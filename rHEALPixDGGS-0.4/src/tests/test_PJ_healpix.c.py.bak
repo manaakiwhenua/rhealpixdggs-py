@@ -1,0 +1,166 @@
+r"""
+This Python 2.7 code tests the ``pj_healpix`` module.
+Beware, these tests cover only some functions and only some scenarios.
+Keep adding tests!
+
+CHANGELOG:
+
+- Alexander Raichev (AR), 2013-01-26: Initial version based on previous test code.
+"""
+#*****************************************************************************
+#       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
+#
+#  Distributed under the terms of the GNU Lesser General Public License (LGPL)
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
+
+# Import third-party modules.
+from scipy.spatial.distance import euclidean, norm
+from scipy import array, sin, arcsin, pi, sqrt
+# Import standard modules.
+import unittest
+# Import my modules.
+from pyproj import Proj
+from projection_tools import auth_lat, auth_rad
+
+# Relative error function.
+def rel_err(get, expect):
+    a = euclidean(get, expect)
+    b = norm(expect)
+    if b == 0:
+        return a
+    else:
+        return a/b
+
+# Define lon-lat input points to test.        
+phi_0 = arcsin(2.0/3)
+a = (0, pi/3)
+b = (0, -pi/3)      
+inputs = [
+    (0, 0), 
+    (0, phi_0), 
+    (0, -phi_0), 
+    (pi/2, 0), 
+    (-pi/2, 0), 
+    (-pi, 0),
+    (-pi, pi/2), 
+    (-pi, -pi/2), 
+    a, 
+    b,
+]
+
+
+class MyTestCase(unittest.TestCase):
+    def test_healpix_sphere(self):
+        # Sphere parameters.
+        R = 5
+        
+        # Expected outputs of healpix_sphere() applied to inputs.
+        sigma_a = sqrt(3 - 3*sin(a[1]))
+        ha = (pi/4*(1 - sigma_a), pi/4*(2 - sigma_a))  
+        hb = (ha[0], -ha[1])
+        healpix_sphere_outputs = [
+            (0, 0), 
+            (0, pi/4), 
+            (0, -pi/4), 
+            (pi/2, 0), 
+            (-pi/2, 0), 
+            (-pi, 0),
+            (-3*pi/4, pi/2), 
+            (-3*pi/4, -pi/2), 
+            ha, 
+            hb
+        ]        
+        healpix_sphere_outputs = [tuple(R*array(p)) for p in 
+                                  healpix_sphere_outputs]
+
+        # Forward projection should be correct on test points.
+        f = Proj(proj='healpix', R=R)
+        given = inputs
+        get = [f(*p, radians=True) for p in given]
+        expect = healpix_sphere_outputs
+        # Fuzz to allow for rounding errors:
+        error = 1e-12
+        print
+        print "-"*80
+        print 'HEALPix forward projection, sphere with radius R = %s' % R
+        print 'input (radians) / expected output (meters) / received output'
+        print "-"*80
+        for i in range(len(get)):
+            print given[i], expect[i], get[i] 
+            self.assertTrue(rel_err(get[i], expect[i]) < error)
+         
+        # Inverse of projection of a point p should yield p.
+        given = get
+        get = [f(*q, radians=True, inverse=True) for q in given]
+        expect = inputs
+        print "-"*80
+        print 'HEALPix inverse projection, sphere with radius R = %s' % R
+        print 'input (meters) / expected output (radians) / received output'
+        print "-"*80
+        for i in range(len(get)):
+            print given[i], expect[i], get[i]         
+            self.assertTrue(rel_err(get[i], expect[i]) < error)
+            
+        # Inverse projection of p below should return longitude of -pi.
+        # Previously, it was returning a number slightly less than pi
+        # because of a rounding error, which got magnified by
+        # wrap_lon())
+        # p = (-7*pi/8, 3*pi/8)
+        # get = healpix_sphere_inverse(*p)
+        # expect = (-pi, arcsin(1 - 1.0/12))   
+        # self.assertEqual(get, expect)
+        # q = (-5*pi/6, 5*pi/12)
+        # get = healpix_sphere_inverse(*q)
+        # expect = (-pi, arcsin(1 - 1.0/27))
+        # self.assertEqual(get, expect)
+        
+    def test_healpix_ellipsoid(self):
+        # Ellipsoid parameters.
+        a = 5
+        e = 0.8
+        R_A = auth_rad(a, e=e) 
+        # Expected output of healpix_ellipsoid() applied to inputs.
+        healpix_ellipsoid_outputs = []
+        g = Proj(proj='healpix', R=R_A)
+        for p in inputs:
+            lam, phi = p
+            beta = auth_lat(phi, e=e, radians=True)
+            q = g(lam, beta, radians=True)
+            healpix_ellipsoid_outputs.append(q)
+
+        # Forward projection should be correct on test points.
+        f = Proj(proj='healpix', a=a, e=e)
+        given = inputs
+        get = [f(*p, radians=True) for p in given]
+        expect = healpix_ellipsoid_outputs
+        # Fuzz to allow for rounding errors:
+        error = 1e-12
+        print "-"*80
+        print 'HEALPix forward projection, ellipsoid with major radius a = %s and eccentricity e = %s" % (a, e)'
+        print 'input (radians) / expected output (meters) / received output'
+        print "-"*80
+        for i in range(len(get)):
+            print given[i], expect[i], get[i]
+            self.assertTrue(rel_err(get[i], expect[i]) < error)
+         
+        # Inverse of projection of a point p should yield p.
+        given = get
+        get = [f(*q, radians=True, inverse=True) for q in given]
+        expect = inputs
+        # Fuzz for rounding errors based on the error of the approximation to
+        # the inverse authalic latitude function:
+        alpha = pi/4
+        alpha_ = auth_lat(auth_lat(alpha, e, radians=True), e, radians=True, 
+                          inverse=True)
+        error = 10*rel_err(alpha_, alpha)        
+        print "-"*80
+        print 'HEALPix inverse projection, ellipsoid with major radius a = %s and eccentricity e = %s" % (a, e)'
+        print 'input (meters) / expected output (radians) / received output'
+        print "-"*80
+        for i in range(len(get)):
+            print given[i], expect[i], get[i]
+            self.assertTrue(rel_err(get[i], expect[i]) < error)
+                     #------------------------------------------------------------------------------                           
+if __name__ == '__main__':
+    unittest.main()

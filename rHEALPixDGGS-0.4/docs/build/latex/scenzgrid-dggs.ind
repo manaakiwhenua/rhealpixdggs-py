@@ -1,0 +1,160 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item area() (dggs\_rhealpix.Cell method), \hyperpage{20}
+  \item auth\_lat() (in module projection\_tools), \hyperpage{6}
+  \item auth\_rad() (in module projection\_tools), \hyperpage{6}
+
+  \indexspace
+  \bigletter B
+  \item boundary() (dggs\_rhealpix.Cell method), \hyperpage{20}
+
+  \indexspace
+  \bigletter C
+  \item Cell (class in dggs\_rhealpix), \hyperpage{20}
+  \item cell() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{28}
+  \item cell\_area() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{28}
+  \item cell\_from\_point() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{28}
+  \item cell\_from\_region() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{29}
+  \item cell\_latitudes() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{29}
+  \item cell\_width() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{29}
+  \item cells0 (dggs\_rhealpix.RHEALPixDGGS attribute), \hyperpage{30}
+  \item cells\_from\_meridian() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{30}
+  \item cells\_from\_parallel() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{30}
+  \item cells\_from\_region() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{30}
+  \item centroid() (dggs\_rhealpix.Cell method), \hyperpage{21}
+  \item color() (dggs\_rhealpix.Cell method), \hyperpage{21}
+  \item combine\_triangles() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{31}
+  \item combine\_triangles() (in module pj\_rhealpix), \hyperpage{11}
+  \item contains() (dggs\_rhealpix.Cell method), \hyperpage{21}
+
+  \indexspace
+  \bigletter D
+  \item dggs\_rhealpix (module), \hyperpage{18}
+  \item distortion (module), \hyperpage{35}
+  \item distortion() (in module distortion), \hyperpage{35}
+  \item distortion\_stats() (in module distortion), \hyperpage{35}
+
+  \indexspace
+  \bigletter E
+  \item Ellipsoid (class in ellipsoids), \hyperpage{15}
+  \item ellipsoidal\_shape() (dggs\_rhealpix.Cell method), \hyperpage{21}
+  \item ellipsoids (module), \hyperpage{15}
+
+  \indexspace
+  \bigletter F
+  \item fff\_coeffs() (in module distortion), \hyperpage{35}
+
+  \indexspace
+  \bigletter G
+  \item get\_points() (ellipsoids.Ellipsoid method), \hyperpage{15}
+  \item graticule() (ellipsoids.Ellipsoid method), \hyperpage{15}
+  \item grid() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{31}
+
+  \indexspace
+  \bigletter H
+  \item healpix() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{31}
+  \item healpix() (in module pj\_healpix), \hyperpage{8}
+  \item healpix\_diagram() (in module pj\_healpix), \hyperpage{8}
+  \item healpix\_ellipsoid() (in module pj\_healpix), \hyperpage{8}
+  \item healpix\_ellipsoid\_inverse() (in module pj\_healpix), \hyperpage{9}
+  \item healpix\_sphere() (in module pj\_healpix), \hyperpage{9}
+  \item healpix\_sphere\_inverse() (in module pj\_healpix), \hyperpage{9}
+  \item healpix\_vertices() (in module pj\_healpix), \hyperpage{9}
+
+  \indexspace
+  \bigletter I
+  \item in\_healpix\_image() (in module pj\_healpix), \hyperpage{9}
+  \item in\_rhealpix\_image() (in module pj\_rhealpix), \hyperpage{11}
+  \item index() (dggs\_rhealpix.Cell method), \hyperpage{21}
+  \item interior() (dggs\_rhealpix.Cell method), \hyperpage{22}
+  \item intersects\_meridian() (dggs\_rhealpix.Cell method), \hyperpage{22}
+  \item intersects\_parallel() (dggs\_rhealpix.Cell method), \hyperpage{22}
+  \item interval() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{32}
+
+  \indexspace
+  \bigletter L
+  \item lattice() (ellipsoids.Ellipsoid method), \hyperpage{16}
+
+  \indexspace
+  \bigletter M
+  \item meridian() (ellipsoids.Ellipsoid method), \hyperpage{16}
+  \item minimal\_cover() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{32}
+
+  \indexspace
+  \bigletter N
+  \item neighbor() (dggs\_rhealpix.Cell method), \hyperpage{22}
+  \item neighbors() (dggs\_rhealpix.Cell method), \hyperpage{23}
+  \item nucleus() (dggs\_rhealpix.Cell method), \hyperpage{23}
+  \item num\_cells() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{32}
+  \item nw\_vertex() (dggs\_rhealpix.Cell method), \hyperpage{23}
+
+  \indexspace
+  \bigletter P
+  \item parallel() (ellipsoids.Ellipsoid method), \hyperpage{16}
+  \item pi() (ellipsoids.Ellipsoid method), \hyperpage{16}
+  \item pj\_healpix (module), \hyperpage{8}
+  \item pj\_rhealpix (module), \hyperpage{11}
+  \item plot\_cells() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{32}
+  \item predecessor() (dggs\_rhealpix.Cell method), \hyperpage{24}
+  \item Proj (class in projection\_wrapper), \hyperpage{17}
+  \item projection\_tools (module), \hyperpage{6}
+  \item projection\_wrapper (module), \hyperpage{17}
+
+  \indexspace
+  \bigletter R
+  \item random\_cell() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{33}
+  \item random\_point() (dggs\_rhealpix.Cell method), \hyperpage{24}
+  \item random\_point() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{33}
+  \item random\_point() (ellipsoids.Ellipsoid method), \hyperpage{16}
+  \item region() (dggs\_rhealpix.Cell method), \hyperpage{25}
+  \item rhealpix() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{33}
+  \item rhealpix() (in module pj\_rhealpix), \hyperpage{12}
+  \item rhealpix\_diagram() (in module pj\_rhealpix), \hyperpage{12}
+  \item rhealpix\_ellipsoid() (in module pj\_rhealpix), \hyperpage{12}
+  \item rhealpix\_ellipsoid\_inverse() (in module pj\_rhealpix), \hyperpage{12}
+  \item rhealpix\_sphere() (in module pj\_rhealpix), \hyperpage{13}
+  \item rhealpix\_sphere\_inverse() (in module pj\_rhealpix), \hyperpage{13}
+  \item rhealpix\_vertices() (in module pj\_rhealpix), \hyperpage{13}
+  \item RHEALPixDGGS (class in dggs\_rhealpix), \hyperpage{27}
+  \item rotate() (dggs\_rhealpix.Cell method), \hyperpage{25}
+  \item rotate\_entry() (dggs\_rhealpix.Cell method), \hyperpage{25}
+
+  \indexspace
+  \bigletter S
+  \item scale\_factors() (in module distortion), \hyperpage{36}
+  \item subcell() (dggs\_rhealpix.Cell method), \hyperpage{25}
+  \item subcells() (dggs\_rhealpix.Cell method), \hyperpage{25}
+  \item successor() (dggs\_rhealpix.Cell method), \hyperpage{26}
+  \item suid\_from\_index() (dggs\_rhealpix.Cell static method), \hyperpage{26}
+  \item suid\_rowcol() (dggs\_rhealpix.Cell method), \hyperpage{26}
+
+  \indexspace
+  \bigletter T
+  \item triangle() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{33}
+  \item triangle() (in module pj\_rhealpix), \hyperpage{13}
+
+  \indexspace
+  \bigletter U
+  \item ul\_vertex() (dggs\_rhealpix.Cell method), \hyperpage{26}
+  \item utm\_zone() (in module distortion), \hyperpage{36}
+
+  \indexspace
+  \bigletter V
+  \item vertices() (dggs\_rhealpix.Cell method), \hyperpage{26}
+
+  \indexspace
+  \bigletter W
+  \item width() (dggs\_rhealpix.Cell method), \hyperpage{27}
+  \item wrap\_latitude() (in module projection\_tools), \hyperpage{6}
+  \item wrap\_longitude() (in module projection\_tools), \hyperpage{7}
+
+  \indexspace
+  \bigletter X
+  \item xy\_range() (dggs\_rhealpix.Cell method), \hyperpage{27}
+  \item xyz() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{34}
+  \item xyz() (ellipsoids.Ellipsoid method), \hyperpage{16}
+  \item xyz\_cube() (dggs\_rhealpix.RHEALPixDGGS method), \hyperpage{34}
+
+\end{theindex}

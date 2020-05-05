@@ -1,0 +1,13 @@
+Bug Database for the scenzgrid-py Project
+==========================================
+Begun 2012-12-17 by Alexander Raichev.
+
+Each entry must include
+
+(a) the date the bug was discovered
+(b) complete steps to reproduce the bug
+(c) expected behavior
+(d) observed (buggy) behavior
+(e) who it's assigned to
+(f) whether it has been fixed or not.
+

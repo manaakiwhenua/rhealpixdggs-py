@@ -1,0 +1,7 @@
+The rhealpix_projection Module
+===============================
+
+.. automodule:: rhealpix_projection
+    :members:
+    :undoc-members:
+    :show-inheritance:
