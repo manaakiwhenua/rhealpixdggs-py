@@ -1,0 +1,9 @@
+﻿Title: A draft cyber-infastructure for GlobalSoilMap.net
+
+Abstract: The GlobalSoilMap.net project is an ambitious project to produce high-resolution global soil attribute data. Beyond the numerous inherited challenges in creating the data, working with high-resolution data at a global scale also raises key system design questions: How to store large amounts of data?  How to make the data available to users?  How to support widespread adoption using common shared algorithms? How to foster use of the data together with other equally large global and local environmental datasets?
+
+The SCENZ-grid project is developing a software system to address these questions and apply them to the GlobalSoilMap.net community. A high performance parallel database is used in order to cope with large data sets.  Data can be readily retrieved due to the distributed and parallel design of the database. 
+
+This paper presents the application of the SCENZ-grid project to GlobalSoilMap.net using a mixture of global synthetic data for one soil attribute and the full attribute set within one country. The export of covariates and soil profile data from the system into R is demonstrated. Global soil attribute maps are visualised in a geographic browser. 
+
+We discuss different ways people can use the data. For smaller data subsets the data can be download and used on their desktop machines. For analyses using very large portions or all of the data, a script can be uploaded to run directly in the high performance computing system where the data resides. Both of these modes of use will be supported via a web based portal.

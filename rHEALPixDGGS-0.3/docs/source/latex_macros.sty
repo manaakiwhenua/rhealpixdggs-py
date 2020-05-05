@@ -1,0 +1,31 @@
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{xifthen}    % provides \isempty test
+\newcommand{\del}{\partial}
+\newcommand{\nats}{\mathbb{N}}
+\newcommand{\reals}{\mathbb{R}}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\cat}{\,\,\widehat{}\,\,}
+\newcommand{\phat}{\hat{p}}
+\newcommand{\hhat}{\hat{h}}
+\newcommand{\Hhat}{\hat{H}}
+\newcommand{\rh}{\underline{h}}
+\newcommand{\rhhat}{\hat{\rh}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\maxlevel}{L}
+\newcommand{\llt}{<_\text{lex}}
+\newcommand{\tge}{\trianglerighteq}
+\newcommand{\tle}{\trianglelefteq}
+\newcommand{\tlt}{\triangleleft}
+\newcommand{\nam}{\mathop{\mathrm{name}}}
+\newcommand{\cell}[1][]{
+  \ifthenelse{\isempty{#1}}
+    {\square}   % if #1 is empty
+    {\boxed{#1}}  % if #1 is not empty
+}
+%\newcommand{\cell}[1]{\boxed{#1}}
+\newcommand{\ind}{\mathop{\mathrm{index}}}
+\newcommand{\bind}{\mathop{\mathrm{Index}}}
+\newcommand{\val}{\mathop{\mathrm{value_9}}}
+\newcommand{\loc}{\mathop{\mathrm{location}}}

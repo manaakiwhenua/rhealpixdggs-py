@@ -1,0 +1,558 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The projections Module &mdash; scenzgrid-dggs 0.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="scenzgrid-dggs 0.3 documentation" href="index.html" />
+    <link rel="next" title="The grids Module" href="grids.html" />
+    <link rel="prev" title="Welcome to scenzgrid-dggs’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="grids.html" title="The grids Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to scenzgrid-dggs’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">scenzgrid-dggs 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-projections">
+<span id="the-projections-module"></span><h1>The projections Module<a class="headerlink" href="#module-projections" title="Permalink to this headline">¶</a></h1>
+<p>The Python 2.7 module implements the cartographic projections used in SCENZ-Grid.</p>
+<p>CHANGELOG:</p>
+<ul class="simple">
+<li>Alexander Raichev (AR), 2011-09-27: Split projection functions and pixelation 
+functions into separate files.</li>
+<li>AR, 2011-10-04: Tidied a little. Improved variable names.</li>
+<li>AR, 2011-10-06: Added more examples and more default arguments.</li>
+<li>AR, 2011-10-23: Added more error-checking, such as the function in_image().</li>
+<li>AR, 2012-03-07: Changed &#8216;rot&#8217; to &#8216;rotate&#8217;.</li>
+<li>AR, 2012-03-23: Fixed a conceptual bug in combine_caps() and get_cap(). Now polar caps actually assemble on top of the caps numbered north and south.</li>
+<li>AR, 2012-03-26: Changed in_image() to accept a radius argument.</li>
+<li>AR, 2012-04-16: Imported NumPy instead of SciPy.</li>
+<li>AR, 2012-06-13: Simplified get_cap() to cap() and simplified combine_caps().</li>
+<li>AR, 2012-07-10: Corrected a subtle longitude rounding error in healpix_sphere(inverse=True).</li>
+<li>AR, 2012-08-31: Redefined the projections for only the unit sphere and 
+the ellipsoid with eccentricity e and authalic sphere equal to the unit
+sphere. Will handle scaling of spheres/ellipsoids in grids.py  
+instead. This simplifies the code and puts it more in line with proj4
+design, which also deals with scaling as a pre-/post-processing step outside
+of the projection definitions.</li>
+<li>AR, 2012-09-03: Corrected WGS84_f, the WGS84 ellipsoid flattening factor.</li>
+</ul>
+<p>NOTE:</p>
+<p>All lengths are measured in meters and all angles are measured in radians 
+unless indicated otherwise.</p>
+<p>These projections work only for ellipsoids and not for general (triaxial) ellipsoids.</p>
+<p>Except when manipulating positive integers, I avoid the modulo function &#8216;%&#8217; 
+and insted write everything in terms of &#8216;floor()&#8217;.
+This is because Python interprets the sign of &#8216;%&#8217; differently than
+Java or C, and I don&#8217;t want to confuse people who are translating this code
+to those languages.</p>
+<dl class="function">
+<dt id="projections.auth_lat">
+<tt class="descclassname">projections.</tt><tt class="descname">auth_lat</tt><big>(</big><em>phi</em>, <em>e</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#projections.auth_lat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a point of geographic latitude <cite>phi</cite> on an ellipse of 
+eccentricity <cite>e</cite>, return the authalic latitude of the point.
+If <cite>inverse=True</cite>, then compute its inverse approximately.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">beta</span> <span class="o">=</span> <span class="n">auth_lat</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">WGS84_E</span><span class="p">);</span> <span class="n">beta</span>
+<span class="go">0.78315895611802222</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">auth_lat</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">WGS84_E</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span>
+<span class="go">0.78539816331575041</span>
+<span class="go">0.7853981633974483</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.cap">
+<tt class="descclassname">projections.</tt><tt class="descname">cap</tt><big>(</big><em>x</em>, <em>y</em>, <em>north=0</em>, <em>south=0</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#projections.cap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of the polar cap and region that <cite>(x, y)</cite> lies in.
+If <cite>inverse=False</cite>, then assume <cite>(x,y)</cite> lies in the image of the HEALPix 
+projection of the unit sphere.
+If <cite>inverse=True</cite>, then assume <cite>(x,y)</cite> lies in the image of the 
+<cite>(north, south)</cite>-rHEALPix projection of the unit sphere.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><cite>x, y</cite> - Coordinates in the HEALPix or rHEALPix (if <cite>inverse=True</cite>) 
+projection of the unit sphere.</li>
+<li><cite>north, south</cite> - Integers between 0 and 3 indicating the positions
+of the north pole square and south pole square respectively.
+See rhealpix_sphere() docstring for a diagram.</li>
+<li><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
+forward function. If True, then compute inverse function.</li>
+</ul>
+<p>OUTPUT:</p>
+<p>The pair (cap_number, region).
+Here region equals &#8216;north&#8217; (polar), &#8216;south&#8217; (polar), or &#8216;equatorial&#8217;, 
+indicating where <cite>(x, y)</cite> lies.
+If region = &#8216;equatorial&#8217;, then cap_number = None.
+Suppose now that region != &#8216;equatorial&#8217;.
+If <cite>inverse=False</cite>, then cap_number is the number (= 0, 1, 2, or 3) of 
+the HEALPix polar cap Z that <cite>(x, y)</cite> lies in.
+If <cite>inverse=True</cite>, then cap_number is the number (= 0, 1, 2, or 3) of 
+the HEALPix polar cap that <cite>(x, y)</cite> will get moved into.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cap</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="go">(1, &#39;north&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cap</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(1, &#39;north&#39;)</span>
+</pre></div>
+</div>
+<p>NOTE:</p>
+<p>In the HEALPix projection, the polar caps are labeled 0&#8211;3 from 
+east to west like this:</p>
+<div class="highlight-python"><pre>    *       *       *       *       
+  * 0 *   * 1 *   * 2 *   * 3 *        
+*-------*-------*-------*-------*
+|       |       |       |       |
+|       |       |       |       |
+|       |       |       |       |
+*-------*-------*-------*-------*
+  * 0 *   * 1 *   * 2 *   * 3 *
+    *       *       *       *</pre>
+</div>
+<p>In the rHEALPix projection these polar caps get rearranged
+into a square with the caps numbered <cite>north</cite> and <cite>south</cite> remaining fixed.
+For example, if <cite>north</cite> = 1 and <cite>south</cite> = 3, then the caps get
+rearranged this way:</p>
+<div class="highlight-python"><pre>North polar square:     *-------*       
+                        | * 3 * |    
+                        | 0 * 2 |    
+                        | * 1 * |    
+                    ----*-------*----
+                    
+South polar square: ----*-------*----
+                        | * 3 * |
+                        | 2 * 0 |
+                        | * 1 * |
+                        *-------*    </pre>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.combine_caps">
+<tt class="descclassname">projections.</tt><tt class="descname">combine_caps</tt><big>(</big><em>x</em>, <em>y</em>, <em>north=0</em>, <em>south=0</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#projections.combine_caps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rearrange point <cite>(x, y)</cite> in the HEALPix projection by 
+combining the polar caps into two polar squares.
+Put the north polar square in position <cite>north</cite> and 
+the south polar square in position <cite>south</cite>.
+If <cite>inverse=True</cite>, uncombine the polar caps.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><cite>x, y</cite> - Coordinates in the HEALPix projection of the unit sphere.</li>
+<li><cite>north, south</cite> - Integers between 0 and 3 indicating the positions
+of the north polar square and south polar square respectively.
+See rhealpix_sphere() docstring for a diagram.</li>
+<li><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
+forward function. If True, then compute inverse function.</li>
+</ul>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">combine_caps</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">);</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="go">(-1.8325957145940459, 1.5707963267948966)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">combine_caps</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
+<span class="go">(-0.78539816339744828, 1.0471975511965976)</span>
+<span class="go">(-0.7853981633974483, 1.0471975511965976)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.ellipsoid_parameters">
+<tt class="descclassname">projections.</tt><tt class="descname">ellipsoid_parameters</tt><big>(</big><em>a</em>, <em>f</em><big>)</big><a class="headerlink" href="#projections.ellipsoid_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the major radius <cite>a</cite> and flattening factor <cite>f</cite> of a
+ellipsoid, return its minor radius, eccentricity, and authalic 
+sphere radius.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellipsoid_parameters</span><span class="p">(</span><span class="n">WGS84_A</span><span class="p">,</span> <span class="n">WGS84_F</span><span class="p">)</span>
+<span class="go">(6356752.314245179, 0.081819190842621486, 6371007.1809184756)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.healpix_ellipsoid">
+<tt class="descclassname">projections.</tt><tt class="descname">healpix_ellipsoid</tt><big>(</big><em>u</em>, <em>v</em>, <em>e</em>, <em>lon0=0</em>, <em>degrees=False</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#projections.healpix_ellipsoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the forward and inverse signature functions of the HEALPix 
+projection of an oblate ellipsoid with eccentricity <cite>e</cite> whose authalic
+sphere is the unit sphere with central meridian <cite>lon0</cite>.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><cite>u, v</cite> - If <cite>inverse=False</cite>, then these are geographic coordinates.
+Any input angles are accepted and get standardized to lie in the intervals 
+-pi &lt;= <cite>u</cite> &lt; pi and -pi/2 &lt;= <cite>v</cite> &lt;= pi/2 via wrap_longitude() and 
+wrap_latitude().
+If <cite>inverse=True</cite>, then these are planar coordinates in the image
+of the HEALPix projection of a sphere of radius 1.</li>
+<li><cite>e</cite> - Eccentricity.</li>
+<li><cite>lon0</cite> - (Optional; default = 0) Central meridian. Any angle is accepted
+and gets standardized to lie in the interval -pi &lt;= <cite>lon0</cite> &lt; pi.</li>
+<li><cite>degrees</cite> - (Optional; default = False) Boolean. If True, then use 
+degrees for input/output instead of radians.</li>
+<li><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
+forward function. If True, then compute inverse function.</li>
+</ul>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="mi">82</span><span class="p">,</span><span class="o">-</span><span class="mi">45</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="n">WGS84_E</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span><span class="n">e</span><span class="o">=</span><span class="n">WGS84_E</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
+<span class="go">(81.999999999999986, -44.999999995319058)</span>
+<span class="go">(82, -45)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.healpix_sphere">
+<tt class="descclassname">projections.</tt><tt class="descname">healpix_sphere</tt><big>(</big><em>u</em>, <em>v</em>, <em>lon0=0</em>, <em>degrees=False</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#projections.healpix_sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the forward and inverse signature functions of the HEALPix 
+projection of the unit sphere with central meridian <cite>lon0</cite>.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><cite>u, v</cite> - If <cite>inverse=False</cite>, then these are geographic coordinates.
+Any input angles are accepted and get standardized to lie in the 
+intervals -pi &lt;= <cite>u</cite> &lt; pi and -pi/2 &lt;= <cite>v</cite> &lt;= pi/2 
+via wrap_longitude() and wrap_latitude().
+If <cite>inverse=True</cite>, then these are planar coordinates in the image
+of the HEALPix projection of the unit sphere.</li>
+<li><cite>lon0</cite> - (Optional; default = 0) Central meridian. Any angle is accepted
+and gets standardized to lie in the interval -pi &lt;= <cite>lon0</cite> &lt; pi.</li>
+<li><cite>degrees</cite> - (Optional; default = False) Boolean. If True, then use 
+degrees for input/output instead of radians.</li>
+<li><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
+forward function. If True, then compute inverse function.</li>
+</ul>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">healpix_sphere</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lon0</span><span class="o">=-</span><span class="mi">45</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span>
+<span class="go">(0.78539816339744828, 0.0)</span>
+<span class="go">0.7853981633974483</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">healpix_sphere</span><span class="p">(</span><span class="o">-</span><span class="mi">45</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lon0</span><span class="o">=-</span><span class="mi">45</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(0.0, 0.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">healpix_sphere</span><span class="p">(</span><span class="mi">180</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lon0</span><span class="o">=-</span><span class="mi">45</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(-2.3561944901923448, 0.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">healpix_sphere</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lon0</span><span class="o">=-</span><span class="mi">45</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(-2.3561944901923448, 0.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">82</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">healpix_sphere</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">healpix_sphere</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
+<span class="go">(-49.999999999999993, 82.000000000000028)</span>
+<span class="go">(-50, 82)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.in_image">
+<tt class="descclassname">projections.</tt><tt class="descname">in_image</tt><big>(</big><em>x</em>, <em>y</em>, <em>proj='healpix_sphere'</em>, <em>north=0</em>, <em>south=0</em><big>)</big><a class="headerlink" href="#projections.in_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <cite>(x, y)</cite> lies in the image of the projection <cite>proj</cite>
+of the unit sphere, where <cite>proj</cite> is either
+&#8216;healpix_sphere&#8217; or &#8216;rhealpix_sphere&#8217; and <cite>north</cite> and <cite>south</cite> indicate 
+the positions of the polar squares in case <cite>proj</cite> = &#8216;rhealpix_sphere&#8217;.
+Return False otherwise.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eps</span> <span class="o">=</span> <span class="mi">0</span>     <span class="c"># Test boundary points.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hp</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">pi</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">pi</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">hp</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="ow">not</span> <span class="n">in_image</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">):</span>
+<span class="gp">... </span>            <span class="k">print</span> <span class="s">&#39;Fail&#39;</span>
+<span class="gp">... </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">in_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">in_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eps</span> <span class="o">=</span> <span class="mi">0</span>     <span class="c"># Test boundary points.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">north</span><span class="p">,</span> <span class="n">south</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rhp</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">+</span> <span class="n">north</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">+</span> <span class="n">north</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">+</span> <span class="p">(</span><span class="n">north</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">+</span> <span class="p">(</span><span class="n">north</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">pi</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">pi</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">+</span> <span class="p">(</span><span class="n">south</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">+</span> <span class="p">(</span><span class="n">south</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">+</span> <span class="n">south</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">+</span> <span class="n">south</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span><span class="n">eps</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">eps</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">eps</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">rhp</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="ow">not</span> <span class="n">in_image</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s">&#39;rhealpix_sphere&#39;</span><span class="p">):</span>
+<span class="gp">... </span>            <span class="k">print</span> <span class="s">&#39;Fail&#39;</span>
+<span class="gp">... </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">in_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="n">proj</span><span class="o">=</span><span class="s">&#39;rhealpix_sphere&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">in_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s">&#39;rhealpix_sphere&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.para_lat">
+<tt class="descclassname">projections.</tt><tt class="descname">para_lat</tt><big>(</big><em>phi</em>, <em>e</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#projections.para_lat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a point at geographic latitude <cite>phi</cite> on an ellipse of 
+eccentricity <cite>e</cite>, return the parametric latitude of the point.
+If <cite>inverse=True</cite>, then compute its inverse.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eta</span> <span class="o">=</span> <span class="n">para_lat</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">WGS84_E</span><span class="p">);</span> <span class="n">eta</span>
+<span class="go">1.0457420826841251</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">para_lat</span><span class="p">(</span><span class="n">eta</span><span class="p">,</span> <span class="n">WGS84_E</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span>
+<span class="go">1.0471975511965976</span>
+<span class="go">1.0471975511965976</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.rhealpix_ellipsoid">
+<tt class="descclassname">projections.</tt><tt class="descname">rhealpix_ellipsoid</tt><big>(</big><em>u</em>, <em>v</em>, <em>e</em>, <em>lon0=0</em>, <em>north=0</em>, <em>south=0</em>, <em>degrees=False</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#projections.rhealpix_ellipsoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the forward and inverse signature functions of the rHEALPix 
+projection of an oblate ellipsoid with eccentricity <cite>e</cite> whose 
+authalic sphere is the unit sphere with central meridian <cite>lon0</cite>. 
+The north pole square is put in position <cite>north</cite>, and the south pole
+square is put in position <cite>south</cite>.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><cite>u, v</cite> - If <cite>inverse=False</cite>, then these are geographic coordinates.
+Any input angles are accepted and get standardized to lie in the 
+intervals 
+-pi &lt;= <cite>u</cite> &lt; pi and -pi/2 &lt;= <cite>v</cite> &lt;= pi/2 via wrap_longitude() and 
+wrap_latitude().
+If <cite>inverse= True</cite>, then these are planar coordinates in the
+image of the rHEALPix projection of the unit sphere.</li>
+<li><cite>e</cite> - Eccentricity.</li>
+<li><cite>lon0</cite> - (Optional; default = 0) Central meridian. Any angle is accepted
+and gets standardized to lie in the interval -pi &lt;= <cite>lon0</cite> &lt; pi.</li>
+<li><cite>north, south</cite> - (Optional; defaults = 0, 0) Integers between 0 and 3 
+indicating positions of north polar and south polar squares, 
+respectively.
+See rhealpix_sphere() docstring for a diagram.</li>
+<li><cite>degrees</cite> - (Optional; default = False) Boolean. If True, then use 
+degrees for input/output instead of radians.</li>
+<li><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
+forward function. If True, then compute inverse function.</li>
+</ul>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">72</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="n">WGS84_E</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span><span class="n">e</span><span class="o">=</span><span class="n">WGS84_E</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
+<span class="go">(90.000000000000028, 71.99999999914445)</span>
+<span class="go">(90, 72)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.rhealpix_sphere">
+<tt class="descclassname">projections.</tt><tt class="descname">rhealpix_sphere</tt><big>(</big><em>u</em>, <em>v</em>, <em>lon0=0</em>, <em>north=0</em>, <em>south=0</em>, <em>degrees=False</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#projections.rhealpix_sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the forward and inverse signature functions of the rHEALPix 
+projection of the unit sphere with central meridian <cite>lon0</cite>. 
+The north pole square is put in position <cite>north</cite>, and the south pole
+square is put in position <cite>south</cite>.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><cite>u, v</cite> - If <cite>inverse</cite> = False, then these are geographic coordinates.
+Any input angles are accepted and get standardized to lie in the intervals 
+-pi &lt;= <cite>u</cite> &lt; pi and -pi/2 &lt;= <cite>v</cite> &lt;= pi/2 via wrap_longitude() and 
+wrap_latitude().
+If <cite>inverse</cite> = True, then these are planar coordinates in the image
+of the rHEALPix projection of the unit sphere.</li>
+<li><cite>lon0</cite> - (Optional; default = 0) Central meridian. Any angle is accepted
+and gets standardized to lie in the interval -pi &lt;= <cite>lon0</cite> &lt; pi.</li>
+<li><cite>north, south</cite> - (Optional; defaults = 0, 0) Integers between 0 and 3 
+indicating positions of north polar and south polar squares, respectively.</li>
+<li><cite>degrees</cite> - (Optional; default = False) Boolean. If True, then use 
+degrees for input/output instead of radians.</li>
+<li><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
+forward function. If True, then compute inverse function.</li>
+</ul>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">82</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">rhealpix_sphere</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">north</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">south</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rhealpix_sphere</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
+<span class="go">(-50.000000000000036, 82.000000000000028)</span>
+<span class="go">(-50, 82)</span>
+</pre></div>
+</div>
+<p>NOTE:</p>
+<p>The polar squares are labeled 0, 1, 2, 3 from east to west like this:</p>
+<div class="highlight-python"><pre>east    lon0    west        
+*---*---*---*---*
+| 0 | 1 | 2 | 3 |
+*---*---*---*---*
+|   |   |   |   |
+*---*---*---*---*
+| 0 | 1 | 2 | 3 |
+*---*---*---*---*    </pre>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.wrap_latitude">
+<tt class="descclassname">projections.</tt><tt class="descname">wrap_latitude</tt><big>(</big><em>phi</em>, <em>degrees=False</em><big>)</big><a class="headerlink" href="#projections.wrap_latitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a point p on the unit circle at angle <cite>phi</cite> from the positive x-axis,
+if p lies in the right half of the circle, then return its angle that lies 
+in the interval [-pi/2, pi/2].
+If p lies in the left half of the circle, then reflect it through the 
+origin, and return the angle of the reflected point that lies in the 
+interval [-pi/2, pi/2].
+If <cite>radians</cite> = True, then <cite>phi</cite> and the output are given in radians.
+Otherwise, they are given in degrees.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">45.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="o">-</span><span class="mi">45</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">-45.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">90.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">-90.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="mi">135</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">-45.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="o">-</span><span class="mi">135</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">45.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="projections.wrap_longitude">
+<tt class="descclassname">projections.</tt><tt class="descname">wrap_longitude</tt><big>(</big><em>lam</em>, <em>degrees=False</em><big>)</big><a class="headerlink" href="#projections.wrap_longitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a point p on the unit circle at angle <cite>lam</cite> from the positive x-axis, 
+return its angle theta in the range -pi &lt;= theta &lt; pi.
+If <cite>radians</cite> = True, then <cite>lam</cite> and the output are given in radians.
+Otherwise, they are given in degrees.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span> <span class="o">+</span> <span class="n">pi</span><span class="p">)</span>
+<span class="go">-3.1415926535897931</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="o">-</span><span class="mi">185</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">175.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">-180.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="mi">185</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">-175.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to scenzgrid-dggs&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="grids.html"
+                        title="next chapter">The grids Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/projections.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="grids.html" title="The grids Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to scenzgrid-dggs’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">scenzgrid-dggs 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Alexander Raichev.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

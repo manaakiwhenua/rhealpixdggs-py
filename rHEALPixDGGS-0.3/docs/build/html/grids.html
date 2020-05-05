@@ -1,0 +1,1052 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The grids Module &mdash; scenzgrid-dggs 0.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="scenzgrid-dggs 0.3 documentation" href="index.html" />
+    <link rel="prev" title="The projections Module" href="projections.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="projections.html" title="The projections Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">scenzgrid-dggs 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-grids">
+<span id="the-grids-module"></span><h1>The grids Module<a class="headerlink" href="#module-grids" title="Permalink to this headline">¶</a></h1>
+<p>This Python 2.7 module implements the SCENZ-Grid discrete global grid system (DGGS), which is an instance of the rHEALPix DGGS.</p>
+<p>CHANGELOG:</p>
+<ul class="simple">
+<li>Alexander Raichev (AR), 2011-07-11: Initial version</li>
+<li>AR, 2011-07-26: Added new functions. 
+Improved suids.</li>
+<li>AR, 2011-08-05: Extended function capababilities 
+to the WGS84 ellipsoid. Improved suids.</li>
+<li>AR, 2011-08-31: Added optional central meridian shift in 
+HEALPix and rHEALPix projections. 
+Added optional polar squares shift in rHEALPix projection.
+Added Earth class and restructured and tidied everything.
+Fixed rounding bug in HEALPix projection.</li>
+<li>AR, 2011-09-01: Added option for entering angles in degrees
+in projections and set degrees as default mode in Earth class.
+Fixed a rounding bug in auth_lat().</li>
+<li>AR, 2011-09-27: Split projection functions and grid 
+functions into separate files.</li>
+<li>AR, 2011-10-07: Improved variable and method suids. 
+Tested more. Documented more.</li>
+<li>AR, 2012-03-06: Refactored to update attribute and method suids and
+redo cell ordering.</li>
+<li>AR, 2012-03-12: Refactored some more and added CellFamily class.</li>
+<li>AR, 2012-03-28: Improved CellFamily methods.</li>
+<li>AR, 2012-04-05: Reformatted code to comform to 
+<a class="reference external" href="http://www.python.org/dev/peps/pep-0008/">standard Python style</a>. 
+Fixed minimize(), union(), and intersect() to handle empty cell families properly.</li>
+<li>AR, 2012-04-11: Improved index() and it&#8217;s inverse.</li>
+<li>AR, 2012-04-13: Rewrote CellFamily to inherit from collections.MutableSequence. Added and optimized CellFamily methods.</li>
+<li>AR, 2012-04-16: Removed wildcard imports to avoid suidspace pollution.</li>
+<li>AR, 2012-04-23: Added a <cite>filter_level</cite> option to cell family intersectionand union operations.</li>
+<li>AR, 2012-04-25: Changed level 0 cell suids to &#8216;N&#8217;, &#8216;O&#8217;, ..., &#8216;S&#8217; labeled left to right and top to bottom and changed subcell suids to 0, 1, ..., 8 labeled left to right and top to bottom. Consequently had to change the code that converts between cell suid and cell location.</li>
+<li>AR, 2012-05-09: Changed &#8216;name&#8217; to &#8216;suid&#8217; and improved intersect_all() slightly.</li>
+<li>AR, 2012-06-08: Changed &#8216;suid_xy&#8217; to &#8216;suid_colrow&#8217; and cleaned up location(), cell_from_point(), and cell_from_region().</li>
+<li>AR, 2012-07-04: Simplified minimize() and eliminated preprocess().</li>
+<li>AR, 2012-07-05: Simplified total ordering definition in Cell class.</li>
+<li>AR, 2012-07-06: Added a width() method to Cell class.</li>
+<li>AR, 2012-09-17: Fixed rounding errors in nucleus_and_vertices() which occurred when interpolation &gt; 0.</li>
+<li>AR, 2012-10-15: Changed names. Changed &#8216;location&#8217; to &#8216;ul_vertex&#8217;, &#8216;center&#8217; to &#8216;nucleus&#8217;, &#8216;corners&#8217; to &#8216;vertices&#8217;. Introduced the &#8216;surface&#8217; keyword for cell operations that depend on the distinction between planar and ellipsoidal cells. - AR, 2012-10-24: Added ellipsoidal_shape() and centroid().</li>
+</ul>
+<p>EXAMPLES:</p>
+<p>Create a WGS84 ellipsoid model of the Earth:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="n">ellps</span><span class="o">=</span><span class="s">&#39;WGS84&#39;</span><span class="p">,</span> <span class="n">south</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">north</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span>
+<span class="go">____Earth model____</span>
+<span class="go">lengths measured in meters and angles measured in degrees</span>
+<span class="go">ellipsoid: WGS84</span>
+<span class="go">    major radius: 6378137</span>
+<span class="go">    flattening factor: 0.00335281066475</span>
+<span class="go">    minor radius: 6356752.31425</span>
+<span class="go">    eccentricity: 0.0818191908426</span>
+<span class="go">    authalic sphere radius: 6371007.18092</span>
+<span class="go">central meridian: 0</span>
+<span class="go">north pole square position: 2</span>
+<span class="go">south pole square position: 1</span>
+<span class="go">max areal resolution: 1.0</span>
+<span class="go">max cell level: 15</span>
+</pre></div>
+</div>
+<p>Use the HEALPix projection for this Earth to project the
+(longitude, latitude) point (45, 60) onto a plane and back again:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">healpix</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="mi">60</span><span class="p">);</span> <span class="n">p</span>
+<span class="go">(5003777.338885325, 6823798.3004998406)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">.</span><span class="n">healpix</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(45.0, 59.999999998490921)</span>
+</pre></div>
+</div>
+<p>Do the same but use the rHEALPix projection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">rhealpix</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="mi">60</span><span class="p">);</span> <span class="n">p</span>
+<span class="go">(5003777.338885325, 6823798.3004998406)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">.</span><span class="n">rhealpix</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(45.0, 59.999999998490921)</span>
+</pre></div>
+</div>
+<p>Create the &#8216;Q3&#8217; cell of this Earth and find its four neighbors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="s">&#39;Q3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">neighbors</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span>
+<span class="gp">... </span>
+<span class="go">down Q6</span>
+<span class="go">right Q4</span>
+<span class="go">up Q0</span>
+<span class="go">left P5</span>
+</pre></div>
+</div>
+<p>Find the nucleus and vertices of this cell and the level 2 cell 
+that contains the nucleus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nucleus</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">nucleus_and_vertices</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span> <span class="n">nucleus</span>
+<span class="go">(1667925.7796284417, 0.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span><span class="o">.</span><span class="n">cell_from_point</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">nucleus</span><span class="p">)</span>
+<span class="go">Q344</span>
+</pre></div>
+</div>
+<p>NOTES:</p>
+<p>All lengths are measured in meters and all angles are measured in radians 
+unless indicated otherwise. 
+Points lying on the plane are given in rectangular (horizontal, vertical) coordinates, and points lying on the ellipsoid are given in geodetic (longitude, latitude) coordinates unless indicated otherwise.
+Below, GGS abbreviates global grid system.</p>
+<p>Except when manipulating positive integers, I avoid the modulo function &#8216;%&#8217; 
+and insted write everything in terms of &#8216;floor()&#8217;.
+This is because Python interprets the sign of &#8216;%&#8217; differently than
+Java or C, and I don&#8217;t want to confuse people who are translating this code
+to those languages.</p>
+<dl class="class">
+<dt id="grids.Cell">
+<em class="property">class </em><tt class="descclassname">grids.</tt><tt class="descname">Cell</tt><big>(</big><em>earth</em>, <em>suid=None</em>, <em>level_order_index=None</em>, <em>post_order_index=None</em><big>)</big><a class="headerlink" href="#grids.Cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Represents a cell of the planar or ellipsoidal global grid system (GGS)
+relative to a given Earth model.
+Cell identifiers are of the form (p_0, p_1,...,p_l), where p_0 is one of 
+the characters &#8216;A&#8217;, &#8216;B&#8217;, &#8216;C&#8217;, &#8216;D&#8217;, &#8216;E&#8217;, &#8216;F&#8217; and p_i for i &gt; 0 is one of
+the characters &#8216;0&#8217;, &#8216;1&#8217;,..., &#8216;8&#8217;.</p>
+<dl class="method">
+<dt id="grids.Cell.area">
+<tt class="descname">area</tt><big>(</big><em>surface='plane'</em><big>)</big><a class="headerlink" href="#grids.Cell.area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the area of this cell.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="grids.Cell.atomic_rotate">
+<em class="property">static </em><tt class="descname">atomic_rotate</tt><big>(</big><em>quarter_turns</em>, <em>x</em><big>)</big><a class="headerlink" href="#grids.Cell.atomic_rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the function g that represents the table</p>
+<div class="highlight-python"><pre>0 1 2
+3 4 5
+6 7 8</pre>
+</div>
+<p>rotated anticlockwise by <cite>quarter_turns</cite> quarter turns.
+The table is then read from left to right and top to bottom
+to give the values g(0), g(1), ..., g(8).</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><cite>quarter_turns</cite> - 0, 1, 2, or 3.</li>
+<li><cite>x</cite> - 0, 1, 2, ..., 8, Earth.CELLS0[5], Earth.CELLS0[1], ..., Earth.CELLS0[0].</li>
+</ul>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Cell</span><span class="o">.</span><span class="n">atomic_rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Cell</span><span class="o">.</span><span class="n">atomic_rotate</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Cell</span><span class="o">.</span><span class="n">atomic_rotate</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Cell</span><span class="o">.</span><span class="n">atomic_rotate</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Cell</span><span class="o">.</span><span class="n">atomic_rotate</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.centroid">
+<tt class="descname">centroid</tt><big>(</big><em>surface='plane'</em><big>)</big><a class="headerlink" href="#grids.Cell.centroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the centroid of this planar or ellipsoidal cell.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.ellipsoidal_shape">
+<tt class="descname">ellipsoidal_shape</tt><big>(</big><big>)</big><a class="headerlink" href="#grids.Cell.ellipsoidal_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the shape of this cell (&#8216;rectangle&#8217;, &#8216;cap&#8217;, &#8216;dart&#8217;, or 
+&#8216;trapezoid&#8217;) when viewed on the ellipsoid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.index">
+<tt class="descname">index</tt><big>(</big><em>order='level'</em><big>)</big><a class="headerlink" href="#grids.Cell.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the index of <cite>self</cite> when it&#8217;s ordered according to <cite>order</cite>.
+Here <cite>order</cite> can be &#8216;level&#8217; (default) or &#8216;post&#8217;.        
+Indices start at 0.
+The empty cell has index None.</p>
+<p>The ordering comes from the way of traversing the tree T 
+of all cells defined as follows.
+The root of T is a non-cell place holder. 
+The children of the root are the cells A &lt; B &lt; ... &lt; F.
+The children of a cell in T with suid s are s0 &lt; s1 &lt; ... &lt; s8.</p>
+<p>The level order index of a nonempty cell is its position 
+(starting from 0) in the level order traversal of T starting at cell A.</p>
+<p>The post order index of a nonempty cell is its position 
+(starting from 0) in the post order traversal of T.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="n">ellps</span><span class="o">=</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="s">&#39;N2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s">&#39;level&#39;</span><span class="p">)</span>
+<span class="go">8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s">&#39;post&#39;</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.neighbor">
+<tt class="descname">neighbor</tt><big>(</big><em>direction</em><big>)</big><a class="headerlink" href="#grids.Cell.neighbor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the neighboring cell of this cell in the 
+direction <cite>direction</cite>.
+The direction is relative to this planar neighbor diagram,
+where <cite>self</cite> is the middle cell</p>
+<div class="highlight-python"><pre>             up
+           *-----*
+           |     |
+           |     |
+           |     |
+     *-----*-----*-----*
+     |     | 012 |     |
+left |     | 345 |     | right 
+     |     | 678 |     |
+     *-----*-----*-----*
+           |     |
+           |     |
+           |     |
+           *-----*
+            down</pre>
+</div>
+<p>The tricky part is that the neighbor relationships of the 
+six level 0 cells is determined by the positions of those cells
+on the surface of a cube, one on each face (and not on a plane).
+So sometimes rotating cells in needed to compute neighbors.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><cite>direction</cite> - One of the strings &#8216;up&#8217;, &#8216;right&#8217;, &#8216;down&#8217;, or &#8216;left&#8217;.</li>
+</ul>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N0&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">neighbor</span><span class="p">(</span><span class="s">&#39;down&#39;</span><span class="p">)</span>
+<span class="go">N3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.neighbors">
+<tt class="descname">neighbors</tt><big>(</big><big>)</big><a class="headerlink" href="#grids.Cell.neighbors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary of the left, right, down, and up neighbors of this 
+cell. 
+Direction is relative to this planar neighbor diagram, where <cite>self</cite> is 
+the middle cell</p>
+<div class="highlight-python"><pre>                    up
+                  *-----*
+                  |     |
+                  |     |
+                  |     |
+            *-----*-----*-----*
+            |     | 012 |     |
+       left |     | 345 |     | right 
+            |     | 678 |     |
+            *-----*-----*-----*
+                  |     |
+                  |     |
+                  |     |
+                  *-----*
+                   down
+
+The tricky part is that the neighbor relationships of the 
+six level 0 cells is determined by the positions of those cells
+on the surface of a cube, one on each face (and not a plane).
+So sometimes rotating cells in needed to compute neighbors.</pre>
+</div>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N0&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">neighbors</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span>
+<span class="gp">... </span>
+<span class="go">down N3</span>
+<span class="go">right N1</span>
+<span class="go">up Q2</span>
+<span class="go">left R0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.nucleus_and_vertices">
+<tt class="descname">nucleus_and_vertices</tt><big>(</big><em>surface='plane'</em>, <em>interpolation=0</em><big>)</big><a class="headerlink" href="#grids.Cell.nucleus_and_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the nucleus of this planar or ellipsoidal cell along 
+with its corner points interpolated by <cite>3**(interpolation)</cite> points 
+along each edge.
+The nucleus is the first point in the output list and the remaining 
+points are the boundary points enumerated from the upleft corner
+to the downleft corner to the downright corner to the upright corner
+to the upleft corner (but not including the downright corner in
+the list again).
+The output for ellipsoidal cells is the projection onto the ellipsoid
+of the output for planar cells.  In particular, while the 
+nucleus of a planar cell is its centroid, the nucleus 
+of an ellipsoidal cell is not its centroid.
+To compute the centroid of a cell, use centroid() below.</p>
+<p>NOTE:</p>
+<p>The interpolation option is intended mostly for drawing the
+boundary of <cite>self</cite> with varying degrees of smoothness.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">nucleus_and_vertices</span><span class="p">()</span>
+<span class="go">[(-2.3561944901923448, 1.5707963267948966), (-3.141592653589793, 2.356194490192345), (-3.1415926535897931, 0.78539816339744828), (-1.5707963267948966, 0.78539816339744828), (-1.5707963267948966, 2.3561944901923448)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.predecessor">
+<tt class="descname">predecessor</tt><big>(</big><em>level=None</em><big>)</big><a class="headerlink" href="#grids.Cell.predecessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the greatest level <cite>level</cite> cell less than <cite>self</cite>.
+Note: <cite>self</cite> need not be a level <cite>level</cite> cell.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N08&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">predecessor</span><span class="p">())</span>
+<span class="go">N07</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">N088</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.region">
+<tt class="descname">region</tt><big>(</big><big>)</big><a class="headerlink" href="#grids.Cell.region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the region, &#8216;equatorial&#8217; or &#8216;polar&#8217;, of this cell.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.rotate">
+<tt class="descname">rotate</tt><big>(</big><em>quarter_turns</em><big>)</big><a class="headerlink" href="#grids.Cell.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the cell that is the result of rotating this cell 
+<cite>quarter_turns</cite> quarter_turns.
+Used in neighbor().</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N0&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">N0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">N2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">N8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">N6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">N0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.str9">
+<tt class="descname">str9</tt><big>(</big><big>)</big><a class="headerlink" href="#grids.Cell.str9" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the suid of <cite>self</cite> as a base 9 numeral.
+Just need to convert the leading character to a digit between 0 and 8.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="s">&#39;N130534&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">str9</span><span class="p">()</span>
+<span class="go">0130534</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.subcell">
+<tt class="descname">subcell</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#grids.Cell.subcell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subcell (subset) relation on cells.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">a</span><span class="o">.</span><span class="n">subcell</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">b</span><span class="o">.</span><span class="n">subcell</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.subcells">
+<tt class="descname">subcells</tt><big>(</big><em>level=None</em><big>)</big><a class="headerlink" href="#grids.Cell.subcells" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator function for the set of level <cite>level</cite> subcells of <cite>self</cite>.  
+If <cite>level=None</cite>, then return a generator function for the children
+of <cite>self</cite>.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">subcells</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+<span class="go">[&#39;N00&#39;, &#39;N01&#39;, &#39;N02&#39;, &#39;N03&#39;, &#39;N04&#39;, &#39;N05&#39;, &#39;N06&#39;, &#39;N07&#39;, &#39;N08&#39;, &#39;N10&#39;, &#39;N11&#39;, &#39;N12&#39;, &#39;N13&#39;, &#39;N14&#39;, &#39;N15&#39;, &#39;N16&#39;, &#39;N17&#39;, &#39;N18&#39;, &#39;N20&#39;, &#39;N21&#39;, &#39;N22&#39;, &#39;N23&#39;, &#39;N24&#39;, &#39;N25&#39;, &#39;N26&#39;, &#39;N27&#39;, &#39;N28&#39;, &#39;N30&#39;, &#39;N31&#39;, &#39;N32&#39;, &#39;N33&#39;, &#39;N34&#39;, &#39;N35&#39;, &#39;N36&#39;, &#39;N37&#39;, &#39;N38&#39;, &#39;N40&#39;, &#39;N41&#39;, &#39;N42&#39;, &#39;N43&#39;, &#39;N44&#39;, &#39;N45&#39;, &#39;N46&#39;, &#39;N47&#39;, &#39;N48&#39;, &#39;N50&#39;, &#39;N51&#39;, &#39;N52&#39;, &#39;N53&#39;, &#39;N54&#39;, &#39;N55&#39;, &#39;N56&#39;, &#39;N57&#39;, &#39;N58&#39;, &#39;N60&#39;, &#39;N61&#39;, &#39;N62&#39;, &#39;N63&#39;, &#39;N64&#39;, &#39;N65&#39;, &#39;N66&#39;, &#39;N67&#39;, &#39;N68&#39;, &#39;N70&#39;, &#39;N71&#39;, &#39;N72&#39;, &#39;N73&#39;, &#39;N74&#39;, &#39;N75&#39;, &#39;N76&#39;, &#39;N77&#39;, &#39;N78&#39;, &#39;N80&#39;, &#39;N81&#39;, &#39;N82&#39;, &#39;N83&#39;, &#39;N84&#39;, &#39;N85&#39;, &#39;N86&#39;, &#39;N87&#39;, &#39;N88&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.successor">
+<tt class="descname">successor</tt><big>(</big><em>level=None</em><big>)</big><a class="headerlink" href="#grids.Cell.successor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the least level <cite>level</cite> cell greater than <cite>self</cite>.
+Note: <cite>self</cite> need not be a level <cite>level</cite> cell.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N82&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">successor</span><span class="p">())</span>
+<span class="go">N83</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">successor</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">O</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">successor</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">O0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">successor</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">N830</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.suid_colrow">
+<tt class="descname">suid_colrow</tt><big>(</big><big>)</big><a class="headerlink" href="#grids.Cell.suid_colrow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the pair of row- and column-suids of <cite>self</cite>, each as tuples.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="s">&#39;N73&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xn</span><span class="p">,</span> <span class="n">yn</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">suid_colrow</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">xn</span> <span class="o">==</span> <span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">yn</span> <span class="o">==</span> <span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="grids.Cell.suid_from_index">
+<em class="property">static </em><tt class="descname">suid_from_index</tt><big>(</big><em>earth</em>, <em>index</em>, <em>order='level'</em><big>)</big><a class="headerlink" href="#grids.Cell.suid_from_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the suid of a cell from its index.
+The index is according to the cell ordering <cite>order</cite>,
+which can be &#8216;level&#8217; (default) or &#8216;post&#8217;.
+See the <cite>index()</cite> docstring for more details on orderings.
+For internal use.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.ul_vertex">
+<tt class="descname">ul_vertex</tt><big>(</big><em>surface='plane'</em><big>)</big><a class="headerlink" href="#grids.Cell.ul_vertex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the upper left (northwest) vertex of this planar or 
+ellipsoidal cell.</p>
+<p>WARNING: The upper left vertex of a cell might not lie in the cell, 
+because not all cells contain their boundary.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">),</span> <span class="s">&#39;N0&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">ul_vertex</span><span class="p">()</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Cell.width">
+<tt class="descname">width</tt><big>(</big><em>surface='plane'</em><big>)</big><a class="headerlink" href="#grids.Cell.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the width of this cell. If <cite>surface=&#8217;ellipsoid&#8217;</cite>, then
+return None, because ellipsoidal cells don&#8217;t have a fixed
+width.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">),</span> <span class="s">&#39;N8&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span>
+<span class="go">N8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">==</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="mi">3</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grids.CellFamily">
+<em class="property">class </em><tt class="descclassname">grids.</tt><tt class="descname">CellFamily</tt><big>(</big><em>cells=None</em>, <em>min_level=None</em>, <em>max_level=None</em>, <em>sort=True</em>, <em>eliminate_subcells=True</em><big>)</big><a class="headerlink" href="#grids.CellFamily" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">_abcoll.MutableSequence</span></tt></p>
+<p>A subcell-free ordered list of cells along with the minimum level of 
+the cells in family the maximum level of the cells in family.</p>
+<dl class="method">
+<dt id="grids.CellFamily.add">
+<tt class="descname">add</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#grids.CellFamily.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add <cite>key</cite> to <cite>self</cite> if <cite>key</cite> is not a subcell of any cell of <cite>self</cite>.
+Uses bisection to find the insertion point in O(log(len(self)))
+comparisons.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">CellFamily</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">f</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span> <span class="k">print</span> <span class="n">f</span>
+<span class="go">[&#39;N&#39;, &#39;O&#39;, &#39;Q&#39;, &#39;R&#39;, &#39;S&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="s">&#39;P3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span>
+<span class="go">[&#39;N&#39;, &#39;O&#39;, &#39;P3&#39;, &#39;Q&#39;, &#39;R&#39;, &#39;S&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="s">&#39;O3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>    <span class="c"># Should do nothing.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span>
+<span class="go">[&#39;N&#39;, &#39;O&#39;, &#39;P3&#39;, &#39;Q&#39;, &#39;R&#39;, &#39;S&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.CellFamily.insert">
+<tt class="descname">insert</tt><big>(</big><em>index</em>, <em>value</em><big>)</big><a class="headerlink" href="#grids.CellFamily.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert the <cite>value</cite> into <cite>self</cite> at index <cite>index</cite>.
+Warning: for internal use only; does not maintain sorted order.
+Use <cite>add()</cite> to add cells to <cite>self</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.CellFamily.intersect">
+<tt class="descname">intersect</tt><big>(</big><em>other</em>, <em>filter_level=None</em><big>)</big><a class="headerlink" href="#grids.CellFamily.intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the minimal cell family v for the intersection of the regions 
+of <cite>self</cite> and <cite>other</cite>. 
+If a nonnegative integer <cite>filter_level</cite> is given, then return the cell
+family comprised of the cell&#8217;s of v at levels &lt;= <cite>filter_level</cite>.</p>
+<p>Uses O(max(m, n)) cell operations, where m = <cite>len(self)</cite> and
+n = <cite>len(other)</cite>.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">CellFamily</span><span class="p">([</span><span class="n">b</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">subcells</span><span class="p">(</span><span class="mi">1</span><span class="p">))[:</span><span class="mi">4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span>
+<span class="go">[&#39;N0&#39;, &#39;N1&#39;, &#39;N2&#39;, &#39;N3&#39;, &#39;P&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">CellFamily</span><span class="p">([</span><span class="n">b</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">subcells</span><span class="p">(</span><span class="mi">1</span><span class="p">))[</span><span class="mi">3</span><span class="p">:])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">g</span>
+<span class="go">[&#39;N3&#39;, &#39;N4&#39;, &#39;N5&#39;, &#39;N6&#39;, &#39;N7&#39;, &#39;N8&#39;, &#39;P&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="go">[&#39;N3&#39;, &#39;P&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">filter_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">[&#39;P&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.CellFamily.intersect_all">
+<tt class="descname">intersect_all</tt><big>(</big><em>others</em>, <em>filter_level=None</em><big>)</big><a class="headerlink" href="#grids.CellFamily.intersect_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the minimal cell family v for the intersection of the regions
+of <cite>self</cite> and the cell families in the list <cite>others</cite>.
+If a nonnegative integer <cite>filter_level</cite> is given, then return the cell
+family comprised of the cell&#8217;s of v at levels &lt;= <cite>filter_level</cite>.</p>
+<p>Uses O(n) cell operations, where n is the maximum of <cite>len(self)</cite> and
+the lengths of the cell families in <cite>others</cite>.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cell_families</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">E</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">cell_families</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CellFamily</span><span class="p">([</span><span class="n">c</span><span class="p">]))</span>
+<span class="gp">... </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">cell_families</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span><span class="o">.</span><span class="n">intersect_all</span><span class="p">(</span><span class="n">cell_families</span><span class="p">)</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.CellFamily.minimize">
+<tt class="descname">minimize</tt><big>(</big><big>)</big><a class="headerlink" href="#grids.CellFamily.minimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the minimal cell family that has the same region 
+as <cite>self</cite>.</p>
+<p>Uses O(len(self)) cell operations.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">CellFamily</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">subcells</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span>
+<span class="go">[&#39;N0&#39;, &#39;N1&#39;, &#39;N2&#39;, &#39;N3&#39;, &#39;N4&#39;, &#39;N5&#39;, &#39;N6&#39;, &#39;N7&#39;, &#39;N8&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span><span class="o">.</span><span class="n">minimize</span><span class="p">()</span>
+<span class="go">[&#39;N&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.CellFamily.union">
+<tt class="descname">union</tt><big>(</big><em>other</em>, <em>filter_level=None</em><big>)</big><a class="headerlink" href="#grids.CellFamily.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the cell family u that is the  minimizeed union of <cite>self</cite> 
+and <cite>other</cite>, that is, the smallest cell family whose region is the 
+union of the regions of <cite>self</cite> and <cite>other</cite>.
+If a nonnegative integer <cite>filter_level</cite> is given, then return the cell
+family comprised of the cell&#8217;s of u at levels &lt;= <cite>filter_level</cite>.
+Do not set <cite>minimize_first=False</cite> unless you know that the input
+cell families are already minimizeed.</p>
+<p>Uses O(max(m, n)) cell operations, where m = <cite>len(self)</cite> and
+n = <cite>len(other)</cite>.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b1</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">Earth</span><span class="p">(),</span> <span class="s">&#39;P1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">CellFamily</span><span class="p">([</span><span class="n">b1</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">subcells</span><span class="p">(</span><span class="mi">1</span><span class="p">))[:</span><span class="mi">4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span>
+<span class="go">[&#39;N0&#39;, &#39;N1&#39;, &#39;N2&#39;, &#39;N3&#39;, &#39;P1&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">CellFamily</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">subcells</span><span class="p">(</span><span class="mi">1</span><span class="p">))[</span><span class="mi">3</span><span class="p">:])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">g</span>
+<span class="go">[&#39;N3&#39;, &#39;N4&#39;, &#39;N5&#39;, &#39;N6&#39;, &#39;N7&#39;, &#39;N8&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="go">[&#39;N&#39;, &#39;P1&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">filter_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">[&#39;N&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.CellFamily.union_all">
+<tt class="descname">union_all</tt><big>(</big><em>others</em>, <em>filter_level=None</em>, <em>minimize_first=True</em><big>)</big><a class="headerlink" href="#grids.CellFamily.union_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the cell family u that is the union of the regions of this cell 
+family and cell families in the list <cite>others</cite>. 
+If a nonnegative integer <cite>filter_level</cite> is given, then return the cell
+family comprised of the cell&#8217;s of u at levels &lt;= <cite>filter_level</cite>.</p>
+<p>Uses O(n) cell operations, where n is the maximum of <cite>len(self)</cite> and
+the lengths of the cell families in <cite>others</cite>.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cell_families</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">E</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">cell_families</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CellFamily</span><span class="p">([</span><span class="n">c</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell_families</span><span class="p">)</span>
+<span class="go">54</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">cell_families</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span>
+<span class="go">[&#39;N0&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">f</span><span class="o">.</span><span class="n">union_all</span><span class="p">(</span><span class="n">cell_families</span><span class="p">)</span>
+<span class="go">[&#39;N&#39;, &#39;O&#39;, &#39;P&#39;, &#39;Q&#39;, &#39;R&#39;, &#39;S&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="grids.Earth">
+<em class="property">class </em><tt class="descclassname">grids.</tt><tt class="descname">Earth</tt><big>(</big><em>ellps='WGS84'</em>, <em>degrees=True</em>, <em>lon0=0</em>, <em>north=0</em>, <em>south=0</em>, <em>max_areal_resolution=1.0</em><big>)</big><a class="headerlink" href="#grids.Earth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Represents a model of the Earth its planar and ellipsoidal GGSs.</p>
+<dl class="attribute">
+<dt id="grids.Earth.CELLS0">
+<tt class="descname">CELLS0</tt><em class="property"> = ['N', 'O', 'P', 'Q', 'R', 'S']</em><a class="headerlink" href="#grids.Earth.CELLS0" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grids.Earth.WGS84">
+<tt class="descname">WGS84</tt><em class="property"> = {'a': 6378137, 'b': 6356752.314245179, 'e': 0.081819190842621486, 'figure': 'ellipsoid', 'f': 0.0033528106647474805, 'R': 6371007.1809184756}</em><a class="headerlink" href="#grids.Earth.WGS84" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grids.Earth.WGS84_asphere">
+<tt class="descname">WGS84_asphere</tt><em class="property"> = {'R': 6371007.1809184756, 'figure': 'sphere'}</em><a class="headerlink" href="#grids.Earth.WGS84_asphere" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.cell">
+<tt class="descname">cell</tt><big>(</big><em>suid=None</em>, <em>level_order_index=None</em>, <em>post_order_index=None</em><big>)</big><a class="headerlink" href="#grids.Earth.cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a cell of this Earth model either from its SUID or 
+from its level and index. The cell can be interpreted as lying on the 
+plane or on the ellipsoid, depending on the <cite>surface</cite> option given 
+in the instance methods below.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="s">&#39;N45&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Cell</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span>
+<span class="go">N45</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.cell_area">
+<tt class="descname">cell_area</tt><big>(</big><em>level</em>, <em>surface='plane'</em><big>)</big><a class="headerlink" href="#grids.Earth.cell_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>For this Earth model, return the area of a planar or ellipsoiadl cell
+at level <cite>level</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.cell_from_point">
+<tt class="descname">cell_from_point</tt><big>(</big><em>level</em>, <em>p</em>, <em>surface='plane'</em><big>)</big><a class="headerlink" href="#grids.Earth.cell_from_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>For this Earth model, return the planar or ellipsoidal cell at level 
+<cite>level</cite> that contains the point <cite>p</cite>.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><cite>level</cite> - Cell level.</li>
+<li><cite>p</cite> - A point on the plane or ellipsoid given in rectangular or 
+geodetic coordinates, respectively.</li>
+<li><cite>surface</cite> - (Optional; default=&#8217;plane&#8217;) One of &#8216;plane&#8217; or 
+&#8216;ellipsoid&#8217;, indicating whether the given point and returned cell 
+both lie on the plane or on the ellipsoid.</li>
+</ul>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="s">&#39;WGS84&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell_from_point</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span>
+<span class="go">Q33</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.cell_from_region">
+<tt class="descname">cell_from_region</tt><big>(</big><em>ul</em>, <em>dr</em>, <em>surface='plane'</em><big>)</big><a class="headerlink" href="#grids.Earth.cell_from_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the smallest planar or ellipsoidal cell wholly containing 
+the region bounded by the axis-aligned rectangle with upper left 
+and lower right vertices given by the the points <cite>ul</cite> and <cite>dr</cite>, 
+respectively.  
+If such as cell does not exist, then return None.
+If <cite>surface=&#8217;plane&#8217;</cite>, then <cite>ul</cite> and <cite>dr</cite> and the returned cell
+are interpreted as lying on the plane.
+If <cite>surface=&#8217;ellipsoid&#8217;</cite>, then they are interpreted as lying on
+the ellipsoid and the bounding rectangle is interpreted as being
+longitude-latitude aligned.    
+To specify an ellipsoidal cap region (whose centroid is the north
+or south pole and whose boundary is a parallel of latitude),
+set ul = (-pi, pi/2) or (-pi, -pi/2), indicating a north or south pole,
+respectively, and set dr = (-pi, phi), where phi is the latitude of
+the boundary.
+Works on defunct (point and line) planar rectangles too.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell_from_region</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">c</span>
+<span class="go">Q</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.cell_width">
+<tt class="descname">cell_width</tt><big>(</big><em>level</em>, <em>surface='plane'</em><big>)</big><a class="headerlink" href="#grids.Earth.cell_width" title="Permalink to this definition">¶</a></dt>
+<dd><p>For this Earth model, return the width of a planar cell at level 
+<cite>level</cite>.
+If <cite>surface != &#8216;plane&#8217;</cite>, then return None, because ellipsoidal cells
+don&#8217;t have constant width.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">.</span><span class="n">cell_width</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.5707963267948966</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">.</span><span class="n">cell_width</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.5235987755982988</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grids.Earth.child_order">
+<tt class="descname">child_order</tt><em class="property"> = {0: (0, 0), (0, 1): 3, 2: (2, 0), (0, 0): 0, 4: (1, 1), 5: (2, 1), 6: (0, 2), 1: (1, 0), 8: (2, 2), (1, 2): 7, (2, 1): 5, (1, 1): 4, (2, 0): 2, 3: (0, 1), (2, 2): 8, 7: (1, 2), (1, 0): 1, (0, 2): 6}</em><a class="headerlink" href="#grids.Earth.child_order" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="grids.Earth.col">
+<tt class="descname">col</tt><em class="property"> = 2</em><a class="headerlink" href="#grids.Earth.col" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.combine_caps">
+<tt class="descname">combine_caps</tt><big>(</big><em>u</em>, <em>v</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#grids.Earth.combine_caps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the combine_caps() transformation of the point <cite>(u, v)</cite> 
+(or its inverse if <cite>inverse=True</cite>) appropriate to this Earth.
+It maps the HEALPix projection to the rHEALPix projection.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span><span class="o">.</span><span class="n">combine_caps</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span><span class="o">.</span><span class="n">combine_caps</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grids.Earth.ellipsoids">
+<tt class="descname">ellipsoids</tt><em class="property"> = {'unit_sphere': {'R': 1, 'figure': 'sphere'}, 'WGS84_asphere': {'R': 6371007.1809184756, 'figure': 'sphere'}, 'WGS84': {'a': 6378137, 'b': 6356752.314245179, 'e': 0.081819190842621486, 'figure': 'ellipsoid', 'f': 0.0033528106647474805, 'R': 6371007.1809184756}}</em><a class="headerlink" href="#grids.Earth.ellipsoids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.grid">
+<tt class="descname">grid</tt><big>(</big><em>level</em><big>)</big><a class="headerlink" href="#grids.Earth.grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator function for all the cells at level <cite>level</cite>.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">g</span><span class="p">]</span>
+<span class="go">[&#39;N&#39;, &#39;O&#39;, &#39;P&#39;, &#39;Q&#39;, &#39;R&#39;, &#39;S&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.healpix">
+<tt class="descname">healpix</tt><big>(</big><em>u</em>, <em>v</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#grids.Earth.healpix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the HEALPix projection of point <cite>(u, v)</cite> (or its inverse if 
+<cite>inverse=True</cite>) for this Earth model.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span><span class="o">.</span><span class="n">healpix</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span><span class="o">.</span><span class="n">healpix</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.interval">
+<tt class="descname">interval</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="headerlink" href="#grids.Earth.interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator function for all the level <cite>max(a.level, a.level)</cite> 
+cells between cell <cite>a</cite> and cell <cite>b</cite> (inclusive and with respect to the     
+postorder ordering on cells).
+Note that <cite>a</cite> and <cite>b</cite> don&#8217;t have to lie at the same level.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="s">&#39;N10&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="s">&#39;N3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">E</span><span class="o">.</span><span class="n">interval</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)]</span>
+<span class="go">[&#39;N10&#39;, &#39;N11&#39;, &#39;N12&#39;, &#39;N13&#39;, &#39;N14&#39;, &#39;N15&#39;, &#39;N16&#39;, &#39;N17&#39;, &#39;N18&#39;, &#39;N20&#39;, &#39;N21&#39;, &#39;N22&#39;, &#39;N23&#39;, &#39;N24&#39;, &#39;N25&#39;, &#39;N26&#39;, &#39;N27&#39;, &#39;N28&#39;, &#39;N30&#39;, &#39;N31&#39;, &#39;N32&#39;, &#39;N33&#39;, &#39;N34&#39;, &#39;N35&#39;, &#39;N36&#39;, &#39;N37&#39;, &#39;N38&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.num_cells">
+<tt class="descname">num_cells</tt><big>(</big><em>level_a</em>, <em>level_b=None</em>, <em>subcells=False</em><big>)</big><a class="headerlink" href="#grids.Earth.num_cells" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of cells at levels <cite>level_a</cite>
+to <cite>level_b</cite> (inclusive).
+Assume <cite>level_a &lt;= level_b</cite>.
+If <cite>subcells=True</cite>, then return the number of subcells at levels
+<cite>level_a</cite> to <cite>level_b</cite> (inclusive) of a cell at level <cite>level_a</cite>.
+If <cite>level_b=None</cite> and <cite>subcells=False, then return the number of
+cells at level `level_a</cite>.
+If <cite>level_b=None</cite> and <cite>subcells=True</cite>, then return the number of
+subcells from level <cite>level_a</cite> to level <cite>self.max_level</cite>.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">.</span><span class="n">num_cells</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">.</span><span class="n">num_cells</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">60</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">.</span><span class="n">num_cells</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">subcells</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">231627523606480</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">.</span><span class="n">num_cells</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">subcells</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">.</span><span class="n">num_cells</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">subcells</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">10</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grids.Earth.order">
+<tt class="descname">order</tt><em class="property"> = 8</em><a class="headerlink" href="#grids.Earth.order" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.project">
+<tt class="descname">project</tt><big>(</big><em>p</em>, <em>source='lonlat'</em>, <em>target='rhealpix'</em><big>)</big><a class="headerlink" href="#grids.Earth.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform a point <cite>p</cite> from the image of the <cite>source</cite> 
+projection to the image of the <cite>target</cite> projection.</p>
+<p>INPUT:</p>
+<blockquote>
+<div><ul class="simple">
+<li><cite>p</cite> - A point in geographic space, in the HEALPix projection,
+or in the rHEALPix projection.</li>
+<li><cite>source, target</cite> - One of &#8216;lonlat&#8217;, &#8216;healpix&#8217;, or &#8216;rhealpix&#8217;.</li>
+</ul>
+</div></blockquote>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">rad2deg</span><span class="p">,</span> <span class="n">arcsin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">phi0</span> <span class="o">=</span> <span class="n">rad2deg</span><span class="p">(</span><span class="n">arcsin</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">phi0</span>
+<span class="go">41.8103148958</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s">&#39;rhealpix&#39;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s">&#39;lonlat&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">phi0</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.random_cell">
+<tt class="descname">random_cell</tt><big>(</big><em>level=None</em><big>)</big><a class="headerlink" href="#grids.Earth.random_cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a cell chosen of level <cite>level</cite> chosen uniformly at random among
+all level <cite>level</cite> cells.
+If <cite>level=None</cite>, then <cite>level</cite> is first chosen uniformly randomly in
+[0,..,self.max_level]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.rhealpix">
+<tt class="descname">rhealpix</tt><big>(</big><em>u</em>, <em>v</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#grids.Earth.rhealpix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the rHEALPix projection of the point <cite>(u, v)</cite> (or its inverse if 
+<cite>inverse=True</cite>) appropriate to this Earth.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="s">&#39;unit_sphere&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span><span class="o">.</span><span class="n">rhealpix</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span><span class="o">.</span><span class="n">rhealpix</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grids.Earth.row">
+<tt class="descname">row</tt><em class="property"> = 2</em><a class="headerlink" href="#grids.Earth.row" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="grids.Earth.sample">
+<tt class="descname">sample</tt><big>(</big><em>cells</em>, <em>k</em><big>)</big><a class="headerlink" href="#grids.Earth.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <cite>k</cite> length list of unique elements chosen at random without
+replacement from the cell population sequence <cite>cells</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grids.Earth.unit_sphere">
+<tt class="descname">unit_sphere</tt><em class="property"> = {'R': 1, 'figure': 'sphere'}</em><a class="headerlink" href="#grids.Earth.unit_sphere" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="grids.scale">
+<tt class="descclassname">grids.</tt><tt class="descname">scale</tt><big>(</big><em>x</em>, <em>factor</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#grids.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply (all the elements of) <cite>x</cite> by the number <cite>factor</cite> or by 1/<cite>factor</cite> 
+if <cite>inverse=True</cite>.
+Here <cite>x</cite> can be a number or a tuple of numbers.</p>
+<p>EXAMPLES:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">scale</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scale</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span><span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">2.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scale</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mf">3.1</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(10, 6.2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scale</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mf">3.1</span><span class="p">),</span><span class="mi">2</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(2.5, 1.55)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="projections.html"
+                        title="previous chapter">The projections Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/grids.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="projections.html" title="The projections Module"
+             >previous</a> |</li>
+        <li><a href="index.html">scenzgrid-dggs 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Alexander Raichev.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

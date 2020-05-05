@@ -1,0 +1,112 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item add() (grids.CellFamily method), \hyperpage{16}
+  \item area() (grids.Cell method), \hyperpage{12}
+  \item atomic\_rotate() (grids.Cell static method), \hyperpage{12}
+  \item auth\_lat() (in module projections), \hyperpage{3}
+
+  \indexspace
+  \bigletter C
+  \item cap() (in module projections), \hyperpage{3}
+  \item Cell (class in grids), \hyperpage{12}
+  \item cell() (grids.Earth method), \hyperpage{18}
+  \item cell\_area() (grids.Earth method), \hyperpage{18}
+  \item cell\_from\_point() (grids.Earth method), \hyperpage{18}
+  \item cell\_from\_region() (grids.Earth method), \hyperpage{18}
+  \item cell\_width() (grids.Earth method), \hyperpage{19}
+  \item CellFamily (class in grids), \hyperpage{16}
+  \item CELLS0 (grids.Earth attribute), \hyperpage{18}
+  \item centroid() (grids.Cell method), \hyperpage{12}
+  \item child\_order (grids.Earth attribute), \hyperpage{19}
+  \item col (grids.Earth attribute), \hyperpage{19}
+  \item combine\_caps() (grids.Earth method), \hyperpage{19}
+  \item combine\_caps() (in module projections), \hyperpage{4}
+
+  \indexspace
+  \bigletter E
+  \item Earth (class in grids), \hyperpage{18}
+  \item ellipsoid\_parameters() (in module projections), \hyperpage{5}
+  \item ellipsoidal\_shape() (grids.Cell method), \hyperpage{12}
+  \item ellipsoids (grids.Earth attribute), \hyperpage{19}
+
+  \indexspace
+  \bigletter G
+  \item grid() (grids.Earth method), \hyperpage{19}
+  \item grids (module), \hyperpage{10}
+
+  \indexspace
+  \bigletter H
+  \item healpix() (grids.Earth method), \hyperpage{19}
+  \item healpix\_ellipsoid() (in module projections), \hyperpage{5}
+  \item healpix\_sphere() (in module projections), \hyperpage{5}
+
+  \indexspace
+  \bigletter I
+  \item in\_image() (in module projections), \hyperpage{6}
+  \item index() (grids.Cell method), \hyperpage{12}
+  \item insert() (grids.CellFamily method), \hyperpage{16}
+  \item intersect() (grids.CellFamily method), \hyperpage{16}
+  \item intersect\_all() (grids.CellFamily method), \hyperpage{17}
+  \item interval() (grids.Earth method), \hyperpage{20}
+
+  \indexspace
+  \bigletter M
+  \item minimize() (grids.CellFamily method), \hyperpage{17}
+
+  \indexspace
+  \bigletter N
+  \item neighbor() (grids.Cell method), \hyperpage{12}
+  \item neighbors() (grids.Cell method), \hyperpage{13}
+  \item nucleus\_and\_vertices() (grids.Cell method), \hyperpage{14}
+  \item num\_cells() (grids.Earth method), \hyperpage{20}
+
+  \indexspace
+  \bigletter O
+  \item order (grids.Earth attribute), \hyperpage{20}
+
+  \indexspace
+  \bigletter P
+  \item para\_lat() (in module projections), \hyperpage{7}
+  \item predecessor() (grids.Cell method), \hyperpage{14}
+  \item project() (grids.Earth method), \hyperpage{20}
+  \item projections (module), \hyperpage{3}
+
+  \indexspace
+  \bigletter R
+  \item random\_cell() (grids.Earth method), \hyperpage{20}
+  \item region() (grids.Cell method), \hyperpage{14}
+  \item rhealpix() (grids.Earth method), \hyperpage{20}
+  \item rhealpix\_ellipsoid() (in module projections), \hyperpage{7}
+  \item rhealpix\_sphere() (in module projections), \hyperpage{7}
+  \item rotate() (grids.Cell method), \hyperpage{14}
+  \item row (grids.Earth attribute), \hyperpage{21}
+
+  \indexspace
+  \bigletter S
+  \item sample() (grids.Earth method), \hyperpage{21}
+  \item scale() (in module grids), \hyperpage{21}
+  \item str9() (grids.Cell method), \hyperpage{14}
+  \item subcell() (grids.Cell method), \hyperpage{15}
+  \item subcells() (grids.Cell method), \hyperpage{15}
+  \item successor() (grids.Cell method), \hyperpage{15}
+  \item suid\_colrow() (grids.Cell method), \hyperpage{15}
+  \item suid\_from\_index() (grids.Cell static method), \hyperpage{15}
+
+  \indexspace
+  \bigletter U
+  \item ul\_vertex() (grids.Cell method), \hyperpage{15}
+  \item union() (grids.CellFamily method), \hyperpage{17}
+  \item union\_all() (grids.CellFamily method), \hyperpage{17}
+  \item unit\_sphere (grids.Earth attribute), \hyperpage{21}
+
+  \indexspace
+  \bigletter W
+  \item WGS84 (grids.Earth attribute), \hyperpage{18}
+  \item WGS84\_asphere (grids.Earth attribute), \hyperpage{18}
+  \item width() (grids.Cell method), \hyperpage{16}
+  \item wrap\_latitude() (in module projections), \hyperpage{8}
+  \item wrap\_longitude() (in module projections), \hyperpage{8}
+
+\end{theindex}

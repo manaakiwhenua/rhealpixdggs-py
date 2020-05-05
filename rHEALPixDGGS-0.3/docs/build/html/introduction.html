@@ -1,0 +1,239 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; scenzgrid-dggs 0.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="scenzgrid-dggs 0.3 documentation" href="index.html" />
+    <link rel="next" title="The projections Module" href="projections.html" />
+    <link rel="prev" title="Welcome to scenzgrid-dggs’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="projections.html" title="The projections Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to scenzgrid-dggs’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">scenzgrid-dggs 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>SCENZ-Grid is a geographic analysis system currently under development by Landcare Research, New Zealand.
+scenzgrid-dggs is a collection of Python modules that implements SCENZ-Grid&#8217;s discrete global grid system (DGGS), which is an instance of the rHEALPix DGGS.</p>
+<p>This documentation assumes you are familiar with the rHEALPix DGGS as described in <a class="reference internal" href="#grs2013">[GRS2013]</a> and familiar with basic Python 2.7.x usage as described in, say, <a class="reference external" href="http://docs.python.org/2/tutorial/">The Python Tutorial</a>.</p>
+<table class="docutils citation" frame="void" id="grs2013" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[GRS2013]</a></td><td>Robert Gibb, Alexander Raichev, Michael Speth, <a class="reference external" href="http://code.scenzgrid.org/index.php/p/scenzgrid-py/source/tree/master/rhealpix_dggs_paper/rhealpix_dggs.pdf">The rHEALPix discrete global grid system</a>, in preparation, 2013.</td></tr>
+</tbody>
+</table>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://python.org/">Python 2.7</a></li>
+<li><a class="reference external" href="http://www.scipy.org/">numpy and scipy</a>
+Third-party Python modules for scientific computation.</li>
+<li><a class="reference external" href="http://www.sagemath.org">Sage</a>
+(Optional) Third-party Python package for symbolic mathematics.
+Needed only for a few optional graphics methods.</li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>The modules of scenzgrid-dggs are open source and available for download at Landcare&#8217;s git repository <a class="reference external" href="http://code.scenzgrid.org/index.php/p/scenzgrid-py/">http://code.scenzgrid.org/index.php/p/scenzgrid-py/</a> and can be cloned via the command <tt class="docutils literal"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">git&#64;code.scenzgrid.org:scenzgrid-py.git</span></tt>.</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>To use the scenzgrid-dggs modules, start a Python session in the directory where you downloaded the modules and import the modules.
+Here are some examples.
+For a list of all methods available, see the application programming interface (API) in the following chapters.</p>
+<div class="section" id="using-projections-py">
+<h3>Using <tt class="docutils literal"><span class="pre">projections.py</span></tt><a class="headerlink" href="#using-projections-py" title="Permalink to this headline">¶</a></h3>
+<p>The <tt class="docutils literal"><span class="pre">projections</span></tt> module implements the HEALPix and rHEALPix map projections on oblate ellipsoids of revolution whose authalic sphere is the unit sphere.
+Because of this restriction, it is not so useful by itself.
+Still, here are a few examples.</p>
+<p>Import all the classes, methods, and constants from the module</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">projections</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Project some points of an oblate ellipsoid of revolution using the HEALPix and (1, 2)-rHEALPix projections.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="mf">0.2</span>  <span class="c"># Eccentricity of ellipsoid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="k">print</span> <span class="n">q</span>
+<span class="go">(0.27646508139326409, 1.0618632447907124)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="n">p</span>
+<span class="go">(6.3611093629270335e-15, 59.999997971669899) (0, 60)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">rhealpix_ellipsoid</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="p">,</span> <span class="n">north</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">south</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="k">print</span> <span class="n">q</span>
+<span class="go">(-0.27646508139326409, 1.0618632447907124)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">rhealpix_ellipsoid</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="p">,</span> <span class="n">north</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">south</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="n">p</span>
+<span class="go">(6.3611093629270335e-15, 59.999997971669899) (0, 60)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-grids-py">
+<h3>Using <tt class="docutils literal"><span class="pre">grids.py</span></tt><a class="headerlink" href="#using-grids-py" title="Permalink to this headline">¶</a></h3>
+<p>The <tt class="docutils literal"><span class="pre">grids</span></tt> module implements the rHEALPix DGGS and various operations thereupon.
+It depends upon the <tt class="docutils literal"><span class="pre">projections</span></tt> module.</p>
+<p>Import all the classes, methods, and constants from the module</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">grids</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Create the (0, 0)-rHEALPix DGGS based upon the WGS84 ellipsoid.
+Use degrees for angular measurements</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Earth</span><span class="p">(</span><span class="n">ellps</span><span class="o">=</span><span class="s">&#39;WGS84&#39;</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">south</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">north</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">E</span>
+<span class="go">____Earth model____</span>
+<span class="go">lengths measured in meters and angles measured in degrees</span>
+<span class="go">ellipsoid: WGS84</span>
+<span class="go">    major radius: 6378137</span>
+<span class="go">    flattening factor: 0.00335281066475</span>
+<span class="go">    minor radius: 6356752.31425</span>
+<span class="go">    eccentricity: 0.0818191908426</span>
+<span class="go">    authalic sphere radius: 6371007.18092</span>
+<span class="go">central meridian: 0</span>
+<span class="go">north pole square position: 0</span>
+<span class="go">south pole square position: 0</span>
+<span class="go">max resolution: 1.0</span>
+<span class="go">max cell level: 15</span>
+</pre></div>
+</div>
+<p>Pick a (longitude-latitude) point on the ellipsoid and find the level 1 cell that contains it</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">cell_from_point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="s">&#39;ellipsoid&#39;</span><span class="p">);</span> <span class="k">print</span> <span class="n">c</span>
+<span class="go">Q0</span>
+</pre></div>
+</div>
+<p>Find the planar (edge) neighbors of this cell</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="s">&#39;plane&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">direction</span><span class="p">,</span> <span class="n">cell</span>
+<span class="go">down Q3</span>
+<span class="go">right Q1</span>
+<span class="go">up N2</span>
+<span class="go">left P2</span>
+</pre></div>
+</div>
+<p>Compute the ellipsoidal shape and ellipsoidal nuclei of these cells</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cells</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">neighbors</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">cells</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">cell</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">ellipsoidal_shape</span><span class="p">(),</span> <span class="n">cell</span><span class="o">.</span><span class="n">nucleus_and_vertices</span><span class="p">(</span><span class="n">surface</span><span class="o">=</span><span class="s">&#39;ellipsoid&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">Q3 rectangle (14.999999999999998, 0.0)</span>
+<span class="go">Q1 rectangle (45.0, 26.490118738229611)</span>
+<span class="go">N2 dart (0.0, 58.528017480415983)</span>
+<span class="go">P2 rectangle (-14.999999999999998, 26.490118738229611)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#using-projections-py">Using <tt class="docutils literal"><span class="pre">projections.py</span></tt></a></li>
+<li><a class="reference internal" href="#using-grids-py">Using <tt class="docutils literal"><span class="pre">grids.py</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to scenzgrid-dggs&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="projections.html"
+                        title="next chapter">The projections Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/introduction.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="projections.html" title="The projections Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to scenzgrid-dggs’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">scenzgrid-dggs 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Alexander Raichev.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
