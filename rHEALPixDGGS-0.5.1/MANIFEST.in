@@ -1,0 +1,2 @@
+global-include *.txt *.rst *.pdf *.sws *.dat
+recursive-include docs *

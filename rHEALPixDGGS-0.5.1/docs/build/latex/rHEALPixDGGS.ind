@@ -1,0 +1,143 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item auth\_lat() (in module rhealpix\_dggs.utils), \hyperpage{7}
+  \item auth\_rad() (in module rhealpix\_dggs.utils), \hyperpage{7}
+
+  \indexspace
+  \bigletter C
+  \item Cell (class in rhealpix\_dggs.dggs), \hyperpage{22}
+  \item Cell.area() (in module rhealpix\_dggs.dggs), \hyperpage{22}
+  \item Cell.boundary() (in module rhealpix\_dggs.dggs), \hyperpage{22}
+  \item Cell.centroid() (in module rhealpix\_dggs.dggs), \hyperpage{23}
+  \item Cell.color() (in module rhealpix\_dggs.dggs), \hyperpage{23}
+  \item Cell.contains() (in module rhealpix\_dggs.dggs), \hyperpage{23}
+  \item Cell.ellipsoidal\_shape() (in module rhealpix\_dggs.dggs), \hyperpage{23}
+  \item Cell.index() (in module rhealpix\_dggs.dggs), \hyperpage{23}
+  \item Cell.interior() (in module rhealpix\_dggs.dggs), \hyperpage{24}
+  \item Cell.intersects\_meridian() (in module rhealpix\_dggs.dggs), \hyperpage{24}
+  \item Cell.intersects\_parallel() (in module rhealpix\_dggs.dggs), \hyperpage{24}
+  \item Cell.neighbor() (in module rhealpix\_dggs.dggs), \hyperpage{24}
+  \item Cell.neighbors() (in module rhealpix\_dggs.dggs), \hyperpage{25}
+  \item Cell.nucleus() (in module rhealpix\_dggs.dggs), \hyperpage{25}
+  \item Cell.nw\_vertex() (in module rhealpix\_dggs.dggs), \hyperpage{25}
+  \item Cell.predecessor() (in module rhealpix\_dggs.dggs), \hyperpage{26}
+  \item Cell.random\_point() (in module rhealpix\_dggs.dggs), \hyperpage{26}
+  \item Cell.region() (in module rhealpix\_dggs.dggs), \hyperpage{27}
+  \item Cell.rotate() (in module rhealpix\_dggs.dggs), \hyperpage{27}
+  \item Cell.rotate\_entry() (in module rhealpix\_dggs.dggs), \hyperpage{27}
+  \item Cell.subcell() (in module rhealpix\_dggs.dggs), \hyperpage{27}
+  \item Cell.subcells() (in module rhealpix\_dggs.dggs), \hyperpage{28}
+  \item Cell.successor() (in module rhealpix\_dggs.dggs), \hyperpage{28}
+  \item Cell.suid\_from\_index() (in module rhealpix\_dggs.dggs), \hyperpage{28}
+  \item Cell.suid\_rowcol() (in module rhealpix\_dggs.dggs), \hyperpage{28}
+  \item Cell.ul\_vertex() (in module rhealpix\_dggs.dggs), \hyperpage{28}
+  \item Cell.vertices() (in module rhealpix\_dggs.dggs), \hyperpage{28}
+  \item Cell.width() (in module rhealpix\_dggs.dggs), \hyperpage{29}
+  \item Cell.xy\_range() (in module rhealpix\_dggs.dggs), \hyperpage{29}
+  \item cells0 (rhealpix\_dggs.dggs.RHEALPixDGGS attribute), \hyperpage{32}
+  \item combine\_triangles() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{12}
+
+  \indexspace
+  \bigletter D
+  \item distortion() (in module rhealpix\_dggs.distortion), \hyperpage{37}
+  \item distortion\_stats() (in module rhealpix\_dggs.distortion), \hyperpage{37}
+
+  \indexspace
+  \bigletter E
+  \item Ellipsoid (class in rhealpix\_dggs.ellipsoids), \hyperpage{16}
+  \item Ellipsoid.get\_points() (in module rhealpix\_dggs.ellipsoids), \hyperpage{16}
+  \item Ellipsoid.graticule() (in module rhealpix\_dggs.ellipsoids), \hyperpage{16}
+  \item Ellipsoid.lattice() (in module rhealpix\_dggs.ellipsoids), \hyperpage{17}
+  \item Ellipsoid.meridian() (in module rhealpix\_dggs.ellipsoids), \hyperpage{17}
+  \item Ellipsoid.parallel() (in module rhealpix\_dggs.ellipsoids), \hyperpage{17}
+  \item Ellipsoid.pi() (in module rhealpix\_dggs.ellipsoids), \hyperpage{17}
+  \item Ellipsoid.random\_point() (in module rhealpix\_dggs.ellipsoids), \hyperpage{17}
+  \item Ellipsoid.xyz() (in module rhealpix\_dggs.ellipsoids), \hyperpage{17}
+
+  \indexspace
+  \bigletter F
+  \item fff\_coeffs() (in module rhealpix\_dggs.distortion), \hyperpage{37}
+
+  \indexspace
+  \bigletter H
+  \item healpix() (in module rhealpix\_dggs.pj\_healpix), \hyperpage{9}
+  \item healpix\_diagram() (in module rhealpix\_dggs.pj\_healpix), \hyperpage{9}
+  \item healpix\_ellipsoid() (in module rhealpix\_dggs.pj\_healpix), \hyperpage{9}
+  \item healpix\_ellipsoid\_inverse() (in module rhealpix\_dggs.pj\_healpix), \hyperpage{10}
+  \item healpix\_sphere() (in module rhealpix\_dggs.pj\_healpix), \hyperpage{10}
+  \item healpix\_sphere\_inverse() (in module rhealpix\_dggs.pj\_healpix), \hyperpage{10}
+  \item healpix\_vertices() (in module rhealpix\_dggs.pj\_healpix), \hyperpage{10}
+
+  \indexspace
+  \bigletter I
+  \item in\_healpix\_image() (in module rhealpix\_dggs.pj\_healpix), \hyperpage{10}
+  \item in\_rhealpix\_image() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{12}
+
+  \indexspace
+  \bigletter M
+  \item my\_round() (in module rhealpix\_dggs.utils), \hyperpage{7}
+
+  \indexspace
+  \bigletter P
+  \item Proj (class in rhealpix\_dggs.projection\_wrapper), \hyperpage{19}
+
+  \indexspace
+  \bigletter R
+  \item rhealpix() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{13}
+  \item rhealpix\_dggs.dggs (module), \hyperpage{20}
+  \item rhealpix\_dggs.distortion (module), \hyperpage{37}
+  \item rhealpix\_dggs.ellipsoids (module), \hyperpage{16}
+  \item rhealpix\_dggs.pj\_healpix (module), \hyperpage{9}
+  \item rhealpix\_dggs.pj\_rhealpix (module), \hyperpage{12}
+  \item rhealpix\_dggs.projection\_wrapper (module), \hyperpage{19}
+  \item rhealpix\_dggs.utils (module), \hyperpage{7}
+  \item rhealpix\_diagram() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{13}
+  \item rhealpix\_ellipsoid() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{13}
+  \item rhealpix\_ellipsoid\_inverse() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{14}
+  \item rhealpix\_sphere() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{14}
+  \item rhealpix\_sphere\_inverse() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{14}
+  \item rhealpix\_vertices() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{14}
+  \item RHEALPixDGGS (class in rhealpix\_dggs.dggs), \hyperpage{29}
+  \item RHEALPixDGGS.cell() (in module rhealpix\_dggs.dggs), \hyperpage{30}
+  \item RHEALPixDGGS.cell\_area() (in module rhealpix\_dggs.dggs), \hyperpage{30}
+  \item RHEALPixDGGS.cell\_from\_point() (in module rhealpix\_dggs.dggs), \hyperpage{30}
+  \item RHEALPixDGGS.cell\_from\_region() (in module rhealpix\_dggs.dggs), \hyperpage{31}
+  \item RHEALPixDGGS.cell\_latitudes() (in module rhealpix\_dggs.dggs), \hyperpage{31}
+  \item RHEALPixDGGS.cell\_width() (in module rhealpix\_dggs.dggs), \hyperpage{32}
+  \item RHEALPixDGGS.cells\_from\_meridian() (in module rhealpix\_dggs.dggs), \hyperpage{32}
+  \item RHEALPixDGGS.cells\_from\_parallel() (in module rhealpix\_dggs.dggs), \hyperpage{32}
+  \item RHEALPixDGGS.cells\_from\_region() (in module rhealpix\_dggs.dggs), \hyperpage{32}
+  \item RHEALPixDGGS.combine\_triangles() (in module rhealpix\_dggs.dggs), \hyperpage{33}
+  \item RHEALPixDGGS.grid() (in module rhealpix\_dggs.dggs), \hyperpage{33}
+  \item RHEALPixDGGS.healpix() (in module rhealpix\_dggs.dggs), \hyperpage{33}
+  \item RHEALPixDGGS.interval() (in module rhealpix\_dggs.dggs), \hyperpage{34}
+  \item RHEALPixDGGS.minimal\_cover() (in module rhealpix\_dggs.dggs), \hyperpage{34}
+  \item RHEALPixDGGS.num\_cells() (in module rhealpix\_dggs.dggs), \hyperpage{34}
+  \item RHEALPixDGGS.plot\_cells() (in module rhealpix\_dggs.dggs), \hyperpage{35}
+  \item RHEALPixDGGS.random\_cell() (in module rhealpix\_dggs.dggs), \hyperpage{35}
+  \item RHEALPixDGGS.random\_point() (in module rhealpix\_dggs.dggs), \hyperpage{35}
+  \item RHEALPixDGGS.rhealpix() (in module rhealpix\_dggs.dggs), \hyperpage{35}
+  \item RHEALPixDGGS.triangle() (in module rhealpix\_dggs.dggs), \hyperpage{35}
+  \item RHEALPixDGGS.xyz() (in module rhealpix\_dggs.dggs), \hyperpage{36}
+  \item RHEALPixDGGS.xyz\_cube() (in module rhealpix\_dggs.dggs), \hyperpage{36}
+
+  \indexspace
+  \bigletter S
+  \item scale\_factors() (in module rhealpix\_dggs.distortion), \hyperpage{38}
+
+  \indexspace
+  \bigletter T
+  \item triangle() (in module rhealpix\_dggs.pj\_rhealpix), \hyperpage{14}
+
+  \indexspace
+  \bigletter U
+  \item utm\_zone() (in module rhealpix\_dggs.distortion), \hyperpage{38}
+
+  \indexspace
+  \bigletter W
+  \item wrap\_latitude() (in module rhealpix\_dggs.utils), \hyperpage{8}
+  \item wrap\_longitude() (in module rhealpix\_dggs.utils), \hyperpage{8}
+
+\end{theindex}

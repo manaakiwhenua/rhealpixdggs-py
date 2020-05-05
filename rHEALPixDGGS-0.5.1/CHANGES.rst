@@ -1,0 +1,2 @@
+- v0.5, 2013-07-26: Port to Python 3.3.
+- v0.5.1, 2013-07-29: Rounded floats in doctests.
