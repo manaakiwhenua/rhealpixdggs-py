@@ -18,7 +18,7 @@ Requirements
 
 Installation
 --------------
-rHEALPixDGGS is available for download at Landcare's git repository `<http://code.scenzgrid.org/index.php/p/scenzgrid-py/>`_ and can be cloned via the command ``git clone git@code.scenzgrid.org:scenzgrid-py.git``.
+rHEALPixDGGS is available for download from the github repository `<https://github.com/rggibb/rhealpixdggs-py/>`_ from where it can be cloned.
   
 Tests
 ------
