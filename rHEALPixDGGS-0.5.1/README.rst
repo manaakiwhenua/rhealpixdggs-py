@@ -18,7 +18,7 @@ Requirements
 
 Installation
 --------------
-rHEALPixDGGS is available for download from the github repository `<https://github.com/rggibb/rhealpixdggs-py/>`_ from where it can be cloned.
+rHEALPixDGGS is available for download from the github repository `<https://github.com/rggibb/rhealpixdggs-py/rHEALPixDGGS-0.5.1/>`_ from where the latest version can be cloned.
   
 Tests
 ------
