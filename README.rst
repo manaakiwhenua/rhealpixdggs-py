@@ -1,6 +1,6 @@
 Introduction
 ============
-rHEALPixDGGS is a Python 3.3 package that implements the rHEALPix discrete global grid system (DGGS).
+rHEALPixDGGS is a Python package that implements the rHEALPix Discrete Global Grid System (DGGS).
 
 Requirements 
 -------------
@@ -14,11 +14,17 @@ Requirements
   (Optional) Comprehensive mathematics package. 
   Needed only for a few optional graphics methods.
   To use the optional graphics methods, start a Sage notebook session and import/attach the Python module that contains the methods.
-  For examples, see the Sage worksheet ``rhealpix_dggs/tests/test_rhealpix_dggs.sws``.
+  For examples, see the Sage worksheet ``tests/test_rhealpix_dggs.sws``.
 
 Installation
 --------------
-rHEALPixDGGS is available for download from the github repository `<https://github.com/rggibb/rhealpixdggs-py/rHEALPixDGGS-0.5.1/>`_ from where the latest version can be cloned.
+This package is available on PyPI, the Python Package Index from where it can be installed as follows:
+
+::
+
+    pip install rhealpixdggs
+
+rHEALPixDGGS is available for download from the github repository `<https://github.com/rggibb/rhealpixdggs-py>`_ from where the latest version can be cloned.
   
 Tests
 ------
