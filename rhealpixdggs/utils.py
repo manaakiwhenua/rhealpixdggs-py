@@ -1,4 +1,4 @@
-r"""
+"""
 This Python 3.3 module implements several helper functions for coding map projections.
 
 CHANGELOG:
@@ -11,15 +11,15 @@ NOTE:
 All lengths are measured in meters and all angles are measured in radians 
 unless indicated otherwise. 
 """
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2012 Alexander Raichev <alex.raichev@gmail.com>
 #
 #  Distributed under the terms of the GNU Lesser General Public License (LGPL)
 #                  http://www.gnu.org/licenses/
-#*****************************************************************************
+# *****************************************************************************
 
 # Import third-party modules.
-from numpy import pi, floor, sqrt, log, sin, arcsin, deg2rad, rad2deg, sign 
+from numpy import pi, floor, sqrt, log, sin, arcsin, deg2rad, rad2deg, sign
 
 
 def my_round(x, digits=0):
@@ -42,10 +42,11 @@ def my_round(x, digits=0):
         result = [my_round(xx, digits) for xx in x]
         if isinstance(x, tuple):
             result = tuple(result)
-    return result 
+    return result
+
 
 def wrap_longitude(lam, radians=False):
-    r"""
+    """
     Given a point p on the unit circle at angle `lam` from the positive 
     x-axis, return its angle theta in the range -pi <= theta < pi.
     If `radians` = True, then `lam` and the output are given in radians.
@@ -67,18 +68,19 @@ def wrap_longitude(lam, radians=False):
         # Convert to radians.
         lam = deg2rad(lam)
     if lam < -pi or lam >= pi:
-        result = lam - 2*pi*floor(lam/(2*pi))    # x mod 2*pi
+        result = lam - 2 * pi * floor(lam / (2 * pi))  # x mod 2*pi
         if result >= pi:
-            result = result - 2*pi
+            result = result - 2 * pi
     else:
         result = lam
     if not radians:
         # Convert to degrees.
         result = rad2deg(result)
     return result
-        
+
+
 def wrap_latitude(phi, radians=False):
-    r"""
+    """
     Given a point p on the unit circle at angle `phi` from the positive x-axis,
     if p lies in the right half of the circle, then return its angle that lies 
     in the interval [-pi/2, pi/2].
@@ -109,17 +111,18 @@ def wrap_latitude(phi, radians=False):
         phi = deg2rad(phi)
     # Put phi in range -pi <= phi < pi.
     phi = wrap_longitude(phi, radians=True)
-    if abs(phi) <= pi/2:
+    if abs(phi) <= pi / 2:
         result = phi
     else:
-        result = phi - sign(phi)*pi
+        result = phi - sign(phi) * pi
     if not radians:
         # Convert to degrees.
         result = rad2deg(result)
     return result
-    
+
+
 def auth_lat(phi, e, inverse=False, radians=False):
-    r"""
+    """
     Given a point of geographic latitude `phi` on an ellipse of 
     eccentricity `e`, return the authalic latitude of the point.
     If `inverse` =True, then compute its inverse approximately.
@@ -147,28 +150,33 @@ def auth_lat(phi, e, inverse=False, radians=False):
         phi = deg2rad(phi)
     if not inverse:
         # Compute authalic latitude from latitude phi.
-        q = ((1 - e**2)*sin(phi))/(1 - (e*sin(phi))**2) - \
-            (1 - e**2)/(2.0*e)*log((1 - e*sin(phi))/(1 + e*sin(phi)))
-        qp = 1 - (1 - e**2)/(2.0*e)*log((1.0 - e)/(1.0 + e))
-        ratio = q/qp
+        q = ((1 - e ** 2) * sin(phi)) / (1 - (e * sin(phi)) ** 2) - (1 - e ** 2) / (
+            2.0 * e
+        ) * log((1 - e * sin(phi)) / (1 + e * sin(phi)))
+        qp = 1 - (1 - e ** 2) / (2.0 * e) * log((1.0 - e) / (1.0 + e))
+        ratio = q / qp
         # Avoid rounding errors.
         if abs(ratio) > 1:
             # Make abs(ratio) = 1
-            ratio = sign(ratio) 
+            ratio = sign(ratio)
         result = arcsin(ratio)
     else:
         # Compute an approximation of latitude from authalic latitude phi.
-        result = phi +\
-                 (e**2/3.0 + 31*e**4/180.0 + 517*e**6/5040.0)*sin(2*phi) +\
-                 (23*e**4/360.0 + 251*e**6/3780.0)*sin(4*phi) +\
-                 (761*e**6/45360.0)*sin(6*phi)
+        result = (
+            phi
+            + (e ** 2 / 3.0 + 31 * e ** 4 / 180.0 + 517 * e ** 6 / 5040.0)
+            * sin(2 * phi)
+            + (23 * e ** 4 / 360.0 + 251 * e ** 6 / 3780.0) * sin(4 * phi)
+            + (761 * e ** 6 / 45360.0) * sin(6 * phi)
+        )
     if not radians:
         # Convert back to degrees.
         result = rad2deg(result)
     return result
-    
+
+
 def auth_rad(a, e, inverse=False):
-    r"""
+    """
     Return the radius of the authalic sphere of the ellipsoid with major
     radius `a` and eccentricity `e`.
     If `inverse` = True, then return the major radius of the ellipsoid
@@ -194,11 +202,11 @@ def auth_rad(a, e, inverse=False):
     """
     if e == 0:
         return a
-    k = sqrt(0.5*(1 - (1 - e**2)/(2*e)*log((1 - e)/(1 + e))))
+    k = sqrt(0.5 * (1 - (1 - e ** 2) / (2 * e) * log((1 - e) / (1 + e))))
     if not inverse:
         # The expression below is undefined when e=0 (sphere),
         # but its limit as e tends to 0 is a, as expected.
-        return a*k
+        return a * k
     else:
         # Then a is the authalic radius and output major radius of ellipsoid.
-        return a/k
+        return a / k

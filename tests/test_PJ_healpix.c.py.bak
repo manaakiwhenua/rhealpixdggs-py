@@ -1,4 +1,4 @@
-r"""
+"""
 This Python 2.7 code tests the ``pj_healpix`` module.
 Beware, these tests cover only some functions and only some scenarios.
 Keep adding tests!

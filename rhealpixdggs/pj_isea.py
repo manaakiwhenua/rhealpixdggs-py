@@ -1,4 +1,4 @@
-r"""
+"""
 This Python 3.3 module implements the icosohedral Snyder equal area map projection (ISEA) for ellipsoids of revolution by using the spherical version of the projection (from the PROJ.4 library) on the ellipsoid's authalic sphere.
 
 CHANGELOG:
@@ -12,22 +12,23 @@ All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise. 
 By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
 """
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2012 Alexander Raichev <alex.raichev@gmail.com>
 #
 #  Distributed under the terms of the GNU Lesser General Public License (LGPL)
 #                  http://www.gnu.org/licenses/
-#*****************************************************************************
+# *****************************************************************************
 
 # Import third-party modules.
 import pyproj
 from numpy import rad2deg, deg2rad, array, pi
+
 # Import my modules.
-from rhealpix_dggs.utils import my_round, auth_lat, auth_rad
+from rhealpixdggs.utils import my_round, auth_lat, auth_rad
 
 
 def isea_sphere(lam, phi):
-    r"""
+    """
     Compute the signature function of the icosohedral Snyder equal area
     (ISEA) map projection of the unit sphere. 
         
@@ -39,11 +40,12 @@ def isea_sphere(lam, phi):
     EXAMPLES::
     
     """
-    f = pyproj.Proj(proj='isea', R=1)
+    f = pyproj.Proj(proj="isea", R=1)
     return f(lam, phi, radians=True)
 
+
 def isea_sphere_inverse(x, y):
-    r"""
+    """
     Compute the inverse of isea_sphere().
 
     INPUT:
@@ -56,9 +58,10 @@ def isea_sphere_inverse(x, y):
     Not implemented here nor in PROJ.4.
     """
     pass
-    
+
+
 def isea_ellipsoid(lam, phi, e=0):
-    r"""
+    """
     Compute the signature functions of the ISEA may projection of an oblate
     ellipsoid with eccentricity `e` whose authalic sphere is the unit sphere.
         
@@ -69,10 +72,11 @@ def isea_ellipsoid(lam, phi, e=0):
     - `e` - Eccentricity of the oblate ellipsoid.
     """
     beta = auth_lat(phi, e, radians=True)
-    return isea_sphere(lam, beta)  
+    return isea_sphere(lam, beta)
+
 
 def isea_ellipsoid_inverse(x, y, e=0):
-    r"""
+    """
     Compute the inverse of isea_ellipsoid().
     
     INPUT:
@@ -86,9 +90,10 @@ def isea_ellipsoid_inverse(x, y, e=0):
     Not implemented here nor in PROJ.4.        
     """
     pass
-    
+
+
 def isea(a=1, e=0):
-    r"""
+    """
     Return a function object that wraps the ISEA projection and its inverse
     of an ellipsoid with major radius `a` and eccentricity `e`.
     
@@ -106,19 +111,21 @@ def isea(a=1, e=0):
     - A function object of the form f(u, v, radians=False, inverse=False).
     """
     R_A = auth_rad(a, e)
+
     def f(u, v, radians=False, inverse=False):
         if not inverse:
             lam, phi = u, v
             if not radians:
                 # Convert to radians.
                 lam, phi = deg2rad([lam, phi])
-            return tuple(R_A*array(isea_ellipsoid(lam, phi, e=e)))
+            return tuple(R_A * array(isea_ellipsoid(lam, phi, e=e)))
         else:
             # Scale down to R_A = 1.
-            x, y = array((u, v))/R_A
+            x, y = array((u, v)) / R_A
             lam, phi = array(isea_ellipsoid_inverse(x, y, e=e))
             if not radians:
                 # Convert to degrees.
                 lam, phi = rad2deg([lam, phi])
             return lam, phi
+
     return f

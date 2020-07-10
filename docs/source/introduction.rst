@@ -3,7 +3,7 @@ Introduction
 rHEALPixDGGS is a Python 3.3 package that implements the rHEALPix discrete global grid system (DGGS).
 This documentation assumes you are familiar with the rHEALPix DGGS as described in [GRS2013]_ and familiar with basic Python 3.3 usage as described in `The Python Tutorial <http://docs.python.org/3/tutorial/>`_.
 
-.. [GRS2013] Robert Gibb, Alexander Raichev, Michael Speth, `The rHEALPix discrete global grid system <http://code.scenzgrid.org/index.php/p/scenzgrid-py/source/tree/master/rHEALPixDGGS-0.5/docs/rhealpix_dggs_preprint.pdf>`_, in preparation, 2013.
+.. [GRS2013] Robert Gibb, Alexander Raichev, Michael Speth, `The rHEALPix discrete global grid system <http://code.scenzgrid.org/index.php/p/scenzgrid-py/source/tree/master/rHEALPixDGGS-0.5/docs/rhealpixdggs_preprint.pdf>`_, in preparation, 2013.
 
 Requirements
 ---------------
@@ -17,7 +17,7 @@ Requirements
   (Optional) Comprehensive mathematics package. 
   Needed only for a few optional graphics methods.
   To use the optional graphics methods, start a Sage notebook session and import/attach the Python module that contains the methods.
-  For examples, see the Sage worksheet ``rhealpix_dggs/tests/test_dggs.sws``.
+  For examples, see the Sage worksheet ``rhealpixdggs/tests/test_dggs.sws``.
   
 Installation
 --------------
@@ -47,11 +47,11 @@ Alternatively, you can download a corrected version of ``PJ_healpix.c`` from
 
 Import all the classes, methods, and constants from the module::
 
-    >>> from rhealpix_dggs.projection_wrapper import *
-    
+    >>> from rhealpixdggs.projection_wrapper import *
+    >>> from rhealpixdggs.ellipsoids import *
+
 Create an ellipsoid, say, one with major radius 5 and eccentricity 0.8::
 
-    >>> from rhealpix_dggs.ellipsoids import *
     >>> ellps_1 = Ellipsoid(a=5, e=0.8)
     >>> print(ellps_1)
     ellipsoid:
@@ -135,8 +135,6 @@ Project some points of the ellipsoid using the HEALPix and rHEALPix projections:
     (0.864006732389895, 4.2584985144432679)
     >>> print(rh(0, 70))
     (-0.86400673238989445, 4.2584985144432679)
-    
-
 
 Using the ``dggs`` Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
@@ -144,11 +142,11 @@ The module ``dggs`` implements the rHEALPix DGGS and various operations thereupo
 
 Import all the classes, methods, and constants from the module ::
 
-    >>> from rhealpix_dggs.dggs import *
+    >>> from rhealpixdggs.dggs import *
 
 Create the (0, 0)-rHEALPix DGGS with N_side=3 that is based upon the WGS84 ellipsoid::
 
-    >>> from rhealpix_dggs.ellipsoids import WGS84_ELLIPSOID
+    >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
     >>> E = WGS84_ELLIPSOID
     >>> rdggs = RHEALPixDGGS(ellipsoid=E, north_square=0, south_square=0, N_side=3)
     >>> print(rdggs)
@@ -281,7 +279,7 @@ Create the (0, 0)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellip
 Orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand::
 
     >>> p = (174, -37)  # Approximate Auckland lon-lat coordinates
-    >>> from rhealpix_dggs.projection_wrapper import *
+    >>> from rhealpixdggs.projection_wrapper import *
     >>> E = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=p[0], lat_0=p[1])
     >>> rdggs = RHEALPixDGGS(E, N_side=3, north_square=0, south_square=0)
     >>> print(rdggs)
@@ -311,13 +309,13 @@ The module is not necessary for manipulating the rHEALPix DGGS.
 
 Import all the classes, methods, and constants from the module::
 
-    >>> from rhealpix_dggs.distortion import *
+    >>> from rhealpixdggs.distortion import *
 
 Import the WGS84 ellipsoid, define the rHEALPix projection on the ellipsoid, and compute linear distortion and areal distortion for the projection at a given point::
 
-    >>> from rhealpix_dggs.ellipsoids import WGS84_ELLIPSOID
+    >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
     >>> E = WGS84_ELLIPSOID
-    >>> from rhealpix_dggs.projection_wrapper import Proj
+    >>> from rhealpixdggs.projection_wrapper import Proj
     >>> f = Proj(ellipsoid=E, proj='rhealpix', north_square=0, south_square=0)
     >>> p = (0, 30)
     >>> print(distortion(f, *p)  # First entry of output is f(*p)) # doctest: +SKIP 
@@ -331,7 +329,7 @@ Sample 100 random points from the WGS84 ellipsoid and compute the sample minimum
     
 Do the same for 100 points chosen at random from an rHEALPix DGGS dart cell::
 
-    >>> from rhealpix_dggs.dggs import *
+    >>> from rhealpixdggs.dggs import *
     >>> rdggs = WGS84_003
     >>> cell = rdggs.cell(['N', 6])
     >>> sample = [cell.random_point(plane=False) for i in range(100)]
