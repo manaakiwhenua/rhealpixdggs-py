@@ -27,7 +27,7 @@ setup(
   version=VERSION,
   author="Alexander Raichev",
   author_email="alex@raichev.net",
-  packages=find_packages(),
+  packages=find_packages(exclude=["_old", "docs"]),
   package_dir={"rhealpixdggs": "rhealpixdggs"},
   url="https://github.com/manaakiwhenua/rhealpixdggs-py",
   download_url="https://github.com/manaakiwhenua/rhealpixdggs-py/archive/v{:s}.tar.gz".format(VERSION),

@@ -6,7 +6,14 @@ Release Note
 ------------
 This package was originally authored in 2013 and has had only minor code updates since then. It is currently - July 2020 - at Release 0.5.1.
 
-Many of the 0.5.1 release tests fail but mostly for trivial reasons. A 0.5.2 release is planned shortly (within July, 2020) that will see many of the trivial test issues fixed.
+For releases 0.3, 0.4 & 0.5: these releases are not available via PyPI. See the GitHub repository and the ``_old`` folder for copies of their code.
+
+0.5.2
+^^^^^
+0.5.2, ETA late July, 2020, will be the first PyPI release suitable for pip installation.
+
+Many of the 0.5.1 release tests fail but mostly for trivial reasons and the 0.5.2 release will see them fixed.
+
 
 Requirements 
 -------------
