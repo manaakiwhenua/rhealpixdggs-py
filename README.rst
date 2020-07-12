@@ -71,12 +71,12 @@ Contact
 | **Robert Gibb**
 | `Manaaki Whenua – Landcare Research <https://www.landcareresearch.co.nz/>`_
 | `Gibbr@landcareresearch.co.nz <mailto:Gibbr@landcareresearch.co.nz>`_
-
+|
 | *Release Manager*:
 | **Dr Nicholas J. Car**
 | `SURROUND Australia Pty Ltd <https://surround.com>`_
 | `nicholas.car@surroundaustralia.com <mailto:nicholas.car@surroundaustralia.com>`_
-
+|
 | *Original author*:
 | **Alexander Raichev**
 | `<https://raichev.net/>`_
