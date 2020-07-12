@@ -1,3 +1,5 @@
 sage>=5.10
 black
 pytest
+wheel
+twine

@@ -527,7 +527,7 @@ class RHEALPixDGGS(object):
         
             >>> rdggs = UNIT_003
             >>> print(my_round(rdggs.xyz_cube(0, 0), 14))
-            (0.78539816339745, 0.0, -0.78539816339745)
+            (0.78539816339745006, 0.0, -0.78539816339745006)
 
         """
         if lonlat:
