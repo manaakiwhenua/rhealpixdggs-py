@@ -3,9 +3,9 @@
 
 # 2. change version no in setup.py
 
-# 3. $ git commit changes
+# 3. Update README
 
-# 4. Update README, esp Releases Roadmap - 3 places: "current release", table & release notes
+# 4. $ git commit changes
 
 # 5. $ git tag <VERSION_NO>
 
