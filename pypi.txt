@@ -1,5 +1,5 @@
 # 1. delete build/ , dist/, pyLODE.egg-info
-> rm -rf build dist pyLODE.egg-info
+> rm -rf build dist rHEALPixDGGS.egg-info
 
 # 2. change version no in setup.py
 
