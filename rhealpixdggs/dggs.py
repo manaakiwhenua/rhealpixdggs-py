@@ -12,11 +12,12 @@ CHANGELOG:
 - AR, 2013-03-11: Added minimal_cover(), boundary(), interior(), triangle(), nw_vertex().
 - AR, 2013-03-14: Fixed bug in nw_vertex().
 - AR, 2013-07-23: Ported to Python 3.3.
+- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 NOTES:
 
-All lengths are measured in meters and all angles are measured in radians 
-unless indicated otherwise. 
+All lengths are measured in meters and all angles are measured in radians
+unless indicated otherwise.
 
 By 'ellipsoid' throughout, i mean an ellipsoid of revolution and *not* a general (triaxial) ellipsoid.
 
@@ -24,11 +25,11 @@ Points lying on the plane are given in rectangular (horizontal, vertical) coordi
 
 DGGS abbreviates 'discrete global grid system'.
 
-Except when manipulating positive integers, I avoid the modulo function '%' 
+Except when manipulating positive integers, I avoid the modulo function '%'
 and insted write everything in terms of 'floor()'.
 This is because Python interprets the sign of '%' differently than
 Java or C, and I don't want to confuse people who are translating this code
-to those languages.  
+to those languages.
 
 EXAMPLES:
 
@@ -45,26 +46,34 @@ Create the (1, 2)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellip
         max_areal_resolution = 1
         max_resolution = 15
         ellipsoid:
-            R_A = 6374581.4671
+            R_A = 6374581.467096525
             a = 6378137.0
             b = 6356752.314140356
-            e = 0.0578063088401
+            e = 0.0578063088401125
             f = 0.003352810681182319
             lat_0 = 0
             lon_0 = 0
             radians = False
             sphere = False
-    
+
+NOTES::  .. Issue #1 was ..
+        ellipsoid:
+            R_A = 6374581.4671 *
+            a = 6378137.0
+            b = 6356752.314140356 *
+            e = 0.0578063088401
+            f = 0.003352810681182319
+
 Pick a (longitude-latitude) point on the ellipsoid and find the resolution 1 cell that contains it ::
 
     >>> p = (0, 45)
     >>> c = rdggs.cell_from_point(1, p, plane=False); print(c)
     N8
-    
+
 Find the ellipsoidal (edge) neighbors of this cell ::
 
     >>> for (direction, cell) in sorted(c.neighbors(plane=False).items()):
-    ...     print(direction, cell) 
+    ...     print(direction, cell)
     east N5
     south_east Q0
     south_west P2
@@ -73,7 +82,7 @@ Find the ellipsoidal (edge) neighbors of this cell ::
 Find the planar (edge) neighbors of this cell ::
 
     >>> for (direction, cell) in sorted(c.neighbors('plane').items()):
-    ...     print(direction, cell) 
+    ...     print(direction, cell)
     down P2
     left N7
     right Q0
@@ -95,18 +104,31 @@ Compute the ellipsoidal nuclei of these cells ::
     >>> for row in cells:
     ...     for cell in row:
     ...         print(cell, cell.nucleus(plane=False))
-    N8 (0.0, 58.470677829627363)
-    N5 (45.000000000000036, 58.470677829627363)
-    N2 (90.000000000000028, 58.470677829627355)
+    N8 (0.0, 58.47067782962736)
+    N5 (45.000000000000036, 58.47067782962736)
+    N2 (90.00000000000003, 58.470677829627355)
+    Q0 (14.999999999999998, 26.438744923100096)
+    Q1 (45.0, 26.438744923100096)
+    Q2 (74.99999999999999, 26.438744923100096)
+    R0 (105.00000000000001, 26.438744923100096)
+    Q3 (14.999999999999998, 3.560649871414923e-15)
+    Q4 (45.0, 3.560649871414923e-15)
+    Q5 (74.99999999999999, 3.560649871414923e-15)
+    R3 (105.00000000000001, 3.560649871414923e-15)
+
+NOTES::  .. Issue #1 was ..
+    N8 (0.0, 58.470677829627363) *
+    N5 (45.000000000000036, 58.470677829627363) *
+    N2 (90.000000000000028, 58.470677829627355) *
     Q0 (14.999999999999998, 26.438744923100096)
     Q1 (45.0, 26.438744923100096)
     Q2 (74.999999999999986, 26.438744923100096)
     R0 (105.00000000000001, 26.438744923100096)
     Q3 (14.999999999999998, 3.560649871414923e-15)
     Q4 (45.0, 3.560649871414923e-15)
-    Q5 (74.999999999999986, 3.560649871414923e-15)
+    Q5 (74.999999999999986, 3.560649871414923e-15) *
     R3 (105.00000000000001, 3.560649871414923e-15)
-    
+
 Create the (0, 0)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellipsoid. Use degrees instead of the default radians for angular measurements
 and orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
 
@@ -122,15 +144,24 @@ and orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand
         max_areal_resolution = 1
         max_resolution = 15
         ellipsoid:
-            R_A = 6374581.4671
+            R_A = 6374581.467096525
             a = 6378137.0
             b = 6356752.314140356
-            e = 0.0578063088401
+            e = 0.0578063088401125
             f = 0.003352810681182319
             lat_0 = -37
             lon_0 = 174
             radians = False
             sphere = False
+
+NOTES::  .. Issue #1 was ..
+        ellipsoid:
+            R_A = 6374581.4671 *
+            a = 6378137.0
+            b = 6356752.314140356
+            e = 0.0578063088401 *
+            f = 0.003352810681182319
+
     >>> print(rdggs.cell_from_point(1, p, plane=False))
     Q3
 
@@ -165,45 +196,45 @@ from rhealpixdggs.utils import my_round
 class RHEALPixDGGS(object):
     """
     Represents an rHEALPix DGGS on a given ellipsoid.
-    
+
     CLASS ATTRIBUTES:
-    
-    - `cells0` - A list of the resolution 0 cell IDs (strings). 
-    
+
+    - `cells0` - A list of the resolution 0 cell IDs (strings).
+
     INSTANCE ATTRIBUTES:
-    
+
     - `ellipsoid` - The underlying ellipsoid (Ellipsoid instance).
     - `N_side` - An integer of size at least 2.
       Each planar cell has N_side x N_side child cells.
     - `(north_square, south_square)` - Integers between 0 and 3 indicating
       the positions of north polar and south polar squares, respectively,
       of the rHEALPix projection used.
-    - `max_areal_resolution` - An area measured in square meters that 
+    - `max_areal_resolution` - An area measured in square meters that
       upper bounds the area of the smallest ellipsoidal grid cells.
-    - `max_resolution` - A nonnegative integer that is the maximum grid 
+    - `max_resolution` - A nonnegative integer that is the maximum grid
       resolution needed to have ellipsoidal cells of area at most
       `max_areal_resolution`.
     - `child_order` - A dictionary of the ordering (Morton order) of child
       cells of a cell in terms of the row-column coordinates in the matrix
       of child cells.  Child cell are numbered 0 to `N_side**2 -1` from
-      left to right and top to bottom. 
+      left to right and top to bottom.
     - `ul_vertex` - A dictionary with key-value pairs (c, (x, y)), where
       c is an element of `cells0` and (x, y) is the upper left corner point
-      of the resolution 0 planar cell c.  
-    - `atomic_neighbors` - A dictionary with key-value pairs 
+      of the resolution 0 planar cell c.
+    - `atomic_neighbors` - A dictionary with key-value pairs
       (n, {'up': a, 'down': b, 'left': c, 'right': d}),
-      where n, a, b, c, and d are elements of `cells0` or 
-      {0, 1, ..., `N_side**2 -1`}. 
-      Describes the planar (edge) neighbors of cell0 letter / child cell number 
+      where n, a, b, c, and d are elements of `cells0` or
+      {0, 1, ..., `N_side**2 -1`}.
+      Describes the planar (edge) neighbors of cell0 letter / child cell number
       n.
-      
+
     NOTE:
-    
+
     Several RHEALPixDGGS methods have the keyword argument 'plane'.
-    Setting it to True indicates that all input and output points and cells are 
+    Setting it to True indicates that all input and output points and cells are
     interpreted as lying in the planar DGGS.
-    Setting it to False indicates that they are interpreted as lying in 
-    the ellipsoidal DGGS. 
+    Setting it to False indicates that they are interpreted as lying in
+    the ellipsoidal DGGS.
     """
     # Level 0 cell IDs, which are anamolous.
     cells0 = ["N", "O", "P", "Q", "R", "S"]
@@ -375,17 +406,20 @@ class RHEALPixDGGS(object):
 
     def healpix(self, u, v, inverse=False):
         """
-        Return the HEALPix projection of point `(u, v)` (or its inverse if 
-        `inverse` = True) appropriate to this rHEALPix DGGS.      
-        
+        Return the HEALPix projection of point `(u, v)` (or its inverse if
+        `inverse` = True) appropriate to this rHEALPix DGGS.
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003_RADIANS
             >>> print(my_round(rdggs.healpix(-pi, pi/2), 14))
-            (-2.35619449019234, 1.5707963267949001)
-            
+            (-2.35619449019234, 1.5707963267949)
+
+        NOTES:: Issue #1 was ..
+            (-2.35619449019234, 1.5707963267949001) *
+
         NOTE:
-        
+
         Uses ``pj_healpix`` instead of the PROJ.4 version of HEALPix.
         """
         f = pw.Proj(ellipsoid=self.ellipsoid, proj="healpix")
@@ -393,17 +427,20 @@ class RHEALPixDGGS(object):
 
     def rhealpix(self, u, v, inverse=False):
         """
-        Return the rHEALPix projection of the point `(u, v)` (or its inverse if 
+        Return the rHEALPix projection of the point `(u, v)` (or its inverse if
         `inverse` = True) appropriate to this rHEALPix DGGS.
 
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003_RADIANS
             >>> print(my_round(rdggs.rhealpix(0, pi/3), 14))
+            (-1.858272006684, 2.06871881030324)
+
+        NOTES:: Issue #1 was ..
             (-1.8582720066839999, 2.0687188103032401)
-            
+
         NOTE:
-        
+
         Uses ``pj_rhealpix`` instead of the PROJ.4 version of rHEALPix.
         """
         f = pw.Proj(
@@ -416,19 +453,22 @@ class RHEALPixDGGS(object):
 
     def combine_triangles(self, u, v, inverse=False):
         """
-        Return the combine_triangles() transformation of the point `(u, v)` 
-        (or its inverse if `inverse` = True) appropriate to the underlying 
+        Return the combine_triangles() transformation of the point `(u, v)`
+        (or its inverse if `inverse` = True) appropriate to the underlying
         ellipsoid.
         It maps the HEALPix projection to the rHEALPix projection.
-  
+
         EXAMPLES::
-  
+
             >>> rdggs = UNIT_003
             >>> p = (0, 0)
             >>> q = (-pi/4, pi/2)
             >>> print(rdggs.combine_triangles(*p))
             (0.0, 0.0)
             >>> print(my_round(rdggs.combine_triangles(*q), 14))
+            (-2.35619449019234, 1.5707963267949)
+
+        NOTES:: Issue #1 was ..
             (-2.35619449019234, 1.5707963267949001)
 
         """
@@ -446,33 +486,33 @@ class RHEALPixDGGS(object):
 
     def triangle(self, x, y, inverse=True):
         """
-        If `inverse` = False, then assume `(x,y)` lies in the image of the 
-        HEALPix projection that comes with this DGGS, and 
-        return the number of the HEALPix polar triangle (0, 1, 2, 3, or None)   
-        and the region ('north_polar', 'south_polar', or 'equatorial') that 
-        `(x, y)` lies in. 
+        If `inverse` = False, then assume `(x,y)` lies in the image of the
+        HEALPix projection that comes with this DGGS, and
+        return the number of the HEALPix polar triangle (0, 1, 2, 3, or None)
+        and the region ('north_polar', 'south_polar', or 'equatorial') that
+        `(x, y)` lies in.
         If `inverse` = True, then assume `(x, y)` lies in the image of
         the rHEALPix projection that comes with this DGGS, map `(x, y)`
-        to its HEALPix image (x', y'), and return the number of the HEALPix 
-        polar triangle and the region that (x', y') lies in. 
-        If `(x, y)` lies in the equatorial region, then the triangle number 
+        to its HEALPix image (x', y'), and return the number of the HEALPix
+        polar triangle and the region that (x', y') lies in.
+        If `(x, y)` lies in the equatorial region, then the triangle number
         returned is None.
-                
+
         OUTPUT:
-    
+
         The pair (triangle_number, region).
 
         NOTES:
-        
+
         This is a wrapper for pjr.triangle().
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> c = rdggs.cell(['N', 7])
             >>> print(rdggs.triangle(*c.nucleus(), inverse=True))
             (0, 'north_polar')
-            
+
             >>> c = rdggs.cell(['N', 3])
             >>> print(rdggs.triangle(*c.nucleus(), inverse=True))
             (3, 'north_polar')
@@ -496,16 +536,19 @@ class RHEALPixDGGS(object):
 
     def xyz(self, u, v, lonlat=False):
         """
-        Given a point `(u, v)` in the planar image of the rHEALPix projection, 
-        project it back to the ellipsoid and return its 3D rectangular 
+        Given a point `(u, v)` in the planar image of the rHEALPix projection,
+        project it back to the ellipsoid and return its 3D rectangular
         coordinates.
         If `lonlat` = True, then assume `(u, v)` is a longitude-latitude
         point.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003_RADIANS
             >>> print(my_round(rdggs.xyz(0, pi/4, lonlat=True), 14))
+            (0.70710678118655, 0.0, 0.70710678118655)
+
+        NOTES:: Issue #1 was ..
             (0.70710678118655002, 0.0, 0.70710678118655002)
 
         """
@@ -517,16 +560,19 @@ class RHEALPixDGGS(object):
 
     def xyz_cube(self, u, v, lonlat=False):
         """
-        Given a point `(u, v)` in the planar version of this rHEALPix DGGS, 
-        fold the rHEALPix image into a cube centered at the origin, 
-        and return the resulting point's 3D rectangular coordinates.  
+        Given a point `(u, v)` in the planar version of this rHEALPix DGGS,
+        fold the rHEALPix image into a cube centered at the origin,
+        and return the resulting point's 3D rectangular coordinates.
         If `lonlat` = True, then assume `(u, v)` is a longitude-latitude
         point.
 
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> print(my_round(rdggs.xyz_cube(0, 0), 14))
+            (0.78539816339745, 0.0, -0.78539816339745)
+
+        NOTES:: Issue #1 was ..
             (0.78539816339745006, 0.0, -0.78539816339745006)
 
         """
@@ -584,27 +630,27 @@ class RHEALPixDGGS(object):
 
     def cell(self, suid=None, level_order_index=None, post_order_index=None):
         """
-        Return a cell (Cell instance) of this DGGS either from its ID or 
-        from its resolution and index. 
-        
+        Return a cell (Cell instance) of this DGGS either from its ID or
+        from its resolution and index.
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> c = rdggs.cell(('N', 4, 5))
             >>> print(isinstance(c, Cell))
             True
             >>> print(c)
             N45
-            
+
         """
         return Cell(self, suid, level_order_index, post_order_index)
 
     def grid(self, resolution):
         """
         Generator function for all the cells at resolution `resolution`.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> grid0 = rdggs.grid(0)
             >>> print([str(x) for x in grid0])
@@ -621,7 +667,7 @@ class RHEALPixDGGS(object):
 
     def num_cells(self, res_1, res_2=None, subcells=False):
         """
-        Return the number of cells of resolutions `res_1` to `res_2` 
+        Return the number of cells of resolutions `res_1` to `res_2`
         (inclusive).
         Assume `res_1 <= res_2`.
         If `subcells` = True, then return the number of subcells at resolutions
@@ -630,9 +676,9 @@ class RHEALPixDGGS(object):
         cells at resolution `res_1`.
         If `res_2=None` and `subcells` = True, then return the number of
         subcells from resolution `res_1` to resolution `self.max_resolution`.
-        
+
         EXAMPLES::
-            
+
             >>> rdggs = RHEALPixDGGS()
             >>> rdggs.num_cells(0)
             6
@@ -644,7 +690,7 @@ class RHEALPixDGGS(object):
             10
             >>> rdggs.num_cells(5, 6, subcells=True)
             10
-                        
+
         """
         k = self.N_side ** 2
         if subcells:
@@ -660,17 +706,17 @@ class RHEALPixDGGS(object):
     def cell_width(self, resolution, plane=True):
         """
         Return the width of a planar cell at the given resolution.
-        If `plane` = False, then return None, 
+        If `plane` = False, then return None,
         because the ellipsoidal cells don't have constant width.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> print(rdggs.cell_width(0) == pi/2)
             True
             >>> print(rdggs.cell_width(1) == pi/6)
             True
-                        
+
         """
         if plane:
             return self.ellipsoid.R_A * (pi / 2) * self.N_side ** (-resolution)
@@ -678,17 +724,17 @@ class RHEALPixDGGS(object):
     def cell_area(self, resolution, plane=True):
         """
         Return the area of a planar or ellipsoidal cell at the given
-        resolution.         
+        resolution.
 
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
-            >>> a = rdggs.cell_area(1) 
+            >>> a = rdggs.cell_area(1)
             >>> print(a == (pi/6)**2)
             True
             >>> print(rdggs.cell_area(1, plane=False) == 8/(3*pi)*a)
             True
-        
+
         """
         w = self.cell_width(resolution)
         if plane:
@@ -698,14 +744,14 @@ class RHEALPixDGGS(object):
 
     def interval(self, a, b):
         """
-        Generator function for all the resolution 
-        `max(a.resolution, b.resolution)` cells between cell 
-        `a` and cell `b` (inclusive and with respect to the     
+        Generator function for all the resolution
+        `max(a.resolution, b.resolution)` cells between cell
+        `a` and cell `b` (inclusive and with respect to the
         postorder ordering on cells).
         Note that `a` and `b` don't have to lie at the same resolution.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> a = rdggs.cell(('N', 1))
             >>> b = rdggs.cell(('N',))
@@ -728,16 +774,16 @@ class RHEALPixDGGS(object):
         Return the resolution `resolution` cell that contains the point `p`.
         If `plane` = True, then `p` and the output cell lie in the
         planar DGGS.
-        Otherwise, `p` and the output cell lie in the ellipsoidal DGGS. 
-                  
+        Otherwise, `p` and the output cell lie in the ellipsoidal DGGS.
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> p = (0, 0)
             >>> c = rdggs.cell_from_point(1, p)
             >>> print(c)
             Q3
-                        
+
         """
         # Get the rectangular coordinates of p.
         if plane:
@@ -813,32 +859,32 @@ class RHEALPixDGGS(object):
 
     def cell_from_region(self, ul, dr, plane=True):
         """
-        Return the smallest planar or ellipsoidal cell wholly containing 
-        the region bounded by the axis-aligned rectangle with upper left 
-        and lower right vertices given by the the points `ul` and `dr`, 
-        respectively.  
+        Return the smallest planar or ellipsoidal cell wholly containing
+        the region bounded by the axis-aligned rectangle with upper left
+        and lower right vertices given by the the points `ul` and `dr`,
+        respectively.
         If such as cell does not exist, then return None.
         If `plane` = True, then `ul` and `dr` and the returned cell
         lie in the planar DGGS.
         Otherwise, `ul` and `dr` and the returned cell lie in the ellipsoidal
         DGGS.
 
-        To specify an ellipsoidal cap region, set `ul` = (-pi, pi/2) and 
-        `dr` = (-pi, phi) for a northern cap from latitudes pi/2 to phi, or 
-        set `ul` = (-pi, phi) and `dr` = (-pi, -pi/2) for a southern cap from 
-        latitudes phi to -pi/2. 
-        (As usual, if `self.ellipsoid.radians` = False, 
-        then use degrees instead of radians when specifying ul and dr.) 
-        
+        To specify an ellipsoidal cap region, set `ul` = (-pi, pi/2) and
+        `dr` = (-pi, phi) for a northern cap from latitudes pi/2 to phi, or
+        set `ul` = (-pi, phi) and `dr` = (-pi, -pi/2) for a southern cap from
+        latitudes phi to -pi/2.
+        (As usual, if `self.ellipsoid.radians` = False,
+        then use degrees instead of radians when specifying ul and dr.)
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> p = (0, pi/12)
             >>> q = (pi/6 - 1e-6, 0)
             >>> c = rdggs.cell_from_region(p, q)
             >>> print(c)
             Q3
-            
+
         """
         if not plane:
             # Compute planar ul and dr as follows.
@@ -888,40 +934,57 @@ class RHEALPixDGGS(object):
     def cell_latitudes(self, resolution, phi_min, phi_max, nucleus=True, plane=True):
         """
         Return a list of every latitude phi whose parallel intersects
-        a resolution `resolution` cell nucleus and satisfies 
+        a resolution `resolution` cell nucleus and satisfies
         `phi_min` < phi < `phi_max`.
         If `plane` = True, then use rHEALPix y-coordinates for `phi_min`,
         `phi_max`, and the result. Return the list in increasing order.
-        If `nucleus` = False, then return a list of every latitude phi whose   
-        parallel intersects the north or south boundary of a resolution 
+        If `nucleus` = False, then return a list of every latitude phi whose
+        parallel intersects the north or south boundary of a resolution
         `resolution` cell and that satisfies `phi_min` < phi < `phi_max`.
-        
+
         NOTE:
-        
-        By convention, the pole latitudes pi/2 and -pi/2 (or their 
+
+        By convention, the pole latitudes pi/2 and -pi/2 (or their
         corresponding rHEALPix y-coordinates) will be excluded.
-        
+
         There are 2*self.N_side**resolution - 1 nuclei
-        latitudes between the poles if self.N_side is odd and 
+        latitudes between the poles if self.N_side is odd and
         2*self.N_side**resolution if self.N_side is even.
-        Consequently, there are 2*self.N_side**resolution 
-        boundary latitudes between the poles if self.N_side is odd and 
+        Consequently, there are 2*self.N_side**resolution
+        boundary latitudes between the poles if self.N_side is odd and
         2*self.N_side**resolution - 1 boundary latitudes if self.N_side is
         even.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = WGS84_003_RADIANS
             >>> for phi in rdggs.cell_latitudes(1, -pi/2, pi/2, plane=False):
             ...     print(my_round(phi, 14))
+            -1.02050584399985
+            -0.46144314900303
+            -0.0
+            0.46144314900303
+            1.02050584399985
+            1.5707963267949
+
+        NOTES:: .. Issue @1 was ..
             -1.020505844
             -0.461443149003
             -0
             0.461443149003
             1.020505844
             1.57079632679
+
             >>> for phi in rdggs.cell_latitudes(1, -pi/2, pi/2, nucleus=False, plane=False):
-            ...     print(my_round(phi, 14)) 
+            ...     print(my_round(phi, 14))
+            -1.29836248988994
+            -0.73083668811327
+            -0.22457715619516
+            0.22457715619516
+            0.73083668811327
+            1.29836248988994
+
+        NOTES:: .. Issue @1 was ..
             -1.29836248989
             -0.730836688113
             -0.224577156195
@@ -983,9 +1046,9 @@ class RHEALPixDGGS(object):
         Sort the cells from north to south and west to east in case
         two cells with the same nucleus latitude intersect the
         meridian.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = WGS84_003_RADIANS
             >>> cells = rdggs.cells_from_meridian(1, 0.1, -pi/2, pi/2)
             >>> print([str(cell) for cell in cells])
@@ -1033,9 +1096,9 @@ class RHEALPixDGGS(object):
         the parallel segment of latitude `phi` whose least longitude is
         `lam_min` and whose greatest longitude is `lam_max`.
         Sort the list from west to east.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = WGS84_003_RADIANS
             >>> cells = rdggs.cells_from_parallel(1, pi/3, -pi, pi)
             >>> print([str(cell) for cell in cells])
@@ -1063,45 +1126,45 @@ class RHEALPixDGGS(object):
 
     def cells_from_region(self, resolution, ul, dr, plane=True):
         """
-        If `plane` = True, then return a list of lists of resolution 
-        `resolution` cells that cover the axis-aligned rectangle whose 
-        upper left and lower right vertices are the points `ul` and `dr`, 
-        respectively.  
-        In the output, sort each sublist of cells from left to right (in the 
+        If `plane` = True, then return a list of lists of resolution
+        `resolution` cells that cover the axis-aligned rectangle whose
+        upper left and lower right vertices are the points `ul` and `dr`,
+        respectively.
+        In the output, sort each sublist of cells from left to right (in the
         planar DGGS) and sort the sublists from top to bottom.
-        
-        If `plane` = False, then return a list of lists of resolution 
-        `resolution` 
-        cells that cover the longitude-latitude aligned ellipsoidal quadrangle  
-        whose northwest and southeast vertices are the points `ul` and `dr`, 
-        respectively. Defunct quads with `ul` = (stuff, pi/2) or 
-        `dr` = (stuff, -pi/2) also work 
-        (and rely on the fact that the north and south pole can both 
+
+        If `plane` = False, then return a list of lists of resolution
+        `resolution`
+        cells that cover the longitude-latitude aligned ellipsoidal quadrangle
+        whose northwest and southeast vertices are the points `ul` and `dr`,
+        respectively. Defunct quads with `ul` = (stuff, pi/2) or
+        `dr` = (stuff, -pi/2) also work
+        (and rely on the fact that the north and south pole can both
         be specified by infinitely many longitudes).
-        
-        To specify an ellipsoidal cap region, set `ul` = (-pi, pi/2) and 
-        `dr` = (-pi, phi) for a northern cap from latitudes pi/2 to phi, or 
-        set `ul` = (-pi, phi) and `dr` = (-pi, -pi/2) for a southern cap from 
-        latitudes phi to -pi/2. (As usual, if `self.ellipsoid.radians` = False, 
-        then use degrees instead of radians when specifying ul and dr.) 
-        
-        In the output, sort each sublist of cells from west to east (in the 
+
+        To specify an ellipsoidal cap region, set `ul` = (-pi, pi/2) and
+        `dr` = (-pi, phi) for a northern cap from latitudes pi/2 to phi, or
+        set `ul` = (-pi, phi) and `dr` = (-pi, -pi/2) for a southern cap from
+        latitudes phi to -pi/2. (As usual, if `self.ellipsoid.radians` = False,
+        then use degrees instead of radians when specifying ul and dr.)
+
+        In the output, sort each sublist of cells from west to east (in the
         ellipsoidal DGGS) and sort the sublists from north to south.
 
         Return the empty list if if `ul[0] > dr[0]` or `ul[1] < dr[1]`.
-        
+
         NOTE:
-        
+
         If `plane` = True, then the resulting list is a matrix, that is,
         each sublist has the same length.  This is not necessarily so if
         `plane` = False; see the examples below.
-            
+
         EXAMPLES::
-        
+
             >>> rdggs = WGS84_003_RADIANS
             >>> R_A = rdggs.ellipsoid.R_A
             >>> ul = R_A*array((-0.1, pi/4))
-            >>> dr = R_A*array((0.1, -pi/4))  # Rectangle 
+            >>> dr = R_A*array((0.1, -pi/4))  # Rectangle
             >>> M = rdggs.cells_from_region(1, ul, dr)
             >>> for row in M:
             ...     print([str(cell) for cell in row])
@@ -1110,24 +1173,24 @@ class RHEALPixDGGS(object):
             ['P8', 'Q6']
 
             >>> ul = (0, pi/3)
-            >>> dr = (pi/2, 0)  # Quad 
+            >>> dr = (pi/2, 0)  # Quad
             >>> M = rdggs.cells_from_region(1, ul, dr, plane=False)
             >>> for row in M:
             ...     print([str(cell) for cell in row])
             ['N2', 'N1', 'N0']
             ['Q0', 'Q1', 'Q2', 'R0']
             ['Q3', 'Q4', 'Q5', 'R3']
-            
+
             >>> ul = (0, -pi/6)
-            >>> dr = (pi/2, -pi/2)  # Defunct quad / lune segment 
+            >>> dr = (pi/2, -pi/2)  # Defunct quad / lune segment
             >>> M = rdggs.cells_from_region(1, ul, dr, plane=False)
             >>> for row in M:
             ...     print([str(cell) for cell in row])
             ['Q6', 'Q7', 'Q8', 'R6']
             ['S8', 'S7', 'S6']
             ['S4']
-            
-            >>> ul = (-pi, -pi/5)  
+
+            >>> ul = (-pi, -pi/5)
             >>> dr = (-pi, -pi/2)  # Cap
             >>> M = rdggs.cells_from_region(1, ul, dr, plane=False)
             >>> for row in M:
@@ -1210,7 +1273,7 @@ class RHEALPixDGGS(object):
     def random_point(self, plane=True):
         """
         Return a point in this DGGS sampled uniformly at
-        random from the plane or from the ellipsoid.     
+        random from the plane or from the ellipsoid.
 
         EXAMPLES::
 
@@ -1227,9 +1290,9 @@ class RHEALPixDGGS(object):
 
     def random_cell(self, resolution=None):
         """
-        Return a cell of the given resolution chosen uniformly at random 
+        Return a cell of the given resolution chosen uniformly at random
         from all cells at that resolution.
-        If `resolution=None`, then the cell resolution is first chosen 
+        If `resolution=None`, then the cell resolution is first chosen
         uniformly at random from [0,..,self.max_resolution].
 
         EXAMPLES::
@@ -1250,15 +1313,15 @@ class RHEALPixDGGS(object):
         """
         Find the minimal set of resolution `resolution` cells that covers
         the list of points `points`.
-        If `plane` = True, then assume `points` is a list of x-y 
+        If `plane` = True, then assume `points` is a list of x-y
         coordinates in the planar DGGS.
-        If `plane` = False, then assume `points` is a list of 
-        longitude-latitude coordinates in the ellipsoidal DGGS.  
-        This method will be made redundant by standard GIS rasterization 
-        tools that implement the rHEALPix projection. 
-        
+        If `plane` = False, then assume `points` is a list of
+        longitude-latitude coordinates in the ellipsoidal DGGS.
+        This method will be made redundant by standard GIS rasterization
+        tools that implement the rHEALPix projection.
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> c1 = rdggs.cell(['N', 0, 2, 1])
             >>> c2 = rdggs.cell(['P', 7, 3, 3])
@@ -1288,21 +1351,21 @@ class RHEALPixDGGS(object):
         self, cells, surface="plane", label=True, fontsize=15, saturation=0.5
     ):
         """
-        Plot the given list of cells on the given surface. 
+        Plot the given list of cells on the given surface.
         The cells should all come from the same rHEALPix DGGS.
-        Inessential graphics method.  
+        Inessential graphics method.
         Requires Sage graphics methods.
-    
+
         INPUT:
-    
+
         - `cells` - A list of cells from a common rHEALPix DGGS.
-        - `surface` - (Optional; default = 'plane'). 
+        - `surface` - (Optional; default = 'plane').
           One of the strings 'plane', 'plane_lonlat', 'cube', or 'ellipsoid'.
-          Surface to draw cells on.  
+          Surface to draw cells on.
         - `label` - (Optional; default = True). If True, then label cells
           with their names. If False, then don't.
         - `saturation` - (Optional) Number between 0 and 1 indicating the
-          saturation value of the cell color. 
+          saturation value of the cell color.
         """
         from sage.all import (
             Graphics,
@@ -1461,28 +1524,28 @@ from functools import total_ordering
 class Cell(object):
     """
     Represents a cell of the planar or ellipsoidal rHEALPix grid hierarchies.
-    Cell identifiers are of the form (p_0, p_1,...,p_l), where p_0 is one of 
+    Cell identifiers are of the form (p_0, p_1,...,p_l), where p_0 is one of
     the characters 'A', 'B', 'C', 'D', 'E', 'F' and p_i for i > 0 is one of
-    the integers 0, 1,..., N_side**2 - 1, where N_side is the instance 
+    the integers 0, 1,..., N_side**2 - 1, where N_side is the instance
     attribute from RHEALPixDGGS (the number of children cells along a cell's
-    side). 
-    
+    side).
+
     INSTANCE ATTRIBUTES:
-    
+
     - `rdggs` - The DGGS that the cell comes from.
     - `ellipsoid` - The underlying ellipsoid of the DGGS.
     - `N_side` - The N_side attribute of the DGGS
     - `suid` - The cell's ID (tuple).  SUID = spatially unique identifier.
       ('id' is a reserved word in Python)
     - `resolution` - The cell's resolution (nonnegative integer).
-    
+
     NOTE:
-    
+
     Several Cell methods have the keyword argument 'plane'.
-    Setting it to True indicates that all input and output points and cells are 
+    Setting it to True indicates that all input and output points and cells are
     to be interpreted as lying in the planar DGGS.
-    Setting it to False indicates that they are to be interpreted as lying in 
-    the ellipsoidal DGGS. 
+    Setting it to False indicates that they are to be interpreted as lying in
+    the ellipsoidal DGGS.
     """
 
     @staticmethod
@@ -1570,9 +1633,9 @@ class Cell(object):
         """
         Create a cell either from its suid or from its level order or
         post order index.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> print(rdggs.max_resolution)
             1
@@ -1645,9 +1708,9 @@ class Cell(object):
         """
         The (strictly) less-than relation on cells.
         Derived from the post order traversal of the tree T of all cells
-        defined in the `index()` docstring. 
-        Return True if (`self.suid < other.suid` and 
-        `self.suid` is not a prefix of `other.suid`) or 
+        defined in the `index()` docstring.
+        Return True if (`self.suid < other.suid` and
+        `self.suid` is not a prefix of `other.suid`) or
         `self` is a subcell of `other`.
         Here < is the lexicographic order.
         Returns False otherwise.
@@ -1662,25 +1725,25 @@ class Cell(object):
     def index(self, order="resolution"):
         """
         Return the index of `self` when it's ordered according to `order`.
-        Here `order` can be 'resolution' (default) or 'post'.        
+        Here `order` can be 'resolution' (default) or 'post'.
         Indices start at 0.
         The empty cell has index None.
 
-        The ordering comes from the way of traversing the tree T 
+        The ordering comes from the way of traversing the tree T
         of all cells defined as follows.
-        The root of T is a non-cell place holder. 
+        The root of T is a non-cell place holder.
         The children of the root are the cells A < B < ... < F.
         The children of a cell in T with suid s are s0 < s1 < ... < sn,
         where n = self.N_side**2.
-        
-        The level order index of a nonempty cell is its position 
+
+        The level order index of a nonempty cell is its position
         (starting from 0) in the level order traversal of T starting at cell A.
-        
-        The post order index of a nonempty cell is its position 
+
+        The post order index of a nonempty cell is its position
         (starting from 0) in the post order traversal of T.
-         
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> c = Cell(rdggs, ['N', 2])
             >>> print(c.index(order='resolution'))
@@ -1712,9 +1775,9 @@ class Cell(object):
     def suid_rowcol(self):
         """
         Return the pair of row- and column-suids of `self`, each as tuples.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> c = Cell(rdggs, ['N', 7, 3])
             >>> rsuid, csuid = c.suid_rowcol()
@@ -1722,7 +1785,7 @@ class Cell(object):
             True
             >>> print(csuid == ('N', 1, 0))
             True
-            
+
         """
         suid_row = [self.suid[0]]
         suid_col = [self.suid[0]]
@@ -1734,18 +1797,18 @@ class Cell(object):
 
     def width(self, plane=True):
         """
-        Return the width of this cell. 
+        Return the width of this cell.
         If `plane` = False, then return None, because ellipsoidal cells
         don't have a fixed width.
-        
+
         EXAMPLES::
-        
+
             >>> c = Cell(UNIT_003, ('N', 8))
             >>> print(c)
             N8
             >>> c.width() == pi/2*3**(-1)
             True
-            
+
         """
         return self.rdggs.cell_width(self.resolution, plane=plane)
 
@@ -1759,9 +1822,9 @@ class Cell(object):
         """
         Return the least resolution `resolution` cell greater than `self`.
         Note: `self` need not be a resolution `resolution` cell.
-        
+
         EXAMPLES::
-        
+
             >>> c = Cell(RHEALPixDGGS(), ('N', 8, 2))
             >>> print(c.successor())
             N83
@@ -1819,9 +1882,9 @@ class Cell(object):
         """
         Return the greatest resolution `resolution` cell less than `self`.
         Note: `self` need not be a resolution `resolution` cell.
-        
+
         EXAMPLES::
-        
+
             >>> c = Cell(RHEALPixDGGS(), ('N', 0, 8))
             >>> print(c.predecessor())
             N07
@@ -1831,7 +1894,7 @@ class Cell(object):
             None
             >>> print(c.predecessor(3))
             N088
-            
+
         """
         M = self.N_side ** 2 - 1
         suid = list(self.suid)
@@ -1876,16 +1939,16 @@ class Cell(object):
     def subcell(self, other):
         """
         Subcell (subset) relation on cells.
-        
+
         EXAMPLES::
-        
+
             >>> a = Cell(RHEALPixDGGS(), ('N', 1))
             >>> b = Cell(RHEALPixDGGS(), ['N'])
             >>> print(a.subcell(b))
             True
             >>> print(b.subcell(a))
             False
-            
+
         """
         s = ",".join([str(x) for x in self.suid])
         t = ",".join([str(x) for x in other.suid])
@@ -1893,13 +1956,13 @@ class Cell(object):
 
     def subcells(self, resolution=None):
         """
-        Generator function for the set of all resolution `resolution` subcells 
-        of this cell.  
+        Generator function for the set of all resolution `resolution` subcells
+        of this cell.
         If `resolution=None`, then return a generator function for the children
         of this cell.
-        
+
         EXAMPLES::
-        
+
             >>> c = Cell(RHEALPixDGGS(), ['N'])
             >>> print([str(cell) for cell in c.subcells()])
             ['N0', 'N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8']
@@ -1919,19 +1982,19 @@ class Cell(object):
 
     def ul_vertex(self, plane=True):
         """
-        If `plane` = True, then return the upper left vertex of this 
+        If `plane` = True, then return the upper left vertex of this
         planar cell.
         If `plane` = False, then return the projection onto the ellipsoid
         of the planar upper left vertex.
-        Note that for polar cells, this projection is not necessarily the 
+        Note that for polar cells, this projection is not necessarily the
         northwest vertex.
         For the latter vertex use nw_vertex().
-        
-        WARNING: The upper left vertex of a cell might not lie in the cell, 
+
+        WARNING: The upper left vertex of a cell might not lie in the cell,
         because not all cells contain their boundary.
-                  
+
         EXAMPLES::
-        
+
             >>> c = Cell(UNIT_003, ['N', 0])
             >>> print(c.ul_vertex() == (-pi, 3*pi/4))
             True
@@ -1972,45 +2035,57 @@ class Cell(object):
         ellipsoidal cell.
         If `plane` = True, then return the projection onto the plane
         of the ellipsoidal northwest vertex.
-        On quad cells and cap cells, this function returns the same output 
+        On quad cells and cap cells, this function returns the same output
         as ul_vertex().
         On skew quad cells and dart cells, this function returns output
         different from ul_vertex().
-        
-        WARNING: The northwest vertex of a cell might not lie in the cell, 
+
+        WARNING: The northwest vertex of a cell might not lie in the cell,
         because not all cells contain their boundary.
-                  
+
         EXAMPLES::
             >>> rdggs = RHEALPixDGGS()
             >>> c = rdggs.cell(['P', 5, 7]) # Quad cell.
             >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-2225148.7007489, -556287.17518722452)
+            (-2225148.7007489, -556287.1751872245)
             >>> print(my_round(c.nw_vertex(plane=True), 14))
-            (-2225148.7007489, -556287.17518722452)
+            (-2225148.7007489, -556287.1751872245)
+
+        NOTES:: .. Issue #1 was ..
+            (-2225148.7007489, -556287.17518722452) * for both above tests
 
             >>> c = rdggs.cell(['S', 4])  # Cap cell.
             >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-16688615.255616743, -8344307.6278083706)
+            (-16688615.255616743, -8344307.627808371)
             >>> print(my_round(c.nw_vertex(plane=True), 14))
-            (-16688615.255616743, -8344307.6278083706)
+            (-16688615.255616743, -8344307.627808371)
+
+        NOTES:: .. Issue #1 was ..
+            (-16688615.255616743, -8344307.6278083706) * for both above tests
 
             >>> c = rdggs.cell(['N', 4, 3]) # Skew quad cell.
             >>> print(my_round(c.ul_vertex(plane=True), 14))
             (-16688615.255616743, 10569456.32855727)
             >>> print(my_round(c.nw_vertex(plane=True), 14))
             (-15576040.905242294, 10569456.32855727)
-            
+
             >>> c = rdggs.cell(['S', 4, 3])  # Skew quad cell.
             >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-16688615.255616743, -9456881.9781828206)
+            (-16688615.255616743, -9456881.97818282)
             >>> print(my_round(c.nw_vertex(plane=True), 14))
             (-16688615.255616743, -10569456.32855727)
 
+        NOTES:: .. Issue #1 was ..
+            (-16688615.255616743, -9456881.9781828206) *
+
             >>> c = rdggs.cell(['N', 6, 2])  # Dart cell.
             >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-17801189.605991192, 8344307.6278083716)
+            (-17801189.605991192, 8344307.627808372)
             >>> print(my_round(c.nw_vertex(plane=True), 14))
-            (-16688615.255616743, 8344307.6278083716)
+            (-16688615.255616743, 8344307.627808372)
+
+        NOTES:: .. Issue #1 was ..
+            (-16688615.255616743, 8344307.6278083716) * for both above tests
 
             >>> c = rdggs.cell(['S', 6, 2])  # Dart cell.
             >>> print(my_round(c.ul_vertex(plane=True), 14))
@@ -2059,21 +2134,24 @@ class Cell(object):
     def nucleus(self, plane=True):
         """
         Return the nucleus and vertices of this planar or ellipsoidal cell
-        in the order (nucleus, upper left corner, lower left corner, 
-        lower right corner, upper right corner) with reference to the 
+        in the order (nucleus, upper left corner, lower left corner,
+        lower right corner, upper right corner) with reference to the
         planar cell.
         The output for ellipsoidal cells is the projection onto the ellipsoid
-        of the output for planar cells.  In particular, while the 
-        nucleus of a planar cell is its centroid, the nucleus 
+        of the output for planar cells.  In particular, while the
+        nucleus of a planar cell is its centroid, the nucleus
         of an ellipsoidal cell is not its centroid.
         To compute the centroid of a cell, use centroid() below.
-                        
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> print(my_round(c.nucleus(), 14))
-            (-2.35619449019234, 1.5707963267949001)
+            (-2.35619449019234, 1.5707963267949)
+
+        NOTES:: .. Issue #1 was ..
+            (-2.35619449019234, 1.5707963267949001) *
 
         """
         ul = self.ul_vertex(plane=True)
@@ -2086,54 +2164,67 @@ class Cell(object):
 
     def vertices(self, plane=True, trim_dart=False):
         """
-        If `plane` = True, then assume this cell is planar and return 
-        its four vertices in the order (upper left corner, upper right corner, 
+        If `plane` = True, then assume this cell is planar and return
+        its four vertices in the order (upper left corner, upper right corner,
         lower right corner, lower left corner).
         If `plane` = False, then assume this cell is ellipsoidal and return
         the projection of the planar vertices in the order
         (northwest, northeast, southeast, southwest).
-        If `plane` = False, this cell is a dart cell, and 
+        If `plane` = False, this cell is a dart cell, and
         `trim_dart` = True, then remove the one non-vertex point from
-        the output. (Dart cells only have three vertices.) 
-                                
+        the output. (Dart cells only have three vertices.)
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> for p in c.vertices():
             ...     print(my_round(p, 14))
             (-3.14159265358979, 2.35619449019234)
-            (-1.5707963267949001, 2.35619449019234)
-            (-1.5707963267949001, 0.78539816339745006)
-            (-3.14159265358979, 0.78539816339745006)
+            (-1.5707963267949, 2.35619449019234)
+            (-1.5707963267949, 0.78539816339745)
+            (-3.14159265358979, 0.78539816339745)
+
+        NOTES:: .. Issue #1 was ..
+            (-3.14159265358979, 2.35619449019234)
+            (-1.5707963267949001, 2.35619449019234) *
+            (-1.5707963267949001, 0.78539816339745006) *
+            (-3.14159265358979, 0.78539816339745006) *
 
             >>> rdggs = WGS84_003
             >>> c = rdggs.cell(['N', 0])
             >>> for p in c.vertices(plane=False):
             ...     print(my_round(p, 14))
-            (89.999999999999929, 74.39069094879062)
+            (89.99999999999993, 74.39069094879062)
             (119.99999999999999, 41.87385774220941)
             (90.0, 41.87385774220941)
-            (60.000000000000007, 41.87385774220941)
-
+            (60.00000000000001, 41.87385774220941)
             >>> for p in c.vertices(plane=False, trim_dart=True):
             ...     print(my_round(p, 14))
-            (89.999999999999929, 74.39069094879062)
+            (89.99999999999993, 74.39069094879062)
             (119.99999999999999, 41.87385774220941)
-            (60.000000000000007, 41.87385774220941)
-            
+            (60.00000000000001, 41.87385774220941)
+
+        NOTES:: .. Issue #1 was ..
+            (89.999999999999929, 74.39069094879062) * for both of the above
+            <skip>
+            (60.000000000000007, 41.87385774220941) * for both of the above
+
             >>> c = rdggs.cell(['S', 0])
             >>> for p in c.vertices(plane=False):
             ...     print(my_round(p, 14))
             (149.99999999999997, -41.87385774220941)
             (-180.0, -41.87385774220941)
             (-150.0, -41.87385774220941)
-            (-180.0, -74.390690948790649)
+            (-180.0, -74.39069094879065)
             >>> for p in c.vertices(plane=False, trim_dart=True):
             ...     print(my_round(p, 14))
             (149.99999999999997, -41.87385774220941)
             (-150.0, -41.87385774220941)
-            (-180.0, -74.390690948790649)
+            (-180.0, -74.39069094879065)
+
+        NOTES:: .. Issue #1 was ..
+            (-180.0, -74.390690948790649) * for both of the above
 
         """
         ul = self.ul_vertex(plane=True)
@@ -2161,11 +2252,11 @@ class Cell(object):
 
     def xy_range(self):
         """
-        Return the x- and y-coordinate extremes of the planar version of 
+        Return the x- and y-coordinate extremes of the planar version of
         this cell in the format ((x_min, x_max), (y_min, y_max)).
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> c.xy_range() == ((-pi, -pi/2), (pi/4, 3*pi/4))
@@ -2182,43 +2273,64 @@ class Cell(object):
 
     def boundary(self, n=2, plane=True, interior=False):
         """
-        Return a list of `4*n - 4` boundary points of this cell, 
-        `n` on each edge, where `n` >= 2.  
-        List the points in clockwise order starting from the cell's upper left 
-        corner if `plane` = True, or from the cell's northwest corner 
-        if `plane` = False. 
-    
+        Return a list of `4*n - 4` boundary points of this cell,
+        `n` on each edge, where `n` >= 2.
+        List the points in clockwise order starting from the cell's upper left
+        corner if `plane` = True, or from the cell's northwest corner
+        if `plane` = False.
+
         If `n` = 2, then the output is the same as vertices().
         If `interior` = True, then push the boundary points slighly into the
         interior of the cell, which is convenient for some graphics methods.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N', 6])
             >>> c.boundary(n=2, plane=True) == c.vertices(plane=True)
             True
             >>> for p in c.boundary(n=3, plane=True):
             ...     print(my_round(p, 14))
-            (-3.14159265358979, 1.3089969389957501)
-            (-2.87979326579064, 1.3089969389957501)
-            (-2.61799387799149, 1.3089969389957501)
-            (-2.61799387799149, 1.0471975511966001)
-            (-2.61799387799149, 0.78539816339745006)
-            (-2.87979326579064, 0.78539816339745006)
-            (-3.14159265358979, 0.78539816339745006)
-            (-3.14159265358979, 1.0471975511966001)
+            (-3.14159265358979, 1.30899693899575)
+            (-2.87979326579064, 1.30899693899575)
+            (-2.61799387799149, 1.30899693899575)
+            (-2.61799387799149, 1.0471975511966)
+            (-2.61799387799149, 0.78539816339745)
+            (-2.87979326579064, 0.78539816339745)
+            (-3.14159265358979, 0.78539816339745)
+            (-3.14159265358979, 1.0471975511966)
+
+        NOTES::  .. Issue #1 was ..
+            (-3.14159265358979, 1.3089969389957501) *
+            (-2.87979326579064, 1.3089969389957501) *
+            (-2.61799387799149, 1.3089969389957501) *
+            (-2.61799387799149, 1.0471975511966001) *
+            (-2.61799387799149, 0.78539816339745006) *
+            (-2.87979326579064, 0.78539816339745006) *
+            (-3.14159265358979, 0.78539816339745006) *
+            (-3.14159265358979, 1.0471975511966001) *
+
 
             >>> for p in c.boundary(n=3, plane=False):
             ...     print(my_round(p, 14))
             (-180.0, 74.35752898700072)
-            (-157.50000000000003, 58.413661903472082)
-            (-150.0, 41.810314895778603)
-            (-165.00000000000003, 41.810314895778603)
-            (-180.0, 41.810314895778603)
-            (165.0, 41.810314895778603)
-            (149.99999999999997, 41.810314895778603)
-            (157.49999999999997, 58.413661903472082)
+            (-157.50000000000003, 58.41366190347208)
+            (-150.0, 41.8103148957786)
+            (-165.00000000000003, 41.8103148957786)
+            (-180.0, 41.8103148957786)
+            (165.0, 41.8103148957786)
+            (149.99999999999997, 41.8103148957786)
+            (157.49999999999997, 58.41366190347208)
+
+        NOTES::  .. Issue #1 was ..
+            (-180.0, 74.35752898700072)
+            (-157.50000000000003, 58.413661903472082) *
+            (-150.0, 41.810314895778603) *
+            (-165.00000000000003, 41.810314895778603) *
+            (-180.0, 41.810314895778603) *
+            (165.0, 41.810314895778603) *
+            (149.99999999999997, 41.810314895778603) *
+            (157.49999999999997, 58.413661903472082) *
 
         """
         ul = self.ul_vertex(plane=True)
@@ -2259,20 +2371,27 @@ class Cell(object):
         square grid.
         List the points in standard, row-major matrix order.
         If the cell is ellipsoidal, project the matrix of points to the
-        ellipsoid (longitude-latitude points).  
+        ellipsoid (longitude-latitude points).
         If `flatten` = True, then flatten the matrix into a one dimensional
         array of pairs.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> for p in c.interior(n=2, plane=False, flatten=True):
             ...     print(my_round(p, 14))
-            (90.0, 41.810380145353903)
-            (-180.0, 41.810380145353903)
-            (-1e-14, 41.810380145353903)
-            (-90.0, 41.810380145353903)
+            (90.0, 41.8103801453539)
+            (-180.0, 41.8103801453539)
+            (-1e-14, 41.8103801453539)
+            (-90.0, 41.8103801453539)
+
+        NOTES::  .. Issue #1 was ..
+            (90.0, 41.810380145353903) *
+            (-180.0, 41.810380145353903) *
+            (-1e-14, 41.810380145353903) *
+            (-90.0, 41.810380145353903) *
+
             >>> all([c.contains(p) for p in c.interior(n=5, plane=True, flatten=True)])
             True
 
@@ -2303,8 +2422,8 @@ class Cell(object):
 
     def contains(self, p, plane=True):
         """
-        Return True if this cell contains point `p`, and return False 
-        otherwise. 
+        Return True if this cell contains point `p`, and return False
+        otherwise.
 
         EXAMPLES::
 
@@ -2326,11 +2445,11 @@ class Cell(object):
 
     def intersects_meridian(self, lam):
         """
-        Return True if this ellipsoidal cell's boundary intersects the 
+        Return True if this ellipsoidal cell's boundary intersects the
         meridian of longitude `lam`, and return False otherwise.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = WGS84_003_RADIANS
             >>> c = rdggs.cell(['N', 6])
             >>> print(c.intersects_meridian(-pi))
@@ -2358,7 +2477,7 @@ class Cell(object):
     def intersects_parallel(self, phi):
         """
         Return True if this cell's boundary intersects the parallel of latitude
-        `phi`, and return False otherwise. 
+        `phi`, and return False otherwise.
         """
         # Cell's boundary intersects parallel iff its extreme latitudes lie on
         # opposite sides of parallel.
@@ -2377,9 +2496,9 @@ class Cell(object):
         """
         Return the region of this cell: 'equatorial', 'north_polar', or
         'south_polar'.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> print(Cell(rdggs, ['P', 2]).region())
             equatorial
@@ -2396,11 +2515,11 @@ class Cell(object):
 
     def ellipsoidal_shape(self):
         """
-        Return the shape of this cell ('quad', 'cap', 'dart', or 
+        Return the shape of this cell ('quad', 'cap', 'dart', or
         'skew_quad') when viewed on the ellipsoid.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> print(Cell(rdggs, ['P', 2]).ellipsoidal_shape())
             quad
@@ -2447,9 +2566,9 @@ class Cell(object):
     def centroid(self, plane=True):
         """
         Return the centroid of this planar or ellipsoidal cell.
-        
+
         EXAMPLES::
-        
+
             >>> rdggs = RHEALPixDGGS()
             >>> c = Cell(rdggs, ['P', 0, 2])
             >>> centroid = c.centroid()
@@ -2546,15 +2665,15 @@ class Cell(object):
         - `x` - A letter from RHEALPixDGGS.cells0 or one of the integers
           0, 1, ..., N**2 - 1.
         - `quarter_turns` - 0, 1, 2, or 3.
-          
+
         EXAMPLES::
 
             >>> c = Cell(RHEALPixDGGS(), ['P', 2])
             >>> print([c.rotate_entry(0, t) for t in range(4)])
             [0, 2, 8, 6]
-            
+
         NOTES:
-        
+
         Operates on letters from RHEALPixDGGS.cells0 too.
         They stay fixed under f.
         Only depends on `self` through `self.N_side`.
@@ -2588,7 +2707,7 @@ class Cell(object):
         Return the cell that is the result of rotating this cell's
         resolution 0 supercell by `quarter_turns` quarter turns anticlockwise.
         Used in neighbor().
-    
+
         EXAMPLES::
 
             >>> c = Cell(RHEALPixDGGS(), ['N', 0])
@@ -2601,11 +2720,11 @@ class Cell(object):
 
     def neighbor(self, direction, plane=True):
         """
-        Return this cell's (edge) neighbor in the given direction. 
-        If `plane` = True, then the direction is one of the strings 
+        Return this cell's (edge) neighbor in the given direction.
+        If `plane` = True, then the direction is one of the strings
         'up', 'right', 'down', 'left', which indicates the desired neighbor
-        relative to x-y coordinates 
-        in the following planar neighbor diagram, (drawn for self.N_side = 3) 
+        relative to x-y coordinates
+        in the following planar neighbor diagram, (drawn for self.N_side = 3)
         where `self` is the middle cell ::
 
                             up
@@ -2615,7 +2734,7 @@ class Cell(object):
                           |     |
                     *-----*-----*-----*
                     |     | 012 |     |
-               left |     | 345 |     | right 
+               left |     | 345 |     | right
                     |     | 678 |     |
                     *-----*-----*-----*
                           |     |
@@ -2623,34 +2742,34 @@ class Cell(object):
                           |     |
                           *-----*
                            down
-        
-        If `plane` = False, then the direction is relative to 
-        longitude-latitude coordinates and is one of the strings 
-        'west', 'east', 'north', 'south' for a quad or skew quad cell; 
+
+        If `plane` = False, then the direction is relative to
+        longitude-latitude coordinates and is one of the strings
+        'west', 'east', 'north', 'south' for a quad or skew quad cell;
         'west', 'east', 'southwest', 'southeast' for a northern dart cell;
         'west', 'east', 'northwest', 'northeast' for a southern dart cell;
         'south_0', 'south_1', 'south_2', 'south_3' for a northern cap cell;
         'north_0', 'north_1', 'north_2', 'north_3' for a southern cap cell;
-        For a cap cell, neighbor directions are numbered in increasing  
-        longitude, so that the longitude of the (nucleus of) north_0 is less 
+        For a cap cell, neighbor directions are numbered in increasing
+        longitude, so that the longitude of the (nucleus of) north_0 is less
         than the longitude of north_1 is less than the longitude of north_2 is
         less than the longitude of north_3, and the longitude of the south_0 is
         less than the longitude of south_1, etc.
-        
-        The tricky part in the planar scenario is that the neighbor 
-        relationships of the six resolution 0 cells is determined by the 
-        positions of those cells on the surface of a cube, 
+
+        The tricky part in the planar scenario is that the neighbor
+        relationships of the six resolution 0 cells is determined by the
+        positions of those cells on the surface of a cube,
         one cell on each face, and not on a plane.
         So sometimes rotating cells is needed to compute neighbors.
-        
+
         Return None if the given direction is invalid for this cell.
-                
+
         EXAMPLES::
 
             >>> c = Cell(RHEALPixDGGS(), ['N', 0])
             >>> print(c.neighbor('down'))
             N3
-            
+
         """
         if plane:
             if direction not in {"left", "right", "down", "up"}:
@@ -2727,13 +2846,13 @@ class Cell(object):
         Return this cell's planar or ellipsoidal (edge) neighbors
         as a dictionary whose keys are the directions of the neighbors.
         See neighbor() for a list of valid directions.
-        
+
         EXAMPLES::
 
             >>> c = Cell(RHEALPixDGGS(), ['N', 0])
             >>> for k, v in sorted(c.neighbors().items()):
             ...     print(k, v)
-            ... 
+            ...
             down N3
             left R0
             right N1

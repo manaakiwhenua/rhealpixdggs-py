@@ -5,11 +5,12 @@ CHANGELOG:
 
 - Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
 - AR, 2013-07-23: Ported to Python 3.3.
+- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 NOTE:
 
-All lengths are measured in meters and all angles are measured in radians 
-unless indicated otherwise. 
+All lengths are measured in meters and all angles are measured in radians
+unless indicated otherwise.
 """
 # *****************************************************************************
 #       Copyright (C) 2012 Alexander Raichev <alex.raichev@gmail.com>
@@ -34,7 +35,7 @@ def my_round(x, digits=0):
         0.142857
         >>> print(my_round((1./3, 1./7), 6))
         (0.333333, 0.142857)
-        
+
     """
     try:
         result = round(x, digits)
@@ -47,15 +48,19 @@ def my_round(x, digits=0):
 
 def wrap_longitude(lam, radians=False):
     """
-    Given a point p on the unit circle at angle `lam` from the positive 
+    Given a point p on the unit circle at angle `lam` from the positive
     x-axis, return its angle theta in the range -pi <= theta < pi.
     If `radians` = True, then `lam` and the output are given in radians.
     Otherwise, they are given in degrees.
-    
+
     EXAMPLES::
-    
+
         >>> wrap_longitude(2*pi + pi, radians=True)
+        -3.141592653589793
+
+    NOTES:: .. Issue #1 was ..
         -3.1415926535897931
+
         >>> wrap_longitude(-185, radians=False)
         175.0
         >>> wrap_longitude(-180, radians=False)
@@ -82,14 +87,14 @@ def wrap_longitude(lam, radians=False):
 def wrap_latitude(phi, radians=False):
     """
     Given a point p on the unit circle at angle `phi` from the positive x-axis,
-    if p lies in the right half of the circle, then return its angle that lies 
+    if p lies in the right half of the circle, then return its angle that lies
     in the interval [-pi/2, pi/2].
-    If p lies in the left half of the circle, then reflect it through the 
-    origin, and return the angle of the reflected point that lies in the 
+    If p lies in the left half of the circle, then reflect it through the
+    origin, and return the angle of the reflected point that lies in the
     interval [-pi/2, pi/2].
     If `radians` = True, then `phi` and the output are given in radians.
     Otherwise, they are given in degrees.
-    
+
     EXAMPLES::
 
         >>> wrap_latitude(45, radians=False)
@@ -123,22 +128,30 @@ def wrap_latitude(phi, radians=False):
 
 def auth_lat(phi, e, inverse=False, radians=False):
     """
-    Given a point of geographic latitude `phi` on an ellipse of 
+    Given a point of geographic latitude `phi` on an ellipse of
     eccentricity `e`, return the authalic latitude of the point.
     If `inverse` =True, then compute its inverse approximately.
-    
+
     EXAMPLES::
-    
+
         >>> beta = auth_lat(pi/4, 0.5, radians=True)
         >>> print(my_round(beta, 15))
+        0.68951821243544
+
+    NOTES:: .. Issue #1 was ..
         0.689518212435
+
         >>> print(my_round(auth_lat(beta, 0.5, radians=True, inverse=True), 15))
+        0.785126523581272
+
+    NOTES:: .. Issue #1 was ..
         0.785126523581
+
         >>> print(my_round(pi/4, 15))
         0.785398163397448
-        
+
     NOTES:
-    
+
     The power series approximation used for the inverse is
     standard in cartography (PROJ.4 uses it, for instance)
     and accurate for small eccentricities.
@@ -181,23 +194,34 @@ def auth_rad(a, e, inverse=False):
     radius `a` and eccentricity `e`.
     If `inverse` = True, then return the major radius of the ellipsoid
     with authalic radius `a` and eccentricity `e`.
-    
+
     EXAMPLES::
-    
+
         >>> auth_rad(1, 0)
         1
         >>> for i in range(2, 11):
-        ...     e = 1.0/i**2     
+        ...     e = 1.0/i**2
         ...     print(my_round((e, auth_rad(1, 1.0/i**2)), 15))
-        (0.25, 0.98939325967009495)
-        (0.111111111111111, 0.99793514742994305)
-        (0.0625, 0.99934823645582505)
-        (0.04, 0.99973321235361001)
-        (0.027777777777778, 0.99987137105187995)
-        (0.020408163265306, 0.99993057628561399)
-        (0.015625, 0.99995930708084702)
-        (0.012345679012346, 0.99997459627121099)
-        (0.01, 0.99998333286108898)
+        (0.25, 0.989393259670095)
+        (0.111111111111111, 0.997935147429943)
+        (0.0625, 0.999348236455825)
+        (0.04, 0.99973321235361)
+        (0.027777777777778, 0.99987137105188)
+        (0.020408163265306, 0.999930576285614)
+        (0.015625, 0.999959307080847)
+        (0.012345679012346, 0.999974596271211)
+        (0.01, 0.999983332861089)
+
+    NOTES:: .. Issue #1 was ..
+        (0.25, 0.98939325967009495) *
+        (0.111111111111111, 0.99793514742994305) *
+        (0.0625, 0.99934823645582505) *
+        (0.04, 0.99973321235361001) *
+        (0.027777777777778, 0.99987137105187995) *
+        (0.020408163265306, 0.99993057628561399) *
+        (0.015625, 0.99995930708084702) *
+        (0.012345679012346, 0.99997459627121099) *
+        (0.01, 0.99998333286108898) *
 
     """
     if e == 0:

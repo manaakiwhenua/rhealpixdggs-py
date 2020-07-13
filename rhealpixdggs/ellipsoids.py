@@ -5,11 +5,12 @@ CHANGELOG:
 
 - Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
 - AR, 2013-07-23: Ported to Python 3.3.
+- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 NOTE:
 
-All lengths are measured in meters and all angles are measured in radians 
-unless indicated otherwise. 
+All lengths are measured in meters and all angles are measured in radians
+unless indicated otherwise.
 
 By 'ellipsoid' throughout, i mean an ellipsoid of revolution and *not* a general (triaxial) ellipsoid.
 Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordinates.
@@ -32,7 +33,9 @@ from rhealpixdggs.utils import my_round, auth_lat, auth_rad
 
 # Parameters of some common ellipsoids.
 WGS84_A = 6378137.0
-WGS84_F = 1 / 298.257222101
+WGS84_F = 1 / 298.257222101  # ORIGINAL: GRS80 from EPSG:42310 298.257222101, based on WGS84+GRS80
+# WGS84_F = 1 / 298.257222100882711  # GRS80 from https://en.wikipedia.org/wiki/World_Geodetic_System
+# WGS84_F = 1 / 298.257223563  # new value from EPSG:7030
 WGS84_B = WGS84_A * (1 - WGS84_F)
 WGS84_E = sqrt(WGS84_F * (1 - WGS84_F))
 WGS84_R_A = sqrt(WGS84_A ** 2 / 2 + WGS84_B ** 2 / 2 * (arctanh(WGS84_E) / WGS84_E))
@@ -41,13 +44,13 @@ R_EM = 6371000  # Earth's mean radius
 
 class Ellipsoid(object):
     """
-    Represents an ellipsoid of revolution (possibly a sphere) with a 
+    Represents an ellipsoid of revolution (possibly a sphere) with a
     geodetic longitude-latitude coordinate frame.
-    
+
     INSTANCE ATTRIBUTES:
-    
+
     - `sphere` - True if the ellipsoid is a sphere, and False otherwise.
-    - `R` - The radius of the ellipsoid in meters, implying that it is a 
+    - `R` - The radius of the ellipsoid in meters, implying that it is a
       sphere.
     - `a` - Major radius of the ellipsoid in meters.
     - `b` - Minor radius of the ellipsoid in meters.
@@ -58,10 +61,10 @@ class Ellipsoid(object):
     - `lat_0` - Latitude of origin.
     - `radians` - If True, use angles measured in radians for all calculations.
       Use degrees otherwise.
-    - `phi_0` - The latitude separating the equatorial region and 
+    - `phi_0` - The latitude separating the equatorial region and
       the north polar region in the context of the (r)HEALPix projection.
 
-    Except for phi_0, these attribute names match the names of the 
+    Except for phi_0, these attribute names match the names of the
     `PROJ.4 ellipsoid parameters <http://trac.osgeo.org/proj/wiki/GenParms>`_.
     """
 
@@ -132,7 +135,7 @@ class Ellipsoid(object):
 
     def __ne__(self, other):
         """
-        The inequality relation on cells. 
+        The inequality relation on cells.
         Since Python 3.3 doesn't automatically create reverse relations
         from given ones, i must define this seemingly redundant relation.
         """
@@ -140,7 +143,7 @@ class Ellipsoid(object):
 
     def pi(self):
         """
-        Return pi if `self.radians` = True and 180 otherwise. 
+        Return pi if `self.radians` = True and 180 otherwise.
         """
         if self.radians:
             return pi
@@ -151,12 +154,12 @@ class Ellipsoid(object):
         """
         Return a point (given in geodetic coordinates) sampled uniformly at
         random from the section of this ellipsoid with longitude in the range
-        `lam_min <= lam < lam_max` and latitude in the range 
-        `phi_min <= phi < phi_max`.     
+        `lam_min <= lam < lam_max` and latitude in the range
+        `phi_min <= phi < phi_max`.
         But avoid the poles.
-        
+
         EXAMPLES::
-        
+
            >>> E = UNIT_SPHERE
            >>> print(E.random_point()) # doctest: +SKIP
            (-1.0999574573422948, 0.21029104897701129)
@@ -212,9 +215,9 @@ class Ellipsoid(object):
     def lattice(self, n=90):
         """
         Return a 2n x n square lattice of longitude-latitude points.
-        
+
         EXAMPLES::
-        
+
             >>> E = UNIT_SPHERE
             >>> for p in E.lattice(n=3):
             ...     print(p)
@@ -249,7 +252,7 @@ class Ellipsoid(object):
 
     def meridian(self, lam, n=200):
         """
-        Return a list of `n` equispaced longitude-latitude 
+        Return a list of `n` equispaced longitude-latitude
         points lying along the meridian of longitude `lam`.
         Avoid the poles.
         """
@@ -259,7 +262,7 @@ class Ellipsoid(object):
 
     def parallel(self, phi, n=200):
         """
-        Return a list of `2*n` equispaced longitude-latitude 
+        Return a list of `2*n` equispaced longitude-latitude
         points lying along the parallel of latitude `phi`.
         """
         PI = self.pi()
@@ -268,16 +271,16 @@ class Ellipsoid(object):
 
     def graticule(self, n=400, spacing=None):
         """
-        Return a list of longitude-latitude points sampled from a 
-        longitude-latitude graticule on this ellipsoid with the given 
+        Return a list of longitude-latitude points sampled from a
+        longitude-latitude graticule on this ellipsoid with the given
         spacing between meridians and between parallels.
         The number of points on longitude and latitude per pi radians is `n`.
         The spacing should be specified in the angle units used for this
         ellipsoid.
         If `spacing=None`, then a default spacing of pi/16 radians will be set.
-        
+
         EXAMPLES::
-        
+
             >>> E = UNIT_SPHERE
             >>> print(len(E.graticule(n=400)))
             25600
@@ -308,8 +311,8 @@ class Ellipsoid(object):
         """
         Return a list of longitude-latitude points contained in
         the file with filename `filename`.
-        Assume the file is a text file containing at most one     
-        longitude-latitude point per line with the coordinates separated by 
+        Assume the file is a text file containing at most one
+        longitude-latitude point per line with the coordinates separated by
         whitespace and angles given in degrees.
         """
         result = []
@@ -328,13 +331,16 @@ class Ellipsoid(object):
 
     def xyz(self, lam, phi):
         """
-        Given a point on this ellipsoid with longitude-latitude coordinates 
+        Given a point on this ellipsoid with longitude-latitude coordinates
         `(lam, phi)`, return the point's 3D rectangular coordinates.
-        
+
         EXAMPLES::
-        
+
             >>> E = UNIT_SPHERE
             >>> print(my_round(E.xyz(0, 45), 15))
+            (0.707106781186548, 0.0, 0.707106781186548)
+
+        NOTES:: .. Issue #1 was ..
             (0.70710678118654802, 0.0, 0.70710678118654802)
 
         """

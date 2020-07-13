@@ -1,7 +1,7 @@
 """
-This Python 3.3 module computes linear and areal distortion statistics of 
+This Python 3.3 module computes linear and areal distortion statistics of
 map projections.
-It is used for analysis only and so is not essential to manipulating 
+It is used for analysis only and so is not essential to manipulating
 the rHEALPix discrete global grid system.
 
 CHANGELOG:
@@ -9,6 +9,7 @@ CHANGELOG:
 - Alexander Raichev (AR), 2012-10-01: Initial version.
 - AR, 2013-01-21: Wasn't working in degrees mode. Fixed that bug.
 - AR, 2013-07-23: Ported to Python 3.3.
+- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 """
 # *****************************************************************************
@@ -27,16 +28,19 @@ from rhealpixdggs.utils import my_round, wrap_longitude, wrap_latitude
 def fff_coeffs(T, lam, phi):
     """
     Return numerical approximations of the `first fundamental form <http://en.wikipedia.org/wiki/First_fundamental_form>`_ coefficients
-    E, F, and G (in that order) of map projection `T` 
-    (an projection_tools.Proj or projection_tools.Proj4 instance) at longitude `lam` and 
+    E, F, and G (in that order) of map projection `T`
+    (an projection_tools.Proj or projection_tools.Proj4 instance) at longitude `lam` and
     latitude `phi`.
-    
+
     EXAMPLES::
-    
+
         >>> from rhealpixdggs.projection_wrapper import Proj
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID_RADIANS
         >>> f = Proj(ellipsoid=WGS84_ELLIPSOID_RADIANS, proj='healpix')
         >>> print(my_round(fff_coeffs(f, 0, pi/6), 15))
+        (40635288880650.484, 0.0, 42251277112739.64)
+
+    NOTES:: .. Issue #1 was !!! ..
         (40635288880650.484, 0.0, 42251277118793.328)
 
     """
@@ -65,27 +69,30 @@ def fff_coeffs(T, lam, phi):
 
 def scale_factors(T, lam, phi):
     """
-    Return numerical approximations of the local scale factors s_M, s_P, and 
-    s_A of the map projection `T` 
+    Return numerical approximations of the local scale factors s_M, s_P, and
+    s_A of the map projection `T`
     (an projection_tools.Proj or projection_tools.Proj4 instance)
-    at longitude `lam` and  latitude `phi`, where 
-    s_M is the local linear scale along meridians, 
+    at longitude `lam` and  latitude `phi`, where
+    s_M is the local linear scale along meridians,
     s_P is the local linear scale along parallels, and
-    s_A is the local area scale. 
+    s_A is the local area scale.
     Also return theta (in radians), the angle between the vectors (delxdellam, delydellam)
     and (delxdelphi, delydelphi).
 
     OUTPUT:
 
     (s_M, s_P, s_A, theta)
-    
+
     EXAMPLES::
-    
+
         >>> from rhealpixdggs.projection_wrapper import Proj
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID_RADIANS
         >>> f = Proj(ellipsoid=WGS84_ELLIPSOID_RADIANS, proj='healpix')
         >>> print(my_round(scale_factors(f, 0, pi/6), 15))
-        (1.0212575853790069, 1.1535746974071359, 1.1780969100283301, 1.5707963267948959)
+        (1.021257585305845, 1.153574697407136, 1.178096909943932, 1.570796326794896)
+
+    NOTES:: .. Issue #1 was !!! ..
+        (1.0212575853790069, 1.1535746974071359, 1.1780969100283301, 1.5707963267948959) *
 
 
     """
@@ -118,22 +125,25 @@ def scale_factors(T, lam, phi):
 def distortion(T, lam, phi):
     """
     Return ((x, y), mad, ld, ad)
-    Here `(x, y) = T(lam, phi)`, the image under the map projection `T` 
+    Here `(x, y) = T(lam, phi)`, the image under the map projection `T`
     (an projection_tools.Proj or projection_tools.Proj4 instance)
     of the longitude-latitude point `(lam, phi)`;
     mad = maximum angular distortion at (x, y) = 2*arcsin((A - B)/(A + B))
     ld = linear distortion at (x, y) = A/B;
     ad = areal distortion at (x, y) = AB;
-    A and B are the major and minor radii, respectively, of the Tissot ellipse 
+    A and B are the major and minor radii, respectively, of the Tissot ellipse
     at (x, y).
-    
+
     EXAMPLES::
-    
+
         >>> from rhealpixdggs.projection_wrapper import Proj
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID_RADIANS
         >>> f = Proj(ellipsoid=WGS84_ELLIPSOID_RADIANS, proj='healpix')
         >>> print(my_round(distortion(f, 0, pi/6), 15))
-        ((0.0, 3748655.1150495014), 0.121755482930707, 1.1295629172526771, 1.1780969100283301)
+        ((0.0, 3748655.1150495014), 0.121755483002213, 1.129562917333597, 1.178096909943932)
+
+        NOTES:: .. Issue #1 was !!! ..
+        ((0.0, 3748655.1150495014), 0.121755482930707, 1.1295629172526771, 1.1780969100283301) *
 
     """
     x, y = T(lam, phi)
@@ -158,35 +168,35 @@ def distortion(T, lam, phi):
 
 def distortion_stats(T, sample, my_round_numbers=3):
     """
-    Return the sample minimum, sample maximum, sample median, sample mean, 
-    and sample standard deviation of the maximum angular distortion, linear 
+    Return the sample minimum, sample maximum, sample median, sample mean,
+    and sample standard deviation of the maximum angular distortion, linear
     distortion, and area distortion functions
-    for the map projection `T` 
+    for the map projection `T`
     (an projection_tools.Proj or projection_tools.Proj4 instance)
-    of the list `sample` of longitude-latitude 
+    of the list `sample` of longitude-latitude
     points chosen from the surface `T.ellipsoid`.
-    Most likely you will want sample to comprise points sampled uniformly 
-    at random from the surface of `T.ellipsoid` (and not simply sampled 
+    Most likely you will want sample to comprise points sampled uniformly
+    at random from the surface of `T.ellipsoid` (and not simply sampled
     uniformly at random from the rectangle (-pi, pi) x (-pi/2, pi/2)).
-        
+
     OUTPUT:
-    
+
     (distortions, stats), where
     distortions is a list of distortion() outputs for each longitude-
     latitude point sampled;
-    stats is the list of lists [maximum angular distortion stats, 
-    linear distortion stats, area distortion stats], where each stats sublist 
+    stats is the list of lists [maximum angular distortion stats,
+    linear distortion stats, area distortion stats], where each stats sublist
     is of the form [sample mean, sample standard deviation, sample minimum,
     sample maximum, sample median].
-    
+
     EXAMPLES::
-    
+
         >>> from rhealpixdggs.projection_wrapper import Proj
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID_RADIANS
         >>> E = WGS84_ELLIPSOID_RADIANS
         >>> f = Proj(ellipsoid=E, proj='healpix')
         >>> sample = [E.random_point() for i in range(100)]
-        >>> print(distortion_stats(f, sample)[1])  # doctest: +SKIP 
+        >>> print(distortion_stats(f, sample)[1])  # doctest: +SKIP
         [[0.309, 0.238, 0.001, 0.838, 0.178], [1.41, 0.375, 1.001, 2.372, 1.195], [1.178, 0.0, 1.178, 1.178, 1.178]]
 
     """
@@ -239,12 +249,12 @@ def utm_zone(lam, phi):
     Based on the WGS84 ellipsoid.
     Return None if `phi` is out of bounds, that is, if `phi` is greater than
     84 degrees or less than 80 degrees.
-    
+
     EXAMPLES::
-    
+
         >>> print(utm_zone(0, 84*pi/180))
         31
-        >>> print(utm_zone(0, 85*pi/180)) 
+        >>> print(utm_zone(0, 85*pi/180))
         None
 
     """

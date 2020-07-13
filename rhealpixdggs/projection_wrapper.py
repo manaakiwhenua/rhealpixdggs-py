@@ -5,11 +5,12 @@ CHANGELOG:
 
 - Alexander Raichev (AR), 2013-01-25: Refactored code from release 0.3.
 - AR, 2013-07-23: Ported to Python 3.3.
+- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 NOTE:
 
-All lengths are measured in meters and all angles are measured in radians 
-unless indicated otherwise. 
+All lengths are measured in meters and all angles are measured in radians
+unless indicated otherwise.
 By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
 """
 # *****************************************************************************
@@ -39,17 +40,17 @@ HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
 class Proj(object):
     """
     Represents a map projection of a given ellipsoid.
-    
+
     INSTANCE ATTRIBUTES:
-    
+
     - `ellipsoid` - An ellipsoid (Ellipsoid instance) to project.
-    - `proj` - The name (string) of the map projection, either a valid PROJ.4 
+    - `proj` - The name (string) of the map projection, either a valid PROJ.4
       projection name or a valid homemade projection name.
-    - `kwargs` - Keyword arguments (dictionary) needed for the projection's 
-      definition, but not for the definition of the ellipsoid.  For example, 
-      these could be {'north_square':1, 'south_square': 2} for the rhealpix 
-      projection. 
-    
+    - `kwargs` - Keyword arguments (dictionary) needed for the projection's
+      definition, but not for the definition of the ellipsoid.  For example,
+      these could be {'north_square':1, 'south_square': 2} for the rhealpix
+      projection.
+
     EXAMPLES::
 
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
@@ -58,14 +59,17 @@ class Proj(object):
         (0.0, 3748655.1150495014)
         >>> f = Proj(ellipsoid=WGS84_ELLIPSOID, proj='cea')
         >>> print(my_round(f(0, 30), 15))
-        (0.0, 3180183.485774971)
-        
+        (0.0, 3180183.4857749646)
+
+    NOTES:: .. Issue #1 was !!! ..
+        (0.0, 3180183.485774971) *
+
     NOTES:
-    
+
     When accessing a homemade map projection assume that it can be called via
-    a function g(a, e), where a is the major radius of the ellipsoid to be 
+    a function g(a, e), where a is the major radius of the ellipsoid to be
     projected and e is its eccentricity.
-    The output of g should be a function object of the form 
+    The output of g should be a function object of the form
     f(u, v, radians=False, inverse=False).
     For example, see the healpix() function in ``pj_healpix.py``.
     """

@@ -10,11 +10,12 @@ CHANGELOG:
 - AR, 2013-03-05: In in_healpix_image() increased eps to 1e-10 to decrease out-of-bounds errors i was getting when
 drawing figures.
 - AR, 2013-07-23: Ported to Python 3.3.
+- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 NOTE:
 
-All lengths are measured in meters and all angles are measured in radians 
-unless indicated otherwise. 
+All lengths are measured in meters and all angles are measured in radians
+unless indicated otherwise.
 By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
 """
 # *****************************************************************************
@@ -33,16 +34,16 @@ from rhealpixdggs.utils import my_round, auth_lat, auth_rad
 
 def healpix_sphere(lam, phi):
     """
-    Compute the signature function of the HEALPix 
-    projection of the unit sphere. 
-        
+    Compute the signature function of the HEALPix
+    projection of the unit sphere.
+
     INPUT:
-    
+
     - `lam, phi` - Geodetic longitude-latitude coordinates in radians.
-      Assume -pi <= `lam` < pi and -pi/2 <= `phi` <= pi/2. 
-    
+      Assume -pi <= `lam` < pi and -pi/2 <= `phi` <= pi/2.
+
     EXAMPLES::
-    
+
         >>> print(healpix_sphere(0, arcsin(2.0/3)) == (0, pi/4))
         True
 
@@ -68,12 +69,12 @@ def healpix_sphere(lam, phi):
 def healpix_sphere_inverse(x, y):
     """
     Compute the inverse of the healpix_sphere().
-    
+
     INPUT:
-    
+
     - `x, y` - Planar coordinates in meters in the image of the
       HEALPix projection of the unit sphere.
-    
+
     EXAMPLES::
 
         >>> print(healpix_sphere_inverse(0, pi/4) == (0, arcsin(2.0/3)))
@@ -116,19 +117,19 @@ def healpix_ellipsoid(lam, phi, e=0):
     Compute the signature functions of the HEALPix projection of an oblate
     ellipsoid with eccentricity `e` whose authalic sphere is the unit sphere.
     Works when `e` = 0 (spherical case) too.
-        
+
     INPUT:
-    
+
     - `lam, phi` - Geodetic longitude-latitude coordinates in radians.
-      Assume -pi <= `lam` < pi and -pi/2 <= `phi` <= pi/2. 
+      Assume -pi <= `lam` < pi and -pi/2 <= `phi` <= pi/2.
     - `e` - Eccentricity of the oblate ellipsoid.
-    
+
     EXAMPLES::
-    
+
         >>> print(my_round(healpix_ellipsoid(0, pi/7), 15))
-        (0, 0.51115723774642197)
+        (0, 0.511157237746422)
         >>> print(my_round(healpix_ellipsoid(0, pi/7, e=0.8), 15))
-        (0, 0.26848445085783701)
+        (0, 0.268484450857837)
 
     """
     beta = auth_lat(phi, e, radians=True)
@@ -138,16 +139,16 @@ def healpix_ellipsoid(lam, phi, e=0):
 def healpix_ellipsoid_inverse(x, y, e=0):
     """
     Compute the inverse of healpix_ellipsoid().
-    
+
     EXAMPLES::
-    
+
         >>> p = (0, pi/7)
         >>> q = healpix_ellipsoid(*p)
         >>> print(my_round(healpix_ellipsoid_inverse(*q), 15))
-        (0, 0.44879895051282798)
+        (0, 0.448798950512828)
         >>> print(my_round(p, 15))
         (0, 0.448798950512828)
-        
+
     """
     # Throw error if input coordinates are out of bounds.
     if not in_healpix_image(x, y):
@@ -160,11 +161,11 @@ def healpix_ellipsoid_inverse(x, y, e=0):
 
 def in_healpix_image(x, y):
     """
-    Return True if and only if `(x, y)` lies in the image of the HEALPix 
+    Return True if and only if `(x, y)` lies in the image of the HEALPix
     projection of the unit sphere.
-        
+
     EXAMPLES::
-    
+
         >>> eps = 0     # Test boundary points.
         >>> hp = [
         ... (-pi - eps, pi/4),
@@ -189,7 +190,7 @@ def in_healpix_image(x, y):
         >>> for p in hp:
         ...     if not in_healpix_image(*p):
         ...             print('Fail')
-        ... 
+        ...
         >>> in_healpix_image(0, 0)
         True
         >>> in_healpix_image(0, pi/4 + 0.1)
@@ -228,7 +229,7 @@ def in_healpix_image(x, y):
 
 def healpix_vertices():
     """
-    Return a list of the planar vertices of the HEALPix projection of 
+    Return a list of the planar vertices of the HEALPix projection of
     the unit sphere.
     """
     return [
@@ -257,22 +258,22 @@ def healpix(a=1, e=0):
     """
     Return a function object that wraps the HEALPix projection and its inverse
     of an ellipsoid with major radius `a` and eccentricity `e`.
-    
+
     EXAMPLES::
-    
+
         >>> f = healpix(a=2, e=0)
         >>> print(my_round(f(0, pi/3, radians=True), 15))
-        (0.57495135977821499, 2.1457476865731109)
-        >>> p = (0, 60) 
+        (0.574951359778215, 2.145747686573111)
+        >>> p = (0, 60)
         >>> q = f(*p, radians=False); print(my_round(q, 15))
-        (0.57495135977821499, 2.1457476865731109)
+        (0.574951359778215, 2.145747686573111)
         >>> print(my_round(f(*q, radians=False, inverse=True), 15))
-        (5.9999999999999997e-15, 59.999999999999986)
+        (6e-15, 59.999999999999986)
         >>> print(my_round(p, 15))
         (0, 60)
-    
+
     OUTPUT:
-    
+
     - A function object of the form f(u, v, radians=False, inverse=False).
     """
     R_A = auth_rad(a, e)
@@ -299,7 +300,7 @@ def healpix(a=1, e=0):
 def healpix_diagram(a=1, e=0, shade_polar_region=True):
     """
     Return a Sage Graphics object diagramming the HEALPix projection
-    boundary and polar triangles for the ellipsoid with major radius `a` 
+    boundary and polar triangles for the ellipsoid with major radius `a`
     and eccentricity `e`.
     Inessential graphics method.
     Requires Sage graphics methods.

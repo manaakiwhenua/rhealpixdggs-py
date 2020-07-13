@@ -5,11 +5,12 @@ CHANGELOG:
 
 - Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.
 - AR, 2013-07-23: Ported to Python 3.3.
+- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 NOTE:
 
-All lengths are measured in meters and all angles are measured in radians 
-unless indicated otherwise. 
+All lengths are measured in meters and all angles are measured in radians
+unless indicated otherwise.
 By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
 """
 # *****************************************************************************
@@ -51,30 +52,30 @@ ROTATE = {
 
 def combine_triangles(x, y, north_square=0, south_square=0, inverse=False):
     """
-    Rearrange point `(x, y)` in the HEALPix projection by 
+    Rearrange point `(x, y)` in the HEALPix projection by
     combining the polar triangles into two polar squares.
-    Put the north polar square in position `north_square` and 
+    Put the north polar square in position `north_square` and
     the south polar square in position `south_square`.
     If `inverse` = True, uncombine the polar triangles.
 
     INPUT:
 
     - `x, y` - Coordinates in the HEALPix projection of the unit sphere.
-    - `north_square, south_square` - Integers between 0 and 3 indicating 
-      the positions of the north_square polar square and south_square polar 
+    - `north_square, south_square` - Integers between 0 and 3 indicating
+      the positions of the north_square polar square and south_square polar
       square respectively.
       See rhealpix_sphere() docstring for a diagram.
     - `inverse` - (Optional; default = False) Boolean. If False, then compute
       forward function. If True, then compute inverse function.
-        
+
     EXAMPLES::
-    
+
         >>> u, v = -pi/4, pi/3
         >>> x, y = combine_triangles(u, v)
         >>> print(my_round((x, y), 15))
-        (-1.8325957145940459, 1.5707963267948959)
+        (-1.832595714594046, 1.570796326794896)
         >>> print(my_round(combine_triangles(x, y, inverse=True), 15))
-        (-0.78539816339744795, 1.0471975511965981)
+        (-0.785398163397448, 1.047197551196598)
         >>> print(my_round((u, v), 15))
         (-0.785398163397448, 1.047197551196598)
 
@@ -115,48 +116,48 @@ def combine_triangles(x, y, north_square=0, south_square=0, inverse=False):
 def triangle(x, y, north_square=0, south_square=0, inverse=False):
     """
     Return the number of the polar triangle and region that `(x, y)` lies in.
-    If `inverse` = False, then assume `(x,y)` lies in the image of the HEALPix 
+    If `inverse` = False, then assume `(x,y)` lies in the image of the HEALPix
     projection of the unit sphere.
-    If `inverse` = True, then assume `(x,y)` lies in the image of the 
+    If `inverse` = True, then assume `(x,y)` lies in the image of the
     `(north_square, south_square)`-rHEALPix projection of the unit sphere.
 
     INPUT:
-    
-    - `x, y` - Coordinates in the HEALPix or rHEALPix (if `inverse` = True) 
+
+    - `x, y` - Coordinates in the HEALPix or rHEALPix (if `inverse` = True)
       projection of the unit sphere.
-    - `north_square, south_square` - Integers between 0 and 3 indicating the 
-      positions of the north_square pole square and south_square pole square 
+    - `north_square, south_square` - Integers between 0 and 3 indicating the
+      positions of the north_square pole square and south_square pole square
       respectively.
       See rhealpix_sphere() docstring for a diagram.
     - `inverse` - (Optional; default = False) Boolean. If False, then compute
       forward function. If True, then compute inverse function.
-      
+
     OUTPUT:
-    
+
     The pair (triangle_number, region).
-    Here region equals 'north_polar' (polar), 'south_polar' (polar), or 
+    Here region equals 'north_polar' (polar), 'south_polar' (polar), or
     'equatorial', indicating where `(x, y)` lies.
     If region = 'equatorial', then triangle_number = None.
     Suppose now that region != 'equatorial'.
-    If `inverse` = False, then triangle_number is the number (0, 1, 2, or 3) of 
+    If `inverse` = False, then triangle_number is the number (0, 1, 2, or 3) of
     the HEALPix polar triangle Z that `(x, y)` lies in.
-    If `inverse` = True, then triangle_number is the number (0, 1, 2, or 3) of 
+    If `inverse` = True, then triangle_number is the number (0, 1, 2, or 3) of
     the HEALPix polar triangle that `(x, y)` will get moved into.
-    
+
     EXAMPLES::
-    
+
         >>> triangle(-pi/4, pi/4 + 0.1)
         (1, 'north_polar')
         >>> triangle(-3*pi/4 + 0.1, pi/2, inverse=True)
         (1, 'north_polar')
-        
+
     NOTES:
-    
-    In the HEALPix projection, the polar triangles are labeled 0--3 from 
+
+    In the HEALPix projection, the polar triangles are labeled 0--3 from
     east to west like this::
 
-            *       *       *       *       
-          * 0 *   * 1 *   * 2 *   * 3 *        
+            *       *       *       *
+          * 0 *   * 1 *   * 2 *   * 3 *
         *-------*-------*-------*-------*
         |       |       |       |       |
         |       |       |       |       |
@@ -164,25 +165,25 @@ def triangle(x, y, north_square=0, south_square=0, inverse=False):
         *-------*-------*-------*-------*
           * 0 *   * 1 *   * 2 *   * 3 *
             *       *       *       *
-    
-    In the rHEALPix projection these polar triangles get rearranged
-    into a square with the triangles numbered `north_square` and `south_square` 
-    remaining fixed.
-    For example, if `north_square` = 1 and `south_square` = 3, 
-    then the triangles get rearranged this way:: 
 
-        North polar square:     *-------*       
-                                | * 3 * |    
-                                | 0 * 2 |    
-                                | * 1 * |    
+    In the rHEALPix projection these polar triangles get rearranged
+    into a square with the triangles numbered `north_square` and `south_square`
+    remaining fixed.
+    For example, if `north_square` = 1 and `south_square` = 3,
+    then the triangles get rearranged this way::
+
+        North polar square:     *-------*
+                                | * 3 * |
+                                | 0 * 2 |
+                                | * 1 * |
                             ----*-------*----
-                            
+
         South polar square: ----*-------*----
                                 | * 3 * |
                                 | 2 * 0 |
                                 | * 1 * |
-                                *-------*    
-        
+                                *-------*
+
     """
     if not inverse:
         # Forward function.
@@ -248,36 +249,36 @@ def triangle(x, y, north_square=0, south_square=0, inverse=False):
 
 def rhealpix_sphere(lam, phi, north_square=0, south_square=0):
     """
-    Compute the signature functions of the rHEALPix map projection of 
-    the unit sphere. 
-    The north polar square is put in position `north_square`, and the 
+    Compute the signature functions of the rHEALPix map projection of
+    the unit sphere.
+    The north polar square is put in position `north_square`, and the
     south polar square is put in position `south_square`.
-        
+
     INPUT:
-    
+
     - `lam, phi` -Geographic longitude-latitude coordinates in radians.
       Assume -pi <= `lam` < pi and -pi/2 <= `phi` <= pi/2.
-    - `north_square, south_square` - (Optional; defaults = 0, 0) Integers 
-      between 0 and 3 indicating positions of north polar and 
+    - `north_square, south_square` - (Optional; defaults = 0, 0) Integers
+      between 0 and 3 indicating positions of north polar and
       south polar squares, respectively.
-    
+
     EXAMPLES::
-    
+
         >>> print(my_round(rhealpix_sphere(0, pi/4), 15))
         (-1.619978633413937, 2.307012183573304)
 
     NOTE:
-    
+
     The polar squares are labeled 0, 1, 2, 3 from east to west like this::
-        
-        east         west        
+
+        east         west
         *---*---*---*---*
         | 0 | 1 | 2 | 3 |
         *---*---*---*---*
         |   |   |   |   |
         *---*---*---*---*
         | 0 | 1 | 2 | 3 |
-        *---*---*---*---*    
+        *---*---*---*---*
     """
     x, y = healpix_sphere(lam, phi)
     return combine_triangles(x, y, north_square=north_square, south_square=south_square)
@@ -286,13 +287,13 @@ def rhealpix_sphere(lam, phi, north_square=0, south_square=0):
 def rhealpix_sphere_inverse(x, y, north_square=0, south_square=0):
     """
     Compute the inverse of rhealpix_sphere().
-    
+
     EXAMPLES::
-    
+
         >>> p = (0, pi/4)
         >>> q = rhealpix_sphere(*p)
         >>> print(my_round(rhealpix_sphere_inverse(*q), 15))
-        (0.0, 0.78539816339744795)
+        (0.0, 0.785398163397448)
         >>> print(my_round(p, 15))
         (0, 0.785398163397448)
 
@@ -311,28 +312,28 @@ def rhealpix_sphere_inverse(x, y, north_square=0, south_square=0):
 
 def rhealpix_ellipsoid(lam, phi, e=0, north_square=0, south_square=0):
     """
-    Compute the signature functions of the rHEALPix map 
-    projection of an oblate ellipsoid with eccentricity `e` whose 
-    authalic sphere is the unit sphere. 
-    The north polar square is put in position `north_square`, 
+    Compute the signature functions of the rHEALPix map
+    projection of an oblate ellipsoid with eccentricity `e` whose
+    authalic sphere is the unit sphere.
+    The north polar square is put in position `north_square`,
     and the south polar square is put in position `south_square`.
     Works when `e` = 0 (spherical case) too.
-    
+
     INPUT:
-    
+
     - `lam, phi` - Geographic longitude-latitude coordinates in radian.
       Assume -pi <= `lam` < pi and -pi/2 <= `phi` <= pi/2.
     - `e` - Eccentricity of the ellipsoid.
-    - `north_square, south_square` - (Optional; defaults = 0, 0) Integers 
-      between 0 and 3 indicating positions of north polar and 
+    - `north_square, south_square` - (Optional; defaults = 0, 0) Integers
+      between 0 and 3 indicating positions of north polar and
       south polar squares, respectively.
       See rhealpix_sphere() docstring for a diagram.
 
     EXAMPLES::
-        
+
         >>> from numpy import arcsin
         >>> print(my_round(rhealpix_ellipsoid(0, arcsin(2.0/3)), 15))
-        (0, 0.78539816339744795)
+        (0, 0.785398163397448)
 
     """
     # Ensure north_square and south_square lie in {0, 1,2, 3}.
@@ -343,16 +344,16 @@ def rhealpix_ellipsoid(lam, phi, e=0, north_square=0, south_square=0):
 def rhealpix_ellipsoid_inverse(x, y, e=0, north_square=0, south_square=0):
     """
     Compute the inverse of rhealpix_ellipsoid.
-    
+
     EXAMPLES::
-    
+
         >>> p = (0, pi/4)
         >>> q = rhealpix_ellipsoid(*p)
         >>> print(my_round(rhealpix_ellipsoid_inverse(*q), 15))
-        (0.0, 0.78539816339744795)
+        (0.0, 0.785398163397448)
         >>> print(my_round(p, 15))
         (0, 0.785398163397448)
-        
+
     """
     # Throw error if input coordinates are out of bounds.
     if not in_rhealpix_image(
@@ -368,11 +369,11 @@ def rhealpix_ellipsoid_inverse(x, y, e=0, north_square=0, south_square=0):
 
 def in_rhealpix_image(x, y, north_square=0, south_square=0):
     """
-    Return True if and only if the point `(x, y)` lies in the image of 
+    Return True if and only if the point `(x, y)` lies in the image of
     the rHEALPix projection of the unit sphere.
-            
+
     EXAMPLES::
-    
+
         >>> eps = 0     # Test boundary points.
         >>> north_square, south_square = 0, 0
         >>> rhp = [
@@ -392,12 +393,12 @@ def in_rhealpix_image(x, y, north_square=0, south_square=0):
         >>> for p in rhp:
         ...     if not in_rhealpix_image(*p):
         ...             print('Fail')
-        ... 
+        ...
         >>> print(in_rhealpix_image(0, 0))
         True
         >>> print(in_rhealpix_image(0, pi/4 + 0.1))
         False
-        
+
     """
     # matplotlib is a third-party module.
     from matplotlib.path import Path
@@ -425,7 +426,7 @@ def in_rhealpix_image(x, y, north_square=0, south_square=0):
 
 def rhealpix_vertices(north_square=0, south_square=0):
     """
-    Return a list of the planar vertices of the rHEALPix projection of 
+    Return a list of the planar vertices of the rHEALPix projection of
     the unit sphere.
     """
     vertices = [
@@ -461,23 +462,23 @@ def rhealpix(a=1, e=0, north_square=0, south_square=0):
     """
     Return a function object that wraps the rHEALPix projection and its inverse
     of an ellipsoid with major radius `a` and eccentricity `e`.
-    
+
     EXAMPLES::
-    
+
         >>> f = rhealpix(a=2, e=0, north_square=1, south_square=2)
         >>> print(my_round(f(0, pi/3, radians=True), 15))
-        (-0.57495135977821499, 2.1457476865731109)
-        >>> p = (0, 60) 
+        (-0.574951359778215, 2.145747686573111)
+        >>> p = (0, 60)
         >>> q = f(*p, radians=False)
         >>> print(my_round(q, 15))
-        (-0.57495135977821499, 2.1457476865731109)
+        (-0.574951359778215, 2.145747686573111)
         >>> print(my_round(f(*q, radians=False, inverse=True), 15))
-        (5.9999999999999997e-15, 59.999999999999986)
+        (6e-15, 59.999999999999986)
         >>> print(my_round(p, 15))
         (0, 60)
-        
+
     OUTPUT:
-    
+
     - A function object of the form f(u, v, radians=False, inverse=False).
     """
     R_A = auth_rad(a, e)
@@ -520,7 +521,7 @@ def rhealpix(a=1, e=0, north_square=0, south_square=0):
 def rhealpix_diagram(a=1, e=0, north_square=0, south_square=0, shade_polar_region=True):
     """
     Return a Sage Graphics object diagramming the rHEALPix projection
-    boundary and polar triangles for the ellipsoid with major radius `a` 
+    boundary and polar triangles for the ellipsoid with major radius `a`
     and eccentricity `e`.
     Inessential graphics method.
     Requires Sage graphics methods.
