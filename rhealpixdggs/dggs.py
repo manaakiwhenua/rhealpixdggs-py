@@ -129,8 +129,9 @@ NOTES::  .. Issue #1 was ..
     Q5 (74.999999999999986, 3.560649871414923e-15) *
     R3 (105.00000000000001, 3.560649871414923e-15)
 
-Create the (0, 0)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellipsoid. Use degrees instead of the default radians for angular measurements
-and orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
+Create a (0, 0)-rHEALPix DGGS with N_side = 3 based on the WGS84 ellipsoid.
+Use degrees instead of the default radians for angular measurements and
+orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
 
     >>> p = (174, -37)  # Approximate Auckland lon-lat coordinates
     >>> from rhealpixdggs.ellipsoids import *

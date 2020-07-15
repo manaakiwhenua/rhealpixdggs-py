@@ -15,12 +15,10 @@ Welcome the rHEALPixDGGS documentation!
    ellipsoids
    projection_wrapper
    dggs
-   distortion
-  
+
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
