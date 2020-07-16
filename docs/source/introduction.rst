@@ -1,6 +1,6 @@
 Introduction
 ============
-rHEALPixDGGS is a Python 3.3 package that implements the rHEALPix discrete global grid system (DGGS).
+rHEALPixDGGS is a Python 3 package that implements the rHEALPix discrete global grid system (DGGS).
 This documentation assumes you are familiar with the rHEALPix DGGS as described in [GRS2013]_ and familiar with basic Python 3.3 usage as described in `The Python Tutorial <http://docs.python.org/3/tutorial/>`_.
 
 .. [GRS2013] Robert Gibb, Alexander Raichev, Michael Speth, `The rHEALPix discrete global grid system <http://code.scenzgrid.org/index.php/p/scenzgrid-py/source/tree/master/rHEALPixDGGS-0.5/docs/rhealpixdggs_preprint.pdf>`_, in preparation, 2013.
@@ -50,9 +50,9 @@ Create an ellipsoid, say, one with major radius 5 and eccentricity 0.8::
     >>> ellps_1 = Ellipsoid(a=5, e=0.8)
     >>> print(ellps_1)
     ellipsoid:
-        R_A = 4.32200117119
+        R_A = 4.322001171188888
         a = 5
-        b = 3.0
+        b = 2.999999999999999
         e = 0.8
         f = 0.4
         lat_0 = 0
@@ -69,9 +69,9 @@ If you prefer radians, then do::
     >>> ellps_2 = Ellipsoid(a=5, e=0.8, radians=True)
     >>> print(ellps_2)
     ellipsoid:
-        R_A = 4.32200117119
+        R_A = 4.322001171188888
         a = 5
-        b = 3.0
+        b = 2.999999999999999
         e = 0.8
         f = 0.4
         lat_0 = 0
@@ -95,10 +95,10 @@ Some common ellipsoids are predefined as constants.
         sphere = True
     >>> print(WGS84_ELLIPSOID)
     ellipsoid:
-        R_A = 6374581.4671
+        R_A = 6374581.467096525
         a = 6378137.0
         b = 6356752.314140356
-        e = 0.0578063088401
+        e = 0.057806308840112
         f = 0.003352810681182
         lat_0 = 0
         lon_0 = 0
@@ -106,10 +106,10 @@ Some common ellipsoids are predefined as constants.
         sphere = False
     >>> print(WGS84_ELLIPSOID_RADIANS)
     ellipsoid:
-        R_A = 6374581.4671
+        R_A = 6374581.467096525
         a = 6378137.0
         b = 6356752.314140356
-        e = 0.0578063088401
+        e = 0.057806308840112
         f = 0.003352810681182
         lat_0 = 0
         lon_0 = 0
@@ -127,9 +127,9 @@ Project some points of the ellipsoid using the HEALPix and rHEALPix projections:
     >>> print(rh(0, 60))
     (0.0, 3.351278550178026)
     >>> print(h(0, 70))
-    (0.864006732389895, 4.2584985144432679)
+    (0.864006732389895, 4.258498514443268)
     >>> print(rh(0, 70))
-    (-0.86400673238989445, 4.2584985144432679)
+    (-0.8640067323898944, 4.258498514443268)
 
 Using the ``dggs`` Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -152,10 +152,10 @@ Create the (0, 0)-rHEALPix DGGS with N_side=3 that is based upon the WGS84 ellip
         max_areal_resolution = 1
         max_resolution = 15
         ellipsoid:
-            R_A = 6374581.4671
+            R_A = 6374581.467096525
             a = 6378137.0
             b = 6356752.314140356
-            e = 0.0578063088401
+            e = 0.0578063088401125
             f = 0.003352810681182319
             lat_0 = 0
             lon_0 = 0
@@ -190,10 +190,10 @@ Some common rHEALPix DGGSs are predefined as constants::
         max_areal_resolution = 1
         max_resolution = 15
         ellipsoid:
-            R_A = 6374581.4671
+            R_A = 6374581.467096525
             a = 6378137.0
             b = 6356752.314140356
-            e = 0.0578063088401
+            e = 0.0578063088401125
             f = 0.003352810681182319
             lat_0 = 0
             lon_0 = 0
@@ -258,16 +258,16 @@ Compute the ellipsoidal shape and ellipsoidal nuclei of these cells ::
     >>> for row in cells:
     ...     for cell in row:
     ...         print(cell, cell.ellipsoidal_shape(), cell.nucleus(plane=False))
-    N2 dart (5.0888874903416268e-14, 58.470677829627355)
+    N2 dart (5.088887490341627e-14, 58.470677829627355)
     N1 skew_quad (45.000000000000036, 58.470677829627355)
-    N0 dart (89.999999999999957, 58.470677829627363)
+    N0 dart (89.99999999999996, 58.47067782962736)
     Q0 quad (14.999999999999998, 26.438744923100096)
     Q1 quad (45.0, 26.438744923100096)
-    Q2 quad (74.999999999999986, 26.438744923100096)
+    Q2 quad (74.99999999999999, 26.438744923100096)
     R0 quad (105.00000000000001, 26.438744923100096)
     Q3 quad (14.999999999999998, 3.560649871414923e-15)
     Q4 quad (45.0, 3.560649871414923e-15)
-    Q5 quad (74.999999999999986, 3.560649871414923e-15)
+    Q5 quad (74.99999999999999, 3.560649871414923e-15)
     R3 quad (105.00000000000001, 3.560649871414923e-15)
 
 Create the (0, 0)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellipsoid.
@@ -285,10 +285,10 @@ Orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand::
         max_areal_resolution = 1
         max_resolution = 15
         ellipsoid:
-            R_A = 6374581.4671
+            R_A = 6374581.467096525
             a = 6378137.0
             b = 6356752.314140356
-            e = 0.0578063088401
+            e = 0.0578063088401125
             f = 0.003352810681182319
             lat_0 = -37
             lon_0 = 174
