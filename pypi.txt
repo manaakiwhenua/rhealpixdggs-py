@@ -3,7 +3,7 @@
 
 # 2. change version no in setup.py
 
-# 3. Update README
+# 3. Update README - releases section
 
 # 4. $ git commit changes
 

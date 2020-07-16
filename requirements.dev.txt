@@ -2,3 +2,4 @@ black
 pytest
 wheel
 twine
+doctest

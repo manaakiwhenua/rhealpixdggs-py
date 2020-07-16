@@ -1,19 +1,26 @@
+************
+rHEALPixDGGS
+************
+
 Introduction
 ============
 rHEALPixDGGS is a Python package that implements the rHEALPix Discrete Global Grid System (DGGS).
 
 Release Note
 ------------
-This package was originally authored in 2013 and has had only minor code updates since then. It is currently - July 2020 - at Release 0.5.1.
+This package was originally authored in 2013 and has had only minor code updates since then.
 
-For releases 0.3, 0.4 & 0.5: these releases are not available via PyPI. See the GitHub repository and the ``_old`` folder for copies of their code.
+0.5.2 - current
+^^^^^^^^^^^^^^^
+0.5.1 with tests that pass. Test fixes where just relating to rounding errors.
 
-0.5.2
+0.5.1
 ^^^^^
-0.5.2, ETA late July, 2020, will be the first PyPI release suitable for pip installation.
+Code unchanged from 2013 other than updating to Python 3.7.
 
-Many of the 0.5.1 release tests fail but mostly for trivial reasons and the 0.5.2 release will see them fixed.
-
+Pre-0.5.1
+^^^^^^^^^
+For releases 0.3, 0.4 & 0.5, see the ``_old`` folder within the `0.5.1 release <https://github.com/manaakiwhenua/rhealpixdggs-py/tree/0.5.1/_old>`_ on GitHub
 
 Requirements 
 -------------
@@ -38,7 +45,12 @@ rHEALPixDGGS is also available for download from the github repository `<https:/
   
 Tests
 ------
-The files in the ``tests`` directory test the rHEALPixDGGS modules. These files are plain unittest files (the Python testing framework contained within the standard distribution) but, movinf forward, `pytest <https://docs.pytest.org/>`_ will be used.
+The files in the ``tests`` directory test the rHEALPixDGGS modules. These files are plain ``unittest`` files (the Python testing framework contained within the standard distribution). Tests for examples in documents need the ``doctest`` module installed (see ``requirements.dev.txt``).
+
+Two UNIX shell scripts are included in this repository to run all unit and doc tests:
+
+* ``run_doctests.sh``
+* ``run_unittests.sh``
 
 Running the command ``python tests/test_<foo>.py`` performs a sequence of automated tests of ``<foo>.py``.
 
