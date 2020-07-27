@@ -29,8 +29,8 @@ Requirements
     - `SciPy >=0.12 <http://www.scipy.org/>`_ Fundamental library for scientific computing
     - `Matplotlib >=1.2.1 <http://matplotlib.org/>`_ Comprehensive 2D Plotting
     - `Pyproj >=1.9.3 <http://code.google.com/p/pyproj/>`_ Python interface to the PROJ.4 cartographic library
-* ``requirements.opt.txt`` - Optional comprehensive mathematics package needed only for a few optional graphics methods.
-    - `Sage >=5.10 <http://www.sagemath.org>`_ - To use the optional graphics methods, start a Sage notebook session and import/attach the Python module that contains the methods. For examples, see the Sage worksheet ``tests/test_rhealpixdggs.sws``.
+* ``requirements.opt.txt`` - optional modules.
+    - _none_.
 * ``requirements.dev.txt`` - packages for developing this package
 
 Installation
@@ -60,10 +60,6 @@ If you update a module, then update its test file to test the changes you made!
 
 Test early, test often, test automatically!
 
-The ``.sws`` files in the ``tests`` directory are `Sage <http://www.sagemath.org>`_ worksheets.
-They are not automated tests, but rather supplementary graphical tests.
-To run these, install Sage, install Pyproj in Sage (download the Pyproj source code, change to the Pyproj directory, start a Sage shell via ``sage -sh``, then type ``python setup.py build``, then ``python setup.py install``; if that doesn't work, try again but first start in superuser mode via ``sudo su``), start up a Sage notebook session, and open the worksheets.
-
 There are a couple of files in the main package directory that can be used to run all tests, starting ``run_...``.
 
 Documentation
@@ -71,7 +67,7 @@ Documentation
 Documentation can be found at:
 
 - `The rHEALPix Discrete Global Grid System <https://datastore.landcareresearch.co.nz/dataset/rhealpix-discrete-global-grid-system>`_ - The rHEALPix Discrete Global Grid System
-- ``docs/build/latex/rHEALPixDGGS.pdf`` - The rHEALPixDGGS manual (the main paper)
+- ``docs/build/latex/rHEALPixDGGS.pdf`` - The rHEALPixDGGS manual
 - ``docs/build/html/index.html`` - The rHEALPixDGGS manual in HTML format
 
 The latter two documents are generated automatically from the source code of the ``rhealpixdggs`` package modules.
