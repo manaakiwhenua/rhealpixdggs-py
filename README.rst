@@ -82,7 +82,7 @@ The ``source`` and ``build`` directories contain all the Sphinx source and build
 
 License
 -------
-This code is licensed under the `GNU General Public License, v3 <https://www.gnu.org/licenses/gpl-3.0.html>`_. See the file ``LICENSE`` for a copy of the deed.
+This code is licensed under the `GNU Lesser General Public License v3.0, <http://www.gnu.org/licenses/lgpl-3.0.html>`_. See the file ``LICENSE`` for a copy of the deed.
 
 Contact
 -------
