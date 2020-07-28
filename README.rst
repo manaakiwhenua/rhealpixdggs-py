@@ -30,7 +30,7 @@ Requirements
     - `Matplotlib >=1.2.1 <http://matplotlib.org/>`_ Comprehensive 2D Plotting
     - `Pyproj >=1.9.3 <http://code.google.com/p/pyproj/>`_ Python interface to the PROJ.4 cartographic library
 * ``requirements.opt.txt`` - optional modules.
-    - _none_.
+    - *none*.
 * ``requirements.dev.txt`` - packages for developing this package
 
 Installation
