@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 import codecs
 import os
-VERSION = "0.5.2"
+VERSION = "0.5.3"
 
 
 def open_local(paths, mode="r", encoding="utf8"):
