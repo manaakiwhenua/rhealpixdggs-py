@@ -6,13 +6,16 @@ Introduction
 ============
 rHEALPixDGGS is a Python package that implements the rHEALPix Discrete Global Grid System (DGGS).
 
-Release Note
-------------
+Release Notes
+-------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.2 - current
+0.5.3 - current
 ^^^^^^^^^^^^^^^
-0.5.1 with tests that pass. Test fixes where just relating to rounding errors.
+0.5.1 with:
+* tests that pass
+* Sage removed
+* Test fixes where just relating to rounding errors.
 
 0.5.1
 ^^^^^
@@ -29,9 +32,7 @@ Requirements
     - `SciPy >=0.12 <http://www.scipy.org/>`_ Fundamental library for scientific computing
     - `Matplotlib >=1.2.1 <http://matplotlib.org/>`_ Comprehensive 2D Plotting
     - `Pyproj >=1.9.3 <http://code.google.com/p/pyproj/>`_ Python interface to the PROJ.4 cartographic library
-* ``requirements.opt.txt`` - optional modules.
-    - *none*.
-* ``requirements.dev.txt`` - packages for developing this package
+* ``requirements.dev.txt`` - packages needed for developing this package
 
 Installation
 --------------
