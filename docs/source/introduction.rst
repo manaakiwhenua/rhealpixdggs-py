@@ -16,11 +16,11 @@ Requirements
 
 Installation
 --------------
-rHEALPixDGGS is available for download at Landcare Research's git repository `<http://code.scenzgrid.org/index.php/p/scenzgrid-py/source/tree/master/rHEALPixDGGS-0.5>`_ and can be cloned via the command ``git clone git@code.scenzgrid.org:scenzgrid-py.git``.
+The package is available on PyPI, the Package Index from where it can be installed as follows:
 
-To install Sage, download and install the appropriate binary file from `sagemath.org <http://www.sagemath.org>`_.
-Then install Pyproj within Sage by downloading the Pyproj source, changing to the Pyproj directory, starting a Sage shell via ``sage -sh``, then typing ``python setup.py build``, then ``python setup.py install``.
-If that doesn't work, try again but first start in superuser mode via ``sudo su``.
+pip install rhealpixdggs
+
+rHEALPixDGGS is also available for download from Landcare Research's github repository `<https://github.com/manaakiwhenua/rhealpixdggs-py>`_ from wher the latest version can be cloned.
 
 Usage
 ------
