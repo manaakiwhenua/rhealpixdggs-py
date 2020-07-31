@@ -11,6 +11,7 @@ CHANGELOG:
 drawing figures.
 - AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
+- RG, 2020-07-31: Issue #5 Moved healpix_diagram to GRS2013 to remove sage dependence
 
 NOTE:
 
