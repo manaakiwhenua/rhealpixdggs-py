@@ -12,6 +12,8 @@ drawing figures.
 - AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 - RG, 2020-07-31: Issue #5 Moved healpix_diagram to GRS2013 to remove sage dependence
+- RG, 2020-09-08: Issue #6 In in_healpix_image added +-eps to the extreme corner vertices
+                           added calling function abbrev to error statements
 
 NOTE:
 
@@ -84,7 +86,7 @@ def healpix_sphere_inverse(x, y):
     """
     # Throw error if input coordinates are out of bounds.
     if not in_healpix_image(x, y):
-        print("Error: input coordinates (%f, %f) are out of bounds" % (x, y))
+        print("Error (hsi): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
         return float("inf"), float("inf")
     y0 = pi / 4
     # Equatorial region.
@@ -153,8 +155,9 @@ def healpix_ellipsoid_inverse(x, y, e=0):
     """
     # Throw error if input coordinates are out of bounds.
     if not in_healpix_image(x, y):
-        print("Error: input coordinates (%f, %f) are out of bounds" % (x, y))
+        print("Error (hei): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
         return
+
     lam, beta = healpix_sphere_inverse(x, y)
     phi = auth_lat(beta, e, radians=True, inverse=True)
     return lam, phi
@@ -205,7 +208,7 @@ def in_healpix_image(x, y):
     # points on the boundary count as lying in the image.
     eps = 1e-10
     vertices = [
-        (-pi - eps, pi / 4),
+        (-pi - eps, pi / 4 + eps),
         (-3 * pi / 4, pi / 2 + eps),
         (-pi / 2, pi / 4 + eps),
         (-pi / 4, pi / 2 + eps),
@@ -213,8 +216,8 @@ def in_healpix_image(x, y):
         (pi / 4, pi / 2 + eps),
         (pi / 2, pi / 4 + eps),
         (3 * pi / 4, pi / 2 + eps),
-        (pi + eps, pi / 4),
-        (pi + eps, -pi / 4),
+        (pi + eps, pi / 4 + eps),
+        (pi + eps, -pi / 4 - eps),
         (3 * pi / 4, -pi / 2 - eps),
         (pi / 2, -pi / 4 - eps),
         (pi / 4, -pi / 2 - eps),
@@ -222,7 +225,7 @@ def in_healpix_image(x, y):
         (-pi / 4, -pi / 2 - eps),
         (-pi / 2, -pi / 4 - eps),
         (-3 * pi / 4, -pi / 2 - eps),
-        (-pi - eps, -pi / 4),
+        (-pi - eps, -pi / 4 - eps),
     ]
     poly = Path(vertices)
     return bool(poly.contains_point([x, y]))

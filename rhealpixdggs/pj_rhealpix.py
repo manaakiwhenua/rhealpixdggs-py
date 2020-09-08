@@ -7,6 +7,9 @@ CHANGELOG:
 - AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 - RG, 2020-07-31: Issue #5 Moved rhealpix_diagram to GRS2013 to remove sage dependence
+- RG, 2020-09-08: Issue #6 Added optional region="none" arg to all projection calls, and
+                           used it to enforce region behaviour in calls to combine_triangles
+                           added calling function abbrev to error statements
 
 NOTE:
 
@@ -248,7 +251,7 @@ def triangle(x, y, north_square=0, south_square=0, inverse=False):
     return triangle_number, region
 
 
-def rhealpix_sphere(lam, phi, north_square=0, south_square=0):
+def rhealpix_sphere(lam, phi, north_square=0, south_square=0, region="none"):
     """
     Compute the signature functions of the rHEALPix map projection of
     the unit sphere.
@@ -285,7 +288,7 @@ def rhealpix_sphere(lam, phi, north_square=0, south_square=0):
     return combine_triangles(x, y, north_square=north_square, south_square=south_square)
 
 
-def rhealpix_sphere_inverse(x, y, north_square=0, south_square=0):
+def rhealpix_sphere_inverse(x, y, north_square=0, south_square=0, region="none"):
     """
     Compute the inverse of rhealpix_sphere().
 
@@ -303,15 +306,16 @@ def rhealpix_sphere_inverse(x, y, north_square=0, south_square=0):
     if not in_rhealpix_image(
         x, y, south_square=south_square, north_square=north_square
     ):
-        print("Error: input coordinates (%f,%f) are out of bounds" % (x, y))
+        print("Error (rsi): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
         return
-    x, y = combine_triangles(
-        x, y, north_square=north_square, south_square=south_square, inverse=True
-    )
+    if region != "equatorial":
+        x, y = combine_triangles(
+            x, y, north_square=north_square, south_square=south_square, inverse=True
+        )
     return healpix_sphere_inverse(x, y)
 
 
-def rhealpix_ellipsoid(lam, phi, e=0, north_square=0, south_square=0):
+def rhealpix_ellipsoid(lam, phi, e=0, north_square=0, south_square=0, region="none"):
     """
     Compute the signature functions of the rHEALPix map
     projection of an oblate ellipsoid with eccentricity `e` whose
@@ -339,10 +343,12 @@ def rhealpix_ellipsoid(lam, phi, e=0, north_square=0, south_square=0):
     """
     # Ensure north_square and south_square lie in {0, 1,2, 3}.
     x, y = healpix_ellipsoid(lam, phi, e)
-    return combine_triangles(x, y, north_square=north_square, south_square=south_square)
+    if region != "equatorial":
+        x, y = combine_triangles(x, y, north_square=north_square, south_square=south_square)
+    return x, y
 
 
-def rhealpix_ellipsoid_inverse(x, y, e=0, north_square=0, south_square=0):
+def rhealpix_ellipsoid_inverse(x, y, e=0, north_square=0, south_square=0, region="none"):
     """
     Compute the inverse of rhealpix_ellipsoid.
 
@@ -360,11 +366,14 @@ def rhealpix_ellipsoid_inverse(x, y, e=0, north_square=0, south_square=0):
     if not in_rhealpix_image(
         x, y, south_square=south_square, north_square=north_square
     ):
-        print("Error: input coordinates (%f,%f) are out of bounds" % (x, y))
+        print("Error (rei): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
         return
-    x, y = combine_triangles(
-        x, y, north_square=north_square, south_square=south_square, inverse=True
-    )
+    
+    if region != "equatorial":
+        x, y = combine_triangles(
+            x, y, north_square=north_square, south_square=south_square, inverse=True
+        )
+
     return healpix_ellipsoid_inverse(x, y, e=e)
 
 
@@ -459,7 +468,7 @@ def rhealpix_vertices(north_square=0, south_square=0):
         vertices.remove((-pi, -pi / 4))
 
 
-def rhealpix(a=1, e=0, north_square=0, south_square=0):
+def rhealpix(a=1, e=0, north_square=0, south_square=0, region="none"):
     """
     Return a function object that wraps the rHEALPix projection and its inverse
     of an ellipsoid with major radius `a` and eccentricity `e`.
@@ -491,14 +500,14 @@ def rhealpix(a=1, e=0, north_square=0, south_square=0):
                 # Convert to radians.
                 lam, phi = deg2rad([lam, phi])
             return tuple(
-                R_A
-                * array(
+                R_A * array(
                     rhealpix_ellipsoid(
                         lam,
                         phi,
                         e=e,
                         north_square=north_square,
                         south_square=south_square,
+                        region=region,
                     )
                 )
             )
@@ -507,7 +516,12 @@ def rhealpix(a=1, e=0, north_square=0, south_square=0):
             x, y = array((u, v)) / R_A
             lam, phi = array(
                 rhealpix_ellipsoid_inverse(
-                    x, y, e=e, north_square=north_square, south_square=south_square
+                    x, 
+                    y, 
+                    e=e, 
+                    north_square=north_square, 
+                    south_square=south_square,
+                    region=region,
                 )
             )
 

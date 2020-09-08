@@ -6,6 +6,7 @@ CHANGELOG:
 - Alexander Raichev (AR), 2013-01-25: Refactored code from release 0.3.
 - AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
+- RG, 2020-09-08: Issue #6 Added optional region="none" arg to all projection calls
 
 NOTE:
 
@@ -91,7 +92,7 @@ class Proj(object):
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 
-    def __call__(self, u, v, inverse=False):
+    def __call__(self, u, v, inverse=False, region="none"):
         ellipsoid = self.ellipsoid
         proj = self.proj
         kwargs = self.kwargs
