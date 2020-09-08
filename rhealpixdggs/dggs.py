@@ -14,6 +14,8 @@ CHANGELOG:
 - AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 - RG, 2020-07-31: Issue #5 Moved plot_cells to GRS2013 to remove sage dependence
+- RG, 2020-09-08: Issue #6 Added optional region="none" arg to rhealpix projection calls, and
+                           forced region to cell.region() in cell.vertex() and cell.boundary()
 
 NOTES:
 
@@ -427,7 +429,7 @@ class RHEALPixDGGS(object):
         f = pw.Proj(ellipsoid=self.ellipsoid, proj="healpix")
         return f(u, v, inverse=inverse)
 
-    def rhealpix(self, u, v, inverse=False):
+    def rhealpix(self, u, v, inverse=False, region="none"):
         """
         Return the rHEALPix projection of the point `(u, v)` (or its inverse if
         `inverse` = True) appropriate to this rHEALPix DGGS.
@@ -450,10 +452,11 @@ class RHEALPixDGGS(object):
             proj="rhealpix",
             north_square=self.north_square,
             south_square=self.south_square,
+            region=region,
         )
-        return f(u, v, inverse=inverse)
+        return f(u, v, inverse=inverse, region=region)
 
-    def combine_triangles(self, u, v, inverse=False):
+    def combine_triangles(self, u, v, inverse=False, region="none"):
         """
         Return the combine_triangles() transformation of the point `(u, v)`
         (or its inverse if `inverse` = True) appropriate to the underlying
@@ -480,9 +483,10 @@ class RHEALPixDGGS(object):
         # Scale down.
         u, v = array((u, v)) / R_A
         # Combine triangles.
-        u, v = pjr.combine_triangles(
-            u, v, inverse=inverse, north_square=ns, south_square=ss
-        )
+        if region != "equatorial":
+            u, v = pjr.combine_triangles(
+                u, v, inverse=inverse, north_square=ns, south_square=ss
+            )
         # Scale up.
         return tuple(R_A * array((u, v)))
 
@@ -2089,7 +2093,8 @@ class Cell(object):
             i = result.index(nw)
             result = result[i:] + result[:i]
             # Project to ellipsoid.
-            result = [self.rdggs.rhealpix(*p, inverse=True) for p in result]
+            region = self.region()
+            result = [self.rdggs.rhealpix(*p, inverse=True, region=region) for p in result]
             if trim_dart and self.ellipsoidal_shape() == "dart":
                 # Remove non-vertex point.
                 if self.region() == "north_polar":
@@ -2209,7 +2214,8 @@ class Cell(object):
             i = (n - 1) * i  # Index of northwest vertex in result.
             result = result[i:] + result[:i]
             # Project to ellipsoid.
-            result = [self.rdggs.rhealpix(*p, inverse=True) for p in result]
+            region = self.region()
+            result = [self.rdggs.rhealpix(*p, inverse=True, region=region) for p in result]
         return result
 
     def interior(self, n=2, plane=True, flatten=False):
@@ -2446,8 +2452,8 @@ class Cell(object):
         y1 = min([v[1] for v in planar_vertices])
         y2 = max([v[1] for v in planar_vertices])
         area = (x2 - x1) ** 2
-        lam = lambda x, y: self.rdggs.rhealpix(x, y, inverse=True)[0]
-        phi = lambda x, y: self.rdggs.rhealpix(x, y, inverse=True)[1]
+        def lam(x, y): return self.rdggs.rhealpix(x, y, inverse=True)[0]
+        def phi(x, y): return self.rdggs.rhealpix(x, y, inverse=True)[1]
         if shape == "dart":
             lam_bar = nucleus[0]
             phi_bar = (1 / area) * integrate.dblquad(
