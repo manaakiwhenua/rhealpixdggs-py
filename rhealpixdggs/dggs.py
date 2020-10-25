@@ -244,12 +244,12 @@ class RHEALPixDGGS(object):
     cells0 = ["N", "O", "P", "Q", "R", "S"]
 
     def __init__(
-        self,
-        ellipsoid=WGS84_ELLIPSOID,
-        N_side=3,
-        north_square=0,
-        south_square=0,
-        max_areal_resolution=1,
+            self,
+            ellipsoid=WGS84_ELLIPSOID,
+            N_side=3,
+            north_square=0,
+            south_square=0,
+            max_areal_resolution=1,
     ):
         self.N_side = N_side
         self.north_square = north_square % 4  # = 0, 1, 2, or 3.
@@ -397,12 +397,12 @@ class RHEALPixDGGS(object):
 
     def __eq__(self, other):
         return (
-            other is not None
-            and self.ellipsoid == other.ellipsoid
-            and self.N_side == other.N_side
-            and self.north_square == other.north_square
-            and self.south_square == other.south_square
-            and self.max_resolution == other.max_resolution
+                other is not None
+                and self.ellipsoid == other.ellipsoid
+                and self.N_side == other.N_side
+                and self.north_square == other.north_square
+                and self.south_square == other.south_square
+                and self.max_resolution == other.max_resolution
         )
 
     def __ne__(self, other):
@@ -803,17 +803,17 @@ class RHEALPixDGGS(object):
         ss = self.south_square
         R = self.ellipsoid.R_A
         if (
-            y > R * pi / 4
-            and y < R * 3 * pi / 4
-            and x > R * (-pi + ns * (pi / 2))
-            and x < R * (-pi / 2 + ns * (pi / 2))
+                y > R * pi / 4
+                and y < R * 3 * pi / 4
+                and x > R * (-pi + ns * (pi / 2))
+                and x < R * (-pi / 2 + ns * (pi / 2))
         ):
             s0 = RHEALPixDGGS.cells0[0]
         elif (
-            y > -R * 3 * pi / 4
-            and y < -R * pi / 4
-            and x > R * (-pi + ss * (pi / 2))
-            and x < R * (-pi / 2 + ss * (pi / 2))
+                y > -R * 3 * pi / 4
+                and y < -R * pi / 4
+                and x > R * (-pi + ss * (pi / 2))
+                and x < R * (-pi / 2 + ss * (pi / 2))
         ):
             s0 = RHEALPixDGGS.cells0[5]
         elif y >= -R * pi / 4 and y <= R * pi / 4 and x >= -R * pi and x < -R * pi / 2:
@@ -1249,7 +1249,7 @@ class RHEALPixDGGS(object):
         # Collect the cells along the parallels of phis.
         PI = self.ellipsoid.pi()
         if (ul == (-PI, PI / 2) and dr[0] == -PI) or (
-            dr == (-PI, -PI / 2) and ul[0] == -PI
+                dr == (-PI, -PI / 2) and ul[0] == -PI
         ):
             # Cap.
             lam_min = -PI
@@ -1449,6 +1449,7 @@ class Cell(object):
             suid = tuple(suid)
         else:
             b = rdggs.N_side ** 2
+
             # Compute suid from level order index.
             def ind(k):
                 """
@@ -1480,7 +1481,7 @@ class Cell(object):
         return suid
 
     def __init__(
-        self, rdggs=WGS84_003, suid=None, level_order_index=None, post_order_index=None
+            self, rdggs=WGS84_003, suid=None, level_order_index=None, post_order_index=None
     ):
         """
         Create a cell either from its suid or from its level order or
@@ -1511,7 +1512,7 @@ class Cell(object):
         if suid is not None:
             # A little error checking.
             assert isinstance(suid, list) or isinstance(suid, tuple), (
-                "Cell suid must be a list or tuple. Got %s." % suid
+                    "Cell suid must be a list or tuple. Got %s." % suid
             )
             assert suid[0] in RHEALPixDGGS.cells0, "suid[0] must lie in %s. Got %s." % (
                 RHEALPixDGGS.cells0,
@@ -1521,7 +1522,7 @@ class Cell(object):
             for x in suid[1:]:
                 assert x in digits, "Digits of suid must lie in %s" % digits
             assert (len(suid) > 0) and (
-                len(suid) <= rdggs.max_resolution + 1
+                    len(suid) <= rdggs.max_resolution + 1
             ), "Need 0 < len(suid) <= %s. Got %s." % (rdggs.max_resolution + 1, suid)
 
             self.suid = [suid[0]] + [int(n) for n in suid[1:]]
@@ -1548,9 +1549,9 @@ class Cell(object):
 
     def __eq__(self, other):
         return (
-            (other is not None)
-            and (self.rdggs == other.rdggs)
-            and (self.suid == other.suid)
+                (other is not None)
+                and (self.rdggs == other.rdggs)
+                and (self.suid == other.suid)
         )
 
     def __ne__(self, other):
@@ -1724,9 +1725,9 @@ class Cell(object):
         else:
             # suid[greatest] is a number.
             suid = (
-                suid[0:greatest]
-                + [suid[greatest] + 1]
-                + [0 for j in range(resolution - greatest)]
+                    suid[0:greatest]
+                    + [suid[greatest] + 1]
+                    + [0 for j in range(resolution - greatest)]
             )
         return Cell(self.rdggs, suid)
 
@@ -1782,9 +1783,9 @@ class Cell(object):
         else:
             # nome[greatest] is a number > 0.
             suid = (
-                suid[0:greatest]
-                + [suid[greatest] - 1]
-                + [M for i in range(resolution - greatest)]
+                    suid[0:greatest]
+                    + [suid[greatest] - 1]
+                    + [M for i in range(resolution - greatest)]
             )
         return Cell(self.rdggs, suid)
 
@@ -2346,6 +2347,33 @@ class Cell(object):
         else:
             return lat_min <= phi and lat_max >= phi
 
+    def overlaps(self, other_cell):
+        """
+        Determines whether two DGGS cells overlap.
+        Where cells are of different resolution, they will have different suid lengths. The zip function truncates the longer
+        to be the same length as the shorter, producing two lists for comparison. If these lists are equal, the cells overlap.
+        :param cell_one: the first DGGS cell
+        :param cell_two: the second DGGS cell
+        :return: True if overlaps
+        """
+        assert self.suid is not tuple()  # cell cannot be empty
+        for i, j in zip(self.suid, other_cell.suid):
+            if i != j:
+                return False
+        return True
+
+    def region_overlaps(self, region: list):
+        """
+        Determine whether a cell overlaps with any cell in a list of cells
+        :param cell: a DGGS cell
+        :param region: a list of DGGS cells
+        :return: True if any overlapping cells
+        """
+        for component_cell in region:
+            if self.overlaps(component_cell):
+                return True
+        return False
+
     def region(self):
         """
         Return the region of this cell: 'equatorial', 'north_polar', or
@@ -2452,8 +2480,13 @@ class Cell(object):
         y1 = min([v[1] for v in planar_vertices])
         y2 = max([v[1] for v in planar_vertices])
         area = (x2 - x1) ** 2
-        def lam(x, y): return self.rdggs.rhealpix(x, y, inverse=True)[0]
-        def phi(x, y): return self.rdggs.rhealpix(x, y, inverse=True)[1]
+
+        def lam(x, y):
+            return self.rdggs.rhealpix(x, y, inverse=True)[0]
+
+        def phi(x, y):
+            return self.rdggs.rhealpix(x, y, inverse=True)[1]
+
         if shape == "dart":
             lam_bar = nucleus[0]
             phi_bar = (1 / area) * integrate.dblquad(
@@ -2664,24 +2697,24 @@ class Cell(object):
             neighbor0 = neighbor_suid[0]
             cells0 = RHEALPixDGGS.cells0
             if (
-                (self0 == cells0[5] and neighbor0 == an[self0]["left"])
-                or (self0 == an[cells0[5]]["right"] and neighbor0 == cells0[5])
-                or (self0 == cells0[0] and neighbor0 == an[self0]["right"])
-                or (self0 == an[cells0[0]]["left"] and neighbor0 == cells0[0])
+                    (self0 == cells0[5] and neighbor0 == an[self0]["left"])
+                    or (self0 == an[cells0[5]]["right"] and neighbor0 == cells0[5])
+                    or (self0 == cells0[0] and neighbor0 == an[self0]["right"])
+                    or (self0 == an[cells0[0]]["left"] and neighbor0 == cells0[0])
             ):
                 neighbor = neighbor.rotate(1)
             elif (
-                (self0 == cells0[5] and neighbor0 == an[self0]["down"])
-                or (self0 == an[cells0[5]]["down"] and neighbor0 == cells0[5])
-                or (self0 == cells0[0] and neighbor0 == an[self0]["up"])
-                or (self0 == an[cells0[0]]["up"] and neighbor0 == cells0[0])
+                    (self0 == cells0[5] and neighbor0 == an[self0]["down"])
+                    or (self0 == an[cells0[5]]["down"] and neighbor0 == cells0[5])
+                    or (self0 == cells0[0] and neighbor0 == an[self0]["up"])
+                    or (self0 == an[cells0[0]]["up"] and neighbor0 == cells0[0])
             ):
                 neighbor = neighbor.rotate(2)
             elif (
-                (self0 == cells0[5] and neighbor0 == an[self0]["right"])
-                or (self0 == an[cells0[5]]["left"] and neighbor0 == cells0[5])
-                or (self0 == cells0[0] and neighbor0 == an[self0]["left"])
-                or (self0 == an[cells0[0]]["right"] and neighbor0 == cells0[0])
+                    (self0 == cells0[5] and neighbor0 == an[self0]["right"])
+                    or (self0 == an[cells0[5]]["left"] and neighbor0 == cells0[5])
+                    or (self0 == cells0[0] and neighbor0 == an[self0]["left"])
+                    or (self0 == an[cells0[0]]["right"] and neighbor0 == cells0[0])
             ):
                 neighbor = neighbor.rotate(3)
         else:
@@ -2853,3 +2886,21 @@ class Cell(object):
             #             for i in range(resolution)])/\
             #        float(6*N**(2*resolution))
         return hsv_to_rgb(hue, saturation, 1)
+
+
+class RhealPolygon(object):
+    """
+
+    """
+
+    def __init__(
+            self, rdggs=WGS84_003, suid_list=None
+    ):
+        self.rdggs = rdggs
+        self.ellipsoid = rdggs.ellipsoid
+        self.N_side = rdggs.N_side
+        self.suid = ()  # Spatially unique identifier of self.
+        if suid_list is not None:
+            self.suid_list
+
+    ...

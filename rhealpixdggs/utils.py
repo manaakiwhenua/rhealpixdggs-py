@@ -234,3 +234,5 @@ def auth_rad(a, e, inverse=False):
     else:
         # Then a is the authalic radius and output major radius of ellipsoid.
         return a / k
+
+
