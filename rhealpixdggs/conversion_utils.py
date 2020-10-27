@@ -37,7 +37,7 @@ def _get_finest_cell(polygon, suid):
 
 # TODO class should be a general class for collections of cells (believe the term is 'zone'?)
 class CellZoneFromPoly:
-    def __init__(self, feature, res_limit, return_cells: bool, file=None):
+    def __init__(self, feature, res_limit, return_cells: bool, file=None, bounding_cell=None):
         self.label = feature[0]
         self.geometry = feature[1]
         self.res_limit = res_limit
@@ -48,8 +48,10 @@ class CellZoneFromPoly:
         self.file = file
         if file:
             self.file.write(f"\n{self.label},")
-
-        self._get_dggs_poly(call_get_finest(self.geometry))
+        if bounding_cell is None:
+            self._get_dggs_poly(call_get_finest(self.geometry))
+        else:
+            self._get_dggs_poly(bounding_cell)
 
     def _get_dggs_poly(self, bounding_cell):
         bounding_poly = Polygon(bounding_cell.vertices(plane=False))
@@ -70,7 +72,6 @@ class CellZoneFromPoly:
         # print('****************')
         return self.cells_list
 
-
     def _process_children(self, together):
         for child_cell, child_poly in together:
             # 1: add contained cells
@@ -84,7 +85,6 @@ class CellZoneFromPoly:
             else:
                 if self.geometry.overlaps(child_poly):
                     self._get_dggs_poly(child_cell)
-
 
     def _write_cells(self, cell, poly, desc):
         """
