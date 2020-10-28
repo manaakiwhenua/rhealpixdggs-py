@@ -96,6 +96,23 @@ class CellZoneFromPoly:
         if self.return_cells:
             # cell = self.add_int_suid(cell)
             self.cells_list.append(cell)
+
+def compress_order_cells(cells):
+    """
+    Compresses and order a set of cells
+    """
+    upper_cells = {}
+    for cell in cells:
+        upper_cells.setdefault(cell[:-1], []).append(cell)
+    compressed_cells = []
+    for k, v in upper_cells.items():
+        if len(v) == 9:
+            compressed_cells.append(k)
+        else:
+            compressed_cells.extend(v)
+    ordered_compressed_cells = sorted(compressed_cells, key=len)
+    return ordered_compressed_cells
+    
 #
 #
 # # TODO extract compression function from below and benchmark against Nicks, also Nick's doesn't require integer suids
