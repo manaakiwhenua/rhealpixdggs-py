@@ -216,6 +216,10 @@ class ConversionUtilsTestCase(unittest.TestCase):
 
 
     def test_compress_order_cells(self):
+        """
+        Tests correct cells are output for the Geofabric Contracted Catchment 12104622 at resolution 9, with ordering
+        and compression.
+        """
         compressed_cells = compress_order_cells(ground_truth_cells_for_catchment_12104622_at_res_9)
         assert compressed_cells == ground_truth_ordered_compressed_cells_for_catchment_12104622_at_res_9
 
