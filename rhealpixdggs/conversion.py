@@ -97,10 +97,18 @@ class CellZoneFromPoly:
             # cell = self.add_int_suid(cell)
             self.cells_list.append(cell)
 
+
 def compress_order_cells(cells):
     """
     Compresses and order a set of cells
     """
+    import re
+    def alphanum_sort(lst):
+        convert = lambda text: int(text) if text.isdigit() else text
+        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+        return sorted(lst, key=alphanum_key)
+
+    cells = set(cells)
     upper_cells = {}
     for cell in cells:
         upper_cells.setdefault(cell[:-1], []).append(cell)
@@ -110,5 +118,4 @@ def compress_order_cells(cells):
             compressed_cells.append(k)
         else:
             compressed_cells.extend(v)
-    ordered_compressed_cells = sorted(compressed_cells, key=len)
-    return ordered_compressed_cells
+    return alphanum_sort(compressed_cells)
