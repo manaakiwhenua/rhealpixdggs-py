@@ -12,7 +12,7 @@ import unittest
 from shapely import wkt
 
 # Import my modules.
-from rhealpixdggs.conversion_utils import *
+from rhealpixdggs.conversion import *
 
 
 test_geom = """
@@ -220,6 +220,31 @@ class ConversionUtilsTestCase(unittest.TestCase):
         """
         compressed_cells = compress_order_cells(ground_truth_cells_for_catchment_12104622_at_res_9)
         assert compressed_cells == ground_truth_ordered_compressed_cells_for_catchment_12104622_at_res_9
+
+        equal_length_in = [
+            'R785188032',
+            'R785188031',
+            'R785188035',
+            'R785188034',
+            'R785188038',
+            'R785188053',
+            'R785188054',
+            'R785188056',
+        ]
+
+        equal_length_expected = [
+            'R785188031',
+            'R785188032',
+            'R785188034',
+            'R785188035',
+            'R785188038',
+            'R785188053',
+            'R785188054',
+            'R785188056',
+        ]
+
+        assert compress_order_cells(equal_length_in) == equal_length_expected
+
 
 if __name__ == "__main__":
     unittest.main()
