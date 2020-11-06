@@ -199,7 +199,7 @@ ground_truth_ordered_compressed_cells_for_catchment_12104622_at_res_9 = ['R78518
 class ConversionUtilsTestCase(unittest.TestCase):
     def test_call_get_finest(self):
 
-        assert(str(call_get_finest(test_poly))) == 'R78518'
+        assert (str(get_finest_containing_cell(test_poly))) == 'R78518'
 
 
     def test_CellZoneFromPoly(self):

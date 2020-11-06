@@ -1,38 +1,35 @@
 from shapely.geometry import Polygon, Point
 from rhealpixdggs.dggs import Cell
 from itertools import compress
-from functools import reduce
 
 
-def call_get_finest(polygon):
+def get_finest_containing_cell(polygon: Polygon) -> Cell:
     """
-    Returns the finest DGGS cell covering a cartesian polygon.
-    Requires input as a shapely polygon.
+    Finds the finest DGGS Cell containing a cartesian polygon
     """
+    def _get_finest_cell(polygon, suid):
+        parent_cell = Cell(suid=suid)
+        # get the children cells and polygons for these cells
+        children_cells = [cell for cell in parent_cell.subcells()]
+        children_poly = [Polygon(cell.vertices(plane=False)) for cell in children_cells]
+        # function and truth list for multipolygon / polygon (polygon) contained within multipolygon / polygon (cell)
+        truth = [poly.contains(polygon) for poly in children_poly]
+        # if we get something back, check the next level lower
+        returned_cells = list(compress(children_cells, truth))
+        if returned_cells:
+            finest = _get_finest_cell(polygon, returned_cells[0].suid)
+        else:
+            parent_poly = Polygon(parent_cell.vertices(plane=False))
+            if parent_poly.contains(polygon):
+                finest = parent_cell
+            else:
+                finest = None
+        return finest
+
     for suid in [tuple(x) for x in ['N', 'O', 'P', 'Q', 'R', 'S']]:
         finest = _get_finest_cell(polygon, suid)
         if finest is not None:
             return finest
-
-
-def _get_finest_cell(polygon, suid):
-    parent_cell = Cell(suid=suid)
-    # get the children cells and polygons for these cells
-    children_cells = [cell for cell in parent_cell.subcells()]
-    children_poly = [Polygon(cell.vertices(plane=False)) for cell in children_cells]
-    # function and truth list for multipolygon / polygon (polygon) contained within multipolygon / polygon (cell)
-    truth = [poly.contains(polygon) for poly in children_poly]
-    # if we get something back, check the next level lower
-    returned_cells = list(compress(children_cells, truth))
-    if returned_cells:
-        finest = _get_finest_cell(polygon, returned_cells[0].suid)
-    else:
-        parent_poly = Polygon(parent_cell.vertices(plane=False))
-        if parent_poly.contains(polygon):
-            finest = parent_cell
-        else:
-            finest = None
-    return finest
 
 
 # TODO class should be a general class for collections of cells (believe the term is 'zone'?)
@@ -49,7 +46,7 @@ class CellZoneFromPoly:
         if file:
             self.file.write(f"\n{self.label},")
         if bounding_cell is None:
-            self._get_dggs_poly(call_get_finest(self.geometry))
+            self._get_dggs_poly(get_finest_containing_cell(self.geometry))
         else:
             self._get_dggs_poly(bounding_cell)
 
