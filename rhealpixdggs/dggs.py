@@ -2346,6 +2346,33 @@ class Cell(object):
         else:
             return lat_min <= phi and lat_max >= phi
 
+    def overlaps(self, other_cell):
+        """
+        Determines whether two DGGS cells overlap.
+        Where cells are of different resolution, they will have different suid lengths. The zip function truncates the longer
+        to be the same length as the shorter, producing two lists for comparison. If these lists are equal, the cells overlap.
+        :param cell_one: the first DGGS cell
+        :param cell_two: the second DGGS cell
+        :return: True if overlaps
+        """
+        assert self.suid is not tuple()  # cell cannot be empty
+        for i, j in zip(self.suid, other_cell.suid):
+            if i != j:
+                return False
+        return True
+
+    def region_overlaps(self, region: list):
+        """
+        Determine whether a cell overlaps with any cell in a list of cells
+        :param cell: a DGGS cell
+        :param region: a list of DGGS cells
+        :return: True if any overlapping cells
+        """
+        for component_cell in region:
+            if self.overlaps(component_cell):
+                return True
+        return False
+
     def region(self):
         """
         Return the region of this cell: 'equatorial', 'north_polar', or
@@ -2853,3 +2880,18 @@ class Cell(object):
             #             for i in range(resolution)])/\
             #        float(6*N**(2*resolution))
         return hsv_to_rgb(hue, saturation, 1)
+
+
+class RhealPolygon(object):
+    """
+    """
+
+    def __init__(
+            self, rdggs=WGS84_003, suid_list=None
+    ):
+        self.rdggs = rdggs
+        self.ellipsoid = rdggs.ellipsoid
+        self.N_side = rdggs.N_side
+        self.suid = ()  # Spatially unique identifier of self.
+        self.suid_list = suid_list
+

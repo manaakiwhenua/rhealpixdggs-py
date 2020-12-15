@@ -29,7 +29,7 @@ from numpy import pi, sqrt, sin, cos, arcsin, arctanh, deg2rad, rad2deg
 from random import uniform
 
 # Import my modules.
-from utils import my_round, auth_lat, auth_rad
+from rhealpixdggs.utils import my_round, auth_lat, auth_rad
 
 # Parameters of some common ellipsoids.
 WGS84_A = 6378137.0
