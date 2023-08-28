@@ -12,7 +12,7 @@ NOTE:
 
 All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
-By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
+By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 """
 # *****************************************************************************
 #       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
@@ -88,7 +88,7 @@ class Proj(object):
         result.append("    proj = %s" % self.proj)
         result.append("    kwargs = %s" % self.kwargs)
         result.append("    ellipsoid:")
-        for (k, v) in sorted(self.ellipsoid.__dict__.items()):
+        for k, v in sorted(self.ellipsoid.__dict__.items()):
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 

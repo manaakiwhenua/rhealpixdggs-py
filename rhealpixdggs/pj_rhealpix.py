@@ -15,7 +15,7 @@ NOTE:
 
 All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
-By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
+By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 """
 # *****************************************************************************
 #       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
@@ -344,11 +344,15 @@ def rhealpix_ellipsoid(lam, phi, e=0, north_square=0, south_square=0, region="no
     # Ensure north_square and south_square lie in {0, 1,2, 3}.
     x, y = healpix_ellipsoid(lam, phi, e)
     if region != "equatorial":
-        x, y = combine_triangles(x, y, north_square=north_square, south_square=south_square)
+        x, y = combine_triangles(
+            x, y, north_square=north_square, south_square=south_square
+        )
     return x, y
 
 
-def rhealpix_ellipsoid_inverse(x, y, e=0, north_square=0, south_square=0, region="none"):
+def rhealpix_ellipsoid_inverse(
+    x, y, e=0, north_square=0, south_square=0, region="none"
+):
     """
     Compute the inverse of rhealpix_ellipsoid.
 
@@ -368,7 +372,7 @@ def rhealpix_ellipsoid_inverse(x, y, e=0, north_square=0, south_square=0, region
     ):
         print("Error (rei): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
         return
-    
+
     if region != "equatorial":
         x, y = combine_triangles(
             x, y, north_square=north_square, south_square=south_square, inverse=True
@@ -500,7 +504,8 @@ def rhealpix(a=1, e=0, north_square=0, south_square=0, region="none"):
                 # Convert to radians.
                 lam, phi = deg2rad([lam, phi])
             return tuple(
-                R_A * array(
+                R_A
+                * array(
                     rhealpix_ellipsoid(
                         lam,
                         phi,
@@ -516,10 +521,10 @@ def rhealpix(a=1, e=0, north_square=0, south_square=0, region="none"):
             x, y = array((u, v)) / R_A
             lam, phi = array(
                 rhealpix_ellipsoid_inverse(
-                    x, 
-                    y, 
-                    e=e, 
-                    north_square=north_square, 
+                    x,
+                    y,
+                    e=e,
+                    north_square=north_square,
                     south_square=south_square,
                     region=region,
                 )

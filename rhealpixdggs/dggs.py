@@ -22,7 +22,7 @@ NOTES:
 All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
 
-By 'ellipsoid' throughout, i mean an ellipsoid of revolution and *not* a general (triaxial) ellipsoid.
+By 'ellipsoid' throughout, I mean an ellipsoid of revolution and *not* a general (triaxial) ellipsoid.
 
 Points lying on the plane are given in rectangular (horizontal, vertical) coordinates, and points lying on the ellipsoid are given in geodetic (longitude, latitude) coordinates unless indicated otherwise.
 

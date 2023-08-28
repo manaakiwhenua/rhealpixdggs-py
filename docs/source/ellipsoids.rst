@@ -1,7 +1,7 @@
 The ellipsoids Module
 ===========================
 
-.. automodule:: rhealpix_dggs.ellipsoids
+.. automodule:: rhealpixdggs.ellipsoids
     :members:
     :undoc-members:
     :show-inheritance:

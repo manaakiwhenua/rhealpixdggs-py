@@ -1,14 +1,12 @@
 """
 This Python 3.3 module implements the HEALPix map projection as described in [CaRo2007]_.
 
-.. [CaRo2007] Mark R. Calabretta and Boudewijn F. Roukema, Mapping on the healpix grid, Monthly Notices of the Royal
-Astronomical Society 381 (2007), no. 2, 865--872.
+.. [CaRo2007] Mark R. Calabretta and Boudewijn F. Roukema, Mapping on the healpix grid, Monthly Notices of the Royal Astronomical Society 381 (2007), no. 2, 865--872.
 
 CHANGELOG:
 
 - Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.
-- AR, 2013-03-05: In in_healpix_image() increased eps to 1e-10 to decrease out-of-bounds errors i was getting when
-drawing figures.
+- AR, 2013-03-05: In in_healpix_image() increased eps to 1e-10 to decrease out-of-bounds errors i was getting when drawing figures.
 - AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 - RG, 2020-07-31: Issue #5 Moved healpix_diagram to GRS2013 to remove sage dependence
@@ -19,7 +17,7 @@ NOTE:
 
 All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
-By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
+By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 """
 # *****************************************************************************
 #       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
@@ -102,7 +100,7 @@ def healpix_sphere_inverse(x, y):
         xc = -3 * pi / 4 + (pi / 2) * cap_number
         tau = 2 - 4 * abs(y) / pi
         lam = xc + (x - xc) / tau
-        phi = sign(y) * arcsin(1 - tau ** 2 / 3)
+        phi = sign(y) * arcsin(1 - tau**2 / 3)
         # Handle rounding errors in longitude.
         if lam < -pi:
             lam = -pi
