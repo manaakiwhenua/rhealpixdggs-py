@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css?v=16cbd302" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=08553120"></script>
+    <script src="_static/documentation_options.js?v=08553120"></script>
     <script src="_static/doctools.js?v=4184ea2e"></script>
     <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     
@@ -44,7 +44,7 @@
           <div class="body" role="main">
             
   <section id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h1>
+<h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h1>
 <p>rHEALPixDGGS is a Python 3 package that implements the rHEALPix discrete global grid system (DGGS).
 This documentation assumes you are familiar with the rHEALPix DGGS as described in <a class="reference internal" href="#grs2013" id="id1"><span>[GRS2013]</span></a> and familiar with basic Python 3.3 usage as described in <a class="reference external" href="http://docs.python.org/3/tutorial/">The Python Tutorial</a>.</p>
 <div role="list" class="citation-list">
@@ -54,7 +54,7 @@ This documentation assumes you are familiar with the rHEALPix DGGS as described 
 </div>
 </div>
 <section id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">¶</a></h2>
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="http://python.org/">Python &gt;=3.3</a></p></li>
 <li><p><a class="reference external" href="http://www.numpy.org/">NumPy &gt;=1.7</a> Base N-dimensional array package</p></li>
@@ -65,18 +65,18 @@ Python interface to the PROJ.4 cartographic library</p></li>
 </ul>
 </section>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
 <p>The package is available on PyPI, the Package Index from where it can be installed as follows:</p>
 <p>pip install rhealpixdggs</p>
 <p>rHEALPixDGGS is also available for download from Landcare Research’s github repository <a class="reference external" href="https://github.com/manaakiwhenua/rhealpixdggs-py">https://github.com/manaakiwhenua/rhealpixdggs-py</a> from wher the latest version can be cloned.</p>
 </section>
 <section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">¶</a></h2>
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
 <p>To use rHEALPixDGGS after installing it, start a Python session in the directory where you downloaded the modules and import the modules.
 Here are some examples.
 For a list of all methods available, see the application programming interface (API) in the following chapters.</p>
 <section id="using-the-ellipsoids-and-projection-wrapper-modules">
-<h3>Using the <code class="docutils literal notranslate"><span class="pre">ellipsoids</span></code> and <code class="docutils literal notranslate"><span class="pre">projection_wrapper</span></code> Modules<a class="headerlink" href="#using-the-ellipsoids-and-projection-wrapper-modules" title="Permalink to this heading">¶</a></h3>
+<h3>Using the <code class="docutils literal notranslate"><span class="pre">ellipsoids</span></code> and <code class="docutils literal notranslate"><span class="pre">projection_wrapper</span></code> Modules<a class="headerlink" href="#using-the-ellipsoids-and-projection-wrapper-modules" title="Link to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">ellipsoids</span></code> module implements functions and constants dealing with ellipsoids of revolution (which include spheres but not general triaxial ellipsoids).
 For brevity hereafter, the word ‘ellipsoid’ abbreviates ‘ellipsoid of revolution’.</p>
 <p>The module <code class="docutils literal notranslate"><span class="pre">projection_wrapper</span></code> implements a wrapper for the map projections of ellipsoids defined in <code class="docutils literal notranslate"><span class="pre">pj_healpix</span></code>, <code class="docutils literal notranslate"><span class="pre">pj_rhealpix</span></code>, and Pyproj.</p>
@@ -164,9 +164,9 @@ If you prefer radians, then do:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">Proj</span><span class="p">(</span><span class="n">ellps_1</span><span class="p">,</span> <span class="s1">&#39;healpix&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rh</span> <span class="o">=</span> <span class="n">Proj</span><span class="p">(</span><span class="n">ellps_1</span><span class="p">,</span> <span class="s1">&#39;rhealpix&#39;</span><span class="p">,</span> <span class="n">north_square</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">south_square</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">))</span>
-<span class="go">(0.0, 3.3512785501780242)</span>
+<span class="go">(0.0, 3.351278550178025)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rh</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">))</span>
-<span class="go">(0.0, 3.3512785501780242)</span>
+<span class="go">(0.0, 3.351278550178025)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">70</span><span class="p">))</span>
 <span class="go">(0.864006732389895, 4.258498514443268)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rh</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">70</span><span class="p">))</span>
@@ -175,7 +175,7 @@ If you prefer radians, then do:</p>
 </div>
 </section>
 <section id="using-the-dggs-module">
-<h3>Using the <code class="docutils literal notranslate"><span class="pre">dggs</span></code> Module<a class="headerlink" href="#using-the-dggs-module" title="Permalink to this heading">¶</a></h3>
+<h3>Using the <code class="docutils literal notranslate"><span class="pre">dggs</span></code> Module<a class="headerlink" href="#using-the-dggs-module" title="Link to this heading">¶</a></h3>
 <p>The module <code class="docutils literal notranslate"><span class="pre">dggs</span></code> implements the rHEALPix DGGS and various operations thereupon.</p>
 <p>Import all the classes, methods, and constants from the module</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rhealpixdggs.dggs</span> <span class="kn">import</span> <span class="o">*</span>
@@ -418,7 +418,7 @@ Orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand:</p
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2013, Alexander Raichev.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.4.
     </div>
   </body>
 </html>
