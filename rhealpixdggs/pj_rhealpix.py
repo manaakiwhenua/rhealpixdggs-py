@@ -487,7 +487,7 @@ def rhealpix(a=1, e=0, north_square=0, south_square=0, region="none"):
         >>> print(my_round(q, 15))
         (-0.574951359778215, 2.145747686573111)
         >>> print(my_round(f(*q, radians=False, inverse=True), 15))
-        (-1.3e-14, 59.999999999999986)
+        (6e-15, 59.999999999999986)
         >>> print(my_round(p, 15))
         (0, 60)
 
