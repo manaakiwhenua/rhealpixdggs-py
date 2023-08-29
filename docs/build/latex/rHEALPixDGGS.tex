@@ -10,6 +10,8 @@
 %% let collapsible pdf bookmarks panel have high depth per default
 \PassOptionsToPackage{bookmarksdepth=5}{hyperref}
 
+\PassOptionsToPackage{booktabs}{sphinx}
+\PassOptionsToPackage{colorrows}{sphinx}
 
 \PassOptionsToPackage{warn}{textcomp}
 \usepackage[utf8]{inputenc}
@@ -492,7 +494,7 @@ unless indicated otherwise.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.auth_lat}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{auth\_lat}}}{\emph{\DUrole{n}{phi}}, \emph{\DUrole{n}{e}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}, \emph{\DUrole{n}{radians}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{auth\_lat}}}{\sphinxparam{\DUrole{n,n}{phi}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{e}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{inverse}\DUrole{o,o}{=}\DUrole{default_value}{False}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{radians}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point of geographic latitude \sphinxtitleref{phi} on an ellipse of
@@ -543,7 +545,7 @@ and accurate for small eccentricities.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.auth_rad}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{auth\_rad}}}{\emph{\DUrole{n}{a}}, \emph{\DUrole{n}{e}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{auth\_rad}}}{\sphinxparam{\DUrole{n,n}{a}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{e}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{inverse}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the radius of the authalic sphere of the ellipsoid with major
@@ -592,7 +594,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.my_round}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{my\_round}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{digits}\DUrole{o}{=}\DUrole{default_value}{0}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{my\_round}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{digits}\DUrole{o,o}{=}\DUrole{default_value}{0}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Round the floating point number or list/tuple of floating point
@@ -616,7 +618,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.wrap_latitude}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{wrap\_latitude}}}{\emph{\DUrole{n}{phi}}, \emph{\DUrole{n}{radians}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{wrap\_latitude}}}{\sphinxparam{\DUrole{n,n}{phi}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{radians}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point p on the unit circle at angle \sphinxtitleref{phi} from the positive x\sphinxhyphen{}axis,
@@ -653,7 +655,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.wrap_longitude}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{wrap\_longitude}}}{\emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{radians}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{wrap\_longitude}}}{\sphinxparam{\DUrole{n,n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{radians}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point p on the unit circle at angle \sphinxtitleref{lam} from the positive
@@ -739,7 +741,7 @@ By ‘ellipsoid’ below, I mean an oblate ellipsoid of revolution.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix}}}{\emph{\DUrole{n}{a}\DUrole{o}{=}\DUrole{default_value}{1}}, \emph{\DUrole{n}{e}\DUrole{o}{=}\DUrole{default_value}{0}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix}}}{\sphinxparam{\DUrole{n,n}{a}\DUrole{o,o}{=}\DUrole{default_value}{1}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{e}\DUrole{o,o}{=}\DUrole{default_value}{0}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a function object that wraps the HEALPix projection and its inverse
@@ -777,7 +779,7 @@ A function object of the form f(u, v, radians=False, inverse=False).
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix_ellipsoid}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_ellipsoid}}}{\emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{phi}}, \emph{\DUrole{n}{e}\DUrole{o}{=}\DUrole{default_value}{0}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_ellipsoid}}}{\sphinxparam{\DUrole{n,n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{e}\DUrole{o,o}{=}\DUrole{default_value}{0}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the signature functions of the HEALPix projection of an oblate
@@ -815,7 +817,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix_ellipsoid_inverse}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_ellipsoid\_inverse}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}, \emph{\DUrole{n}{e}\DUrole{o}{=}\DUrole{default_value}{0}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_ellipsoid\_inverse}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{y}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{e}\DUrole{o,o}{=}\DUrole{default_value}{0}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the inverse of healpix\_ellipsoid().
@@ -839,7 +841,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix_sphere}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_sphere}}}{\emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{phi}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_sphere}}}{\sphinxparam{\DUrole{n,n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the signature function of the HEALPix
@@ -870,7 +872,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix_sphere_inverse}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_sphere\_inverse}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_sphere\_inverse}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{y}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the inverse of the healpix\_sphere().
@@ -913,7 +915,7 @@ the unit sphere.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.in_healpix_image}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{in\_healpix\_image}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{in\_healpix\_image}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{y}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return True if and only if \sphinxtitleref{(x, y)} lies in the image of the HEALPix
@@ -1006,7 +1008,7 @@ By ‘ellipsoid’ below, I mean an oblate ellipsoid of revolution.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.combine_triangles}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{combine\_triangles}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}, \emph{\DUrole{n}{north\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{combine\_triangles}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{y}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{north\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{inverse}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Rearrange point \sphinxtitleref{(x, y)} in the HEALPix projection by
@@ -1057,7 +1059,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.in_rhealpix_image}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{in\_rhealpix\_image}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}, \emph{\DUrole{n}{north\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{o}{=}\DUrole{default_value}{0}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{in\_rhealpix\_image}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{y}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{north\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return True if and only if the point \sphinxtitleref{(x, y)} lies in the image of
@@ -1100,7 +1102,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix}}}{\emph{\DUrole{n}{a}\DUrole{o}{=}\DUrole{default_value}{1}}, \emph{\DUrole{n}{e}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{north\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix}}}{\sphinxparam{\DUrole{n,n}{a}\DUrole{o,o}{=}\DUrole{default_value}{1}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{e}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{north\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{region}\DUrole{o,o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a function object that wraps the rHEALPix projection and its inverse
@@ -1139,7 +1141,7 @@ A function object of the form f(u, v, radians=False, inverse=False).
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_ellipsoid}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_ellipsoid}}}{\emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{phi}}, \emph{\DUrole{n}{e}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{north\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_ellipsoid}}}{\sphinxparam{\DUrole{n,n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{e}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{north\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{region}\DUrole{o,o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the signature functions of the rHEALPix map
@@ -1186,7 +1188,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_ellipsoid_inverse}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_ellipsoid\_inverse}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}, \emph{\DUrole{n}{e}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{north\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_ellipsoid\_inverse}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{y}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{e}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{north\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{region}\DUrole{o,o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the inverse of rhealpix\_ellipsoid.
@@ -1210,7 +1212,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_sphere}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_sphere}}}{\emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{phi}}, \emph{\DUrole{n}{north\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_sphere}}}{\sphinxparam{\DUrole{n,n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{north\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{region}\DUrole{o,o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the signature functions of the rHEALPix map projection of
@@ -1266,7 +1268,7 @@ The polar squares are labeled 0, 1, 2, 3 from east to west like this:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_sphere_inverse}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_sphere\_inverse}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}, \emph{\DUrole{n}{north\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_sphere\_inverse}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{y}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{north\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{region}\DUrole{o,o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the inverse of rhealpix\_sphere().
@@ -1290,7 +1292,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_vertices}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_vertices}}}{\emph{\DUrole{n}{north\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{o}{=}\DUrole{default_value}{0}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_vertices}}}{\sphinxparam{\DUrole{n,n}{north\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of the planar vertices of the rHEALPix projection of
@@ -1303,7 +1305,7 @@ the unit sphere.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.triangle}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{triangle}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}, \emph{\DUrole{n}{north\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{triangle}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{y}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{north\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{inverse}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the number of the polar triangle and region that \sphinxtitleref{(x, y)} lies in.
@@ -1441,7 +1443,7 @@ Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordin
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.ellipsoids.}}\sphinxbfcode{\sphinxupquote{Ellipsoid}}}{\emph{\DUrole{n}{R}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{a}\DUrole{o}{=}\DUrole{default_value}{6378137.0}}, \emph{\DUrole{n}{b}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{e}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{f}\DUrole{o}{=}\DUrole{default_value}{0.003352810681182319}}, \emph{\DUrole{n}{lon\_0}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{lat\_0}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{radians}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w,w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.ellipsoids.}}\sphinxbfcode{\sphinxupquote{Ellipsoid}}}{\sphinxparam{\DUrole{n,n}{R}\DUrole{o,o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{a}\DUrole{o,o}{=}\DUrole{default_value}{6378137.0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{b}\DUrole{o,o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{e}\DUrole{o,o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{f}\DUrole{o,o}{=}\DUrole{default_value}{0.003352810681182319}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{lon\_0}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{lat\_0}\DUrole{o,o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{radians}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Bases: \sphinxcode{\sphinxupquote{object}}
@@ -1510,7 +1512,7 @@ Except for phi\_0, these attribute names match the names of the
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.get_points}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{get\_points}}}{\emph{\DUrole{n}{filename}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{get\_points}}}{\sphinxparam{\DUrole{n,n}{filename}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of longitude\sphinxhyphen{}latitude points contained in
@@ -1526,7 +1528,7 @@ whitespace and angles given in degrees.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.graticule}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{graticule}}}{\emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{400}}, \emph{\DUrole{n}{spacing}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{graticule}}}{\sphinxparam{\DUrole{n,n}{n}\DUrole{o,o}{=}\DUrole{default_value}{400}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{spacing}\DUrole{o,o}{=}\DUrole{default_value}{None}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of longitude\sphinxhyphen{}latitude points sampled from a
@@ -1553,7 +1555,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.lattice}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{lattice}}}{\emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{90}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{lattice}}}{\sphinxparam{\DUrole{n,n}{n}\DUrole{o,o}{=}\DUrole{default_value}{90}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a 2n x n square lattice of longitude\sphinxhyphen{}latitude points.
@@ -1592,7 +1594,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.meridian}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{meridian}}}{\emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{200}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{meridian}}}{\sphinxparam{\DUrole{n,n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{n}\DUrole{o,o}{=}\DUrole{default_value}{200}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of \sphinxtitleref{n} equispaced longitude\sphinxhyphen{}latitude
@@ -1606,7 +1608,7 @@ Avoid the poles.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.parallel}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{parallel}}}{\emph{\DUrole{n}{phi}}, \emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{200}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{parallel}}}{\sphinxparam{\DUrole{n,n}{phi}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{n}\DUrole{o,o}{=}\DUrole{default_value}{200}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of \sphinxtitleref{2*n} equispaced longitude\sphinxhyphen{}latitude
@@ -1631,7 +1633,7 @@ Return pi if \sphinxtitleref{self.radians} = True and 180 otherwise.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.random_point}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_point}}}{\emph{\DUrole{n}{lam\_min}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{lam\_max}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{phi\_min}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{phi\_max}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_point}}}{\sphinxparam{\DUrole{n,n}{lam\_min}\DUrole{o,o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{lam\_max}\DUrole{o,o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi\_min}\DUrole{o,o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi\_max}\DUrole{o,o}{=}\DUrole{default_value}{None}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a point (given in geodetic coordinates) sampled uniformly at
@@ -1656,7 +1658,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.xyz}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xyz}}}{\emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{phi}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xyz}}}{\sphinxparam{\DUrole{n,n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point on this ellipsoid with longitude\sphinxhyphen{}latitude coordinates
@@ -1724,7 +1726,7 @@ By ‘ellipsoid’ below, I mean an oblate ellipsoid of revolution.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{projection_wrapper:rhealpixdggs.projection_wrapper.Proj}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.projection\_wrapper.}}\sphinxbfcode{\sphinxupquote{Proj}}}{\emph{\DUrole{n}{ellipsoid=\textless{}rhealpixdggs.ellipsoids.Ellipsoid object\textgreater{}}}, \emph{\DUrole{n}{proj=None}}, \emph{\DUrole{n}{**kwargs}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w,w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.projection\_wrapper.}}\sphinxbfcode{\sphinxupquote{Proj}}}{\sphinxparam{\DUrole{n,n}{ellipsoid=\textless{}rhealpixdggs.ellipsoids.Ellipsoid object\textgreater{}}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{proj=None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{**kwargs}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Bases: \sphinxcode{\sphinxupquote{object}}
@@ -2051,7 +2053,7 @@ f = 0.003352810681182319
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{Cell}}}{\emph{\DUrole{n}{rdggs=\textless{}rhealpixdggs.dggs.RHEALPixDGGS object\textgreater{}}}, \emph{\DUrole{n}{suid=None}}, \emph{\DUrole{n}{level\_order\_index=None}}, \emph{\DUrole{n}{post\_order\_index=None}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w,w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{Cell}}}{\sphinxparam{\DUrole{n,n}{rdggs=\textless{}rhealpixdggs.dggs.RHEALPixDGGS object\textgreater{}}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{suid=None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{level\_order\_index=None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{post\_order\_index=None}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Bases: \sphinxcode{\sphinxupquote{object}}
@@ -2104,7 +2106,7 @@ the ellipsoidal DGGS.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.area}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{area}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{area}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the area of this cell.
@@ -2116,7 +2118,7 @@ Return the area of this cell.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.boundary}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{boundary}}}{\emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{2}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}, \emph{\DUrole{n}{interior}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{boundary}}}{\sphinxparam{\DUrole{n,n}{n}\DUrole{o,o}{=}\DUrole{default_value}{2}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{interior}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of \sphinxtitleref{4*n \sphinxhyphen{} 4} boundary points of this cell,
@@ -2194,7 +2196,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.centroid}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{centroid}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{centroid}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the centroid of this planar or ellipsoidal cell.
@@ -2218,7 +2220,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.color}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{color}}}{\emph{\DUrole{n}{saturation}\DUrole{o}{=}\DUrole{default_value}{0.5}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{color}}}{\sphinxparam{\DUrole{n,n}{saturation}\DUrole{o,o}{=}\DUrole{default_value}{0.5}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a unique RGB color tuple for this cell.
@@ -2231,7 +2233,7 @@ Inessential graphics method.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.contains}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{contains}}}{\emph{\DUrole{n}{p}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{contains}}}{\sphinxparam{\DUrole{n,n}{p}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return True if this cell contains point \sphinxtitleref{p}, and return False
@@ -2281,7 +2283,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.index}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{index}}}{\emph{\DUrole{n}{order}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}resolution\textquotesingle{}}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{index}}}{\sphinxparam{\DUrole{n,n}{order}\DUrole{o,o}{=}\DUrole{default_value}{\textquotesingle{}resolution\textquotesingle{}}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the index of \sphinxtitleref{self} when it’s ordered according to \sphinxtitleref{order}.
@@ -2324,7 +2326,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.interior}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{interior}}}{\emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{2}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}, \emph{\DUrole{n}{flatten}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{interior}}}{\sphinxparam{\DUrole{n,n}{n}\DUrole{o,o}{=}\DUrole{default_value}{2}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{flatten}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return an \sphinxtitleref{n} x \sphinxtitleref{n} matrix of interior points of this cell.
@@ -2371,7 +2373,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.intersects_meridian}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{intersects\_meridian}}}{\emph{\DUrole{n}{lam}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{intersects\_meridian}}}{\sphinxparam{\DUrole{n,n}{lam}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return True if this ellipsoidal cell’s boundary intersects the
@@ -2396,7 +2398,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.intersects_parallel}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{intersects\_parallel}}}{\emph{\DUrole{n}{phi}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{intersects\_parallel}}}{\sphinxparam{\DUrole{n,n}{phi}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return True if this cell’s boundary intersects the parallel of latitude
@@ -2409,7 +2411,7 @@ Return True if this cell’s boundary intersects the parallel of latitude
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.neighbor}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{neighbor}}}{\emph{\DUrole{n}{direction}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{neighbor}}}{\sphinxparam{\DUrole{n,n}{direction}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return this cell’s (edge) neighbor in the given direction.
@@ -2477,7 +2479,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.neighbors}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{neighbors}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{neighbors}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return this cell’s planar or ellipsoidal (edge) neighbors
@@ -2505,7 +2507,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.nucleus}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{nucleus}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{nucleus}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the nucleus and vertices of this planar or ellipsoidal cell
@@ -2541,7 +2543,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.nw_vertex}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{nw\_vertex}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{nw\_vertex}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 If \sphinxtitleref{plane} = False, then return the northwest vertex of this
@@ -2632,7 +2634,7 @@ because not all cells contain their boundary.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.overlaps}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{overlaps}}}{\emph{\DUrole{n}{other\_cell}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{overlaps}}}{\sphinxparam{\DUrole{n,n}{other\_cell}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Determines whether two DGGS cells overlap.
@@ -2649,7 +2651,7 @@ to be the same length as the shorter, producing two lists for comparison. If the
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.predecessor}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{predecessor}}}{\emph{\DUrole{n}{resolution}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{predecessor}}}{\sphinxparam{\DUrole{n,n}{resolution}\DUrole{o,o}{=}\DUrole{default_value}{None}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the greatest resolution \sphinxtitleref{resolution} cell less than \sphinxtitleref{self}.
@@ -2677,7 +2679,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.random_point}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_point}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_point}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a random point in this cell.
@@ -2725,7 +2727,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.region_overlaps}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{region\_overlaps}}}{\emph{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{list}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{region\_overlaps}}}{\sphinxparam{\DUrole{n,n}{region}\DUrole{p,p}{:}\DUrole{w,w}{  }\DUrole{n,n}{list}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Determine whether a cell overlaps with any cell in a list of cells
@@ -2740,7 +2742,7 @@ Determine whether a cell overlaps with any cell in a list of cells
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.rotate}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{rotate}}}{\emph{\DUrole{n}{quarter\_turns}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{rotate}}}{\sphinxparam{\DUrole{n,n}{quarter\_turns}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the cell that is the result of rotating this cell’s
@@ -2763,7 +2765,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.rotate_entry}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{rotate\_entry}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{quarter\_turns}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{rotate\_entry}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{quarter\_turns}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Let N = self.N\_side and rotate the N x N matrix of subcell numbers
@@ -2820,7 +2822,7 @@ Only depends on \sphinxtitleref{self} through \sphinxtitleref{self.N\_side}.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.subcell}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{subcell}}}{\emph{\DUrole{n}{other}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{subcell}}}{\sphinxparam{\DUrole{n,n}{other}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Subcell (subset) relation on cells.
@@ -2844,7 +2846,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.subcells}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{subcells}}}{\emph{\DUrole{n}{resolution}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{subcells}}}{\sphinxparam{\DUrole{n,n}{resolution}\DUrole{o,o}{=}\DUrole{default_value}{None}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Generator function for the set of all resolution \sphinxtitleref{resolution} subcells
@@ -2868,7 +2870,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.successor}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{successor}}}{\emph{\DUrole{n}{resolution}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{successor}}}{\sphinxparam{\DUrole{n,n}{resolution}\DUrole{o,o}{=}\DUrole{default_value}{None}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the least resolution \sphinxtitleref{resolution} cell greater than \sphinxtitleref{self}.
@@ -2896,7 +2898,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.suid_from_index}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{static\DUrole{w}{  }}}\sphinxbfcode{\sphinxupquote{suid\_from\_index}}}{\emph{\DUrole{n}{rdggs}}, \emph{\DUrole{n}{index}}, \emph{\DUrole{n}{order}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}resolution\textquotesingle{}}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{static\DUrole{w,w}{  }}}\sphinxbfcode{\sphinxupquote{suid\_from\_index}}}{\sphinxparam{\DUrole{n,n}{rdggs}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{index}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{order}\DUrole{o,o}{=}\DUrole{default_value}{\textquotesingle{}resolution\textquotesingle{}}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the suid of a cell from its index.
@@ -2937,7 +2939,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.ul_vertex}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{ul\_vertex}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{ul\_vertex}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 If \sphinxtitleref{plane} = True, then return the upper left vertex of this
@@ -2968,7 +2970,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.vertices}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{vertices}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}, \emph{\DUrole{n}{trim\_dart}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{vertices}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{trim\_dart}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 If \sphinxtitleref{plane} = True, then assume this cell is planar and return
@@ -3052,7 +3054,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.width}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{width}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{width}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the width of this cell.
@@ -3103,7 +3105,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{RHEALPixDGGS}}}{\emph{\DUrole{n}{ellipsoid=\textless{}rhealpixdggs.ellipsoids.Ellipsoid object\textgreater{}}}, \emph{\DUrole{n}{N\_side=3}}, \emph{\DUrole{n}{north\_square=0}}, \emph{\DUrole{n}{south\_square=0}}, \emph{\DUrole{n}{max\_areal\_resolution=1}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w,w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{RHEALPixDGGS}}}{\sphinxparam{\DUrole{n,n}{ellipsoid=\textless{}rhealpixdggs.ellipsoids.Ellipsoid object\textgreater{}}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{N\_side=3}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{north\_square=0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{south\_square=0}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{max\_areal\_resolution=1}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Bases: \sphinxcode{\sphinxupquote{object}}
@@ -3187,7 +3189,7 @@ the ellipsoidal DGGS.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell}}}{\emph{\DUrole{n}{suid}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{level\_order\_index}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{post\_order\_index}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell}}}{\sphinxparam{\DUrole{n,n}{suid}\DUrole{o,o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{level\_order\_index}\DUrole{o,o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{post\_order\_index}\DUrole{o,o}{=}\DUrole{default_value}{None}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a cell (Cell instance) of this DGGS either from its ID or
@@ -3212,7 +3214,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_area}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_area}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_area}}}{\sphinxparam{\DUrole{n,n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the area of a planar or ellipsoidal cell at the given
@@ -3237,7 +3239,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_from\_point}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{p}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_from\_point}}}{\sphinxparam{\DUrole{n,n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{p}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the resolution \sphinxtitleref{resolution} cell that contains the point \sphinxtitleref{p}.
@@ -3263,7 +3265,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_from_region}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_from\_region}}}{\emph{\DUrole{n}{ul}}, \emph{\DUrole{n}{dr}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_from\_region}}}{\sphinxparam{\DUrole{n,n}{ul}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{dr}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the smallest planar or ellipsoidal cell wholly containing
@@ -3303,7 +3305,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_latitudes}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_latitudes}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{phi\_min}}, \emph{\DUrole{n}{phi\_max}}, \emph{\DUrole{n}{nucleus}\DUrole{o}{=}\DUrole{default_value}{True}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_latitudes}}}{\sphinxparam{\DUrole{n,n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi\_min}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi\_max}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{nucleus}\DUrole{o,o}{=}\DUrole{default_value}{True}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of every latitude phi whose parallel intersects
@@ -3384,7 +3386,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_width}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_width}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_width}}}{\sphinxparam{\DUrole{n,n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the width of a planar cell at the given resolution.
@@ -3409,7 +3411,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cells0}}
 \pysigstartsignatures
-\pysigline{\sphinxbfcode{\sphinxupquote{cells0}}\sphinxbfcode{\sphinxupquote{\DUrole{w}{  }\DUrole{p}{=}\DUrole{w}{  }{[}\textquotesingle{}N\textquotesingle{}, \textquotesingle{}O\textquotesingle{}, \textquotesingle{}P\textquotesingle{}, \textquotesingle{}Q\textquotesingle{}, \textquotesingle{}R\textquotesingle{}, \textquotesingle{}S\textquotesingle{}{]}}}}
+\pysigline{\sphinxbfcode{\sphinxupquote{cells0}}\sphinxbfcode{\sphinxupquote{\DUrole{w,w}{  }\DUrole{p,p}{=}\DUrole{w,w}{  }{[}\textquotesingle{}N\textquotesingle{}, \textquotesingle{}O\textquotesingle{}, \textquotesingle{}P\textquotesingle{}, \textquotesingle{}Q\textquotesingle{}, \textquotesingle{}R\textquotesingle{}, \textquotesingle{}S\textquotesingle{}{]}}}}
 \pysigstopsignatures
 \end{fulllineitems}
 
@@ -3418,7 +3420,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cells_from_meridian}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cells\_from\_meridian}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{phi\_min}}, \emph{\DUrole{n}{phi\_max}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cells\_from\_meridian}}}{\sphinxparam{\DUrole{n,n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi\_min}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi\_max}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of the resolution \sphinxtitleref{resolution} cells that intersect
@@ -3445,7 +3447,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cells_from_parallel}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cells\_from\_parallel}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{phi}}, \emph{\DUrole{n}{lam\_min}}, \emph{\DUrole{n}{lam\_max}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cells\_from\_parallel}}}{\sphinxparam{\DUrole{n,n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{phi}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{lam\_min}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{lam\_max}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of the resolution \sphinxtitleref{resolution} cells that intersect
@@ -3470,7 +3472,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cells_from_region}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cells\_from\_region}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{ul}}, \emph{\DUrole{n}{dr}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cells\_from\_region}}}{\sphinxparam{\DUrole{n,n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{ul}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{dr}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 If \sphinxtitleref{plane} = True, then return a list of lists of resolution
@@ -3562,7 +3564,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.combine_triangles}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{combine\_triangles}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}, \emph{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{combine\_triangles}}}{\sphinxparam{\DUrole{n,n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{inverse}\DUrole{o,o}{=}\DUrole{default_value}{False}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{region}\DUrole{o,o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the combine\_triangles() transformation of the point \sphinxtitleref{(u, v)}
@@ -3596,7 +3598,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.grid}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{grid}}}{\emph{\DUrole{n}{resolution}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{grid}}}{\sphinxparam{\DUrole{n,n}{resolution}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Generator function for all the cells at resolution \sphinxtitleref{resolution}.
@@ -3618,7 +3620,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.healpix}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{healpix}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{healpix}}}{\sphinxparam{\DUrole{n,n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{inverse}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the HEALPix projection of point \sphinxtitleref{(u, v)} (or its inverse if
@@ -3652,7 +3654,7 @@ Uses \sphinxcode{\sphinxupquote{pj\_healpix}} instead of the PROJ.4 version of H
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.interval}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{interval}}}{\emph{\DUrole{n}{a}}, \emph{\DUrole{n}{b}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{interval}}}{\sphinxparam{\DUrole{n,n}{a}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{b}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Generator function for all the resolution
@@ -3679,7 +3681,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.minimal_cover}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{minimal\_cover}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{points}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{minimal\_cover}}}{\sphinxparam{\DUrole{n,n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{points}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Find the minimal set of resolution \sphinxtitleref{resolution} cells that covers
@@ -3716,7 +3718,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.num_cells}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{num\_cells}}}{\emph{\DUrole{n}{res\_1}}, \emph{\DUrole{n}{res\_2}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{subcells}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{num\_cells}}}{\sphinxparam{\DUrole{n,n}{res\_1}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{res\_2}\DUrole{o,o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{subcells}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the number of cells of resolutions \sphinxtitleref{res\_1} to \sphinxtitleref{res\_2}
@@ -3753,7 +3755,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.random_cell}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_cell}}}{\emph{\DUrole{n}{resolution}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_cell}}}{\sphinxparam{\DUrole{n,n}{resolution}\DUrole{o,o}{=}\DUrole{default_value}{None}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a cell of the given resolution chosen uniformly at random
@@ -3776,7 +3778,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.random_point}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_point}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_point}}}{\sphinxparam{\DUrole{n,n}{plane}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a point in this DGGS sampled uniformly at
@@ -3798,7 +3800,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.rhealpix}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{rhealpix}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}, \emph{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{rhealpix}}}{\sphinxparam{\DUrole{n,n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{inverse}\DUrole{o,o}{=}\DUrole{default_value}{False}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{region}\DUrole{o,o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the rHEALPix projection of the point \sphinxtitleref{(u, v)} (or its inverse if
@@ -3832,7 +3834,7 @@ Uses \sphinxcode{\sphinxupquote{pj\_rhealpix}} instead of the PROJ.4 version of 
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.triangle}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{triangle}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{triangle}}}{\sphinxparam{\DUrole{n,n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{y}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{inverse}\DUrole{o,o}{=}\DUrole{default_value}{True}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 If \sphinxtitleref{inverse} = False, then assume \sphinxtitleref{(x,y)} lies in the image of the
@@ -3888,7 +3890,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.xyz}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xyz}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{lonlat}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xyz}}}{\sphinxparam{\DUrole{n,n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{lonlat}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point \sphinxtitleref{(u, v)} in the planar image of the rHEALPix projection,
@@ -3919,7 +3921,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.xyz_cube}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xyz\_cube}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{lonlat}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xyz\_cube}}}{\sphinxparam{\DUrole{n,n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{lonlat}\DUrole{o,o}{=}\DUrole{default_value}{False}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point \sphinxtitleref{(u, v)} in the planar version of this rHEALPix DGGS,
@@ -3953,7 +3955,7 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RhealPolygon}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{RhealPolygon}}}{\emph{\DUrole{n}{rdggs=\textless{}rhealpixdggs.dggs.RHEALPixDGGS object\textgreater{}}}, \emph{\DUrole{n}{suid\_list=None}}}{}
+\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w,w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{RhealPolygon}}}{\sphinxparam{\DUrole{n,n}{rdggs=\textless{}rhealpixdggs.dggs.RHEALPixDGGS object\textgreater{}}}\sphinxparamcomma \sphinxparam{\DUrole{n,n}{suid\_list=None}}}{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Bases: \sphinxcode{\sphinxupquote{object}}

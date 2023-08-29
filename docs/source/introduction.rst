@@ -123,9 +123,9 @@ Project some points of the ellipsoid using the HEALPix and rHEALPix projections:
     >>> h = Proj(ellps_1, 'healpix')
     >>> rh = Proj(ellps_1, 'rhealpix', north_square=1, south_square=2)
     >>> print(h(0, 60))
-    (0.0, 3.351278550178025)
+    (0.0, 3.3512785501780242)
     >>> print(rh(0, 60))
-    (0.0, 3.351278550178025)
+    (0.0, 3.3512785501780242)
     >>> print(h(0, 70))
     (0.864006732389895, 4.258498514443268)
     >>> print(rh(0, 70))
@@ -258,8 +258,8 @@ Compute the ellipsoidal shape and ellipsoidal nuclei of these cells ::
     >>> for row in cells:
     ...     for cell in row:
     ...         print(cell, cell.ellipsoidal_shape(), cell.nucleus(plane=False))
-    N2 dart (5.088887490341627e-14, 58.470677829627355)
-    N1 skew_quad (45.000000000000036, 58.470677829627355)
+    N2 dart (5.088887490341627e-14, 58.47067782962734)
+    N1 skew_quad (45.000000000000036, 58.47067782962734)
     N0 dart (89.99999999999996, 58.47067782962736)
     Q0 quad (14.999999999999998, 26.438744923100096)
     Q1 quad (45.0, 26.438744923100096)
