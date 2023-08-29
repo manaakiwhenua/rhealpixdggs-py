@@ -254,9 +254,9 @@ Project some points of the ellipsoid using the HEALPix and rHEALPix projections:
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{h} \PYG{o}{=} \PYG{n}{Proj}\PYG{p}{(}\PYG{n}{ellps\PYGZus{}1}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{healpix}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rh} \PYG{o}{=} \PYG{n}{Proj}\PYG{p}{(}\PYG{n}{ellps\PYGZus{}1}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{rhealpix}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{north\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{south\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{h}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{60}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(0.0, 3.351278550178025)}
+\PYG{g+go}{(0.0, 3.3512785501780242)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{rh}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{60}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(0.0, 3.351278550178025)}
+\PYG{g+go}{(0.0, 3.3512785501780242)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{h}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{70}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0.864006732389895, 4.258498514443268)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{rh}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{70}\PYG{p}{)}\PYG{p}{)}
@@ -415,8 +415,8 @@ Compute the ellipsoidal shape and ellipsoidal nuclei of these cells
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{row} \PYG{o+ow}{in} \PYG{n}{cells}\PYG{p}{:}
 \PYG{g+gp}{... }    \PYG{k}{for} \PYG{n}{cell} \PYG{o+ow}{in} \PYG{n}{row}\PYG{p}{:}
 \PYG{g+gp}{... }        \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{cell}\PYG{p}{,} \PYG{n}{cell}\PYG{o}{.}\PYG{n}{ellipsoidal\PYGZus{}shape}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{n}{cell}\PYG{o}{.}\PYG{n}{nucleus}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{N2 dart (5.088887490341627e\PYGZhy{}14, 58.470677829627355)}
-\PYG{g+go}{N1 skew\PYGZus{}quad (45.000000000000036, 58.470677829627355)}
+\PYG{g+go}{N2 dart (5.088887490341627e\PYGZhy{}14, 58.47067782962734)}
+\PYG{g+go}{N1 skew\PYGZus{}quad (45.000000000000036, 58.47067782962734)}
 \PYG{g+go}{N0 dart (89.99999999999996, 58.47067782962736)}
 \PYG{g+go}{Q0 quad (14.999999999999998, 26.438744923100096)}
 \PYG{g+go}{Q1 quad (45.0, 26.438744923100096)}
@@ -753,12 +753,12 @@ EXAMPLES:
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{f} \PYG{o}{=} \PYG{n}{healpix}\PYG{p}{(}\PYG{n}{a}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{e}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(0.574951359778215, 2.145747686573111)}
+\PYG{g+go}{(0.574951359778214, 2.145747686573111)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{60}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{q} \PYG{o}{=} \PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{;} \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{q}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(0.574951359778215, 2.145747686573111)}
+\PYG{g+go}{(0.574951359778214, 2.145747686573111)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(6e\PYGZhy{}15, 59.999999999999986)}
+\PYG{g+go}{(\PYGZhy{}6e\PYGZhy{}15, 59.999999999999986)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 60)}
 \end{sphinxVerbatim}
@@ -1120,7 +1120,7 @@ EXAMPLES:
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{q}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}0.574951359778215, 2.145747686573111)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(6e\PYGZhy{}15, 59.999999999999986)}
+\PYG{g+go}{(\PYGZhy{}1.3e\PYGZhy{}14, 59.999999999999986)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 60)}
 \end{sphinxVerbatim}
@@ -1973,7 +1973,7 @@ Compute the ellipsoidal nuclei of these cells
 \PYG{g+gp}{... }        \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{cell}\PYG{p}{,} \PYG{n}{cell}\PYG{o}{.}\PYG{n}{nucleus}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{N8 (0.0, 58.47067782962736)}
 \PYG{g+go}{N5 (45.000000000000036, 58.47067782962736)}
-\PYG{g+go}{N2 (90.00000000000003, 58.470677829627355)}
+\PYG{g+go}{N2 (90.00000000000003, 58.47067782962734)}
 \PYG{g+go}{Q0 (14.999999999999998, 26.438744923100096)}
 \PYG{g+go}{Q1 (45.0, 26.438744923100096)}
 \PYG{g+go}{Q2 (74.99999999999999, 26.438744923100096)}
@@ -2346,10 +2346,10 @@ EXAMPLES:
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{interior}\PYG{p}{(}\PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{flatten}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{:}
 \PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(90.0, 41.8103801453539)}
-\PYG{g+go}{(\PYGZhy{}180.0, 41.8103801453539)}
-\PYG{g+go}{(\PYGZhy{}1e\PYGZhy{}14, 41.8103801453539)}
-\PYG{g+go}{(\PYGZhy{}90.0, 41.8103801453539)}
+\PYG{g+go}{(90.0, 41.81038014535389)}
+\PYG{g+go}{(\PYGZhy{}180.0, 41.81038014535389)}
+\PYG{g+go}{(\PYGZhy{}1e\PYGZhy{}14, 41.81038014535389)}
+\PYG{g+go}{(\PYGZhy{}90.0, 41.81038014535389)}
 \end{sphinxVerbatim}
 \begin{description}
 \sphinxlineitem{NOTES::  .. Issue \#1 was ..}
@@ -3009,13 +3009,13 @@ EXAMPLES:
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{vertices}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{:}
 \PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(89.99999999999993, 74.39069094879063)}
+\PYG{g+go}{(89.99999999999993, 74.39069094879062)}
 \PYG{g+go}{(119.99999999999999, 41.87385774220941)}
 \PYG{g+go}{(90.0, 41.87385774220941)}
 \PYG{g+go}{(60.00000000000001, 41.87385774220941)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{vertices}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{trim\PYGZus{}dart}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{:}
 \PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(89.99999999999993, 74.39069094879063)}
+\PYG{g+go}{(89.99999999999993, 74.39069094879062)}
 \PYG{g+go}{(119.99999999999999, 41.87385774220941)}
 \PYG{g+go}{(60.00000000000001, 41.87385774220941)}
 \end{sphinxVerbatim}

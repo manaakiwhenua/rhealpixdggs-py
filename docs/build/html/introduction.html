@@ -164,9 +164,9 @@ If you prefer radians, then do:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">Proj</span><span class="p">(</span><span class="n">ellps_1</span><span class="p">,</span> <span class="s1">&#39;healpix&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rh</span> <span class="o">=</span> <span class="n">Proj</span><span class="p">(</span><span class="n">ellps_1</span><span class="p">,</span> <span class="s1">&#39;rhealpix&#39;</span><span class="p">,</span> <span class="n">north_square</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">south_square</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">))</span>
-<span class="go">(0.0, 3.351278550178025)</span>
+<span class="go">(0.0, 3.3512785501780242)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rh</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">))</span>
-<span class="go">(0.0, 3.351278550178025)</span>
+<span class="go">(0.0, 3.3512785501780242)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">70</span><span class="p">))</span>
 <span class="go">(0.864006732389895, 4.258498514443268)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rh</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">70</span><span class="p">))</span>
@@ -299,8 +299,8 @@ If you prefer radians, then do:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cells</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">ellipsoidal_shape</span><span class="p">(),</span> <span class="n">cell</span><span class="o">.</span><span class="n">nucleus</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-<span class="go">N2 dart (5.088887490341627e-14, 58.470677829627355)</span>
-<span class="go">N1 skew_quad (45.000000000000036, 58.470677829627355)</span>
+<span class="go">N2 dart (5.088887490341627e-14, 58.47067782962734)</span>
+<span class="go">N1 skew_quad (45.000000000000036, 58.47067782962734)</span>
 <span class="go">N0 dart (89.99999999999996, 58.47067782962736)</span>
 <span class="go">Q0 quad (14.999999999999998, 26.438744923100096)</span>
 <span class="go">Q1 quad (45.0, 26.438744923100096)</span>
