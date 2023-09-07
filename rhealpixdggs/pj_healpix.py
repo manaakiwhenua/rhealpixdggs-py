@@ -5,13 +5,6 @@ This Python 3.11 module implements the HEALPix map projection as described in [C
 
 - Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.
 
-CHANGELOG:
-
-- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
-- RG, 2020-07-31: Issue #5 Moved healpix_diagram to GRS2013 to remove sage dependence
-- RG, 2020-09-08: Issue #6 In in_healpix_image added +-eps to the extreme corner vertices
-                           added calling function abbrev to error statements
-
 NOTE:
 
 All lengths are measured in meters and all angles are measured in radians

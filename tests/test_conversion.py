@@ -2,7 +2,7 @@
 This Python 3.11 code tests the ``conversion_utils`` module.
 Beware, these tests cover only some functions and only some scenarios.
 Keep adding tests!
-CHANGELOG:
+
 - David Habgood (DH), 2020-10-27: Initial version.
 """
 

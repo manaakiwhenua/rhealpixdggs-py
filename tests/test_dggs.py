@@ -3,8 +3,6 @@ This Python 3.11 code tests the ``dggs_rhealpix`` module.
 Beware, while these tests cover most functions and scenarios, they don't cover them all.
 Keep adding tests!
 
-CHANGELOG:
-
 - Alexander Raichev (AR), 2013-01-26: Initial version based on previous tests.
 
 """

@@ -4,8 +4,6 @@ pyproj module.
 Beware, these tests cover only some functions and only some scenarios.
 Keep adding tests!
 
-CHANGELOG:
-
 - Alexander Raichev (AR), 2012-11-20: Initial version.
 """
 # *****************************************************************************

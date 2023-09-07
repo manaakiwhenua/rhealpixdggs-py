@@ -3,10 +3,6 @@ This Python 3.11 code implements ellipsoids of revolution.
 
 - Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
 
-CHANGELOG:
-
-- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
-
 NOTE:
 
 All lengths are measured in meters and all angles are measured in radians

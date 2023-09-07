@@ -3,13 +3,6 @@ This Python 3.11 module implements the rHEALPix discrete global grid system.
 
 - Alexander Raichev (AR), 2012-11-12: Initial version based upon grids.py.
 
-CHANGELOG:
-
-- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
-- RG, 2020-07-31: Issue #5 Moved plot_cells to GRS2013 to remove sage dependence
-- RG, 2020-09-08: Issue #6 Added optional region="none" arg to rhealpix projection calls, and
-                           forced region to cell.region() in cell.vertex() and cell.boundary()
-
 NOTES:
 
 All lengths are measured in meters and all angles are measured in radians
