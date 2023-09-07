@@ -1,10 +1,10 @@
 """
-This Python 3.3 module implements several helper functions for coding map projections.
+This Python 3.11 module implements several helper functions for coding map projections.
+
+- Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
 
 CHANGELOG:
 
-- Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
-- AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 NOTE:
@@ -21,9 +21,10 @@ unless indicated otherwise.
 
 # Import third-party modules.
 from numpy import pi, floor, sqrt, log, sin, arcsin, deg2rad, rad2deg, sign
+from typing import Any
 
 
-def my_round(x, digits=0):
+def my_round(x: Any, digits: int = 0) -> Any:
     """
     Round the floating point number or list/tuple of floating point
     numbers to ``digits`` number of digits.
@@ -46,7 +47,7 @@ def my_round(x, digits=0):
     return result
 
 
-def wrap_longitude(lam, radians=False):
+def wrap_longitude(lam: float, radians: bool = False) -> float:
     """
     Given a point p on the unit circle at angle `lam` from the positive
     x-axis, return its angle theta in the range -pi <= theta < pi.
@@ -84,7 +85,7 @@ def wrap_longitude(lam, radians=False):
     return result
 
 
-def wrap_latitude(phi, radians=False):
+def wrap_latitude(phi: float, radians: bool = False) -> float:
     """
     Given a point p on the unit circle at angle `phi` from the positive x-axis,
     if p lies in the right half of the circle, then return its angle that lies
@@ -126,7 +127,9 @@ def wrap_latitude(phi, radians=False):
     return result
 
 
-def auth_lat(phi, e, inverse=False, radians=False):
+def auth_lat(
+    phi: float, e: float, inverse: bool = False, radians: bool = False
+) -> float:
     """
     Given a point of geographic latitude `phi` on an ellipse of
     eccentricity `e`, return the authalic latitude of the point.
@@ -163,10 +166,10 @@ def auth_lat(phi, e, inverse=False, radians=False):
         phi = deg2rad(phi)
     if not inverse:
         # Compute authalic latitude from latitude phi.
-        q = ((1 - e ** 2) * sin(phi)) / (1 - (e * sin(phi)) ** 2) - (1 - e ** 2) / (
+        q = ((1 - e**2) * sin(phi)) / (1 - (e * sin(phi)) ** 2) - (1 - e**2) / (
             2.0 * e
         ) * log((1 - e * sin(phi)) / (1 + e * sin(phi)))
-        qp = 1 - (1 - e ** 2) / (2.0 * e) * log((1.0 - e) / (1.0 + e))
+        qp = 1 - (1 - e**2) / (2.0 * e) * log((1.0 - e) / (1.0 + e))
         ratio = q / qp
         # Avoid rounding errors.
         if abs(ratio) > 1:
@@ -177,10 +180,10 @@ def auth_lat(phi, e, inverse=False, radians=False):
         # Compute an approximation of latitude from authalic latitude phi.
         result = (
             phi
-            + (e ** 2 / 3.0 + 31 * e ** 4 / 180.0 + 517 * e ** 6 / 5040.0)
+            + (e**2 / 3.0 + 31 * e**4 / 180.0 + 517 * e**6 / 5040.0)
             * sin(2 * phi)
-            + (23 * e ** 4 / 360.0 + 251 * e ** 6 / 3780.0) * sin(4 * phi)
-            + (761 * e ** 6 / 45360.0) * sin(6 * phi)
+            + (23 * e**4 / 360.0 + 251 * e**6 / 3780.0) * sin(4 * phi)
+            + (761 * e**6 / 45360.0) * sin(6 * phi)
         )
     if not radians:
         # Convert back to degrees.
@@ -188,7 +191,7 @@ def auth_lat(phi, e, inverse=False, radians=False):
     return result
 
 
-def auth_rad(a, e, inverse=False):
+def auth_rad(a: float, e: float, inverse: bool = False) -> float:
     """
     Return the radius of the authalic sphere of the ellipsoid with major
     radius `a` and eccentricity `e`.
@@ -226,7 +229,7 @@ def auth_rad(a, e, inverse=False):
     """
     if e == 0:
         return a
-    k = sqrt(0.5 * (1 - (1 - e ** 2) / (2 * e) * log((1 - e) / (1 + e))))
+    k = sqrt(0.5 * (1 - (1 - e**2) / (2 * e) * log((1 - e) / (1 + e))))
     if not inverse:
         # The expression below is undefined when e=0 (sphere),
         # but its limit as e tends to 0 is a, as expected.

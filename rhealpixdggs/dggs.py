@@ -1,17 +1,10 @@
 """
-This Python 3.3 module implements the rHEALPix discrete global grid system.
+This Python 3.11 module implements the rHEALPix discrete global grid system.
+
+- Alexander Raichev (AR), 2012-11-12: Initial version based upon grids.py.
 
 CHANGELOG:
 
-- Alexander Raichev (AR), 2012-11-12: Initial version based upon grids.py.
-- AR, 2012-12-10: Corrected centroid() and moved some methods from graphics.py to here.
-- AR, 2012-12-19: Tested all the methods and added examples.
-- AR, 2013-01-01: Added ellipsoidal functionality to neighbor() and neighbors().
-- AR, 2013-01-14: Added intersects_meridian(), cell_latitudes(), cells_from_meridian(), cells_from_parallel(), cells_from_region().
-- AR, 2013-01-16: Changed the string keyword 'surface' to a boolean keyword 'plane'.
-- AR, 2013-03-11: Added minimal_cover(), boundary(), interior(), triangle(), nw_vertex().
-- AR, 2013-03-14: Fixed bug in nw_vertex().
-- AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 - RG, 2020-07-31: Issue #5 Moved plot_cells to GRS2013 to remove sage dependence
 - RG, 2020-09-08: Issue #6 Added optional region="none" arg to rhealpix projection calls, and
@@ -427,7 +420,7 @@ class RHEALPixDGGS(object):
 
         Uses ``pj_healpix`` instead of the PROJ.4 version of HEALPix.
         """
-        f = pw.Proj(ellipsoid=self.ellipsoid, proj="healpix")
+        f = pw.Projection(ellipsoid=self.ellipsoid, proj="healpix")
         return f(u, v, inverse=inverse)
 
     def rhealpix(self, u, v, inverse=False, region="none"):
@@ -448,7 +441,7 @@ class RHEALPixDGGS(object):
 
         Uses ``pj_rhealpix`` instead of the PROJ.4 version of rHEALPix.
         """
-        f = pw.Proj(
+        f = pw.Projection(
             ellipsoid=self.ellipsoid,
             proj="rhealpix",
             north_square=self.north_square,

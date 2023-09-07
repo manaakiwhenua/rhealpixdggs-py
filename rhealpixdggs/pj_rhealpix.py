@@ -1,10 +1,10 @@
 """
-This Python 3.3 module implements the rHEALPix map projection.
+This Python 3.11 module implements the rHEALPix map projection.
+
+- Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.
 
 CHANGELOG:
 
-- Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.
-- AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 - RG, 2020-07-31: Issue #5 Moved rhealpix_diagram to GRS2013 to remove sage dependence
 - RG, 2020-09-08: Issue #6 Added optional region="none" arg to all projection calls, and
@@ -26,6 +26,7 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 
 # Import third-party modules.
 from numpy import pi, sign, array, identity, dot, deg2rad, rad2deg
+from typing import Callable
 
 # Import my modules.
 from rhealpixdggs.pj_healpix import (
@@ -54,7 +55,13 @@ ROTATE = {
 }
 
 
-def combine_triangles(x, y, north_square=0, south_square=0, inverse=False):
+def combine_triangles(
+    x: float,
+    y: float,
+    north_square: int = 0,
+    south_square: int = 0,
+    inverse: bool = False,
+) -> tuple[float, float]:
     """
     Rearrange point `(x, y)` in the HEALPix projection by
     combining the polar triangles into two polar squares.
@@ -117,7 +124,13 @@ def combine_triangles(x, y, north_square=0, south_square=0, inverse=False):
     return x, y
 
 
-def triangle(x, y, north_square=0, south_square=0, inverse=False):
+def triangle(
+    x: float,
+    y: float,
+    north_square: int = 0,
+    south_square: int = 0,
+    inverse: bool = False,
+) -> tuple[int, str]:
     """
     Return the number of the polar triangle and region that `(x, y)` lies in.
     If `inverse` = False, then assume `(x,y)` lies in the image of the HEALPix
@@ -237,7 +250,7 @@ def triangle(x, y, north_square=0, south_square=0, inverse=False):
             else:
                 triangle_number = north_square
         else:
-            # region == 'south_square':
+            # region == 'south_polar':
             L1 = x - (-3 * pi / 4 + (south_square + 1) * pi / 2)
             L2 = -x + (-3 * pi / 4 + (south_square - 1) * pi / 2)
             if y <= L1 + eps and y > L2 + eps:
@@ -251,7 +264,13 @@ def triangle(x, y, north_square=0, south_square=0, inverse=False):
     return triangle_number, region
 
 
-def rhealpix_sphere(lam, phi, north_square=0, south_square=0, region="none"):
+def rhealpix_sphere(
+    lam: float,
+    phi: float,
+    north_square: int = 0,
+    south_square: int = 0,
+    region: str = "none",
+) -> tuple[float, float]:
     """
     Compute the signature functions of the rHEALPix map projection of
     the unit sphere.
@@ -288,7 +307,13 @@ def rhealpix_sphere(lam, phi, north_square=0, south_square=0, region="none"):
     return combine_triangles(x, y, north_square=north_square, south_square=south_square)
 
 
-def rhealpix_sphere_inverse(x, y, north_square=0, south_square=0, region="none"):
+def rhealpix_sphere_inverse(
+    x: float,
+    y: float,
+    north_square: int = 0,
+    south_square: int = 0,
+    region: str = "none",
+) -> tuple[float, float]:
     """
     Compute the inverse of rhealpix_sphere().
 
@@ -315,7 +340,14 @@ def rhealpix_sphere_inverse(x, y, north_square=0, south_square=0, region="none")
     return healpix_sphere_inverse(x, y)
 
 
-def rhealpix_ellipsoid(lam, phi, e=0, north_square=0, south_square=0, region="none"):
+def rhealpix_ellipsoid(
+    lam: float,
+    phi: float,
+    e: float = 0,
+    north_square: int = 0,
+    south_square: int = 0,
+    region: str = "none",
+) -> tuple[float, float]:
     """
     Compute the signature functions of the rHEALPix map
     projection of an oblate ellipsoid with eccentricity `e` whose
@@ -351,10 +383,15 @@ def rhealpix_ellipsoid(lam, phi, e=0, north_square=0, south_square=0, region="no
 
 
 def rhealpix_ellipsoid_inverse(
-    x, y, e=0, north_square=0, south_square=0, region="none"
-):
+    x: float,
+    y: float,
+    e: float = 0,
+    north_square: int = 0,
+    south_square: int = 0,
+    region: str = "none",
+) -> tuple[float, float]:
     """
-    Compute the inverse of rhealpix_ellipsoid.
+    Compute the inverse of rhealpix_ellipsoid().
 
     EXAMPLES::
 
@@ -381,7 +418,9 @@ def rhealpix_ellipsoid_inverse(
     return healpix_ellipsoid_inverse(x, y, e=e)
 
 
-def in_rhealpix_image(x, y, north_square=0, south_square=0):
+def in_rhealpix_image(
+    x: float, y: float, north_square: int = 0, south_square: int = 0
+) -> bool:
     """
     Return True if and only if the point `(x, y)` lies in the image of
     the rHEALPix projection of the unit sphere.
@@ -438,7 +477,9 @@ def in_rhealpix_image(x, y, north_square=0, south_square=0):
     return bool(poly.contains_point([x, y]))
 
 
-def rhealpix_vertices(north_square=0, south_square=0):
+def rhealpix_vertices(
+    north_square: int = 0, south_square: int = 0
+) -> list[tuple[float, float]]:
     """
     Return a list of the planar vertices of the rHEALPix projection of
     the unit sphere.
@@ -471,8 +512,16 @@ def rhealpix_vertices(north_square=0, south_square=0):
         vertices.remove((-pi, -pi / 4))
         vertices.remove((-pi, -pi / 4))
 
+    return vertices
 
-def rhealpix(a=1, e=0, north_square=0, south_square=0, region="none"):
+
+def rhealpix(
+    a: float = 1,
+    e: float = 0,
+    north_square: int = 0,
+    south_square: int = 0,
+    region: str = "none",
+) -> Callable[[float, float, bool, bool], tuple[float, float]]:
     """
     Return a function object that wraps the rHEALPix projection and its inverse
     of an ellipsoid with major radius `a` and eccentricity `e`.
@@ -497,7 +546,9 @@ def rhealpix(a=1, e=0, north_square=0, south_square=0, region="none"):
     """
     R_A = auth_rad(a, e)
 
-    def f(u, v, radians=False, inverse=False):
+    def f(
+        u: float, v: float, radians: bool = False, inverse: bool = False
+    ) -> tuple[float, float]:
         if not inverse:
             lam, phi = u, v
             if not radians:

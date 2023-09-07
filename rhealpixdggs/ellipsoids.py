@@ -1,10 +1,10 @@
 """
-This Python 3.3 code implements ellipsoids of revolution.
+This Python 3.11 code implements ellipsoids of revolution.
+
+- Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
 
 CHANGELOG:
 
-- Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
-- AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 NOTE:

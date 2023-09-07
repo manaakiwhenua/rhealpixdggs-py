@@ -1,10 +1,10 @@
 """
-This Python 3.3 module implements a wrapper for map projections.
+This Python 3.11 module implements a wrapper for map projections.
+
+- Alexander Raichev (AR), 2013-01-25: Refactored code from release 0.3.
 
 CHANGELOG:
 
-- Alexander Raichev (AR), 2013-01-25: Refactored code from release 0.3.
-- AR, 2013-07-23: Ported to Python 3.3.
 - Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 - RG, 2020-09-08: Issue #6 Added optional region="none" arg to all projection calls
 
@@ -38,7 +38,7 @@ from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
 
 
-class Proj(object):
+class Projection(object):
     """
     Represents a map projection of a given ellipsoid.
 
