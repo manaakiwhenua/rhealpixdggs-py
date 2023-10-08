@@ -10,20 +10,11 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.3 - current
+0.5.4 - current
 ^^^^^^^^^^^^^^^
-0.5.1 with:
-* tests that pass
-* Sage removed
-* Test fixes where just relating to rounding errors.
+Code unchanged from 0.5.3 other than updating to Python 3.11
 
-0.5.1
-^^^^^
-Code unchanged from 2013 other than updating to Python 3.7.
-
-Pre-0.5.1
-^^^^^^^^^
-For releases 0.3, 0.4 & 0.5, see the ``_old`` folder within the `0.5.1 release <https://github.com/manaakiwhenua/rhealpixdggs-py/tree/0.5.1/_old>`_ on GitHub
+Refer to file CHANGES.rst for a more detailed history of changes.
 
 Requirements 
 -------------
