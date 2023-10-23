@@ -7,11 +7,11 @@ This documentation assumes you are familiar with the rHEALPix DGGS as described 
 
 Requirements
 ---------------
-- `Python >=3.3 <http://python.org/>`_
-- `NumPy >=1.7 <http://www.numpy.org/>`_ Base N-dimensional array package
-- `SciPy >=0.12 <http://www.scipy.org/>`_ Fundamental library for scientific computing
-- `Matplotlib >=1.2.1 <http://matplotlib.org/>`_ Comprehensive 2D Plotting
-- `Pyproj >=1.9.3 <http://code.google.com/p/pyproj/>`_
+- `Python >=3.11 <http://python.org/>`_
+- `NumPy >=1.25.2 <http://www.numpy.org/>`_ Base N-dimensional array package
+- `SciPy >=1.11.2 <http://www.scipy.org/>`_ Fundamental library for scientific computing
+- `Matplotlib >=3.7.2 <http://matplotlib.org/>`_ Comprehensive 2D Plotting
+- `Pyproj >=3.6 <http://code.google.com/p/pyproj/>`_
   Python interface to the PROJ.4 cartographic library
 
 Installation
