@@ -227,7 +227,7 @@ class RHEALPixDGGS(object):
     the ellipsoidal DGGS.
     """
 
-    # Level 0 cell IDs, which are anamolous.
+    # Level 0 cell IDs, which are anomalous.
     cells0 = ["N", "O", "P", "Q", "R", "S"]
 
     def __init__(
@@ -236,7 +236,7 @@ class RHEALPixDGGS(object):
         N_side=3,
         north_square=0,
         south_square=0,
-        max_areal_resolution=1,
+        max_areal_resolution=1,  # square metres
     ):
         self.N_side = N_side
         self.north_square = north_square % 4  # = 0, 1, 2, or 3.
