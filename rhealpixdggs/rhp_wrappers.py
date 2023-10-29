@@ -34,3 +34,20 @@ def rhp_to_parent(rhpindex: str, res: int) -> str:
     # Standard case (including child_res == res)
     else:
         return rhpindex[: res + 1]
+
+
+def rhp_to_geo_boundary(
+    rhpindex: str, geo_json: bool = True, plane: bool = True
+) -> tuple[tuple[float, float]]:
+    # Grab the cell vertices as tuple((lat, lng), (lat, lng), (lat, lng), (lat, lng))
+    # (Includes non-corner point in darts if plane == False)
+    suid = [int(d) if d.isdigit() else d for d in rhpindex]
+    cell = WGS84_003.cell(suid)
+    verts = tuple(cell.vertices(plane=plane))
+
+    if geo_json:
+        # lat/lng -> lng/lat and last point same as first (pinched from h3 package)
+        verts += (verts[0],)
+        verts = tuple(v[::-1] for v in verts)
+
+    return verts
