@@ -2,9 +2,9 @@
 from rhealpixdggs.dggs import WGS84_003
 
 
-def geo_to_rhp(lat: float, lng: float, resolution: int) -> str:
+def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> str:
     # Get the grid cell corresponding to the coordinates
-    cell = WGS84_003.cell_from_point(resolution, (lat, lng))
+    cell = WGS84_003.cell_from_point(resolution, (lng, lat), plane)
 
     # Return the cell ID after converting int digits to str
     return "".join([str(d) for d in cell.suid])
