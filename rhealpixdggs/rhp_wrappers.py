@@ -45,9 +45,13 @@ def rhp_to_geo_boundary(
     cell = WGS84_003.cell(suid)
     verts = tuple(cell.vertices(plane=plane))
 
-    if geo_json:
-        # lat/lng -> lng/lat and last point same as first (pinched from h3 package)
-        verts += (verts[0],)
+    # rhealpix coordinates come out natively as lng/lat, h3 ones as lat/lng
+    # Neither has the repeated vertex that geo_json wants so it's inserted here when needed
+    if not geo_json:
+        # lng/lat -> lat/lng to make it consistent with h3
         verts = tuple(v[::-1] for v in verts)
+    else:
+        # last point same as first
+        verts += (verts[0],)
 
     return verts
