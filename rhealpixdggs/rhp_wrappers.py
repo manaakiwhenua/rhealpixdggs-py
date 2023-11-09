@@ -14,8 +14,7 @@ def rhp_to_parent(rhpindex: str, res: int) -> str:
     """
     Return parent of rhpindex at resolution res (immediate parent if res == None)
     """
-    # Top-level cells are their own parent, regardless of the requested resolution
-    # TODO: check if this convention actually applies?
+    # Top-level cells are their own parent, regardless of the requested resolution (by convention)
     child_res = len(rhpindex) - 1
     if child_res < 1:
         return rhpindex
