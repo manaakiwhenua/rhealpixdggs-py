@@ -10,7 +10,7 @@ def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> s
     return "".join([str(d) for d in cell.suid])
 
 
-def rhp_to_parent(rhpindex: str, res: int) -> str:
+def rhp_to_parent(rhpindex: str, res: int = None, verbose: bool = True) -> str:
     """
     Return parent of rhpindex at resolution res (immediate parent if res == None)
     """
@@ -25,9 +25,10 @@ def rhp_to_parent(rhpindex: str, res: int) -> str:
 
     # Handle mismatch between cell resolution and requested parent resolution
     elif res > child_res:
-        print(
-            f"Warning: You requested a parent resolution that is higher than the cell resolution. Returning the cell address itself."
-        )
+        if verbose:
+            print(
+                f"Warning: You requested a parent resolution that is higher than the cell resolution. Returning the cell address itself."
+            )
         return rhpindex
 
     # Standard case (including child_res == res)
