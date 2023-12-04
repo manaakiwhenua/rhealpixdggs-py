@@ -1,15 +1,18 @@
 from shapely.geometry import Polygon, Point
-from rhealpixdggs.dggs import Cell
+from rhealpixdggs.dggs import RHEALPixDGGS, WGS84_003
+from rhealpixdggs.cell import Cell
 from itertools import compress
 
 
-def get_finest_containing_cell(polygon: Polygon) -> Cell:
+def get_finest_containing_cell(
+    polygon: Polygon, rdggs: RHEALPixDGGS = WGS84_003
+) -> Cell:
     """
     Finds the finest DGGS Cell containing a given cartesian polygon
     """
 
-    def _get_finest_cell(polygon, suid):
-        parent_cell = Cell(suid=suid)
+    def _get_finest_cell(polygon, suid, rdggs=rdggs):
+        parent_cell = Cell(rdggs=rdggs, suid=suid)
         # get the children cells and polygons for these cells
         children_cells = [cell for cell in parent_cell.subcells()]
         children_poly = [Polygon(cell.vertices(plane=False)) for cell in children_cells]
@@ -18,7 +21,7 @@ def get_finest_containing_cell(polygon: Polygon) -> Cell:
         # if we get something back, check the next level lower
         returned_cells = list(compress(children_cells, truth))
         if returned_cells:
-            finest = _get_finest_cell(polygon, returned_cells[0].suid)
+            finest = _get_finest_cell(polygon, returned_cells[0].suid, rdggs)
         else:
             parent_poly = Polygon(parent_cell.vertices(plane=False))
             if parent_poly.contains(polygon):
@@ -28,7 +31,7 @@ def get_finest_containing_cell(polygon: Polygon) -> Cell:
         return finest
 
     for suid in [tuple(x) for x in ["N", "O", "P", "Q", "R", "S"]]:
-        finest = _get_finest_cell(polygon, suid)
+        finest = _get_finest_cell(polygon, suid, rdggs)
         if finest is not None:
             return finest
 
@@ -36,7 +39,13 @@ def get_finest_containing_cell(polygon: Polygon) -> Cell:
 # TODO class should be a general class for collections of cells (believe the term is 'zone'?)
 class CellZoneFromPoly:
     def __init__(
-        self, feature, res_limit, return_cells: bool, file=None, bounding_cell=None
+        self,
+        feature,
+        res_limit,
+        return_cells: bool,
+        file=None,
+        bounding_cell=None,
+        rdggs=WGS84_003,
     ):
         self.label = feature[0]
         self.geometry = feature[1]
@@ -49,7 +58,7 @@ class CellZoneFromPoly:
         if file:
             self.file.write(f"\n{self.label},")
         if bounding_cell is None:
-            self._get_dggs_poly(get_finest_containing_cell(self.geometry))
+            self._get_dggs_poly(get_finest_containing_cell(self.geometry, rdggs))
         else:
             self._get_dggs_poly(bounding_cell)
 
