@@ -1,17 +1,20 @@
+
 <!DOCTYPE html>
 
-<html lang="en" data-content_root="./">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>The projection_wrapper Module &#8212; rHEALPixDGGS 0.5.3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=16cbd302" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
-    <script src="_static/documentation_options.js?v=08553120"></script>
-    <script src="_static/doctools.js?v=4184ea2e"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,22 +47,18 @@
           <div class="body" role="main">
             
   <section id="module-rhealpixdggs.projection_wrapper">
-<span id="the-projection-wrapper-module"></span><h1>The projection_wrapper Module<a class="headerlink" href="#module-rhealpixdggs.projection_wrapper" title="Link to this heading">¶</a></h1>
-<p>This Python 3.3 module implements a wrapper for map projections.</p>
-<p>CHANGELOG:</p>
+<span id="the-projection-wrapper-module"></span><h1>The projection_wrapper Module<a class="headerlink" href="#module-rhealpixdggs.projection_wrapper" title="Permalink to this heading">¶</a></h1>
+<p>This Python 3.11 module implements a wrapper for map projections.</p>
 <ul class="simple">
 <li><p>Alexander Raichev (AR), 2013-01-25: Refactored code from release 0.3.</p></li>
-<li><p>AR, 2013-07-23: Ported to Python 3.3.</p></li>
-<li><p>Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors</p></li>
-<li><p>RG, 2020-09-08: Issue #6 Added optional region=”none” arg to all projection calls</p></li>
 </ul>
 <p>NOTE:</p>
 <p>All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
 By ‘ellipsoid’ below, I mean an oblate ellipsoid of revolution.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="rhealpixdggs.projection_wrapper.Proj">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rhealpixdggs.projection_wrapper.</span></span><span class="sig-name descname"><span class="pre">Proj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ellipsoid=&lt;rhealpixdggs.ellipsoids.Ellipsoid</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.projection_wrapper.Proj" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="rhealpixdggs.projection_wrapper.Projection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rhealpixdggs.projection_wrapper.</span></span><span class="sig-name descname"><span class="pre">Projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ellipsoid=&lt;rhealpixdggs.ellipsoids.Ellipsoid</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.projection_wrapper.Projection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Represents a map projection of a given ellipsoid.</p>
 <p>INSTANCE ATTRIBUTES:</p>
@@ -74,10 +73,10 @@ projection.</p></li>
 </ul>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rhealpixdggs.ellipsoids</span> <span class="kn">import</span> <span class="n">WGS84_ELLIPSOID</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Proj</span><span class="p">(</span><span class="n">ellipsoid</span><span class="o">=</span><span class="n">WGS84_ELLIPSOID</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s1">&#39;rhealpix&#39;</span><span class="p">,</span> <span class="n">north_square</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">south_square</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Projection</span><span class="p">(</span><span class="n">ellipsoid</span><span class="o">=</span><span class="n">WGS84_ELLIPSOID</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s1">&#39;rhealpix&#39;</span><span class="p">,</span> <span class="n">north_square</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">south_square</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">(0.0, 3748655.1150495014)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Proj</span><span class="p">(</span><span class="n">ellipsoid</span><span class="o">=</span><span class="n">WGS84_ELLIPSOID</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s1">&#39;cea&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Projection</span><span class="p">(</span><span class="n">ellipsoid</span><span class="o">=</span><span class="n">WGS84_ELLIPSOID</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="s1">&#39;cea&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">(0.0, 3180183.4857749646)</span>
 </pre></div>
@@ -104,16 +103,6 @@ For example, see the healpix() function in <code class="docutils literal notrans
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <div>
-    <h3><a href="index.html">Table of Contents</a></h3>
-    <ul>
-<li><a class="reference internal" href="#">The projection_wrapper Module</a><ul>
-<li><a class="reference internal" href="#rhealpixdggs.projection_wrapper.Proj"><code class="docutils literal notranslate"><span class="pre">Proj</span></code></a></li>
-</ul>
-</li>
-</ul>
-
-  </div>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="ellipsoids.html"
@@ -165,8 +154,8 @@ For example, see the healpix() function in <code class="docutils literal notrans
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 2013, Alexander Raichev.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.4.
+        &#169; Copyright 2013, Alexander Raichev.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
   </body>
 </html>
