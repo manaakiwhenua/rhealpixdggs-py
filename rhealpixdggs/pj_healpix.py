@@ -1,25 +1,15 @@
 """
-This Python 3.3 module implements the HEALPix map projection as described in [CaRo2007]_.
+This Python 3.11 module implements the HEALPix map projection as described in [CaRo2007]_.
 
-.. [CaRo2007] Mark R. Calabretta and Boudewijn F. Roukema, Mapping on the healpix grid, Monthly Notices of the Royal
-Astronomical Society 381 (2007), no. 2, 865--872.
-
-CHANGELOG:
+.. [CaRo2007] Mark R. Calabretta and Boudewijn F. Roukema, Mapping on the healpix grid, Monthly Notices of the Royal Astronomical Society 381 (2007), no. 2, 865--872.
 
 - Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.
-- AR, 2013-03-05: In in_healpix_image() increased eps to 1e-10 to decrease out-of-bounds errors i was getting when
-drawing figures.
-- AR, 2013-07-23: Ported to Python 3.3.
-- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
-- RG, 2020-07-31: Issue #5 Moved healpix_diagram to GRS2013 to remove sage dependence
-- RG, 2020-09-08: Issue #6 In in_healpix_image added +-eps to the extreme corner vertices
-                           added calling function abbrev to error statements
 
 NOTE:
 
 All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
-By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
+By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 """
 # *****************************************************************************
 #       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
@@ -30,12 +20,13 @@ By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
 
 # Import third-party modules.
 from numpy import pi, floor, sqrt, sin, arcsin, sign, array, deg2rad, rad2deg
+from typing import Callable
 
 # Import my modules.
 from rhealpixdggs.utils import my_round, auth_lat, auth_rad
 
 
-def healpix_sphere(lam, phi):
+def healpix_sphere(lam: float, phi: float) -> tuple[float, float]:
     """
     Compute the signature function of the HEALPix
     projection of the unit sphere.
@@ -69,7 +60,7 @@ def healpix_sphere(lam, phi):
     return x, y
 
 
-def healpix_sphere_inverse(x, y):
+def healpix_sphere_inverse(x: float, y: float) -> tuple[float, float]:
     """
     Compute the inverse of the healpix_sphere().
 
@@ -102,7 +93,7 @@ def healpix_sphere_inverse(x, y):
         xc = -3 * pi / 4 + (pi / 2) * cap_number
         tau = 2 - 4 * abs(y) / pi
         lam = xc + (x - xc) / tau
-        phi = sign(y) * arcsin(1 - tau ** 2 / 3)
+        phi = sign(y) * arcsin(1 - tau**2 / 3)
         # Handle rounding errors in longitude.
         if lam < -pi:
             lam = -pi
@@ -115,7 +106,7 @@ def healpix_sphere_inverse(x, y):
     return lam, phi
 
 
-def healpix_ellipsoid(lam, phi, e=0):
+def healpix_ellipsoid(lam: float, phi: float, e: float = 0) -> tuple[float, float]:
     """
     Compute the signature functions of the HEALPix projection of an oblate
     ellipsoid with eccentricity `e` whose authalic sphere is the unit sphere.
@@ -139,7 +130,7 @@ def healpix_ellipsoid(lam, phi, e=0):
     return healpix_sphere(lam, beta)
 
 
-def healpix_ellipsoid_inverse(x, y, e=0):
+def healpix_ellipsoid_inverse(x: float, y: float, e: float = 0) -> tuple[float, float]:
     """
     Compute the inverse of healpix_ellipsoid().
 
@@ -163,7 +154,7 @@ def healpix_ellipsoid_inverse(x, y, e=0):
     return lam, phi
 
 
-def in_healpix_image(x, y):
+def in_healpix_image(x: float, y: float) -> bool:
     """
     Return True if and only if `(x, y)` lies in the image of the HEALPix
     projection of the unit sphere.
@@ -231,7 +222,7 @@ def in_healpix_image(x, y):
     return bool(poly.contains_point([x, y]))
 
 
-def healpix_vertices():
+def healpix_vertices() -> list[tuple[float, float, float]]:
     """
     Return a list of the planar vertices of the HEALPix projection of
     the unit sphere.
@@ -258,7 +249,9 @@ def healpix_vertices():
     ]
 
 
-def healpix(a=1, e=0):
+def healpix(
+    a: float = 1, e: float = 0
+) -> Callable[[float, float, bool, bool], tuple[float, float]]:
     """
     Return a function object that wraps the HEALPix projection and its inverse
     of an ellipsoid with major radius `a` and eccentricity `e`.
@@ -282,7 +275,9 @@ def healpix(a=1, e=0):
     """
     R_A = auth_rad(a, e)
 
-    def f(u, v, radians=False, inverse=False):
+    def f(
+        u: float, v: float, radians: bool = False, inverse: bool = False
+    ) -> tuple[float, float]:
         if not inverse:
             lam, phi = u, v
             if not radians:

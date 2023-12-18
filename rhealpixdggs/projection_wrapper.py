@@ -1,18 +1,13 @@
 """
-This Python 3.3 module implements a wrapper for map projections.
-
-CHANGELOG:
+This Python 3.11 module implements a wrapper for map projections.
 
 - Alexander Raichev (AR), 2013-01-25: Refactored code from release 0.3.
-- AR, 2013-07-23: Ported to Python 3.3.
-- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
-- RG, 2020-09-08: Issue #6 Added optional region="none" arg to all projection calls
 
 NOTE:
 
 All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
-By 'ellipsoid' below, i mean an oblate ellipsoid of revolution.
+By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 """
 # *****************************************************************************
 #       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
@@ -38,7 +33,7 @@ from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
 
 
-class Proj(object):
+class Projection(object):
     """
     Represents a map projection of a given ellipsoid.
 
@@ -55,10 +50,10 @@ class Proj(object):
     EXAMPLES::
 
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
-        >>> f = Proj(ellipsoid=WGS84_ELLIPSOID, proj='rhealpix', north_square=1, south_square=0)
+        >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='rhealpix', north_square=1, south_square=0)
         >>> print(my_round(f(0, 30), 15))
         (0.0, 3748655.1150495014)
-        >>> f = Proj(ellipsoid=WGS84_ELLIPSOID, proj='cea')
+        >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='cea')
         >>> print(my_round(f(0, 30), 15))
         (0.0, 3180183.4857749646)
 
@@ -88,7 +83,7 @@ class Proj(object):
         result.append("    proj = %s" % self.proj)
         result.append("    kwargs = %s" % self.kwargs)
         result.append("    ellipsoid:")
-        for (k, v) in sorted(self.ellipsoid.__dict__.items()):
+        for k, v in sorted(self.ellipsoid.__dict__.items()):
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 

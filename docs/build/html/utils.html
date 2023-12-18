@@ -1,37 +1,27 @@
 
+<!DOCTYPE html>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>The utils Module &#8212; rHEALPixDGGS 0.5.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
-    <title>The utils Module &mdash; rHEALPixDGGS 0.5.1 documentation</title>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.5.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="rHEALPixDGGS 0.5.1 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The pj_healpix Module" href="pj_healpix.html" />
     <link rel="prev" title="Introduction" href="introduction.html" /> 
-  </head>
-  <body>
-    <div class="related">
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -46,174 +36,205 @@
         <li class="right" >
           <a href="introduction.html" title="Introduction"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">rHEALPixDGGS 0.5.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rHEALPixDGGS 0.5.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The utils Module</a></li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
-  <div class="section" id="module-rhealpix_dggs.utils">
-<span id="the-utils-module"></span><h1>The utils Module<a class="headerlink" href="#module-rhealpix_dggs.utils" title="Permalink to this headline">¶</a></h1>
-<p>This Python 3.3 module implements several helper functions for coding map projections.</p>
-<p>CHANGELOG:</p>
+  <section id="module-rhealpixdggs.utils">
+<span id="the-utils-module"></span><h1>The utils Module<a class="headerlink" href="#module-rhealpixdggs.utils" title="Permalink to this heading">¶</a></h1>
+<p>This Python 3.11 module implements several helper functions for coding map projections.</p>
 <ul class="simple">
-<li>Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.</li>
-<li>AR, 2013-07-23: Ported to Python 3.3.</li>
+<li><p>Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.</p></li>
 </ul>
 <p>NOTE:</p>
-<p>All lengths are measured in meters and all angles are measured in radians 
+<p>All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.</p>
-<dl class="function">
-<dt id="rhealpix_dggs.utils.auth_lat">
-<tt class="descclassname">rhealpix_dggs.utils.</tt><tt class="descname">auth_lat</tt><big>(</big><em>phi</em>, <em>e</em>, <em>inverse=False</em>, <em>radians=False</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.utils.auth_lat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a point of geographic latitude <cite>phi</cite> on an ellipse of 
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.utils.auth_lat">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.utils.</span></span><span class="sig-name descname"><span class="pre">auth_lat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radians</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#rhealpixdggs.utils.auth_lat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a point of geographic latitude <cite>phi</cite> on an ellipse of
 eccentricity <cite>e</cite>, return the authalic latitude of the point.
 If <cite>inverse</cite> =True, then compute its inverse approximately.</p>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">beta</span> <span class="o">=</span> <span class="n">auth_lat</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">0.689518212435</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">auth_lat</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">0.785126523581</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">beta</span> <span class="o">=</span> <span class="n">auth_lat</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">0.68951821243544</span>
+</pre></div>
+</div>
+<dl>
+<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>0.689518212435</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">auth_lat</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">0.785126523581272</span>
+</pre></div>
+</div>
+</dd>
+<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>0.785126523581</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">0.785398163397448</span>
 </pre></div>
 </div>
+</dd>
+</dl>
 <p>NOTES:</p>
 <p>The power series approximation used for the inverse is
 standard in cartography (PROJ.4 uses it, for instance)
 and accurate for small eccentricities.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.utils.auth_rad">
-<tt class="descclassname">rhealpix_dggs.utils.</tt><tt class="descname">auth_rad</tt><big>(</big><em>a</em>, <em>e</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.utils.auth_rad" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.utils.auth_rad">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.utils.</span></span><span class="sig-name descname"><span class="pre">auth_rad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#rhealpixdggs.utils.auth_rad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the radius of the authalic sphere of the ellipsoid with major
 radius <cite>a</cite> and eccentricity <cite>e</cite>.
 If <cite>inverse</cite> = True, then return the major radius of the ellipsoid
 with authalic radius <cite>a</cite> and eccentricity <cite>e</cite>.</p>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">auth_rad</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">auth_rad</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="go">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">e</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span>     
-<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">((</span><span class="n">e</span><span class="p">,</span> <span class="n">auth_rad</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span><span class="p">)),</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">(0.25, 0.98939325967009495)</span>
-<span class="go">(0.111111111111111, 0.99793514742994305)</span>
-<span class="go">(0.0625, 0.99934823645582505)</span>
-<span class="go">(0.04, 0.99973321235361001)</span>
-<span class="go">(0.027777777777778, 0.99987137105187995)</span>
-<span class="go">(0.020408163265306, 0.99993057628561399)</span>
-<span class="go">(0.015625, 0.99995930708084702)</span>
-<span class="go">(0.012345679012346, 0.99997459627121099)</span>
-<span class="go">(0.01, 0.99998333286108898)</span>
+<span class="gp">... </span>    <span class="n">e</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">((</span><span class="n">e</span><span class="p">,</span> <span class="n">auth_rad</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span><span class="p">)),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">(0.25, 0.989393259670095)</span>
+<span class="go">(0.111111111111111, 0.997935147429943)</span>
+<span class="go">(0.0625, 0.999348236455825)</span>
+<span class="go">(0.04, 0.99973321235361)</span>
+<span class="go">(0.027777777777778, 0.99987137105188)</span>
+<span class="go">(0.020408163265306, 0.999930576285614)</span>
+<span class="go">(0.015625, 0.999959307080847)</span>
+<span class="go">(0.012345679012346, 0.999974596271211)</span>
+<span class="go">(0.01, 0.999983332861089)</span>
 </pre></div>
 </div>
+<dl class="simple">
+<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>(0.25, 0.98939325967009495) *
+(0.111111111111111, 0.99793514742994305) *
+(0.0625, 0.99934823645582505) *
+(0.04, 0.99973321235361001) *
+(0.027777777777778, 0.99987137105187995) *
+(0.020408163265306, 0.99993057628561399) *
+(0.015625, 0.99995930708084702) *
+(0.012345679012346, 0.99997459627121099) *
+(0.01, 0.99998333286108898) *</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.utils.my_round">
-<tt class="descclassname">rhealpix_dggs.utils.</tt><tt class="descname">my_round</tt><big>(</big><em>x</em>, <em>digits=0</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.utils.my_round" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.utils.my_round">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.utils.</span></span><span class="sig-name descname"><span class="pre">my_round</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">digits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#rhealpixdggs.utils.my_round" title="Permalink to this definition">¶</a></dt>
 <dd><p>Round the floating point number or list/tuple of floating point
-numbers to <tt class="docutils literal"><span class="pre">digits</span></tt> number of digits.
-Calls Python&#8217;s <tt class="docutils literal"><span class="pre">round()</span></tt> function.</p>
+numbers to <code class="docutils literal notranslate"><span class="pre">digits</span></code> number of digits.
+Calls Python’s <code class="docutils literal notranslate"><span class="pre">round()</span></code> function.</p>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
 <span class="go">0.142857</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">((</span><span class="mf">1.</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="mi">7</span><span class="p">),</span> <span class="mi">6</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">((</span><span class="mf">1.</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="mi">7</span><span class="p">),</span> <span class="mi">6</span><span class="p">))</span>
 <span class="go">(0.333333, 0.142857)</span>
 </pre></div>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.utils.wrap_latitude">
-<tt class="descclassname">rhealpix_dggs.utils.</tt><tt class="descname">wrap_latitude</tt><big>(</big><em>phi</em>, <em>radians=False</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.utils.wrap_latitude" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.utils.wrap_latitude">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.utils.</span></span><span class="sig-name descname"><span class="pre">wrap_latitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radians</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#rhealpixdggs.utils.wrap_latitude" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a point p on the unit circle at angle <cite>phi</cite> from the positive x-axis,
-if p lies in the right half of the circle, then return its angle that lies 
+if p lies in the right half of the circle, then return its angle that lies
 in the interval [-pi/2, pi/2].
-If p lies in the left half of the circle, then reflect it through the 
-origin, and return the angle of the reflected point that lies in the 
+If p lies in the left half of the circle, then reflect it through the
+origin, and return the angle of the reflected point that lies in the
 interval [-pi/2, pi/2].
 If <cite>radians</cite> = True, then <cite>phi</cite> and the output are given in radians.
 Otherwise, they are given in degrees.</p>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">45.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="o">-</span><span class="mi">45</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="o">-</span><span class="mi">45</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">-45.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">90.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">-90.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="mi">135</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="mi">135</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">-45.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="o">-</span><span class="mi">135</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_latitude</span><span class="p">(</span><span class="o">-</span><span class="mi">135</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">45.0</span>
 </pre></div>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.utils.wrap_longitude">
-<tt class="descclassname">rhealpix_dggs.utils.</tt><tt class="descname">wrap_longitude</tt><big>(</big><em>lam</em>, <em>radians=False</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.utils.wrap_longitude" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a point p on the unit circle at angle <cite>lam</cite> from the positive 
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.utils.wrap_longitude">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.utils.</span></span><span class="sig-name descname"><span class="pre">wrap_longitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radians</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#rhealpixdggs.utils.wrap_longitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a point p on the unit circle at angle <cite>lam</cite> from the positive
 x-axis, return its angle theta in the range -pi &lt;= theta &lt; pi.
 If <cite>radians</cite> = True, then <cite>lam</cite> and the output are given in radians.
 Otherwise, they are given in degrees.</p>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span> <span class="o">+</span> <span class="n">pi</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="go">-3.1415926535897931</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="o">-</span><span class="mi">185</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span> <span class="o">+</span> <span class="n">pi</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">-3.141592653589793</span>
+</pre></div>
+</div>
+<dl>
+<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>-3.1415926535897931</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="o">-</span><span class="mi">185</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">175.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">-180.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="mi">185</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap_longitude</span><span class="p">(</span><span class="mi">185</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">-175.0</span>
 </pre></div>
 </div>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="introduction.html"
-                        title="previous chapter">Introduction</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="pj_healpix.html"
-                        title="next chapter">The pj_healpix Module</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/utils.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="introduction.html"
+                          title="previous chapter">Introduction</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="pj_healpix.html"
+                          title="next chapter">The pj_healpix Module</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/utils.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
+    </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -228,12 +249,13 @@ Otherwise, they are given in degrees.</p>
         <li class="right" >
           <a href="introduction.html" title="Introduction"
              >previous</a> |</li>
-        <li><a href="index.html">rHEALPixDGGS 0.5.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rHEALPixDGGS 0.5.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The utils Module</a></li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2013, Alexander Raichev.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013, Alexander Raichev.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
   </body>
 </html>

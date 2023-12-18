@@ -1,18 +1,14 @@
 """
-This Python 3.3 code implements ellipsoids of revolution.
-
-CHANGELOG:
+This Python 3.11 code implements ellipsoids of revolution.
 
 - Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
-- AR, 2013-07-23: Ported to Python 3.3.
-- Robert Gibb (RG), 2020-07-13: Issue #1 Multiple tests fail due to rounding errors
 
 NOTE:
 
 All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
 
-By 'ellipsoid' throughout, i mean an ellipsoid of revolution and *not* a general (triaxial) ellipsoid.
+By 'ellipsoid' throughout, I mean an ellipsoid of revolution and *not* a general (triaxial) ellipsoid.
 Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordinates.
 """
 # *****************************************************************************
@@ -33,12 +29,14 @@ from rhealpixdggs.utils import my_round, auth_lat, auth_rad
 
 # Parameters of some common ellipsoids.
 WGS84_A = 6378137.0
-WGS84_F = 1 / 298.257222101  # ORIGINAL: GRS80 from EPSG:42310 298.257222101, based on WGS84+GRS80
+WGS84_F = (
+    1 / 298.257222101
+)  # ORIGINAL: GRS80 from EPSG:42310 298.257222101, based on WGS84+GRS80
 # WGS84_F = 1 / 298.257222100882711  # GRS80 from https://en.wikipedia.org/wiki/World_Geodetic_System
 # WGS84_F = 1 / 298.257223563  # new value from EPSG:7030
 WGS84_B = WGS84_A * (1 - WGS84_F)
 WGS84_E = sqrt(WGS84_F * (1 - WGS84_F))
-WGS84_R_A = sqrt(WGS84_A ** 2 / 2 + WGS84_B ** 2 / 2 * (arctanh(WGS84_E) / WGS84_E))
+WGS84_R_A = sqrt(WGS84_A**2 / 2 + WGS84_B**2 / 2 * (arctanh(WGS84_E) / WGS84_E))
 R_EM = 6371000  # Earth's mean radius
 
 
@@ -103,8 +101,8 @@ class Ellipsoid(object):
             elif e is not None:
                 # Derive the other geometric parameters from a and e.
                 self.e = e
-                self.b = a * sqrt(1 - e ** 2)
-                self.f = 1 - sqrt(1 - e ** 2)
+                self.b = a * sqrt(1 - e**2)
+                self.f = 1 - sqrt(1 - e**2)
             else:
                 self.f = f
                 self.b = self.a * (1 - f)
@@ -118,7 +116,7 @@ class Ellipsoid(object):
     def __str__(self):
         result = ["ellipsoid:"]
         # result.append('lengths measured in meters')
-        for (k, v) in sorted(self.__dict__.items()):
+        for k, v in sorted(self.__dict__.items()):
             if k == "phi_0":
                 continue
             if k in {"sphere", "radians"}:
@@ -349,11 +347,11 @@ class Ellipsoid(object):
         if not self.radians:
             lam, phi = deg2rad([lam, phi])
         # Equals a iff e = 0 (sphere):
-        N = a / sqrt(1 - e ** 2 * sin(phi) ** 2)
+        N = a / sqrt(1 - e**2 * sin(phi) ** 2)
         return (
             N * cos(lam) * cos(phi),
             N * sin(lam) * cos(phi),
-            N * (1 - e ** 2) * sin(phi),
+            N * (1 - e**2) * sin(phi),
         )
 
 

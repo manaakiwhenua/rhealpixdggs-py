@@ -1,9 +1,7 @@
 """
-This Python 3.3 code tests the ``dggs_rhealpix`` module.
+This Python 3.11 code tests the ``dggs_rhealpix`` module.
 Beware, while these tests cover most functions and scenarios, they don't cover them all.
 Keep adding tests!
-
-CHANGELOG:
 
 - Alexander Raichev (AR), 2013-01-26: Initial version based on previous tests.
 
@@ -34,6 +32,7 @@ from rhealpixdggs.ellipsoids import (
     WGS84_ELLIPSOID_RADIANS,
 )
 
+
 # Relative error function.
 def rel_err(get, expect):
     a = euclidean(get, expect)
@@ -63,7 +62,6 @@ WGS84_123_RADIANS = dggs.RHEALPixDGGS(
 
 
 class SCENZGridTestCase(unittest.TestCase):
-
     # ------------------------------------------------------------------------------
     # Test Cell methods
     def test_suid_from_index(self):
@@ -108,7 +106,7 @@ class SCENZGridTestCase(unittest.TestCase):
             self.assertEqual(C.resolution, resolution)
 
             # Should not create invalid cells.
-            suid = (P, rdggs.N_side ** 2)
+            suid = (P, rdggs.N_side**2)
             self.assertRaises(AssertionError, Cell, rdggs, suid)
 
             # Should create cell P1.
@@ -135,7 +133,7 @@ class SCENZGridTestCase(unittest.TestCase):
 
             # Should work on an arbitrary cell.
             n = rdggs.N_side
-            c = Cell(rdggs, (N, 1, 3, n ** 2 - 1, 2 * n))
+            c = Cell(rdggs, (N, 1, 3, n**2 - 1, 2 * n))
             row, col = c.suid_rowcol()
             for i in range(1, c.resolution + 1):
                 self.assertEqual(c.suid[i], n * row[i] + col[i])
@@ -366,7 +364,7 @@ class SCENZGridTestCase(unittest.TestCase):
             x, y = a.ul_vertex()
             w = rdggs.cell_width(l + 1)
             error = 1e-10  # Error tolerance.
-            for (i, j) in product(list(range(3)), repeat=2):
+            for i, j in product(list(range(3)), repeat=2):
                 b = Cell(rdggs, list(a.suid) + [i + 3 * j])
                 xx, yy = b.ul_vertex()
                 xp, yp = (x + i * w, y - j * w)
@@ -377,7 +375,7 @@ class SCENZGridTestCase(unittest.TestCase):
             x, y = a.ul_vertex()
             w = rdggs.cell_width(l + 1)
             error = rdggs.ellipsoid.R_A * 1e-15  # Error tolerance.
-            for (i, j) in product(list(range(3)), repeat=2):
+            for i, j in product(list(range(3)), repeat=2):
                 b = Cell(rdggs, list(a.suid) + [i + 3 * j])
                 xx, yy = b.ul_vertex(plane=False)
                 xp, yp = rdggs.rhealpix(x + i * w, y - j * w, inverse=True)
@@ -391,7 +389,7 @@ class SCENZGridTestCase(unittest.TestCase):
             w = a.width()
             (x, y) = a.ul_vertex()
             error = 1e-10
-            for (row, col) in product(list(range(3)), repeat=2):
+            for row, col in product(list(range(3)), repeat=2):
                 s = str(row * 3 + col)
                 # Child cell in (row, column) position relative to a:
                 b = Cell(rdggs, list(a.suid) + [3 * row + col])
@@ -643,7 +641,7 @@ class SCENZGridTestCase(unittest.TestCase):
             # For example, the down neighbor of the up neighbor of k
             # should be k.
             an = rdggs.atomic_neighbors
-            n = rdggs.N_side ** 2
+            n = rdggs.N_side**2
             for k in range(n):
                 self.assertEqual(an[an[k]["up"]]["down"], k)
                 self.assertEqual(an[an[k]["right"]]["left"], k)
@@ -653,12 +651,12 @@ class SCENZGridTestCase(unittest.TestCase):
             # Should output the correct number of cells.
             resolution = 3
             cells = list(rdggs.grid(resolution))
-            n = rdggs.N_side ** 2
-            self.assertEqual(len(cells), 6 * n ** resolution)
+            n = rdggs.N_side**2
+            self.assertEqual(len(cells), 6 * n**resolution)
 
             # Pick a random cell of index k in cells and check that cells[k+1]
             # is the successor cell.
-            k = randint(0, 6 * n ** resolution - 2)
+            k = randint(0, 6 * n**resolution - 2)
             a = cells[k]
             b = cells[k + 1]
             c = a.successor()
@@ -807,7 +805,15 @@ class SCENZGridTestCase(unittest.TestCase):
             get = rdggs.cell_latitudes(
                 resolution, -R_A * pi / 2, R_A * pi / 2, True, plane=True
             )
-            expect = R_A * array([-pi / 3, -pi / 6, 0, pi / 6, pi / 3,])
+            expect = R_A * array(
+                [
+                    -pi / 3,
+                    -pi / 6,
+                    0,
+                    pi / 6,
+                    pi / 3,
+                ]
+            )
             for i in range(len(expect)):
                 self.assertAlmostEqual(get[i], expect[i])
 

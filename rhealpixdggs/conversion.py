@@ -5,8 +5,9 @@ from itertools import compress
 
 def get_finest_containing_cell(polygon: Polygon) -> Cell:
     """
-    Finds the finest DGGS Cell containing a cartesian polygon
+    Finds the finest DGGS Cell containing a given cartesian polygon
     """
+
     def _get_finest_cell(polygon, suid):
         parent_cell = Cell(suid=suid)
         # get the children cells and polygons for these cells
@@ -26,7 +27,7 @@ def get_finest_containing_cell(polygon: Polygon) -> Cell:
                 finest = None
         return finest
 
-    for suid in [tuple(x) for x in ['N', 'O', 'P', 'Q', 'R', 'S']]:
+    for suid in [tuple(x) for x in ["N", "O", "P", "Q", "R", "S"]]:
         finest = _get_finest_cell(polygon, suid)
         if finest is not None:
             return finest
@@ -34,7 +35,9 @@ def get_finest_containing_cell(polygon: Polygon) -> Cell:
 
 # TODO class should be a general class for collections of cells (believe the term is 'zone'?)
 class CellZoneFromPoly:
-    def __init__(self, feature, res_limit, return_cells: bool, file=None, bounding_cell=None):
+    def __init__(
+        self, feature, res_limit, return_cells: bool, file=None, bounding_cell=None
+    ):
         self.label = feature[0]
         self.geometry = feature[1]
         self.res_limit = res_limit
@@ -52,14 +55,18 @@ class CellZoneFromPoly:
 
     def _get_dggs_poly(self, bounding_cell):
         bounding_poly = Polygon(bounding_cell.vertices(plane=False))
-        if self.geometry.contains(bounding_poly):  # edge case where the polygon is the same as the bounding cell
-            self._write_cells(bounding_cell, bounding_poly, 'bounding poly')
+        if self.geometry.contains(
+            bounding_poly
+        ):  # edge case where the polygon is the same as the bounding cell
+            self._write_cells(bounding_cell, bounding_poly, "bounding poly")
         else:
             if bounding_cell.resolution + 1 > self.res_limit:
                 pass
             else:
                 children_cells = [cell for cell in bounding_cell.subcells()]
-                children_poly = [Polygon(cell.vertices(plane=False)) for cell in children_cells]
+                children_poly = [
+                    Polygon(cell.vertices(plane=False)) for cell in children_cells
+                ]
                 together = list(zip(children_cells, children_poly))
                 # print(f'processing chhildren for bounding cell {bounding_cell}')
                 self._process_children(together)
@@ -73,11 +80,11 @@ class CellZoneFromPoly:
         for child_cell, child_poly in together:
             # 1: add contained cells
             if self.geometry.contains(child_poly):
-                self._write_cells(child_cell, child_poly, 'fully contained')
+                self._write_cells(child_cell, child_poly, "fully contained")
             # 2: check we're not at the limit, if we are, check centroids
             elif child_cell.resolution == self.res_limit:
                 if self.geometry.contains(Point(child_cell.nucleus(plane=False))):
-                    self._write_cells(child_cell, child_poly, 'nucleus')
+                    self._write_cells(child_cell, child_poly, "nucleus")
             # 3: check the children (call this same function on the children)
             else:
                 if self.geometry.overlaps(child_poly):
@@ -95,14 +102,15 @@ class CellZoneFromPoly:
             self.cells_list.append(cell)
 
 
-def compress_order_cells(cells):
+def compress_order_cells(cells: list[str]) -> list[str]:
     """
-    Compresses and order a set of cells
+    Compresses and sorts a set of cells
     """
     import re
-    def alphanum_sort(lst):
+
+    def alphanum_sort(lst: list[str]) -> list[str]:
         convert = lambda text: int(text) if text.isdigit() else text
-        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+        alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
         return sorted(lst, key=alphanum_key)
 
     cells = set(cells)

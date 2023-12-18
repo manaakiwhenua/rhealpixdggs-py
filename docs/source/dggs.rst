@@ -1,7 +1,7 @@
 The dggs Module
 ===========================
 
-.. automodule:: rhealpix_dggs.dggs
+.. automodule:: rhealpixdggs.dggs
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
 The utils Module
 ===========================
 
-.. automodule:: rhealpix_dggs.utils
+.. automodule:: rhealpixdggs.utils
     :members:
     :undoc-members:
     :show-inheritance:

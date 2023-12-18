@@ -3,15 +3,15 @@ Introduction
 rHEALPixDGGS is a Python 3 package that implements the rHEALPix discrete global grid system (DGGS).
 This documentation assumes you are familiar with the rHEALPix DGGS as described in [GRS2013]_ and familiar with basic Python 3.3 usage as described in `The Python Tutorial <http://docs.python.org/3/tutorial/>`_.
 
-.. [GRS2013] Robert Gibb, Alexander Raichev, Michael Speth, `The rHEALPix discrete global grid system <http://code.scenzgrid.org/index.php/p/scenzgrid-py/source/tree/master/rHEALPixDGGS-0.5/docs/rhealpixdggs_preprint.pdf>`_, in preparation, 2013.
+.. [GRS2013] Robert Gibb, Alexander Raichev, Michael Speth, `The rHEALPix discrete global grid system <https://github.com/manaakiwhenua/rhealpixdggs-2013-gibb-raichev-speth/blob/master/rhealpix_dggs_preprint.pdf>`_, in preparation, 2013.
 
 Requirements
 ---------------
-- `Python >=3.3 <http://python.org/>`_
-- `NumPy >=1.7 <http://www.numpy.org/>`_ Base N-dimensional array package
-- `SciPy >=0.12 <http://www.scipy.org/>`_ Fundamental library for scientific computing
-- `Matplotlib >=1.2.1 <http://matplotlib.org/>`_ Comprehensive 2D Plotting
-- `Pyproj >=1.9.3 <http://code.google.com/p/pyproj/>`_
+- `Python >=3.11 <http://python.org/>`_
+- `NumPy >=1.25.2 <http://www.numpy.org/>`_ Base N-dimensional array package
+- `SciPy >=1.11.2 <http://www.scipy.org/>`_ Fundamental library for scientific computing
+- `Matplotlib >=3.7.2 <http://matplotlib.org/>`_ Comprehensive 2D Plotting
+- `Pyproj >=3.6 <http://code.google.com/p/pyproj/>`_
   Python interface to the PROJ.4 cartographic library
 
 Installation
@@ -120,16 +120,17 @@ Ellipsoid instances are parametrized by geographic longitude and latitude with t
 
 Project some points of the ellipsoid using the HEALPix and rHEALPix projections::
 
-    >>> h = Proj(ellps_1, 'healpix')
-    >>> rh = Proj(ellps_1, 'rhealpix', north_square=1, south_square=2)
-    >>> print(h(0, 60))
-    (0.0, 3.351278550178026)
-    >>> print(rh(0, 60))
-    (0.0, 3.351278550178026)
-    >>> print(h(0, 70))
-    (0.864006732389895, 4.258498514443268)
-    >>> print(rh(0, 70))
-    (-0.8640067323898944, 4.258498514443268)
+    >>> from numpy.testing import assert_allclose
+    >>> h = Projection(ellps_1, 'healpix')
+    >>> rh = Projection(ellps_1, 'rhealpix', north_square=1, south_square=2)
+    >>> assert_allclose(h(0, 60), (0.0, 3.35127855017803), rtol=1e-14, atol=0) == None
+    True
+    >>> assert_allclose(rh(0, 60), (0.0, 3.35127855017803), rtol=1e-14, atol=0) == None
+    True
+    >>> assert_allclose(h(0, 70), (0.864006732389895, 4.258498514443268), rtol=1e-14, atol=0) == None
+    True
+    >>> assert_allclose(rh(0, 70), (-0.864006732389895, 4.258498514443268), rtol=1e-14, atol=0) == None
+    True
 
 Using the ``dggs`` Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -255,20 +256,36 @@ Find all the level 1 cells intersecting the longitude-latitude aligned ellipsoid
 
 Compute the ellipsoidal shape and ellipsoidal nuclei of these cells ::
 
-    >>> for row in cells:
-    ...     for cell in row:
-    ...         print(cell, cell.ellipsoidal_shape(), cell.nucleus(plane=False))
-    N2 dart (5.088887490341627e-14, 58.470677829627355)
-    N1 skew_quad (45.000000000000036, 58.470677829627355)
-    N0 dart (89.99999999999996, 58.47067782962736)
-    Q0 quad (14.999999999999998, 26.438744923100096)
-    Q1 quad (45.0, 26.438744923100096)
-    Q2 quad (74.99999999999999, 26.438744923100096)
-    R0 quad (105.00000000000001, 26.438744923100096)
-    Q3 quad (14.999999999999998, 3.560649871414923e-15)
-    Q4 quad (45.0, 3.560649871414923e-15)
-    Q5 quad (74.99999999999999, 3.560649871414923e-15)
-    R3 quad (105.00000000000001, 3.560649871414923e-15)
+    >>> expected_results = [
+    ...    [
+    ...        (5.088887490341627e-14, 58.47067782962734),
+    ...        (45.000000000000036, 58.47067782962734),
+    ...        (89.99999999999996, 58.47067782962736)
+    ...    ], [
+    ...        (14.999999999999998, 26.438744923100096),
+    ...        (45.0, 26.438744923100096),
+    ...        (74.99999999999999, 26.438744923100096),
+    ...        (105.00000000000001, 26.438744923100096)
+    ...    ], [
+    ...        (14.999999999999998, 3.560649871414923e-15),
+    ...        (45.0, 3.560649871414923e-15),
+    ...        (74.99999999999999, 3.560649871414923e-15),
+    ...        (105.00000000000001, 3.560649871414923e-15)
+    ...    ]]
+    >>> for i, row in enumerate(cells):
+    ...     for j, cell in enumerate(row):
+    ...         print(cell, cell.ellipsoidal_shape(), assert_allclose(cell.nucleus(plane=False), expected_results[i][j], rtol=1e-15, atol=0) == None)
+    N2 dart True
+    N1 skew_quad True
+    N0 dart True
+    Q0 quad True
+    Q1 quad True
+    Q2 quad True
+    R0 quad True
+    Q3 quad True
+    Q4 quad True
+    Q5 quad True
+    R3 quad True
 
 Create the (0, 0)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellipsoid.
 Orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand::

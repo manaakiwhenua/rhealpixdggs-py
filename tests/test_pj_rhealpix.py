@@ -1,9 +1,7 @@
 """
-This Python 3.3 code tests the ``pj_rhealpix`` module.
+This Python 3.11 code tests the ``pj_rhealpix`` module.
 Beware, these tests cover only some functions and only some scenarios.
 Keep adding tests!
-
-CHANGELOG:
 
 - Alexander Raichev (AR), 2013-01-26: Initial version based on previous test code.
 """
@@ -16,7 +14,7 @@ CHANGELOG:
 
 # Import third-party modules.
 from scipy.spatial.distance import euclidean, norm
-from numpy import array, pi, rad2deg, deg2rad, arcsin
+from numpy import atleast_1d, array, pi, rad2deg, deg2rad, arcsin
 
 # Import standard modules.
 import unittest
@@ -27,9 +25,10 @@ import rhealpixdggs.pj_healpix as pjh
 import rhealpixdggs.pj_rhealpix as pjr
 from rhealpixdggs.utils import auth_lat, auth_rad
 
+
 # Relative error function.
 def rel_err(get, expect):
-    a = euclidean(get, expect)
+    a = euclidean(atleast_1d(get), atleast_1d(expect))
     b = norm(expect)
     if b == 0:
         return a
@@ -83,48 +82,48 @@ class MyTestCase(unittest.TestCase):
                 u + array((-dx, 0)),
             ]
         # Test forward.
-        for (north_square, south_square) in product(list(range(4)), repeat=2):
+        for north_square, south_square in product(list(range(4)), repeat=2):
             for p in eq_points:
                 cr = pjr.triangle(
                     *p, north_square=north_square, south_square=south_square
                 )
                 self.assertEqual((None, "equatorial"), cr)
-            for (i, p) in enumerate(np_points):
+            for i, p in enumerate(np_points):
                 cr = pjr.triangle(
                     *p, north_square=north_square, south_square=south_square
                 )
                 self.assertEqual((i, "north_polar"), cr)
-            for (i, p) in enumerate(sp_points):
+            for i, p in enumerate(sp_points):
                 cr = pjr.triangle(
                     *p, north_square=north_square, south_square=south_square
                 )
                 self.assertEqual((i, "south_polar"), cr)
 
         # Test inverse.
-        for (north_square, south_square) in product(list(range(4)), repeat=2):
+        for north_square, south_square in product(list(range(4)), repeat=2):
             for p in eq_points:
                 cr = pjr.triangle(
                     *p,
                     north_square=north_square,
                     south_square=south_square,
-                    inverse=True
+                    inverse=True,
                 )
                 self.assertEqual((None, "equatorial"), cr)
-            for (i, p) in enumerate(np_points_inv[north_square]):
+            for i, p in enumerate(np_points_inv[north_square]):
                 cr = pjr.triangle(
                     *p,
                     north_square=north_square,
                     south_square=south_square,
-                    inverse=True
+                    inverse=True,
                 )
                 j = (north_square + i) % 4
                 self.assertEqual((j, "north_polar"), cr)
-            for (i, p) in enumerate(sp_points_inv[south_square]):
+            for i, p in enumerate(sp_points_inv[south_square]):
                 cr = pjr.triangle(
                     *p,
                     north_square=north_square,
                     south_square=south_square,
-                    inverse=True
+                    inverse=True,
                 )
                 j = (south_square + i) % 4
                 self.assertEqual((j, "south_polar"), cr)
@@ -141,7 +140,7 @@ class MyTestCase(unittest.TestCase):
 
         # Test forward projection.
         # Equatorial points should stay fixed.
-        for (north_square, south_square) in product(list(range(4)), repeat=2):
+        for north_square, south_square in product(list(range(4)), repeat=2):
             for p in eq_points:
                 q = pjr.combine_triangles(
                     *p, north_square=north_square, south_square=south_square
@@ -150,7 +149,7 @@ class MyTestCase(unittest.TestCase):
 
         # Test forward projection.
         # Polar points should map to the correct points.
-        for (north_square, south_square) in product(list(range(4)), repeat=2):
+        for north_square, south_square in product(list(range(4)), repeat=2):
             # Corners of north square.
             ndl = (-pi + north_square * pi / 2, pi / 4)
             ndr = (-pi / 2 + north_square * pi / 2, pi / 4)
@@ -177,13 +176,13 @@ class MyTestCase(unittest.TestCase):
                 (sdr[0] - dx, sdr[1] + dy),
                 (sdl[0] + dy, sdl[1] + dx),
             ]
-            for (i, p) in enumerate(np_points):
+            for i, p in enumerate(np_points):
                 q = pjr.combine_triangles(
                     *p, north_square=north_square, south_square=south_square
                 )
                 qq = np_points_transformed[(i - north_square) % 4]
                 self.assertTrue(euclidean(q, qq) < error)
-            for (i, p) in enumerate(sp_points):
+            for i, p in enumerate(sp_points):
                 q = pjr.combine_triangles(
                     *p, north_square=north_square, south_square=south_square
                 )
@@ -192,7 +191,7 @@ class MyTestCase(unittest.TestCase):
 
         # Test inverse projection.
         # The inverse of the projection of a point p should yield p.
-        for (north_square, south_square) in product(list(range(4)), repeat=2):
+        for north_square, south_square in product(list(range(4)), repeat=2):
             for p in eq_points + sp_points + np_points:
                 q = pjr.combine_triangles(
                     *p, south_square=south_square, north_square=north_square
@@ -201,12 +200,12 @@ class MyTestCase(unittest.TestCase):
                     *q,
                     south_square=south_square,
                     north_square=north_square,
-                    inverse=True
+                    inverse=True,
                 )
                 self.assertTrue(euclidean(p, pp) < error)
         # Points on the boundary of cells S and N should map to points
         # with y-coordniate -pi/4 and pi/4, respectively.
-        for (north_square, south_square) in product(list(range(4)), repeat=2):
+        for north_square, south_square in product(list(range(4)), repeat=2):
             n_shift = array((north_square * pi / 2, 0))
             s_shift = array((south_square * pi / 2, 0))
             np_boundary = [
@@ -227,23 +226,25 @@ class MyTestCase(unittest.TestCase):
                     *q,
                     south_square=south_square,
                     north_square=north_square,
-                    inverse=True
+                    inverse=True,
                 )
-                self.assertTrue(euclidean(p[1], pi / 4) < error)
+                self.assertTrue(euclidean(atleast_1d(p[1]), atleast_1d(pi / 4)) < error)
             for q in sp_boundary:
                 p = pjr.combine_triangles(
                     *q,
                     south_square=south_square,
                     north_square=north_square,
-                    inverse=True
+                    inverse=True,
                 )
-                self.assertTrue(euclidean(p[1], -pi / 4) < error)
+                self.assertTrue(
+                    euclidean(atleast_1d(p[1]), atleast_1d(-pi / 4)) < error
+                )
 
     def test_rhealpix_sphere(self):
         # Test forward projection.
         # Should return the same output as healpix_sphere() of the unit
         # sphere, followed by combine_triangles(), followed by a scaling up.
-        for (ns, ss) in product(list(range(4)), repeat=2):
+        for ns, ss in product(list(range(4)), repeat=2):
             for p in inputs:
                 q = pjr.rhealpix_sphere(*p, north_square=ns, south_square=ss)
                 qq = pjr.combine_triangles(
@@ -255,7 +256,7 @@ class MyTestCase(unittest.TestCase):
         # Test inverse projection.
         # The inverse of the projection of a point p should yield p.
         error = 1e-15  # Fuzz to handle small rounding errors.
-        for (ns, ss) in product(list(range(4)), repeat=2):
+        for ns, ss in product(list(range(4)), repeat=2):
             for p in inputs:
                 q = pjr.rhealpix_sphere(*p, north_square=ns, south_square=ss)
                 pp = pjr.rhealpix_sphere_inverse(*q, north_square=ns, south_square=ss)
@@ -267,7 +268,7 @@ class MyTestCase(unittest.TestCase):
         # by a scaling down, followed by combine_triangles(),
         # followed by a scaling up.
         e = 0.8
-        for (ns, ss) in product(list(range(4)), repeat=2):
+        for ns, ss in product(list(range(4)), repeat=2):
             for p in inputs:
                 q = pjr.rhealpix_ellipsoid(*p, north_square=ns, south_square=ss, e=e)
                 qq = pjh.healpix_ellipsoid(*p, e=e)
@@ -281,7 +282,7 @@ class MyTestCase(unittest.TestCase):
         alpha = pi / 4
         alpha_ = auth_lat(auth_lat(alpha, e), e, inverse=True)
         error = 10 * rel_err(alpha_, alpha)
-        for (ns, ss) in product(list(range(4)), repeat=2):
+        for ns, ss in product(list(range(4)), repeat=2):
             for p in inputs:
                 q = pjr.rhealpix_ellipsoid(*p, north_square=ns, south_square=ss, e=e)
                 pp = pjr.rhealpix_ellipsoid_inverse(

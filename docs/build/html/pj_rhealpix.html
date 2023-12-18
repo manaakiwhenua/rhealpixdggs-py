@@ -1,37 +1,27 @@
 
+<!DOCTYPE html>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>The pj_rhealpix Module &#8212; rHEALPixDGGS 0.5.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
-    <title>The pj_rhealpix Module &mdash; rHEALPixDGGS 0.5.1 documentation</title>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.5.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="rHEALPixDGGS 0.5.1 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The ellipsoids Module" href="ellipsoids.html" />
     <link rel="prev" title="The pj_healpix Module" href="pj_healpix.html" /> 
-  </head>
-  <body>
-    <div class="related">
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -46,65 +36,64 @@
         <li class="right" >
           <a href="pj_healpix.html" title="The pj_healpix Module"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">rHEALPixDGGS 0.5.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rHEALPixDGGS 0.5.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The pj_rhealpix Module</a></li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
-  <div class="section" id="module-rhealpix_dggs.pj_rhealpix">
-<span id="the-pj-rhealpix-module"></span><h1>The pj_rhealpix Module<a class="headerlink" href="#module-rhealpix_dggs.pj_rhealpix" title="Permalink to this headline">¶</a></h1>
-<p>This Python 3.3 module implements the rHEALPix map projection.</p>
-<p>CHANGELOG:</p>
+  <section id="module-rhealpixdggs.pj_rhealpix">
+<span id="the-pj-rhealpix-module"></span><h1>The pj_rhealpix Module<a class="headerlink" href="#module-rhealpixdggs.pj_rhealpix" title="Permalink to this heading">¶</a></h1>
+<p>This Python 3.11 module implements the rHEALPix map projection.</p>
 <ul class="simple">
-<li>Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.</li>
-<li>AR, 2013-07-23: Ported to Python 3.3.</li>
+<li><p>Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.</p></li>
 </ul>
 <p>NOTE:</p>
-<p>All lengths are measured in meters and all angles are measured in radians 
-unless indicated otherwise. 
-By &#8216;ellipsoid&#8217; below, i mean an oblate ellipsoid of revolution.</p>
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.combine_triangles">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">combine_triangles</tt><big>(</big><em>x</em>, <em>y</em>, <em>north_square=0</em>, <em>south_square=0</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.combine_triangles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rearrange point <cite>(x, y)</cite> in the HEALPix projection by 
+<p>All lengths are measured in meters and all angles are measured in radians
+unless indicated otherwise.
+By ‘ellipsoid’ below, I mean an oblate ellipsoid of revolution.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.pj_rhealpix.combine_triangles">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_rhealpix.</span></span><span class="sig-name descname"><span class="pre">combine_triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_rhealpix.combine_triangles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rearrange point <cite>(x, y)</cite> in the HEALPix projection by
 combining the polar triangles into two polar squares.
-Put the north polar square in position <cite>north_square</cite> and 
+Put the north polar square in position <cite>north_square</cite> and
 the south polar square in position <cite>south_square</cite>.
 If <cite>inverse</cite> = True, uncombine the polar triangles.</p>
 <p>INPUT:</p>
 <ul class="simple">
-<li><cite>x, y</cite> - Coordinates in the HEALPix projection of the unit sphere.</li>
-<li><cite>north_square, south_square</cite> - Integers between 0 and 3 indicating 
-the positions of the north_square polar square and south_square polar 
+<li><p><cite>x, y</cite> - Coordinates in the HEALPix projection of the unit sphere.</p></li>
+<li><p><cite>north_square, south_square</cite> - Integers between 0 and 3 indicating
+the positions of the north_square polar square and south_square polar
 square respectively.
-See rhealpix_sphere() docstring for a diagram.</li>
-<li><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
-forward function. If True, then compute inverse function.</li>
+See rhealpix_sphere() docstring for a diagram.</p></li>
+<li><p><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
+forward function. If True, then compute inverse function.</p></li>
 </ul>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">combine_triangles</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">(-1.8325957145940459, 1.5707963267948959)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">combine_triangles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">(-0.78539816339744795, 1.0471975511965981)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">(-1.832595714594046, 1.570796326794896)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">combine_triangles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">(-0.785398163397448, 1.047197551196598)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">(-0.785398163397448, 1.047197551196598)</span>
 </pre></div>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.in_rhealpix_image">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">in_rhealpix_image</tt><big>(</big><em>x</em>, <em>y</em>, <em>north_square=0</em>, <em>south_square=0</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.in_rhealpix_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return True if and only if the point <cite>(x, y)</cite> lies in the image of 
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.pj_rhealpix.in_rhealpix_image">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_rhealpix.</span></span><span class="sig-name descname"><span class="pre">in_rhealpix_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#rhealpixdggs.pj_rhealpix.in_rhealpix_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if and only if the point <cite>(x, y)</cite> lies in the image of
 the rHEALPix projection of the unit sphere.</p>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eps</span> <span class="o">=</span> <span class="mi">0</span>     <span class="c"># Test boundary points.</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eps</span> <span class="o">=</span> <span class="mi">0</span>     <span class="c1"># Test boundary points.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">north_square</span><span class="p">,</span> <span class="n">south_square</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rhp</span> <span class="o">=</span> <span class="p">[</span>
 <span class="gp">... </span><span class="p">(</span><span class="o">-</span><span class="n">pi</span> <span class="o">-</span> <span class="n">eps</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span>
@@ -122,253 +111,250 @@ the rHEALPix projection of the unit sphere.</p>
 <span class="gp">... </span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">rhp</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">if</span> <span class="ow">not</span> <span class="n">in_rhealpix_image</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">):</span>
-<span class="gp">... </span>            <span class="k">print</span><span class="p">(</span><span class="s">&#39;Fail&#39;</span><span class="p">)</span>
-<span class="gp">... </span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">in_rhealpix_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Fail&#39;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">in_rhealpix_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">in_rhealpix_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">in_rhealpix_image</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">))</span>
 <span class="go">False</span>
 </pre></div>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.rhealpix">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">rhealpix</tt><big>(</big><em>a=1</em>, <em>e=0</em>, <em>north_square=0</em>, <em>south_square=0</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.rhealpix" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.pj_rhealpix.rhealpix">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_rhealpix.</span></span><span class="sig-name descname"><span class="pre">rhealpix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_rhealpix.rhealpix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a function object that wraps the rHEALPix projection and its inverse
 of an ellipsoid with major radius <cite>a</cite> and eccentricity <cite>e</cite>.</p>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">rhealpix</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">north_square</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">south_square</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">(-0.57495135977821499, 2.1457476865731109)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span> 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">(-0.57495135977821499, 2.1457476865731109)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">(5.9999999999999997e-15, 59.999999999999986)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">rhealpix</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">north_square</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">south_square</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">(-0.574951359778215, 2.145747686573111)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">(-0.574951359778215, 2.145747686573111)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">(6e-15, 59.999999999999986)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">(0, 60)</span>
 </pre></div>
 </div>
 <p>OUTPUT:</p>
 <ul class="simple">
-<li>A function object of the form f(u, v, radians=False, inverse=False).</li>
+<li><p>A function object of the form f(u, v, radians=False, inverse=False).</p></li>
 </ul>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.rhealpix_diagram">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">rhealpix_diagram</tt><big>(</big><em>a=1</em>, <em>e=0</em>, <em>north_square=0</em>, <em>south_square=0</em>, <em>shade_polar_region=True</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.rhealpix_diagram" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a Sage Graphics object diagramming the rHEALPix projection
-boundary and polar triangles for the ellipsoid with major radius <cite>a</cite> 
-and eccentricity <cite>e</cite>.
-Inessential graphics method.
-Requires Sage graphics methods.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.rhealpix_ellipsoid">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">rhealpix_ellipsoid</tt><big>(</big><em>lam</em>, <em>phi</em>, <em>e=0</em>, <em>north_square=0</em>, <em>south_square=0</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.rhealpix_ellipsoid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the signature functions of the rHEALPix map 
-projection of an oblate ellipsoid with eccentricity <cite>e</cite> whose 
-authalic sphere is the unit sphere. 
-The north polar square is put in position <cite>north_square</cite>, 
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.pj_rhealpix.rhealpix_ellipsoid">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_rhealpix.</span></span><span class="sig-name descname"><span class="pre">rhealpix_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_rhealpix.rhealpix_ellipsoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the signature functions of the rHEALPix map
+projection of an oblate ellipsoid with eccentricity <cite>e</cite> whose
+authalic sphere is the unit sphere.
+The north polar square is put in position <cite>north_square</cite>,
 and the south polar square is put in position <cite>south_square</cite>.
 Works when <cite>e</cite> = 0 (spherical case) too.</p>
 <p>INPUT:</p>
 <ul class="simple">
-<li><cite>lam, phi</cite> - Geographic longitude-latitude coordinates in radian.
-Assume -pi &lt;= <cite>lam</cite> &lt; pi and -pi/2 &lt;= <cite>phi</cite> &lt;= pi/2.</li>
-<li><cite>e</cite> - Eccentricity of the ellipsoid.</li>
-<li><cite>north_square, south_square</cite> - (Optional; defaults = 0, 0) Integers 
-between 0 and 3 indicating positions of north polar and 
+<li><p><cite>lam, phi</cite> - Geographic longitude-latitude coordinates in radian.
+Assume -pi &lt;= <cite>lam</cite> &lt; pi and -pi/2 &lt;= <cite>phi</cite> &lt;= pi/2.</p></li>
+<li><p><cite>e</cite> - Eccentricity of the ellipsoid.</p></li>
+<li><p><cite>north_square, south_square</cite> - (Optional; defaults = 0, 0) Integers
+between 0 and 3 indicating positions of north polar and
 south polar squares, respectively.
-See rhealpix_sphere() docstring for a diagram.</li>
+See rhealpix_sphere() docstring for a diagram.</p></li>
 </ul>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">arcsin</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rhealpix_ellipsoid</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">arcsin</span><span class="p">(</span><span class="mf">2.0</span><span class="o">/</span><span class="mi">3</span><span class="p">)),</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">(0, 0.78539816339744795)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.rhealpix_ellipsoid_inverse">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">rhealpix_ellipsoid_inverse</tt><big>(</big><em>x</em>, <em>y</em>, <em>e=0</em>, <em>north_square=0</em>, <em>south_square=0</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.rhealpix_ellipsoid_inverse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the inverse of rhealpix_ellipsoid.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">rhealpix_ellipsoid</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rhealpix_ellipsoid_inverse</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">(0.0, 0.78539816339744795)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">arcsin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rhealpix_ellipsoid</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">arcsin</span><span class="p">(</span><span class="mf">2.0</span><span class="o">/</span><span class="mi">3</span><span class="p">)),</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">(0, 0.785398163397448)</span>
 </pre></div>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.rhealpix_sphere">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">rhealpix_sphere</tt><big>(</big><em>lam</em>, <em>phi</em>, <em>north_square=0</em>, <em>south_square=0</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.rhealpix_sphere" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the signature functions of the rHEALPix map projection of 
-the unit sphere. 
-The north polar square is put in position <cite>north_square</cite>, and the 
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.pj_rhealpix.rhealpix_ellipsoid_inverse">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_rhealpix.</span></span><span class="sig-name descname"><span class="pre">rhealpix_ellipsoid_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_rhealpix.rhealpix_ellipsoid_inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the inverse of rhealpix_ellipsoid().</p>
+<p>EXAMPLES:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">rhealpix_ellipsoid</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rhealpix_ellipsoid_inverse</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">(0.0, 0.785398163397448)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">(0, 0.785398163397448)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.pj_rhealpix.rhealpix_sphere">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_rhealpix.</span></span><span class="sig-name descname"><span class="pre">rhealpix_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_rhealpix.rhealpix_sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the signature functions of the rHEALPix map projection of
+the unit sphere.
+The north polar square is put in position <cite>north_square</cite>, and the
 south polar square is put in position <cite>south_square</cite>.</p>
 <p>INPUT:</p>
 <ul class="simple">
-<li><cite>lam, phi</cite> -Geographic longitude-latitude coordinates in radians.
-Assume -pi &lt;= <cite>lam</cite> &lt; pi and -pi/2 &lt;= <cite>phi</cite> &lt;= pi/2.</li>
-<li><cite>north_square, south_square</cite> - (Optional; defaults = 0, 0) Integers 
-between 0 and 3 indicating positions of north polar and 
-south polar squares, respectively.</li>
+<li><p><cite>lam, phi</cite> -Geographic longitude-latitude coordinates in radians.
+Assume -pi &lt;= <cite>lam</cite> &lt; pi and -pi/2 &lt;= <cite>phi</cite> &lt;= pi/2.</p></li>
+<li><p><cite>north_square, south_square</cite> - (Optional; defaults = 0, 0) Integers
+between 0 and 3 indicating positions of north polar and
+south polar squares, respectively.</p></li>
 </ul>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rhealpix_sphere</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rhealpix_sphere</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">(-1.619978633413937, 2.307012183573304)</span>
 </pre></div>
 </div>
 <p>NOTE:</p>
 <p>The polar squares are labeled 0, 1, 2, 3 from east to west like this:</p>
-<div class="highlight-python"><pre>east         west        
-*---*---*---*---*
-| 0 | 1 | 2 | 3 |
-*---*---*---*---*
-|   |   |   |   |
-*---*---*---*---*
-| 0 | 1 | 2 | 3 |
-*---*---*---*---*    </pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">east</span>         <span class="n">west</span>
+<span class="o">*---*---*---*---*</span>
+<span class="o">|</span> <span class="mi">0</span> <span class="o">|</span> <span class="mi">1</span> <span class="o">|</span> <span class="mi">2</span> <span class="o">|</span> <span class="mi">3</span> <span class="o">|</span>
+<span class="o">*---*---*---*---*</span>
+<span class="o">|</span>   <span class="o">|</span>   <span class="o">|</span>   <span class="o">|</span>   <span class="o">|</span>
+<span class="o">*---*---*---*---*</span>
+<span class="o">|</span> <span class="mi">0</span> <span class="o">|</span> <span class="mi">1</span> <span class="o">|</span> <span class="mi">2</span> <span class="o">|</span> <span class="mi">3</span> <span class="o">|</span>
+<span class="o">*---*---*---*---*</span>
+</pre></div>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.rhealpix_sphere_inverse">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">rhealpix_sphere_inverse</tt><big>(</big><em>x</em>, <em>y</em>, <em>north_square=0</em>, <em>south_square=0</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.rhealpix_sphere_inverse" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.pj_rhealpix.rhealpix_sphere_inverse">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_rhealpix.</span></span><span class="sig-name descname"><span class="pre">rhealpix_sphere_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_rhealpix.rhealpix_sphere_inverse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the inverse of rhealpix_sphere().</p>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">rhealpix_sphere</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rhealpix_sphere_inverse</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
-<span class="go">(0.0, 0.78539816339744795)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rhealpix_sphere_inverse</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">(0.0, 0.785398163397448)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">(0, 0.785398163397448)</span>
 </pre></div>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.rhealpix_vertices">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">rhealpix_vertices</tt><big>(</big><em>north_square=0</em>, <em>south_square=0</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.rhealpix_vertices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of the planar vertices of the rHEALPix projection of 
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.pj_rhealpix.rhealpix_vertices">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_rhealpix.</span></span><span class="sig-name descname"><span class="pre">rhealpix_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">north_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_rhealpix.rhealpix_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of the planar vertices of the rHEALPix projection of
 the unit sphere.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="rhealpix_dggs.pj_rhealpix.triangle">
-<tt class="descclassname">rhealpix_dggs.pj_rhealpix.</tt><tt class="descname">triangle</tt><big>(</big><em>x</em>, <em>y</em>, <em>north_square=0</em>, <em>south_square=0</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#rhealpix_dggs.pj_rhealpix.triangle" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rhealpixdggs.pj_rhealpix.triangle">
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_rhealpix.</span></span><span class="sig-name descname"><span class="pre">triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_rhealpix.triangle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the number of the polar triangle and region that <cite>(x, y)</cite> lies in.
-If <cite>inverse</cite> = False, then assume <cite>(x,y)</cite> lies in the image of the HEALPix 
+If <cite>inverse</cite> = False, then assume <cite>(x,y)</cite> lies in the image of the HEALPix
 projection of the unit sphere.
-If <cite>inverse</cite> = True, then assume <cite>(x,y)</cite> lies in the image of the 
+If <cite>inverse</cite> = True, then assume <cite>(x,y)</cite> lies in the image of the
 <cite>(north_square, south_square)</cite>-rHEALPix projection of the unit sphere.</p>
 <p>INPUT:</p>
 <ul class="simple">
-<li><cite>x, y</cite> - Coordinates in the HEALPix or rHEALPix (if <cite>inverse</cite> = True) 
-projection of the unit sphere.</li>
-<li><cite>north_square, south_square</cite> - Integers between 0 and 3 indicating the 
-positions of the north_square pole square and south_square pole square 
+<li><p><cite>x, y</cite> - Coordinates in the HEALPix or rHEALPix (if <cite>inverse</cite> = True)
+projection of the unit sphere.</p></li>
+<li><p><cite>north_square, south_square</cite> - Integers between 0 and 3 indicating the
+positions of the north_square pole square and south_square pole square
 respectively.
-See rhealpix_sphere() docstring for a diagram.</li>
-<li><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
-forward function. If True, then compute inverse function.</li>
+See rhealpix_sphere() docstring for a diagram.</p></li>
+<li><p><cite>inverse</cite> - (Optional; default = False) Boolean. If False, then compute
+forward function. If True, then compute inverse function.</p></li>
 </ul>
 <p>OUTPUT:</p>
 <p>The pair (triangle_number, region).
-Here region equals &#8216;north_polar&#8217; (polar), &#8216;south_polar&#8217; (polar), or 
-&#8216;equatorial&#8217;, indicating where <cite>(x, y)</cite> lies.
-If region = &#8216;equatorial&#8217;, then triangle_number = None.
-Suppose now that region != &#8216;equatorial&#8217;.
-If <cite>inverse</cite> = False, then triangle_number is the number (0, 1, 2, or 3) of 
+Here region equals ‘north_polar’ (polar), ‘south_polar’ (polar), or
+‘equatorial’, indicating where <cite>(x, y)</cite> lies.
+If region = ‘equatorial’, then triangle_number = None.
+Suppose now that region != ‘equatorial’.
+If <cite>inverse</cite> = False, then triangle_number is the number (0, 1, 2, or 3) of
 the HEALPix polar triangle Z that <cite>(x, y)</cite> lies in.
-If <cite>inverse</cite> = True, then triangle_number is the number (0, 1, 2, or 3) of 
+If <cite>inverse</cite> = True, then triangle_number is the number (0, 1, 2, or 3) of
 the HEALPix polar triangle that <cite>(x, y)</cite> will get moved into.</p>
 <p>EXAMPLES:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">triangle</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">triangle</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">)</span>
 <span class="go">(1, &#39;north_polar&#39;)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">triangle</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">triangle</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">(1, &#39;north_polar&#39;)</span>
 </pre></div>
 </div>
 <p>NOTES:</p>
-<p>In the HEALPix projection, the polar triangles are labeled 0&#8211;3 from 
+<p>In the HEALPix projection, the polar triangles are labeled 0–3 from
 east to west like this:</p>
-<div class="highlight-python"><pre>    *       *       *       *       
-  * 0 *   * 1 *   * 2 *   * 3 *        
-*-------*-------*-------*-------*
-|       |       |       |       |
-|       |       |       |       |
-|       |       |       |       |
-*-------*-------*-------*-------*
-  * 0 *   * 1 *   * 2 *   * 3 *
-    *       *       *       *</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="o">*</span>       <span class="o">*</span>       <span class="o">*</span>       <span class="o">*</span>
+  <span class="o">*</span> <span class="mi">0</span> <span class="o">*</span>   <span class="o">*</span> <span class="mi">1</span> <span class="o">*</span>   <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span>   <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span>
+<span class="o">*-------*-------*-------*-------*</span>
+<span class="o">|</span>       <span class="o">|</span>       <span class="o">|</span>       <span class="o">|</span>       <span class="o">|</span>
+<span class="o">|</span>       <span class="o">|</span>       <span class="o">|</span>       <span class="o">|</span>       <span class="o">|</span>
+<span class="o">|</span>       <span class="o">|</span>       <span class="o">|</span>       <span class="o">|</span>       <span class="o">|</span>
+<span class="o">*-------*-------*-------*-------*</span>
+  <span class="o">*</span> <span class="mi">0</span> <span class="o">*</span>   <span class="o">*</span> <span class="mi">1</span> <span class="o">*</span>   <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span>   <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span>
+    <span class="o">*</span>       <span class="o">*</span>       <span class="o">*</span>       <span class="o">*</span>
+</pre></div>
 </div>
 <p>In the rHEALPix projection these polar triangles get rearranged
-into a square with the triangles numbered <cite>north_square</cite> and <cite>south_square</cite> 
+into a square with the triangles numbered <cite>north_square</cite> and <cite>south_square</cite>
 remaining fixed.
-For example, if <cite>north_square</cite> = 1 and <cite>south_square</cite> = 3, 
+For example, if <cite>north_square</cite> = 1 and <cite>south_square</cite> = 3,
 then the triangles get rearranged this way:</p>
-<div class="highlight-python"><pre>North polar square:     *-------*       
-                        | * 3 * |    
-                        | 0 * 2 |    
-                        | * 1 * |    
-                    ----*-------*----
-                    
-South polar square: ----*-------*----
-                        | * 3 * |
-                        | 2 * 0 |
-                        | * 1 * |
-                        *-------*    </pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">North</span> <span class="n">polar</span> <span class="n">square</span><span class="p">:</span>     <span class="o">*-------*</span>
+                        <span class="o">|</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span> <span class="o">|</span>
+                        <span class="o">|</span> <span class="mi">0</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">|</span>
+                        <span class="o">|</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">*</span> <span class="o">|</span>
+                    <span class="o">----*-------*----</span>
+
+<span class="n">South</span> <span class="n">polar</span> <span class="n">square</span><span class="p">:</span> <span class="o">----*-------*----</span>
+                        <span class="o">|</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span> <span class="o">|</span>
+                        <span class="o">|</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">0</span> <span class="o">|</span>
+                        <span class="o">|</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">*</span> <span class="o">|</span>
+                        <span class="o">*-------*</span>
+</pre></div>
 </div>
 </dd></dl>
 
-</div>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="pj_healpix.html"
-                        title="previous chapter">The pj_healpix Module</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="ellipsoids.html"
-                        title="next chapter">The ellipsoids Module</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/pj_rhealpix.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="pj_healpix.html"
+                          title="previous chapter">The pj_healpix Module</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="ellipsoids.html"
+                          title="next chapter">The ellipsoids Module</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pj_rhealpix.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
+    </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -383,12 +369,13 @@ South polar square: ----*-------*----
         <li class="right" >
           <a href="pj_healpix.html" title="The pj_healpix Module"
              >previous</a> |</li>
-        <li><a href="index.html">rHEALPixDGGS 0.5.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">rHEALPixDGGS 0.5.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The pj_rhealpix Module</a></li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2013, Alexander Raichev.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013, Alexander Raichev.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
   </body>
 </html>

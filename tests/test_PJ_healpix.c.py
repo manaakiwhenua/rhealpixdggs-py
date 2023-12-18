@@ -1,10 +1,8 @@
 """
-This Python 3.3 code tests the ``PJ_healpix.c`` code of the third party
+This Python 3.11 code tests the ``PJ_healpix.c`` code of the third party
 pyproj module.
 Beware, these tests cover only some functions and only some scenarios.
 Keep adding tests!
-
-CHANGELOG:
 
 - Alexander Raichev (AR), 2012-11-20: Initial version.
 """
@@ -25,6 +23,7 @@ import unittest
 
 # Import my modules.
 from rhealpixdggs.utils import auth_lat, auth_rad
+
 
 # Relative error function.
 def rel_err(get, expect):
@@ -201,7 +200,7 @@ class PJHEALPixTestCase(unittest.TestCase):
         #     given.append(p)
         h = Proj(proj="healpix", R=R)
         expect = [h(*p, radians=RADIANS) for p in given]
-        for (ns, ss) in product(list(range(4)), repeat=2):
+        for ns, ss in product(list(range(4)), repeat=2):
             print("_____ north_square = %s, south_square = %s" % (ns, ss))
             rh = Proj(proj="rhealpix", R=R, north_square=ns, south_square=ss)
             get = [rh(*p, radians=RADIANS) for p in given]
@@ -225,7 +224,7 @@ class PJHEALPixTestCase(unittest.TestCase):
         south_given = [
             h(*p, radians=RADIANS, inverse=True) for p in south_healpix_output
         ]
-        for (ns, ss) in product(list(range(4)), repeat=2):
+        for ns, ss in product(list(range(4)), repeat=2):
             print("_____ north_square = %s, south_square = %s" % (ns, ss))
             rh = Proj(proj="rhealpix", R=R, north_square=ns, south_square=ss)
             # Corners of north square.
@@ -256,12 +255,12 @@ class PJHEALPixTestCase(unittest.TestCase):
                 (sdl[0] + dy, sdl[1] + dx),
             ]
             south_expect = [tuple(R * array(p)) for p in south_expect]
-            for (i, p) in enumerate(north_given):
+            for i, p in enumerate(north_given):
                 get = rh(*p, radians=RADIANS)
                 expect = north_expect[(i - ns) % 4]
                 print(p, expect, get)
                 self.assertTrue(rel_err(get, expect) < error)
-            for (i, p) in enumerate(south_given):
+            for i, p in enumerate(south_given):
                 get = rh(*p, radians=RADIANS)
                 expect = south_expect[(i - ss) % 4]
                 print(p, expect, get)
@@ -272,7 +271,7 @@ class PJHEALPixTestCase(unittest.TestCase):
         print("rHEALPix inverse projection, sphere of radius R = %s" % R)
         print("input (meters) / expected output (radians) / received output:")
         print("=" * 80)
-        for (ns, ss) in product(list(range(4)), repeat=2):
+        for ns, ss in product(list(range(4)), repeat=2):
             print("_____ north_square = %s, south_square = %s" % (ns, ss))
             f = Proj(proj="rhealpix", R=R, north_square=ns, south_square=ss)
             for p in inputs:
@@ -298,7 +297,7 @@ class PJHEALPixTestCase(unittest.TestCase):
         given = inputs
         # Fuzz to allow for rounding errors:
         error = 1e-12
-        for (ns, ss) in product(list(range(4)), repeat=2):
+        for ns, ss in product(list(range(4)), repeat=2):
             print("_____ north_square = %s, south_square = %s" % (ns, ss))
             expect = []
             g = Proj(proj="rhealpix", R=R_A, north_square=ns, south_square=ss)
@@ -329,7 +328,7 @@ class PJHEALPixTestCase(unittest.TestCase):
         print("input (meters) / expected output (radians) / received output")
         print("=" * 80)
         # The inverse of the projection of a point p should yield p.
-        for (ns, ss) in product(list(range(4)), repeat=2):
+        for ns, ss in product(list(range(4)), repeat=2):
             print("_____ north_square = %s, south_square = %s" % (ns, ss))
             f = Proj(proj="rhealpix", a=a, e=e, north_square=ns, south_square=ss)
             for p in inputs:

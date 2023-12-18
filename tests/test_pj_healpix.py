@@ -1,9 +1,7 @@
 """
-This Python 3.3 code tests the ``pj_healpix`` module.
+This Python 3.11 code tests the ``pj_healpix`` module.
 Beware, these tests cover only some functions and only some scenarios.
 Keep adding tests!
-
-CHANGELOG:
 
 - Alexander Raichev (AR), 2013-01-26: Initial version based on previous test code.
 """
@@ -16,7 +14,7 @@ CHANGELOG:
 
 # Import third-party modules.
 from scipy.spatial.distance import euclidean, norm
-from numpy import array, rad2deg, deg2rad, pi, sqrt, sin, arcsin
+from numpy import atleast_1d, array, rad2deg, deg2rad, pi, sqrt, sin, arcsin
 
 # Import standard modules.
 import unittest
@@ -25,9 +23,10 @@ import unittest
 import rhealpixdggs.pj_healpix as pjh
 from rhealpixdggs.utils import auth_lat, auth_rad
 
+
 # Relative error function.
 def rel_err(get, expect):
-    a = euclidean(get, expect)
+    a = euclidean(atleast_1d(get), atleast_1d(expect))
     b = norm(expect)
     if b == 0:
         return a

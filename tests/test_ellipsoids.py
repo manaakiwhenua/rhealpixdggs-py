@@ -1,9 +1,7 @@
 """
-This Python 3.3 code tests the ``ellipsoids`` module.
+This Python 3.11 code tests the ``ellipsoids`` module.
 Beware, these tests cover only some functions and only some scenarios.
 Keep adding tests!
-
-CHANGELOG:
 
 - Alexander Raichev (AR), 2013-01-26: Initial version based on previous test code.
 """
