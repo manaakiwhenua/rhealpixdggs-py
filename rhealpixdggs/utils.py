@@ -16,7 +16,10 @@ unless indicated otherwise.
 # *****************************************************************************
 
 # Import third-party modules.
-from numpy import pi, floor, sqrt, log, sin, arcsin, deg2rad, rad2deg, sign
+from numpy import sqrt, log, sin, arcsin, deg2rad, rad2deg, sign
+
+# Import standard modules.
+from math import copysign, pi
 from typing import Any
 
 
@@ -58,27 +61,31 @@ def wrap_longitude(lam: float, radians: bool = False) -> float:
     NOTES:: .. Issue #1 was ..
         -3.1415926535897931
 
-        >>> wrap_longitude(-185, radians=False)
+        >>> wrap_longitude(-185.0, radians=False)
         175.0
-        >>> wrap_longitude(-180, radians=False)
+        >>> wrap_longitude(-180.0, radians=False)
         -180.0
-        >>> wrap_longitude(185, radians=False)
+        >>> wrap_longitude(185.0, radians=False)
         -175.0
 
     """
-    if not radians:
-        # Convert to radians.
-        lam = deg2rad(lam)
-    if lam < -pi or lam >= pi:
-        result = lam - 2 * pi * floor(lam / (2 * pi))  # x mod 2*pi
-        if result >= pi:
-            result = result - 2 * pi
+    if radians:
+        if lam < -pi or lam >= pi:
+            result = lam % (2 * pi)
+            if result >= pi:
+                result = result - 2 * pi
+        else:
+            result = lam
+        return result
+
     else:
-        result = lam
-    if not radians:
-        # Convert to degrees.
-        result = rad2deg(result)
-    return result
+        if lam < -180 or lam >= 180:
+            result = lam % (360)
+            if result >= 180:
+                result = result - 360
+        else:
+            result = lam
+        return result
 
 
 def wrap_latitude(phi: float, radians: bool = False) -> float:
@@ -94,33 +101,35 @@ def wrap_latitude(phi: float, radians: bool = False) -> float:
 
     EXAMPLES::
 
-        >>> wrap_latitude(45, radians=False)
+        >>> wrap_latitude(45.0, radians=False)
         45.0
-        >>> wrap_latitude(-45, radians=False)
+        >>> wrap_latitude(-45.0, radians=False)
         -45.0
-        >>> wrap_latitude(90, radians=False)
+        >>> wrap_latitude(90.0, radians=False)
         90.0
-        >>> wrap_latitude(-90, radians=False)
+        >>> wrap_latitude(-90.0, radians=False)
         -90.0
-        >>> wrap_latitude(135, radians=False)
+        >>> wrap_latitude(135.0, radians=False)
         -45.0
-        >>> wrap_latitude(-135, radians=False)
+        >>> wrap_latitude(-135.0, radians=False)
         45.0
 
     """
-    if not radians:
-        # Convert to radians.
-        phi = deg2rad(phi)
     # Put phi in range -pi <= phi < pi.
-    phi = wrap_longitude(phi, radians=True)
-    if abs(phi) <= pi / 2:
-        result = phi
+    phi = wrap_longitude(phi, radians=radians)
+
+    if radians:
+        if abs(phi) <= pi / 2:
+            result = phi
+        else:
+            result = phi - copysign(pi, phi)
+        return result
     else:
-        result = phi - sign(phi) * pi
-    if not radians:
-        # Convert to degrees.
-        result = rad2deg(result)
-    return result
+        if abs(phi) <= 180 / 2:
+            result = phi
+        else:
+            result = phi - copysign(180, phi)
+        return result
 
 
 def auth_lat(
