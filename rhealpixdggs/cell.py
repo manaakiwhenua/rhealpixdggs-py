@@ -1,6 +1,6 @@
 # from rhealpixdggs.dggs import WGS84_003
 
-from numpy import array, base_repr
+from numpy import array, base_repr, pi  # pi is just needed for the doctests
 from scipy import integrate
 from itertools import product
 from random import uniform
@@ -128,6 +128,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import UNIT_003
             >>> rdggs = UNIT_003
             >>> print(rdggs.max_resolution)
             1
@@ -236,6 +237,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import UNIT_003
             >>> rdggs = UNIT_003
             >>> c = Cell(rdggs, ['N', 2])
             >>> print(c.index(order='resolution'))
@@ -270,6 +272,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> rdggs = RHEALPixDGGS()
             >>> c = Cell(rdggs, ['N', 7, 3])
             >>> rsuid, csuid = c.suid_rowcol()
@@ -295,6 +298,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import UNIT_003
             >>> c = Cell(UNIT_003, ('N', 8))
             >>> print(c)
             N8
@@ -317,6 +321,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> c = Cell(RHEALPixDGGS(), ('N', 8, 2))
             >>> print(c.successor())
             N83
@@ -377,6 +382,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> c = Cell(RHEALPixDGGS(), ('N', 0, 8))
             >>> print(c.predecessor())
             N07
@@ -434,6 +440,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> a = Cell(RHEALPixDGGS(), ('N', 1))
             >>> b = Cell(RHEALPixDGGS(), ['N'])
             >>> print(a.subcell(b))
@@ -455,6 +462,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> c = Cell(RHEALPixDGGS(), ['N'])
             >>> print([str(cell) for cell in c.subcells()])
             ['N0', 'N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8']
@@ -487,6 +495,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import UNIT_003
             >>> c = Cell(UNIT_003, ['N', 0])
             >>> print(c.ul_vertex() == (-pi, 3*pi/4))
             True
@@ -536,6 +545,8 @@ class Cell(object):
         because not all cells contain their boundary.
 
         EXAMPLES::
+            >>> from rhealpixdggs.utils import my_round
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> rdggs = RHEALPixDGGS()
             >>> c = rdggs.cell(['P', 5, 7]) # Quad cell.
             >>> print(my_round(c.ul_vertex(plane=True), 14))
@@ -637,6 +648,8 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
+            >>> from rhealpixdggs.dggs import UNIT_003
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> print(my_round(c.nucleus(), 14))
@@ -668,6 +681,8 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
+            >>> from rhealpixdggs.dggs import UNIT_003, WGS84_003
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> for p in c.vertices():
@@ -752,6 +767,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import UNIT_003
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> c.xy_range() == ((-pi, -pi/2), (pi/4, 3*pi/4))
@@ -780,6 +796,8 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
+            >>> from rhealpixdggs.dggs import UNIT_003
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N', 6])
             >>> c.boundary(n=2, plane=True) == c.vertices(plane=True)
@@ -875,6 +893,8 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
+            >>> from rhealpixdggs.dggs import UNIT_003
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> for p in c.interior(n=2, plane=False, flatten=True):
@@ -925,6 +945,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import WGS84_003_RADIANS
             >>> rdggs = WGS84_003_RADIANS
             >>> p = (pi/4, 0)
             >>> c = rdggs.cell_from_point(2, p, plane=False)
@@ -948,6 +969,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import WGS84_003_RADIANS
             >>> rdggs = WGS84_003_RADIANS
             >>> c = rdggs.cell(['N', 6])
             >>> print(c.intersects_meridian(-pi))
@@ -1024,6 +1046,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> rdggs = RHEALPixDGGS()
             >>> print(Cell(rdggs, ['P', 2]).region())
             equatorial
@@ -1045,6 +1068,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> rdggs = RHEALPixDGGS()
             >>> print(Cell(rdggs, ['P', 2]).ellipsoidal_shape())
             quad
@@ -1094,6 +1118,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> rdggs = RHEALPixDGGS()
             >>> c = Cell(rdggs, ['P', 0, 2])
             >>> centroid = c.centroid()
@@ -1198,6 +1223,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> c = Cell(RHEALPixDGGS(), ['P', 2])
             >>> print([c.rotate_entry(0, t) for t in range(4)])
             [0, 2, 8, 6]
@@ -1240,6 +1266,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> c = Cell(RHEALPixDGGS(), ['N', 0])
             >>> print([str(c.rotate(t)) for t in range(4)])
             ['N0', 'N2', 'N8', 'N6']
@@ -1296,6 +1323,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> c = Cell(RHEALPixDGGS(), ['N', 0])
             >>> print(c.neighbor('down'))
             N3
@@ -1378,6 +1406,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> c = Cell(RHEALPixDGGS(), ['N', 0])
             >>> for k, v in sorted(c.neighbors().items()):
             ...     print(k, v)
@@ -1479,6 +1508,7 @@ class Cell(object):
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> c = Cell(RHEALPixDGGS(), ['N', 0])
             >>> print(c.random_point(plane=False))  # doctest: +SKIP
             (1.4840291937583836, 0.90042819146088571)
