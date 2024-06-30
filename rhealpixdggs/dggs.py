@@ -90,33 +90,36 @@ Find all the resolution 1 cells intersecting the longitude-latitude aligned elli
 
 Compute the ellipsoidal nuclei of these cells ::
 
-    >>> for row in cells:
-    ...     for cell in row:
-    ...         print(cell, cell.nucleus(plane=False))
-    N8 (0.0, 58.47067782962736)
-    N5 (45.000000000000036, 58.47067782962736)
-    N2 (90.00000000000003, 58.47067782962734)
-    Q0 (14.999999999999998, 26.438744923100096)
-    Q1 (45.0, 26.438744923100096)
-    Q2 (74.99999999999999, 26.438744923100096)
-    R0 (105.00000000000001, 26.438744923100096)
-    Q3 (14.999999999999998, 3.560649871414923e-15)
-    Q4 (45.0, 3.560649871414923e-15)
-    Q5 (74.99999999999999, 3.560649871414923e-15)
-    R3 (105.00000000000001, 3.560649871414923e-15)
-
-NOTES::  .. Issue #1 was ..
-    N8 (0.0, 58.470677829627363) *
-    N5 (45.000000000000036, 58.470677829627363) *
-    N2 (90.000000000000028, 58.470677829627355) *
-    Q0 (14.999999999999998, 26.438744923100096)
-    Q1 (45.0, 26.438744923100096)
-    Q2 (74.999999999999986, 26.438744923100096)
-    R0 (105.00000000000001, 26.438744923100096)
-    Q3 (14.999999999999998, 3.560649871414923e-15)
-    Q4 (45.0, 3.560649871414923e-15)
-    Q5 (74.999999999999986, 3.560649871414923e-15) *
-    R3 (105.00000000000001, 3.560649871414923e-15)
+    >>> expected_results = [
+    ...    [
+    ...        (0.0, 58.47067782962736),
+    ...        (45.000000000000036, 58.47067782962734),
+    ...        (89.99999999999996, 58.47067782962736)
+    ...    ], [
+    ...        (14.999999999999998, 26.438744923100096),
+    ...        (45.0, 26.438744923100096),
+    ...        (74.99999999999999, 26.438744923100096),
+    ...        (105.00000000000001, 26.438744923100096)
+    ...    ], [
+    ...        (14.999999999999998, 3.560649871414923e-15),
+    ...        (45.0, 3.560649871414923e-15),
+    ...        (74.99999999999999, 3.560649871414923e-15),
+    ...        (105.00000000000001, 3.560649871414923e-15)
+    ...    ]]
+    >>> for i, row in enumerate(cells):
+    ...     for j, cell in enumerate(row):
+    ...         print(cell, assert_allclose(cell.nucleus(plane=False), expected_results[i][j], rtol=1e-15, atol=0) == None)
+    N8 True
+    N5 True
+    N2 True
+    Q0 True
+    Q1 True
+    Q2 True
+    R0 True
+    Q3 True
+    Q4 True
+    Q5 True
+    R3 True
 
 Create a (0, 0)-rHEALPix DGGS with N_side = 3 based on the WGS84 ellipsoid.
 Use degrees instead of the default radians for angular measurements and
@@ -156,6 +159,7 @@ NOTES::  .. Issue #1 was ..
     Q3
 
 """
+
 # *****************************************************************************
 #       Copyright (C) 2012 Alexander Raichev <alex.raichev@gmail.com>
 #
@@ -180,6 +184,7 @@ from rhealpixdggs.ellipsoids import (
     UNIT_SPHERE_RADIANS,
 )
 from rhealpixdggs.utils import my_round
+from numpy.testing import assert_allclose
 
 
 class RHEALPixDGGS(object):
