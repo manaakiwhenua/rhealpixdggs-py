@@ -8,6 +8,7 @@ NOTE:
 All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
 """
+
 # *****************************************************************************
 #       Copyright (C) 2012 Alexander Raichev <alex.raichev@gmail.com>
 #
@@ -15,11 +16,8 @@ unless indicated otherwise.
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import third-party modules.
-from numpy import sqrt, log, sin, arcsin, deg2rad, rad2deg, sign
-
 # Import standard modules.
-from math import copysign, pi
+from math import asin, copysign, log, pi, sin, sqrt
 from typing import Any
 
 
@@ -142,58 +140,209 @@ def auth_lat(
 
     EXAMPLES::
 
-        >>> beta = auth_lat(pi/4, 0.5, radians=True)
+        >>> beta = auth_lat(pi/3, 0.08181919104281579, radians=True)
         >>> print(my_round(beta, 15))
-        0.68951821243544
+        1.045256493205824
 
-    NOTES:: .. Issue #1 was ..
-        0.689518212435
+        >>> print(my_round(auth_lat(beta, 0.08181919104281579, radians=True, inverse=True), 15))
+        1.047197551196598
 
-        >>> print(my_round(auth_lat(beta, 0.5, radians=True, inverse=True), 15))
-        0.785126523581272
-
-    NOTES:: .. Issue #1 was ..
-        0.785126523581
-
-        >>> print(my_round(pi/4, 15))
-        0.785398163397448
+        >>> print(my_round(pi/3, 15))
+        1.047197551196598
 
     NOTES:
 
-    The power series approximation used for the inverse is
-    standard in cartography (PROJ.4 uses it, for instance)
-    and accurate for small eccentricities.
+    For small flattenings f (f < 1/150), when calculating
+    authalic from common latitude, power series approximation
+    (from https://doi.org/10.48550/arXiv.2212.05818) gives
+    more accurate results than direct formula (for
+    double-precission accuracy). For the inverse, again power
+    series approximation is used, which is standard in
+    cartography for small flattenings. The one used in this
+    case is from https://doi.org/10.48550/arXiv.2212.05818
     """
     if e == 0:
         return phi
-    if not radians:
-        # Convert to radians to do calculations below.
-        phi = deg2rad(phi)
+    # Compute flattening f and third flattening n from eccentricity e.
+    f = 1 - sqrt(1 - e**2)
+    n = (1 - sqrt(1 - e**2)) / (1 + sqrt(1 - e**2))
+
     if not inverse:
-        # Compute authalic latitude from latitude phi.
-        q = ((1 - e**2) * sin(phi)) / (1 - (e * sin(phi)) ** 2) - (1 - e**2) / (
-            2.0 * e
-        ) * log((1 - e * sin(phi)) / (1 + e * sin(phi)))
-        qp = 1 - (1 - e**2) / (2.0 * e) * log((1.0 - e) / (1.0 + e))
-        ratio = q / qp
-        # Avoid rounding errors.
-        if abs(ratio) > 1:
-            # Make abs(ratio) = 1
-            ratio = sign(ratio)
-        result = arcsin(ratio)
+        # Compute authalic latitude from common latitude phi.
+        # For large flattenings (f > 1/150) use direct formula,
+        # for small flattenings (f <= 1/150) use power series.
+        if abs(f) > 1 / 150:
+            # Use direct formula for large flattenings.
+            if not radians:
+                # Convert to radians to do calculations below.
+                phi = phi * pi / 180
+            # Compute authalic latitude from latitude phi.
+            q = ((1 - e**2) * sin(phi)) / (1 - (e * sin(phi)) ** 2) - (1 - e**2) / (
+                2.0 * e
+            ) * log((1 - e * sin(phi)) / (1 + e * sin(phi)))
+            qp = 1 - (1 - e**2) / (2.0 * e) * log((1.0 - e) / (1.0 + e))
+            ratio = q / qp
+            # Avoid rounding errors.
+            if abs(ratio) > 1:
+                # Make abs(ratio) = 1
+                ratio = copysign(1, ratio)
+            result = asin(ratio)
+            if not radians:
+                result = result * 180 / pi
+            return result
+        else:
+            # Use power series approximation for small flattenings (f <= 1/150).
+            # Power series expansion taken from https://doi.org/10.48550/arXiv.2212.05818 (Equation A19)
+            if radians:
+                authalic_lat = phi + (
+                    (
+                        -4 / 3 * n
+                        - 4 / 45 * n**2
+                        + 88 / 315 * n**3
+                        + 538 / 4725 * n**4
+                        + 20824 / 467775 * n**5
+                        - 44732 / 2837835 * n**6
+                    )
+                    * sin(2 * phi)
+                    + (
+                        34 / 45 * n**2
+                        + 8 / 105 * n**3
+                        - 2482 / 14175 * n**4
+                        - 37192 / 467775 * n**5
+                        - 12467764 / 212837625 * n**6
+                    )
+                    * sin(4 * phi)
+                    + (
+                        -1532 / 2835 * n**3
+                        - 898 / 14175 * n**4
+                        + 54968 / 467775 * n**5
+                        + 100320856 / 1915538625 * n**6
+                    )
+                    * sin(6 * phi)
+                    + (
+                        6007 / 14175 * n**4
+                        + 24496 / 467775 * n**5
+                        - 5884124 / 70945875 * n**6
+                    )
+                    * sin(8 * phi)
+                    + (-23356 / 66825 * n**5 - 839792 / 19348875 * n**6) * sin(10 * phi)
+                    + (570284222 / 1915538625 * n**6) * sin(12 * phi)
+                )
+                return authalic_lat
+            else:
+                authalic_lat = phi * pi / 180 + (
+                    (
+                        -4 / 3 * n
+                        - 4 / 45 * n**2
+                        + 88 / 315 * n**3
+                        + 538 / 4725 * n**4
+                        + 20824 / 467775 * n**5
+                        - 44732 / 2837835 * n**6
+                    )
+                    * sin(2 * phi * pi / 180)
+                    + (
+                        34 / 45 * n**2
+                        + 8 / 105 * n**3
+                        - 2482 / 14175 * n**4
+                        - 37192 / 467775 * n**5
+                        - 12467764 / 212837625 * n**6
+                    )
+                    * sin(4 * phi * pi / 180)
+                    + (
+                        -1532 / 2835 * n**3
+                        - 898 / 14175 * n**4
+                        + 54968 / 467775 * n**5
+                        + 100320856 / 1915538625 * n**6
+                    )
+                    * sin(6 * phi * pi / 180)
+                    + (
+                        6007 / 14175 * n**4
+                        + 24496 / 467775 * n**5
+                        - 5884124 / 70945875 * n**6
+                    )
+                    * sin(8 * phi * pi / 180)
+                    + (-23356 / 66825 * n**5 - 839792 / 19348875 * n**6)
+                    * sin(10 * phi * pi / 180)
+                    + (570284222 / 1915538625 * n**6) * sin(12 * phi * pi / 180)
+                )
+                return authalic_lat * 180 / pi
     else:
-        # Compute an approximation of latitude from authalic latitude phi.
-        result = (
-            phi
-            + (e**2 / 3.0 + 31 * e**4 / 180.0 + 517 * e**6 / 5040.0)
-            * sin(2 * phi)
-            + (23 * e**4 / 360.0 + 251 * e**6 / 3780.0) * sin(4 * phi)
-            + (761 * e**6 / 45360.0) * sin(6 * phi)
-        )
-    if not radians:
-        # Convert back to degrees.
-        result = rad2deg(result)
-    return result
+        # Compute common latitude from authalic latitude phi.
+        # Power series expansion taken from https://doi.org/10.48550/arXiv.2212.05818 (Equation A20)
+        if radians:
+            common_lat = phi + (
+                (
+                    4 / 3 * n
+                    + 4 / 45 * n**2
+                    - 16 / 35 * n**3
+                    - 2582 / 14175 * n**4
+                    + 60136 / 467775 * n**5
+                    + 28112932 / 212837625 * n**6
+                )
+                * sin(2 * phi)
+                + (
+                    46 / 45 * n**2
+                    + 152 / 945 * n**3
+                    - 11966 / 14175 * n**4
+                    - 21016 / 51975 * n**5
+                    + 251310128 / 638512875 * n**6
+                )
+                * sin(4 * phi)
+                + (
+                    3044 / 2835 * n**3
+                    + 3802 / 14175 * n**4
+                    - 94388 / 66825 * n**5
+                    - 8797648 / 10945935 * n**6
+                )
+                * sin(6 * phi)
+                + (
+                    6059 / 4725 * n**4
+                    + 41072 / 93555 * n**5
+                    - 1472637812 / 638512875 * n**6
+                )
+                * sin(8 * phi)
+                + (768272 / 467775 * n**5 + 455935736 / 638512875 * n**6)
+                * sin(10 * phi)
+                + (4210684958 / 1915538625 * n**6) * sin(12 * phi)
+            )
+            return common_lat
+        else:
+            common_lat = phi * pi / 180 + (
+                (
+                    4 / 3 * n
+                    + 4 / 45 * n**2
+                    - 16 / 35 * n**3
+                    - 2582 / 14175 * n**4
+                    + 60136 / 467775 * n**5
+                    + 28112932 / 212837625 * n**6
+                )
+                * sin(2 * phi * pi / 180)
+                + (
+                    46 / 45 * n**2
+                    + 152 / 945 * n**3
+                    - 11966 / 14175 * n**4
+                    - 21016 / 51975 * n**5
+                    + 251310128 / 638512875 * n**6
+                )
+                * sin(4 * phi * pi / 180)
+                + (
+                    3044 / 2835 * n**3
+                    + 3802 / 14175 * n**4
+                    - 94388 / 66825 * n**5
+                    - 8797648 / 10945935 * n**6
+                )
+                * sin(6 * phi * pi / 180)
+                + (
+                    6059 / 4725 * n**4
+                    + 41072 / 93555 * n**5
+                    - 1472637812 / 638512875 * n**6
+                )
+                * sin(8 * phi * pi / 180)
+                + (768272 / 467775 * n**5 + 455935736 / 638512875 * n**6)
+                * sin(10 * phi * pi / 180)
+                + (4210684958 / 1915538625 * n**6) * sin(12 * phi * pi / 180)
+            )
+            return common_lat * 180 / pi
 
 
 def auth_rad(a: float, e: float, inverse: bool = False) -> float:
