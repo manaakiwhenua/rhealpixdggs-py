@@ -1,6 +1,6 @@
 # from rhealpixdggs.dggs import WGS84_003
 
-from numpy import array, base_repr, pi  # pi is just needed for the doctests
+from numpy import array, base_repr, pi  # pi is just for the doctests
 from scipy import integrate
 from itertools import product
 from random import uniform

@@ -437,7 +437,7 @@ class RHEALPixDGGS(object):
             south_square=self.south_square,
             region=region,
         )
-        return f(u, v, inverse=inverse, region=region)
+        return f(u, v, inverse=inverse)
 
     def combine_triangles(self, u, v, inverse=False, region="none"):
         """
@@ -810,6 +810,7 @@ class RHEALPixDGGS(object):
         else:
             # (x, y) doesn't lie in the DGGS.
             return None
+
         suid = [s0]
         if resolution == 0:
             # Done.

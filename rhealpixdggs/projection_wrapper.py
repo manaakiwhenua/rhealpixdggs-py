@@ -9,6 +9,7 @@ All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
 By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 """
+
 # *****************************************************************************
 #       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
 #
@@ -30,7 +31,8 @@ from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 # Homemade map projections, as opposed to those in the PROJ.4 library.
 # Remove 'healpix' and 'rhealpix' to use the PROJ.4 versions instead,
 # assuming you have the *correct/patched* PROJ.4 versions.
-HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
+# HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
+HOMEMADE_PROJECTIONS = {"isea", "csea", "qsc"}
 
 
 class Projection(object):
@@ -87,7 +89,7 @@ class Projection(object):
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 
-    def __call__(self, u, v, inverse=False, region="none"):
+    def __call__(self, u, v, inverse=False):
         ellipsoid = self.ellipsoid
         proj = self.proj
         kwargs = self.kwargs
@@ -105,7 +107,7 @@ class Projection(object):
                 print("Oops! Projection %s is not implemented." % proj)
                 return
         else:
-            # Use a projection from the PROJ.4 library.
+            # Use a projection from the PROJ library.
             f = pyproj.Proj(proj=proj, a=a, e=e, **kwargs)
         if not inverse:
             # Translate longitudes and latitudes so that
