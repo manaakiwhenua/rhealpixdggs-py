@@ -11,6 +11,7 @@ All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
 By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 """
+
 # *****************************************************************************
 #       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
 #
