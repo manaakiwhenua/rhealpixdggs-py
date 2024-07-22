@@ -154,6 +154,9 @@ class Cell(object):
             assert isinstance(suid, list) or isinstance(suid, tuple), (
                 "Cell suid must be a list or tuple. Got %s." % suid
             )
+            assert (len(suid) > 0) and (
+                len(suid) <= rdggs.max_resolution + 1
+            ), "Need 0 < len(suid) <= %s. Got %s." % (rdggs.max_resolution + 1, suid)
             assert suid[0] in CELLS0, "suid[0] must lie in %s. Got %s." % (
                 CELLS0,
                 suid[0],
@@ -161,9 +164,6 @@ class Cell(object):
             digits = set(range(self.N_side**2))
             for x in suid[1:]:
                 assert x in digits, "Digits of suid must lie in %s" % digits
-            assert (len(suid) > 0) and (
-                len(suid) <= rdggs.max_resolution + 1
-            ), "Need 0 < len(suid) <= %s. Got %s." % (rdggs.max_resolution + 1, suid)
 
             self.suid = [suid[0]] + [int(n) for n in suid[1:]]
             self.suid = tuple(self.suid)
