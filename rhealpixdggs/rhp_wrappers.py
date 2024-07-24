@@ -122,3 +122,14 @@ def rhp_get_resolution(rhpindex: str) -> int:
         return None
 
     return len(rhpindex) - 1
+
+
+def rhp_get_base_cell(rhpindex: str) -> str:
+    """
+    Returns the resolution 0 cell id of a given cell index (or None for an empty string).
+    """
+
+    if rhpindex is None or len(rhpindex) == 0:
+        return None
+
+    return rhpindex[0]

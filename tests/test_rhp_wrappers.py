@@ -112,6 +112,17 @@ class RhpWrappersTestCase(unittest.TestCase):
         # Typical case
         self.assertEqual(rhpw.rhp_get_resolution("N12345"), 5)
 
+    def test_rhp_get_base_cell(self):
+        # No index to resolve
+        self.assertIsNone(rhpw.rhp_get_base_cell(None))
+        self.assertIsNone(rhpw.rhp_get_base_cell(""))
+
+        # Base cell is self
+        self.assertEqual(rhpw.rhp_get_base_cell("N"), "N")
+
+        # Typical case
+        self.assertEqual(rhpw.rhp_get_base_cell("N12345"), "N")
+
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
