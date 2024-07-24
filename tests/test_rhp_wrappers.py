@@ -104,6 +104,14 @@ class RhpWrappersTestCase(unittest.TestCase):
             ),
         )
 
+    def test_rhp_get_resolution(self):
+        # No index to resolve
+        self.assertIsNone(rhpw.rhp_get_resolution(None))
+        self.assertIsNone(rhpw.rhp_get_resolution(""))
+
+        # Typical case
+        self.assertEqual(rhpw.rhp_get_resolution("N12345"), 5)
+
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":

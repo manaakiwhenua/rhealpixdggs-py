@@ -47,7 +47,7 @@ def rhp_to_geo(
 
     # rhealpix coordinates come out natively as lng/lat, h3 ones as lat/lng
     if not geo_json:
-        # Swap coordinates
+        # lng/lat -> lat/lng to make it consistent with h3
         centroid = centroid[::-1]
 
     return centroid
@@ -112,3 +112,13 @@ def rhp_to_geo_boundary(
         verts += (verts[0],)
 
     return verts
+
+
+def rhp_get_resolution(rhpindex: str) -> int:
+    """
+    Returns the resolution of a given cell index (or None for an empty string).
+    """
+    if rhpindex is None or len(rhpindex) == 0:
+        return None
+
+    return len(rhpindex) - 1
