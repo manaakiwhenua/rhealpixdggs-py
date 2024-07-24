@@ -3,6 +3,7 @@ This Python 3.11 code tests the ``rhp_wrappers`` module.
 Beware, these tests cover only some functions and only some scenarios.
 Keep adding tests!
 """
+
 # *****************************************************************************
 #       Copyright (C) 2023 Nicoletta De Maio <demaion@landcareresearch.co.nz>
 #
@@ -26,6 +27,31 @@ class RhpWrappersTestCase(unittest.TestCase):
         # Lower-level cell
         cell_id = rhpw.geo_to_rhp(0, 0, 7)
         self.assertEqual(cell_id, "Q3333333")
+
+    def test_rhp_to_geo(self):
+        # Cap cell without geojson
+        centroid = rhpw.rhp_to_geo("N", geo_json=False, plane=False)
+        self.assertEqual(centroid, (90, -180))
+
+        # Cap cell with geojson
+        centroid = rhpw.rhp_to_geo("N", plane=False)
+        self.assertEqual(centroid, (-180, 90))
+
+        # Dart cell without geojson
+        centroid = rhpw.rhp_to_geo("N0", geo_json=False, plane=False)
+        self.assertEqual(centroid, (52.948408366310105, 89.99999999999996))
+
+        # Dart cell with geojson
+        centroid = rhpw.rhp_to_geo("N0", plane=False)
+        self.assertEqual(centroid, (89.99999999999996, 52.948408366310105))
+
+        # Equatorial cell without geojson
+        centroid = rhpw.rhp_to_geo("Q", geo_json=False, plane=False)
+        self.assertEqual(centroid, (0, 45))
+
+        # Equatorial cell with geojson
+        centroid = rhpw.rhp_to_geo("Q", plane=False)
+        self.assertEqual(centroid, (45, 0))
 
     def test_rhp_to_parent(self):
         child_id = "N12345"

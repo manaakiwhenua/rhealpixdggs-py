@@ -25,6 +25,34 @@ def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> s
     return "".join([str(d) for d in cell.suid])
 
 
+def rhp_to_geo(
+    rhpindex: str, geo_json: bool = True, plane: bool = True
+) -> tuple[float, float]:
+    """
+    Look up the centroid (in degrees) of the cell identified by rhpindex.
+
+    If geojson is requested as the output format:
+        - Will return a (longitude, latitude) coordinate pair.
+
+    if geojson is NOT requested as the output format:
+        - Will return a (latitude, longitude) coordinate pair in order to be consistent with
+          h3 coordinate ordering.
+
+    TODO: give the option of requesting centroid coordinates in radians
+    """
+    # Grab cell centroid matching rhpindex string
+    suid = [int(d) if d.isdigit() else d for d in rhpindex]
+    cell = WGS84_003.cell(suid)
+    centroid = cell.centroid(plane=plane)
+
+    # rhealpix coordinates come out natively as lng/lat, h3 ones as lat/lng
+    if not geo_json:
+        # Swap coordinates
+        centroid = centroid[::-1]
+
+    return centroid
+
+
 def rhp_to_parent(rhpindex: str, res: int = None, verbose: bool = True) -> str:
     """
     Return parent of rhpindex at resolution res (immediate parent if res == None)
