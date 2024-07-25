@@ -62,30 +62,46 @@ class RhpWrappersTestCase(unittest.TestCase):
 
         # Usual case
         parent_id = rhpw.rhp_to_parent(child_id, 3)
-        self.assertEqual(parent_id, "N123")
+        self.assertEqual(parent_id, child_id[0:4])
 
         # Parent is top-level cell
         parent_id = rhpw.rhp_to_parent(child_id, 0)
-        self.assertEqual(parent_id, "N")
+        self.assertEqual(parent_id, child_id[0])
 
         # Immediate parent
         parent_id = rhpw.rhp_to_parent(child_id)
-        self.assertEqual(parent_id, "N1234")
+        self.assertEqual(parent_id, child_id[:-1])
 
-        # Chils is top-level cell
+        # Child is top-level cell
         parent_id = rhpw.rhp_to_parent("N")
         self.assertEqual(parent_id, "N")
 
         # Resolution mismatch (suppressing warning from inside function)
         parent_id = rhpw.rhp_to_parent(child_id, 7, False)
-        self.assertEqual(parent_id, "N12345")
+        self.assertEqual(parent_id, child_id)
 
         # Invalid child id
         parent_id = rhpw.rhp_to_parent("X")
         self.assertIsNone(parent_id)
 
     def rhp_to_center_child(self):
-        pass
+        parent_id = "N12345"
+
+        # Usual case
+        child_id = rhpw.rhp_to_center_child(parent_id, 9)
+        self.assertEqual(child_id, parent_id + "444")
+
+        # Immediate child
+        child_id = rhpw.rhp_to_center_child(parent_id)
+        self.assertEqual(child_id, parent_id + "4")
+
+        # Resolution mismatch (suppressing warning from inside function)
+        child_id = rhpw.rhp_to_center_child(child_id, 3, False)
+        self.assertEqual(child_id, parent_id)
+
+        # Invalid parent id
+        child_id = rhpw.rhp_to_center_child("X")
+        self.assertIsNone(child_id)
 
     def test_rhp_to_geo_boundary(self):
         expected_lat = -41.87385774220941

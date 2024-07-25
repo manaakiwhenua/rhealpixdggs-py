@@ -99,8 +99,43 @@ def rhp_to_parent(rhpindex: str, res: int = None, verbose: bool = True) -> str:
         return rhpindex[: res + 1]
 
 
-def rhp_to_center_child() -> str:  # TODO: function arguments
-    pass
+def rhp_to_center_child(
+    rhpindex: str, res: int = None, verbose: bool = True
+) -> str:  # TODO: function arguments
+    """
+    Returns central child of rhpindex at resolution res (immediate central
+    child if res == None).
+
+    Returns None if the cell index is invalid.
+
+    TODO: come up with a scheme for even numbers on a side
+    """
+    # Stop early if the cell index is invalid
+    if not rhp_is_valid(rhpindex):
+        return None
+
+    # Handle mismatch between cell resolution and requested child resolution
+    parent_res = len(rhpindex)
+    if res < parent_res:
+        if verbose:
+            print(
+                f"Warning: You requested a child resolution that is lower than the cell resolution. Returning the cell address itself."
+            )
+        return rhpindex
+
+    # Standard case (including parent_res == res)
+    else:
+        # res == None returns the central child from one level down (by convention)
+        added_levels = 1 if res is None else res - parent_res
+
+        # Derive index of centre child and append that to rhpindex
+        # NOTE: only works for odd values of N_side
+        c_index = (WGS84_003.N_side * WGS84_003.N_side - 1) / 2
+
+        # Append the required number of child digits to cell index
+        child_index = rhpindex + "".join(str(c_index) for d in range(0, added_levels))
+
+        return child_index
 
 
 def rhp_to_geo_boundary(
