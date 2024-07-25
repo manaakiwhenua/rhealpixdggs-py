@@ -29,6 +29,10 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(cell_id, "Q3333333")
 
     def test_rhp_to_geo(self):
+        # Invalid cell address
+        centroid = rhpw.rhp_to_geo("X")
+        self.assertIsNone(centroid)
+
         # Cap cell without geojson
         centroid = rhpw.rhp_to_geo("N", geo_json=False, plane=False)
         self.assertEqual(centroid, (90, -180))
@@ -76,6 +80,13 @@ class RhpWrappersTestCase(unittest.TestCase):
         parent_id = rhpw.rhp_to_parent(child_id, 7, False)
         self.assertEqual(parent_id, "N12345")
 
+        # Invalid child id
+        parent_id = rhpw.rhp_to_parent("X")
+        self.assertIsNone(parent_id)
+
+    def rhp_to_center_child(self):
+        pass
+
     def test_rhp_to_geo_boundary(self):
         expected_lat = -41.87385774220941
 
@@ -104,6 +115,10 @@ class RhpWrappersTestCase(unittest.TestCase):
             ),
         )
 
+        # Invalid cell address
+        corners = rhpw.rhp_to_geo_boundary("X")
+        self.assertIsNone(corners)
+
     def test_rhp_get_resolution(self):
         # No index to resolve
         self.assertIsNone(rhpw.rhp_get_resolution(None))
@@ -122,6 +137,23 @@ class RhpWrappersTestCase(unittest.TestCase):
 
         # Typical case
         self.assertEqual(rhpw.rhp_get_base_cell("N12345"), "N")
+
+    def test_rhp_is_valid(self):
+        # Empty strings are invalid
+        self.assertFalse(rhpw.rhp_is_valid(None))
+        self.assertFalse(rhpw.rhp_is_valid(""))
+
+        # Addresses that don't start with the resolution 0 face are invalid
+        self.assertFalse(rhpw.rhp_is_valid("blubb"))
+
+        # Addresses that have digits out of range are invalid
+        self.assertFalse(rhpw.rhp_is_valid("N123A5"))
+
+        # Typical valid case
+        self.assertTrue(rhpw.rhp_is_valid("N12345"))
+
+    def test_cell_area(self):
+        pass
 
 
 # ------------------------------------------------------------------------------
