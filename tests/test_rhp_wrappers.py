@@ -96,7 +96,7 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(child_id, parent_id + "4")
 
         # Resolution mismatch (suppressing warning from inside function)
-        child_id = rhpw.rhp_to_center_child(child_id, 3, False)
+        child_id = rhpw.rhp_to_center_child(parent_id, 3, False)
         self.assertEqual(child_id, parent_id)
 
         # Invalid parent id

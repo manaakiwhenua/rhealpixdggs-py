@@ -116,7 +116,7 @@ def rhp_to_center_child(
 
     # Handle mismatch between cell resolution and requested child resolution
     parent_res = len(rhpindex)
-    if res < parent_res:
+    if res is not None and res < parent_res:
         if verbose:
             print(
                 f"Warning: You requested a child resolution that is lower than the cell resolution. Returning the cell address itself."
