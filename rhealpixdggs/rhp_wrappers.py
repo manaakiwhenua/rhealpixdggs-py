@@ -1,3 +1,5 @@
+from typing import Literal
+
 # Pre-defined DGGS using WGS84 ellipsoid and n == 3 for cell side subpartitioning
 from rhealpixdggs.dggs import WGS84_003
 
@@ -128,7 +130,7 @@ def rhp_to_center_child(rhpindex: str, res: int = None, verbose: bool = True) ->
 
         # Derive index of centre child and append that to rhpindex
         # NOTE: only works for odd values of N_side
-        c_index = int((WGS84_003.N_side * WGS84_003.N_side - 1) / 2)
+        c_index = int((WGS84_003.N_side**2 - 1) / 2)
 
         # Append the required number of child digits to cell index
         child_index = rhpindex + "".join(str(c_index) for _ in range(0, added_levels))
@@ -217,7 +219,7 @@ def rhp_is_valid(rhpindex: str) -> bool:
         return False
 
     # Addresses that have digits out of range are invalid
-    num_subcells = WGS84_003.N_side * WGS84_003.N_side
+    num_subcells = WGS84_003.N_side**2
     for d in rhpindex[1:]:
         if not d.isdigit() or (int(d) >= num_subcells):
             return False
@@ -226,5 +228,22 @@ def rhp_is_valid(rhpindex: str) -> bool:
     return True
 
 
-def cell_area() -> float:  # TODO: function arguments
-    pass
+def cell_area(
+    rhpindex: str, unit: Literal["km^2", "m^2"] = "km^2", plane=True
+) -> float:
+    """
+    Returns the area of a cell in the requested unit (or None if the cell id is invalid).
+    """
+    if not rhp_is_valid(rhpindex):
+        return None
+
+    # Grab cell area in native unit (m^2)
+    suid = [int(d) if d.isdigit() else d for d in rhpindex]
+    cell = WGS84_003.cell(suid)
+    area = cell.area(plane=plane)
+
+    # Scale area if needed
+    if unit == "km^2":
+        area = area / 10**6
+
+    return area

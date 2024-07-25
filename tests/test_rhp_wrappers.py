@@ -169,7 +169,20 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertTrue(rhpw.rhp_is_valid("N12345"))
 
     def test_cell_area(self):
-        pass
+        cell_id = "N12345"
+        expected_m2 = 1697972133.2114245
+
+        # Cell area in km^2
+        area = rhpw.cell_area(cell_id)
+        self.assertEqual(area, expected_m2 / 10**6)
+
+        # Cell area in m^2
+        area = rhpw.cell_area(cell_id, "m^2")
+        self.assertEqual(area, expected_m2)
+
+        # Invalid cell id
+        area = rhpw.cell_area("X")
+        self.assertIsNone(area)
 
 
 # ------------------------------------------------------------------------------
