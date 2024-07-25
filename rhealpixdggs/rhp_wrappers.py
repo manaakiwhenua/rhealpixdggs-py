@@ -99,9 +99,7 @@ def rhp_to_parent(rhpindex: str, res: int = None, verbose: bool = True) -> str:
         return rhpindex[: res + 1]
 
 
-def rhp_to_center_child(
-    rhpindex: str, res: int = None, verbose: bool = True
-) -> str:  # TODO: function arguments
+def rhp_to_center_child(rhpindex: str, res: int = None, verbose: bool = True) -> str:
     """
     Returns central child of rhpindex at resolution res (immediate central
     child if res == None).
@@ -130,10 +128,10 @@ def rhp_to_center_child(
 
         # Derive index of centre child and append that to rhpindex
         # NOTE: only works for odd values of N_side
-        c_index = (WGS84_003.N_side * WGS84_003.N_side - 1) / 2
+        c_index = int((WGS84_003.N_side * WGS84_003.N_side - 1) / 2)
 
         # Append the required number of child digits to cell index
-        child_index = rhpindex + "".join(str(c_index) for d in range(0, added_levels))
+        child_index = rhpindex + "".join(str(c_index) for _ in range(0, added_levels))
 
         return child_index
 
