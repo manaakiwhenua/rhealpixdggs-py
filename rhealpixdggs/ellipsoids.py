@@ -63,7 +63,7 @@ class Ellipsoid(object):
       the north polar region in the context of the (r)HEALPix projection.
 
     Except for phi_0, these attribute names match the names of the
-    `PROJ.4 ellipsoid parameters <http://trac.osgeo.org/proj/wiki/GenParms>`_.
+    `PROJ ellipsoid parameters <https://proj.org/en/9.4/usage/ellipsoids.html#ellipsoid-spherification-parameters>`
     """
 
     def __init__(
