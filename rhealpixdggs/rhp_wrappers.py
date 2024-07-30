@@ -247,3 +247,65 @@ def cell_area(
         area = area / 10**6
 
     return area
+
+
+def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
+    """
+    Returns the ring of cells around rhpindex at distance k, in clockwise order and without
+    duplicates (or None if the rhpindex is invalid).
+
+    Also returns None if k < 0.
+
+    Returns [ rhpindex ] if k == 0 (by convention).
+
+    Returns the four neighbouring faces at resolution 0 if k > 0 and cell resolution is 0
+    (by convention).
+
+    TODO: this only works for planar cells, add support for non-planar ones
+    """
+    if not rhp_is_valid(rhpindex) or (k < 0):
+        return None
+
+    # A cell ring at distance 0 just consists of the cell itself
+    if k == 0:
+        return [rhpindex]
+
+    # Grab the centre cell
+    suid = [int(d) if d.isdigit() else d for d in rhpindex]
+    cell = WGS84_003.cell(suid)
+
+    # Init the ring and directions
+    ring = []
+    directions = ["right", "down", "left", "up"]
+
+    # Top-level cells (cube faces) are special
+    if len(rhpindex) == 1:
+        for direction in directions:
+            ring.append(cell.neighbor(direction).suid[0])
+
+    # Start in the NW corner of the ring: it's k times W and k times N
+    else:
+        for _ in range(0, k):
+            # One step W, one N
+            cell = cell.neighbor("left")
+            cell = cell.neighbor("up")
+
+        # Walk around the ring one side at a time and collect cell addresses
+        for direction in directions:
+            for _ in range(0, 2 * k):
+                # Add index to ring, take a step
+                ring.append("".join([str(d) for d in cell.suid]))
+                cell = cell.neighbor(direction)
+
+    return _eliminate_duplicates(ring)
+
+
+def _eliminate_duplicates(l: list) -> list:
+    u = []
+
+    if l is not None:
+        for i in l:
+            if i not in u:
+                u.append(i)
+
+    return u
