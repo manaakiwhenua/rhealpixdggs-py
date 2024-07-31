@@ -232,7 +232,9 @@ def cell_area(
     rhpindex: str, unit: Literal["km^2", "m^2"] = "km^2", plane=True
 ) -> float:
     """
-    Returns the area of a cell in the requested unit (or None if the cell id is invalid).
+    Returns the area of a cell in the requested unit (or None if rhpindex is invalid).
+
+    TODO: investigate use case where unit is 'rads^2'
     """
     if not rhp_is_valid(rhpindex):
         return None
@@ -251,8 +253,8 @@ def cell_area(
 
 def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
     """
-    Returns the ring of cells around rhpindex at distance k, in clockwise order and without
-    duplicates (or None if the rhpindex is invalid).
+    Returns the ring of cell indices around rhpindex at distance k, in clockwise order and
+    without duplicates (or None if rhpindex is invalid).
 
     Also returns None if k < 0.
 
@@ -260,8 +262,6 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
 
     Returns the four neighbouring faces at resolution 0 if k > 0 and cell resolution is 0
     (by convention).
-
-    TODO: this only works for planar cells, add support for non-planar ones
     """
     if not rhp_is_valid(rhpindex) or (k < 0):
         return None
@@ -283,10 +283,10 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
         for direction in directions:
             ring.append(cell.neighbor(direction).suid[0])
 
-    # Start in the NW corner of the ring: it's k times W and k times N
+    # Start in the upper left corner of the ring: it's k times up and k times left
     else:
         for _ in range(0, k):
-            # One step W, one N
+            # One pair of steps at a time
             cell = cell.neighbor("left")
             cell = cell.neighbor("up")
 
@@ -301,11 +301,15 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
 
 
 def _eliminate_duplicates(l: list) -> list:
-    u = []
-
+    """
+    Helper function to eliminate duplicates in a list while preserving list order
+    """
     if l is not None:
+        u = []
         for i in l:
             if i not in u:
                 u.append(i)
 
-    return u
+        return u
+
+    return None
