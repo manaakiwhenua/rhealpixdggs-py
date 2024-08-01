@@ -243,18 +243,32 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertListEqual(ring, ["P3", "P4", "P5", "P8", "S8", "S5", "S2", "P6"])
 
         # Neighbours across polar cap edges (third equatorial region)
-        # ring = rhpw.cell_ring("Q1")
-        # self.assertListEqual(ring, ["N2", "N1", "N0", "Q2", "Q5", "Q4", "Q3", "Q0"])
+        ring = rhpw.cell_ring("Q1")
+        self.assertListEqual(ring, ["N2", "N1", "N0", "Q2", "Q5", "Q4", "Q3", "Q0"])
 
-        # ring = rhpw.cell_ring("Q7")
-        # self.assertListEqual(ring, ["Q3", "Q4", "Q5", "Q8", "S8", "S7", "S6", "Q6"])
+        ring = rhpw.cell_ring("Q7")
+        self.assertListEqual(ring, ["Q3", "Q4", "Q5", "Q8", "S6", "S7", "S8", "Q6"])
 
         # Neighbours across polar cap edges (fourth equatorial region)
-        # ring = rhpw.cell_ring("R1")
-        # self.assertListEqual(ring, ["N0", "N3", "N6", "R2", "R5", "R4", "R3", "R0"])
+        ring = rhpw.cell_ring("R1")
+        self.assertListEqual(ring, ["N0", "N3", "N6", "R2", "R5", "R4", "R3", "R0"])
 
-        # ring = rhpw.cell_ring("R7")
-        # self.assertListEqual(ring, ["R3", "R4", "R5", "R8", "S0", "S3", "S6", "R6"])
+        ring = rhpw.cell_ring("R7")
+        self.assertListEqual(ring, ["R3", "R4", "R5", "R8", "S0", "S3", "S6", "R6"])
+
+        # Neighbours across equatorial region (north polar cap)
+        ring = rhpw.cell_ring("N3")
+        self.assertListEqual(ring, ["R0", "N0", "N1", "N4", "N7", "N6", "R2", "R1"])
+
+        # ring = rhpw.cell_ring("N5")
+        # TODO: assertion
+
+        # TODO: neighbours across equatorial region (south polar cap)
+        # ring = rhpw.cell_ring("S3")
+        # TODO: assertion
+
+        # ring rhpw.cell_ring("S5")
+        # TODO: assertion
 
         # Neighbours across corner and edges
         # TODO: "O0", "O2", "P0", "P2", "Q0"

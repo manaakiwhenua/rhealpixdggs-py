@@ -3,6 +3,8 @@ from typing import Literal
 # Pre-defined DGGS using WGS84 ellipsoid and n == 3 for cell side subpartitioning
 from rhealpixdggs.dggs import WGS84_003
 
+from rhealpixdggs.dggs import Cell
+
 
 def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> str:
     """
@@ -285,17 +287,57 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
 
     # Start in the upper left corner of the ring: it's k times up and k times left
     else:
+        # Mapping to detect direction changes
+        direction_inverse = {
+            "right": "left",
+            "down": "up",
+            "left": "right",
+            "up": "down",
+        }
+        # Always start by going left
+        dir_idx = directions.index("left")
+
+        # Work your way to the starting point
         for _ in range(0, k):
-            # One pair of steps at a time
-            cell = cell.neighbor("left")
-            cell = cell.neighbor("up")
+            # One step to local left
+            direction = directions[dir_idx]
+            next = cell.neighbor(direction)
+            # Looking back not being the same as looking ahead means we need to realign
+            if next.neighbor(direction_inverse[direction]) != cell:
+                dir_idx = directions.index(
+                    direction_inverse[_neighbor_direction(next, cell)]
+                )
+            cell = next
+
+            # One step to local up
+            direction = directions[(dir_idx + 1) % len(directions)]
+            next = cell.neighbor(direction)
+            # Looking back not being the same as looking ahead means we need to realign
+            if next.neighbor(direction_inverse[direction]) != cell:
+                dir_idx = (
+                    directions.index(direction_inverse[_neighbor_direction(next, cell)])
+                    - 1
+                ) % len(directions)
+            cell = next
+
+        # Initialise walking direction
+        direction = direction_inverse[directions[dir_idx]]
 
         # Walk around the ring one side at a time and collect cell addresses
-        for direction in directions:
+        for _ in range(0, len(directions)):
             for _ in range(0, 2 * k):
                 # Add index to ring, take a step
                 ring.append("".join([str(d) for d in cell.suid]))
-                cell = cell.neighbor(direction)
+                next = cell.neighbor(direction)
+
+                # Looking back not being the same as looking ahead means we need to realign
+                if next.neighbor(direction_inverse[direction]) != cell:
+                    direction = direction_inverse[_neighbor_direction(next, cell)]
+
+                cell = next
+
+            # Update walking direction before going around a corner
+            direction = directions[(directions.index(direction) + 1) % len(directions)]
 
     return _eliminate_duplicates(ring)
 
@@ -311,5 +353,14 @@ def _eliminate_duplicates(l: list) -> list:
                 u.append(i)
 
         return u
+
+    return None
+
+
+def _neighbor_direction(cell: Cell, neighbor: Cell) -> str:
+    n_dict = cell.neighbors()
+    for dir in n_dict:
+        if n_dict[dir] == neighbor:
+            return dir
 
     return None
