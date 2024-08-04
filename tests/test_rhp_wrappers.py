@@ -260,25 +260,70 @@ class RhpWrappersTestCase(unittest.TestCase):
         ring = rhpw.cell_ring("N3")
         self.assertListEqual(ring, ["R0", "N0", "N1", "N4", "N7", "N6", "R2", "R1"])
 
-        # ring = rhpw.cell_ring("N5")
-        # TODO: assertion
+        ring = rhpw.cell_ring("N5")
+        self.assertListEqual(ring, ["N1", "N2", "P2", "P1", "P0", "N8", "N7", "N4"])
 
-        # TODO: neighbours across equatorial region (south polar cap)
-        # ring = rhpw.cell_ring("S3")
-        # TODO: assertion
+        # Neighbours across equatorial region (south polar cap)
+        ring = rhpw.cell_ring("S3")
+        self.assertListEqual(ring, ["R8", "S0", "S1", "S4", "S7", "S6", "R6", "R7"])
 
-        # ring rhpw.cell_ring("S5")
-        # TODO: assertion
+        ring = rhpw.cell_ring("S5")
+        self.assertListEqual(ring, ["S1", "S2", "P6", "P7", "P8", "S8", "S7", "S4"])
 
-        # Neighbours across corner and edges
-        # TODO: "O0", "O2", "P0", "P2", "Q0"
+        # Neighbours across corner and edges (first equatorial region)
+        # ring = rhpw.cell_ring("O0")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("O2")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("O6")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("O8")
+        # self.assertListEqual(ring, [])
+
+        # Neighbours across corner and edges (second equatorial region)
+        # ring = rhpw.cell_ring("P0")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("P2")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("P6")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("P8")
+        # self.assertListEqual(ring, [])
+
+        # Neighbours across corner and edges (third equatorial region)
+        # ring = rhpw.cell_ring("Q0")
+        # self.assertListEqual(ring, [])
+
         # ring = rhpw.cell_ring("Q2")
         # self.assertListEqual(ring, ["N1", "N0", "R0", "R3", "Q4", "Q3", "Q1"])
-        # TODO: "R0", "R2"
-        # TODO: "O6", "O8", "P6", "P8", "Q6", "Q8", "R6", "R8"
+
+        # ring = rhpw.cell_ring("Q6")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("Q8")
+        # self.assertListEqual(ring, [])
+
+        # Neighbours across corner and edges (fourth equatorial region)
+        # ring = rhpw.cell_ring("R0")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("R2")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("R6")
+        # self.assertListEqual(ring, [])
+
+        # ring = rhpw.cell_ring("R8")
+        # self.assertListEqual(ring, [])
 
         # Cell ring at a distance beyond the resolution
-        # TODO
+        # TODO: k should clamp to resolution + 1?
 
         # Top-level cell (regular case)
         ring = rhpw.cell_ring(cellidx[0])
