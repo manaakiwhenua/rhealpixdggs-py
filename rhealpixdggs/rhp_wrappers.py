@@ -3,7 +3,7 @@ from typing import Literal
 # Pre-defined DGGS using WGS84 ellipsoid and n == 3 for cell side subpartitioning
 from rhealpixdggs.dggs import WGS84_003
 
-from rhealpixdggs.dggs import Cell
+from rhealpixdggs.cell import Cell, CELLS0
 
 
 def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> str:
@@ -217,7 +217,7 @@ def rhp_is_valid(rhpindex: str) -> bool:
         return False
 
     # Addresses that don't start with the resolution 0 face are invalid
-    if rhpindex[0] not in WGS84_003.cells0:
+    if rhpindex[0] not in CELLS0:
         return False
 
     # Addresses that have digits out of range are invalid
