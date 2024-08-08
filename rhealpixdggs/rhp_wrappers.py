@@ -6,6 +6,9 @@ from rhealpixdggs.dggs import WGS84_003
 from rhealpixdggs.cell import Cell, CELLS0
 
 
+# ======== Main API ======== #
+
+
 def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> str:
     """
     Turn a latitute and longitude (in degrees) into an rHEALPix cell address at
@@ -347,13 +350,11 @@ def k_ring(rhpindex: str, k: int = 1) -> list[str]:
     Returns the k-ring of cell indices around rhpindex at distance k (or None if rhpindex is invalid).
 
     Also returns None if k < 0.
-
-    Returns [ rhpindex ] if k == 0 (by convention).
     """
     if not rhp_is_valid(rhpindex) or (k < 0):
         return None
 
-    # A cell ring at distance 0 just consists of the cell itself
+    # A k-ring at distance 0 just consists of the centre cell itself
     if k == 0:
         return [rhpindex]
 
@@ -364,6 +365,9 @@ def k_ring(rhpindex: str, k: int = 1) -> list[str]:
         kring = kring + cell_ring(rhpindex, d)
 
     return kring
+
+
+# ======== Helper functions ======== #
 
 
 def _neighbor_direction(cell: Cell, neighbor: Cell) -> str:
