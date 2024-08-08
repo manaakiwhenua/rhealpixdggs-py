@@ -339,22 +339,31 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
             # Update walking direction before going around a corner
             direction = directions[(directions.index(direction) + 1) % len(directions)]
 
-    return _eliminate_duplicates(ring)
+    return ring
 
 
-def _eliminate_duplicates(l: list) -> list:
+def k_ring(rhpindex: str, k: int = 1) -> list[str]:
     """
-    Helper function to eliminate duplicates in a list while preserving list order
+    Returns the k-ring of cell indices around rhpindex at distance k (or None if rhpindex is invalid).
+
+    Also returns None if k < 0.
+
+    Returns [ rhpindex ] if k == 0 (by convention).
     """
-    if l is not None:
-        u = []
-        for i in l:
-            if i not in u:
-                u.append(i)
+    if not rhp_is_valid(rhpindex) or (k < 0):
+        return None
 
-        return u
+    # A cell ring at distance 0 just consists of the cell itself
+    if k == 0:
+        return [rhpindex]
 
-    return None
+    distance = _clamp_distance(rhpindex, k)
+    kring = [rhpindex]
+
+    for d in range(1, distance + 1):
+        kring = kring + cell_ring(rhpindex, d)
+
+    return kring
 
 
 def _neighbor_direction(cell: Cell, neighbor: Cell) -> str:
@@ -364,3 +373,14 @@ def _neighbor_direction(cell: Cell, neighbor: Cell) -> str:
             return dir
 
     return None
+
+
+def _clamp_distance(rhpindex: str, k: int) -> int:
+    """
+    TODO: give the option to select another predefined DGGS, or pass in a custom one
+    """
+    resolution = len(rhpindex) - 1
+    circumference = 4 * resolution * WGS84_003.N_side
+    max_dist = int(circumference / 2)
+
+    return min(k, max_dist)
