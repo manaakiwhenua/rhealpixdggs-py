@@ -68,22 +68,17 @@ def wrap_longitude(lam: float, radians: bool = False) -> float:
 
     """
     if radians:
-        if lam < -pi or lam >= pi:
-            result = lam % (2 * pi)
-            if result >= pi:
-                result = result - 2 * pi
-        else:
-            result = lam
-        return result
-
+        half_range = pi
     else:
-        if lam < -180 or lam >= 180:
-            result = lam % (360)
-            if result >= 180:
-                result = result - 360
-        else:
-            result = lam
-        return result
+        half_range = 180
+
+    if lam < -half_range or lam >= half_range:
+        result = lam % (2 * half_range)
+        if result >= half_range:
+            result = result - 2 * half_range
+    else:
+        result = lam
+    return result
 
 
 def wrap_latitude(phi: float, radians: bool = False) -> float:
@@ -117,17 +112,15 @@ def wrap_latitude(phi: float, radians: bool = False) -> float:
     phi = wrap_longitude(phi, radians=radians)
 
     if radians:
-        if abs(phi) <= pi / 2:
-            result = phi
-        else:
-            result = phi - copysign(pi, phi)
-        return result
+        half_range = pi
     else:
-        if abs(phi) <= 180 / 2:
-            result = phi
-        else:
-            result = phi - copysign(180, phi)
-        return result
+        half_range = 180
+
+    if abs(phi) <= half_range / 2:
+        result = phi
+    else:
+        result = phi - copysign(half_range, phi)
+    return result
 
 
 def auth_lat(
@@ -193,156 +186,171 @@ def auth_lat(
         else:
             # Use power series approximation for small flattenings (f <= 1/150).
             # Power series expansion taken from https://doi.org/10.48550/arXiv.2212.05818 (Equation A19)
-            if radians:
-                authalic_lat = phi + (
-                    (
-                        -4 / 3 * n
-                        - 4 / 45 * n**2
-                        + 88 / 315 * n**3
-                        + 538 / 4725 * n**4
-                        + 20824 / 467775 * n**5
-                        - 44732 / 2837835 * n**6
+            if not radians:
+                phi = phi * pi / 180
+
+            authalic_lat = phi + (
+                n
+                * (
+                    -4 / 3
+                    + n
+                    * (
+                        -4 / 45
+                        + n
+                        * (
+                            88 / 315
+                            + n
+                            * (
+                                538 / 4725
+                                + n * (20824 / 467775 + n * (-44732 / 2837835))
+                            )
+                        )
                     )
-                    * sin(2 * phi)
-                    + (
-                        34 / 45 * n**2
-                        + 8 / 105 * n**3
-                        - 2482 / 14175 * n**4
-                        - 37192 / 467775 * n**5
-                        - 12467764 / 212837625 * n**6
-                    )
-                    * sin(4 * phi)
-                    + (
-                        -1532 / 2835 * n**3
-                        - 898 / 14175 * n**4
-                        + 54968 / 467775 * n**5
-                        + 100320856 / 1915538625 * n**6
-                    )
-                    * sin(6 * phi)
-                    + (
-                        6007 / 14175 * n**4
-                        + 24496 / 467775 * n**5
-                        - 5884124 / 70945875 * n**6
-                    )
-                    * sin(8 * phi)
-                    + (-23356 / 66825 * n**5 - 839792 / 19348875 * n**6) * sin(10 * phi)
-                    + (570284222 / 1915538625 * n**6) * sin(12 * phi)
                 )
-                return authalic_lat
-            else:
-                authalic_lat = phi * pi / 180 + (
-                    (
-                        -4 / 3 * n
-                        - 4 / 45 * n**2
-                        + 88 / 315 * n**3
-                        + 538 / 4725 * n**4
-                        + 20824 / 467775 * n**5
-                        - 44732 / 2837835 * n**6
+                * sin(2 * phi)
+                + n
+                * (
+                    n
+                    * (
+                        34 / 45
+                        + n
+                        * (
+                            8 / 105
+                            + n
+                            * (
+                                -2482 / 14175
+                                + n * (-37192 / 467775 + n * (-12467764 / 212837625))
+                            )
+                        )
                     )
-                    * sin(2 * phi * pi / 180)
-                    + (
-                        34 / 45 * n**2
-                        + 8 / 105 * n**3
-                        - 2482 / 14175 * n**4
-                        - 37192 / 467775 * n**5
-                        - 12467764 / 212837625 * n**6
-                    )
-                    * sin(4 * phi * pi / 180)
-                    + (
-                        -1532 / 2835 * n**3
-                        - 898 / 14175 * n**4
-                        + 54968 / 467775 * n**5
-                        + 100320856 / 1915538625 * n**6
-                    )
-                    * sin(6 * phi * pi / 180)
-                    + (
-                        6007 / 14175 * n**4
-                        + 24496 / 467775 * n**5
-                        - 5884124 / 70945875 * n**6
-                    )
-                    * sin(8 * phi * pi / 180)
-                    + (-23356 / 66825 * n**5 - 839792 / 19348875 * n**6)
-                    * sin(10 * phi * pi / 180)
-                    + (570284222 / 1915538625 * n**6) * sin(12 * phi * pi / 180)
                 )
-                return authalic_lat * 180 / pi
+                * sin(4 * phi)
+                + n
+                * (
+                    n
+                    * (
+                        n
+                        * (
+                            -1532 / 2835
+                            + n
+                            * (
+                                -898 / 14175
+                                + n * (54968 / 467775 + n * 100320856 / 1915538625)
+                            )
+                        )
+                    )
+                )
+                * sin(6 * phi)
+                + n
+                * (
+                    n
+                    * (
+                        n
+                        * (
+                            n
+                            * (
+                                6007 / 14175
+                                + n * (24496 / 467775 + n * (-5884124 / 70945875))
+                            )
+                        )
+                    )
+                )
+                * sin(8 * phi)
+                + n
+                * (n * (n * (n * (n * (-23356 / 66825 + n * (-839792 / 19348875))))))
+                * sin(10 * phi)
+                + n
+                * (n * (n * (n * (n * (n * 570284222 / 1915538625)))))
+                * sin(12 * phi)
+            )
+
+            if not radians:
+                authalic_lat = authalic_lat * 180 / pi
+
+            return authalic_lat
     else:
         # Compute common latitude from authalic latitude phi.
         # Power series expansion taken from https://doi.org/10.48550/arXiv.2212.05818 (Equation A20)
-        if radians:
-            common_lat = phi + (
-                (
-                    4 / 3 * n
-                    + 4 / 45 * n**2
-                    - 16 / 35 * n**3
-                    - 2582 / 14175 * n**4
-                    + 60136 / 467775 * n**5
-                    + 28112932 / 212837625 * n**6
+        if not radians:
+            phi = phi * pi / 180
+
+        common_lat = phi + (
+            n
+            * (
+                4 / 3
+                + n
+                * (
+                    4 / 45
+                    + n
+                    * (
+                        -16 / 35
+                        + n
+                        * (
+                            -2582 / 14175
+                            + n * (60136 / 467775 + n * 28112932 / 212837625)
+                        )
+                    )
                 )
-                * sin(2 * phi)
-                + (
-                    46 / 45 * n**2
-                    + 152 / 945 * n**3
-                    - 11966 / 14175 * n**4
-                    - 21016 / 51975 * n**5
-                    + 251310128 / 638512875 * n**6
-                )
-                * sin(4 * phi)
-                + (
-                    3044 / 2835 * n**3
-                    + 3802 / 14175 * n**4
-                    - 94388 / 66825 * n**5
-                    - 8797648 / 10945935 * n**6
-                )
-                * sin(6 * phi)
-                + (
-                    6059 / 4725 * n**4
-                    + 41072 / 93555 * n**5
-                    - 1472637812 / 638512875 * n**6
-                )
-                * sin(8 * phi)
-                + (768272 / 467775 * n**5 + 455935736 / 638512875 * n**6)
-                * sin(10 * phi)
-                + (4210684958 / 1915538625 * n**6) * sin(12 * phi)
             )
-            return common_lat
-        else:
-            common_lat = phi * pi / 180 + (
-                (
-                    4 / 3 * n
-                    + 4 / 45 * n**2
-                    - 16 / 35 * n**3
-                    - 2582 / 14175 * n**4
-                    + 60136 / 467775 * n**5
-                    + 28112932 / 212837625 * n**6
+            * sin(2 * phi)
+            + n
+            * (
+                n
+                * (
+                    46 / 45
+                    + n
+                    * (
+                        152 / 945
+                        + n
+                        * (
+                            -11966 / 14175
+                            + n * (-21016 / 51975 + n * 251310128 / 638512875)
+                        )
+                    )
                 )
-                * sin(2 * phi * pi / 180)
-                + (
-                    46 / 45 * n**2
-                    + 152 / 945 * n**3
-                    - 11966 / 14175 * n**4
-                    - 21016 / 51975 * n**5
-                    + 251310128 / 638512875 * n**6
-                )
-                * sin(4 * phi * pi / 180)
-                + (
-                    3044 / 2835 * n**3
-                    + 3802 / 14175 * n**4
-                    - 94388 / 66825 * n**5
-                    - 8797648 / 10945935 * n**6
-                )
-                * sin(6 * phi * pi / 180)
-                + (
-                    6059 / 4725 * n**4
-                    + 41072 / 93555 * n**5
-                    - 1472637812 / 638512875 * n**6
-                )
-                * sin(8 * phi * pi / 180)
-                + (768272 / 467775 * n**5 + 455935736 / 638512875 * n**6)
-                * sin(10 * phi * pi / 180)
-                + (4210684958 / 1915538625 * n**6) * sin(12 * phi * pi / 180)
             )
-            return common_lat * 180 / pi
+            * sin(4 * phi)
+            + n
+            * (
+                n
+                * (
+                    n
+                    * (
+                        3044 / 2835
+                        + n
+                        * (
+                            3802 / 14175
+                            + n * (-94388 / 66825 + n * (-8797648 / 10945935))
+                        )
+                    )
+                )
+            )
+            * sin(6 * phi)
+            + n
+            * (
+                n
+                * (
+                    n
+                    * (
+                        n
+                        * (
+                            6059 / 4725
+                            + n * (41072 / 93555 + n * (-1472637812 / 638512875))
+                        )
+                    )
+                )
+            )
+            * sin(8 * phi)
+            + n
+            * (n * (n * (n * (n * (768272 / 467775 + n * 455935736 / 638512875)))))
+            * sin(10 * phi)
+            + n * (n * (n * (n * (n * (n * 4210684958 / 1915538625))))) * sin(12 * phi)
+        )
+
+        if not radians:
+            common_lat = common_lat * 180 / pi
+
+        return common_lat
 
 
 def auth_rad(a: float, e: float, inverse: bool = False) -> float:
