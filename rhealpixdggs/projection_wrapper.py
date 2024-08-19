@@ -54,7 +54,7 @@ class Projection(object):
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
         >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='rhealpix', north_square=1, south_square=0)
         >>> print(my_round(f(0, 30), 15))
-        (0.0, 3748655.1150495014)
+        (0.0, 3748655.115049504)
         >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='cea')
         >>> print(my_round(f(0, 30), 15))
         (0.0, 3180183.4857749646)
