@@ -6,6 +6,7 @@ Keep adding tests!
 - Alexander Raichev (AR), 2013-01-26: Initial version based on previous tests.
 
 """
+
 # *****************************************************************************
 #       Copyright (C) 2011 Alexander Raichev <tortoise.said@gmail.com>
 #
@@ -838,7 +839,7 @@ class SCENZGridTestCase(unittest.TestCase):
             get = rdggs.cell_latitudes(
                 resolution, -R_A * pi / 4, R_A * 5 * pi / 12, False, plane=True
             )
-            expect = R_A * array([-pi / 12, pi / 12, pi / 4])
+            expect = R_A * array([-pi / 4, -pi / 12, pi / 12, pi / 4])
             for i in range(len(expect)):
                 self.assertAlmostEqual(get[i], expect[i])
 

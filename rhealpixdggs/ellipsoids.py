@@ -107,7 +107,7 @@ class Ellipsoid(object):
             else:
                 self.f = f
                 self.b = self.a * (1 - f)
-                self.e = sqrt(f * (1 - f))
+                self.e = sqrt(f * (2 - f))
             self.R_A = auth_rad(self.a, self.e)
         self.phi_0 = auth_lat(arcsin(2.0 / 3), e=self.e, radians=True, inverse=True)
         if not self.radians:
