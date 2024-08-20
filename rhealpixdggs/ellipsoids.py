@@ -336,7 +336,7 @@ class Ellipsoid(object):
         EXAMPLES::
 
             >>> E = UNIT_SPHERE
-            >>> print(my_round(E.xyz(0, 45), 15))
+            >>> print(tuple(x.tolist() for x in my_round(E.xyz(0, 45), 15)))
             (0.707106781186548, 0.0, 0.707106781186548)
 
         NOTES:: .. Issue #1 was ..
