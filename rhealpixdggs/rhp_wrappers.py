@@ -345,6 +345,11 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
     return ring
 
 
+# TODO: placeholder, find out if rhp needs that function
+# def weighted_cell_ring(rphindex: str, k: int = 1) -> list[str]:
+#    pass
+
+
 def k_ring(rhpindex: str, k: int = 1) -> list[str]:
     """
     Returns the k-ring of cell indices around rhpindex at distance k (or None if rhpindex is invalid).
@@ -365,6 +370,19 @@ def k_ring(rhpindex: str, k: int = 1) -> list[str]:
         kring = kring + cell_ring(rhpindex, d)
 
     return kring
+
+
+# TODO: placeholder, find out if rhp needs that function
+# def k_ring_smoothing(rhpindex: str, k: int = 1) -> list[str]:
+#    pass
+
+
+def polyfill(geometry, resolution: int) -> list[str]:
+    raise NotImplementedError()
+
+
+def linetrace(geometry, resolution: int) -> list[str]:
+    raise NotImplementedError()
 
 
 # ======== Helper functions ======== #
