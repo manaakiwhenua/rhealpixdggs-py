@@ -11,11 +11,14 @@ Keep adding tests!
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import standard modules.
+# Import standard modules
 import unittest
 
-# Import my modules.
+# Import my modules
 import rhealpixdggs.rhp_wrappers as rhpw
+
+# Import helper modules
+import numpy as np
 
 
 class RhpWrappersTestCase(unittest.TestCase):
@@ -43,11 +46,13 @@ class RhpWrappersTestCase(unittest.TestCase):
 
         # Dart cell without geojson
         centroid = rhpw.rhp_to_geo("N0", geo_json=False, plane=False)
-        self.assertEqual(centroid, (52.948408366310105, 89.99999999999996))
+        self.assertEqual(
+            centroid, (np.float64(52.948408366493055), np.float64(89.99999999999996))
+        )
 
         # Dart cell with geojson
         centroid = rhpw.rhp_to_geo("N0", plane=False)
-        self.assertEqual(centroid, (89.99999999999996, 52.948408366310105))
+        self.assertEqual(centroid, (89.99999999999996, 52.948408366493055))
 
         # Equatorial cell without geojson
         centroid = rhpw.rhp_to_geo("Q", geo_json=False, plane=False)
@@ -104,17 +109,17 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(child_id)
 
     def test_rhp_to_geo_boundary(self):
-        expected_lat = -41.87385774220941
+        expected_lat = np.float64(-41.873857742577684)
 
         # Without geojson: (lat, lng) pairs
         corners = rhpw.rhp_to_geo_boundary("S", geo_json=False, plane=False)
         self.assertEqual(
             corners,
             (
-                (expected_lat, -180),
-                (expected_lat, -90),
-                (expected_lat, 0),
-                (expected_lat, 90),
+                (expected_lat, np.float64(-180)),
+                (expected_lat, np.float64(-90)),
+                (expected_lat, np.float64(0)),
+                (expected_lat, np.float64(90)),
             ),
         )
 
