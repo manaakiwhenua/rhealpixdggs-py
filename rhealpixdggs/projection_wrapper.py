@@ -9,6 +9,7 @@ All lengths are measured in meters and all angles are measured in radians
 unless indicated otherwise.
 By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 """
+
 # *****************************************************************************
 #       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
 #
@@ -51,14 +52,11 @@ class Projection(object):
 
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
         >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='rhealpix', north_square=1, south_square=0)
-        >>> print(my_round(f(0, 30), 15))
-        (0.0, 3748655.115049504)
+        >>> print(tuple(x.tolist() for x in my_round(f(0, 30), 15)))
+        (0.0, 3740232.893283906)
         >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='cea')
         >>> print(my_round(f(0, 30), 15))
-        (0.0, 3180183.4857749646)
-
-    NOTES:: .. Issue #1 was !!! ..
-        (0.0, 3180183.485774971) *
+        (0.0, 3171259.3154312936)
 
     NOTES:
 

@@ -35,23 +35,15 @@ Create the (1, 2)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellip
         max_areal_resolution = 1
         max_resolution = 15
         ellipsoid:
-            R_A = 6374581.467096525
+            R_A = 6371007.180883517
             a = 6378137.0
             b = 6356752.314140356
-            e = 0.0578063088401125
+            e = 0.08181919104281579
             f = 0.003352810681182319
             lat_0 = 0
             lon_0 = 0
             radians = False
             sphere = False
-
-NOTES::  .. Issue #1 was ..
-        ellipsoid:
-            R_A = 6374581.4671 *
-            a = 6378137.0
-            b = 6356752.314140356 *
-            e = 0.0578063088401
-            f = 0.003352810681182319
 
 Pick a (longitude-latitude) point on the ellipsoid and find the resolution 1 cell that contains it ::
 
@@ -92,19 +84,19 @@ Compute the ellipsoidal nuclei of these cells ::
 
     >>> expected_results = [
     ...    [
-    ...        (0.0, 58.47067782972936),
-    ...        (45.000000000000036, 58.47067782972936),
-    ...        (89.99999999999996, 58.470677829729375)
+    ...        (0.0, 58.5280174826231),
+    ...        (45.000000000000036, 58.5280174826231),
+    ...        (89.99999999999996, 58.528017482623085)
     ...    ], [
-    ...        (14.999999999999998, 26.438744923918186),
-    ...        (45.0, 26.438744923918186),
-    ...        (74.99999999999999, 26.438744923918186),
-    ...        (105.00000000000001, 26.438744923918186)
+    ...        (14.999999999999998, 26.49011875194297),
+    ...        (45.0, 26.49011875194297),
+    ...        (74.99999999999999, 26.49011875194297),
+    ...        (105.00000000000001, 26.49011875194297)
     ...    ], [
-    ...        (14.999999999999998, 3.560649871661821e-15),
-    ...        (45.0, 3.560649871661821e-15),
-    ...        (74.99999999999999, 3.560649871661821e-15),
-    ...        (105.00000000000001, 3.560649871661821e-15)
+    ...        (14.999999999999998, 0),
+    ...        (45.0, 0),
+    ...        (74.99999999999999, 0),
+    ...        (105.00000000000001, 0)
     ...    ]]
     >>> for i, row in enumerate(cells):
     ...     for j, cell in enumerate(row):
@@ -137,10 +129,10 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
         max_areal_resolution = 1
         max_resolution = 15
         ellipsoid:
-            R_A = 6374581.467096525
+            R_A = 6371007.180883517
             a = 6378137.0
             b = 6356752.314140356
-            e = 0.0578063088401125
+            e = 0.08181919104281579
             f = 0.003352810681182319
             lat_0 = -37
             lon_0 = 174
@@ -399,11 +391,8 @@ class RHEALPixDGGS(object):
         EXAMPLES::
 
             >>> rdggs = UNIT_003_RADIANS
-            >>> print(my_round(rdggs.healpix(-pi, pi/2), 14))
+            >>> print(tuple(x.tolist() for x in my_round(rdggs.healpix(-pi, pi/2), 14)))
             (-2.35619449019234, 1.5707963267949)
-
-        NOTES:: Issue #1 was ..
-            (-2.35619449019234, 1.5707963267949001) *
 
         NOTE:
 
@@ -420,11 +409,8 @@ class RHEALPixDGGS(object):
         EXAMPLES::
 
             >>> rdggs = UNIT_003_RADIANS
-            >>> print(my_round(rdggs.rhealpix(0, pi/3), 14))
+            >>> print(tuple(x.tolist() for x in my_round(rdggs.rhealpix(0, pi/3), 14)))
             (-1.858272006684, 2.06871881030324)
-
-        NOTES:: Issue #1 was ..
-            (-1.8582720066839999, 2.0687188103032401)
 
         NOTE:
 
@@ -451,14 +437,10 @@ class RHEALPixDGGS(object):
             >>> rdggs = UNIT_003
             >>> p = (0, 0)
             >>> q = (-pi/4, pi/2)
-            >>> print(rdggs.combine_triangles(*p))
+            >>> print(tuple(x.tolist() for x in rdggs.combine_triangles(*p)))
             (0.0, 0.0)
-            >>> print(my_round(rdggs.combine_triangles(*q), 14))
+            >>> print(tuple(x.tolist() for x in my_round(rdggs.combine_triangles(*q), 14)))
             (-2.35619449019234, 1.5707963267949)
-
-        NOTES:: Issue #1 was ..
-            (-2.35619449019234, 1.5707963267949001)
-
         """
         R_A = self.ellipsoid.R_A
         ns = self.north_square
@@ -534,12 +516,8 @@ class RHEALPixDGGS(object):
         EXAMPLES::
 
             >>> rdggs = UNIT_003_RADIANS
-            >>> print(my_round(rdggs.xyz(0, pi/4, lonlat=True), 14))
+            >>> print(tuple(x.tolist() for x in my_round(rdggs.xyz(0, pi/4, lonlat=True), 14)))
             (0.70710678118655, 0.0, 0.70710678118655)
-
-        NOTES:: Issue #1 was ..
-            (0.70710678118655002, 0.0, 0.70710678118655002)
-
         """
         if lonlat:
             lam, phi = u, v
@@ -558,7 +536,7 @@ class RHEALPixDGGS(object):
         EXAMPLES::
 
             >>> rdggs = UNIT_003
-            >>> print(my_round(rdggs.xyz_cube(0, 0), 14))
+            >>> print(tuple(x.tolist() for x in my_round(rdggs.xyz_cube(0, 0), 14)))
             (0.78539816339745, 0.0, -0.78539816339745)
 
         NOTES:: Issue #1 was ..
@@ -949,29 +927,20 @@ class RHEALPixDGGS(object):
             >>> rdggs = WGS84_003_RADIANS
             >>> for phi in rdggs.cell_latitudes(1, -pi/2, pi/2, plane=False):
             ...     print(my_round(phi, 14))
-            -1.02050584400163
-            -0.46144314901731
-            -0.0
-            0.46144314901731
-            1.02050584400163
-            1.5707963267949
-
-        NOTES:: .. Issue @1 was ..
-            -1.020505844
-            -0.461443149003
-            -0
-            0.461443149003
-            1.020505844
-            1.57079632679
+            -1.02150660973658
+            -0.4623397914657
+            0.0
+            0.4623397914657
+            1.02150660973658
 
             >>> for phi in rdggs.cell_latitudes(1, -pi/2, pi/2, nucleus=False, plane=False):
             ...     print(my_round(phi, 14))
-            -1.29836248989075
-            -0.7308366881197
-            -0.22457715620807
-            0.22457715620807
-            0.7308366881197
-            1.29836248989075
+            -1.29894395948184
+            -0.73195363196361
+            -0.22506566920323
+            0.22506566920323
+            0.73195363196361
+            1.29894395948184
 
         NOTES:: .. Issue @1 was ..
             -1.29836248989
