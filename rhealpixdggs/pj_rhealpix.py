@@ -76,9 +76,9 @@ def combine_triangles(
 
         >>> u, v = -pi/4, pi/3
         >>> x, y = combine_triangles(u, v)
-        >>> print(my_round((x, y), 15))
+        >>> print(tuple(x.tolist() for x in my_round((x, y), 15)))
         (-1.832595714594046, 1.570796326794896)
-        >>> print(my_round(combine_triangles(x, y, inverse=True), 15))
+        >>> print(tuple(x.tolist() for x in my_round(combine_triangles(x, y, inverse=True), 15)))
         (-0.785398163397448, 1.047197551196598)
         >>> print(my_round((u, v), 15))
         (-0.785398163397448, 1.047197551196598)
@@ -280,7 +280,7 @@ def rhealpix_sphere(
 
     EXAMPLES::
 
-        >>> print(my_round(rhealpix_sphere(0, pi/4), 15))
+        >>> print(tuple(x.tolist() for x in my_round(rhealpix_sphere(0, pi/4), 15)))
         (-1.619978633413937, 2.307012183573304)
 
     NOTE:
@@ -314,7 +314,7 @@ def rhealpix_sphere_inverse(
 
         >>> p = (0, pi/4)
         >>> q = rhealpix_sphere(*p)
-        >>> print(my_round(rhealpix_sphere_inverse(*q), 15))
+        >>> print(tuple(x.tolist() for x in my_round(rhealpix_sphere_inverse(*q), 15)))
         (0.0, 0.785398163397448)
         >>> print(my_round(p, 15))
         (0, 0.785398163397448)
@@ -362,7 +362,7 @@ def rhealpix_ellipsoid(
     EXAMPLES::
 
         >>> from numpy import arcsin
-        >>> print(my_round(rhealpix_ellipsoid(0, arcsin(2.0/3)), 15))
+        >>> print(tuple(x if type(x) is int else x.tolist() for x in my_round(rhealpix_ellipsoid(0, arcsin(2.0/3)), 15)))
         (0, 0.785398163397448)
 
     """
@@ -390,7 +390,7 @@ def rhealpix_ellipsoid_inverse(
 
         >>> p = (0, pi/4)
         >>> q = rhealpix_ellipsoid(*p)
-        >>> print(my_round(rhealpix_ellipsoid_inverse(*q), 15))
+        >>> print(tuple(x.tolist() for x in my_round(rhealpix_ellipsoid_inverse(*q), 15)))
         (0.0, 0.785398163397448)
         >>> print(my_round(p, 15))
         (0, 0.785398163397448)
@@ -522,13 +522,13 @@ def rhealpix(
     EXAMPLES::
 
         >>> f = rhealpix(a=2, e=0, north_square=1, south_square=2)
-        >>> print(my_round(f(0, pi/3, radians=True), 15))
+        >>> print(tuple(x.tolist() for x in my_round(f(0, pi/3, radians=True), 15)))
         (-0.574951359778215, 2.145747686573111)
         >>> p = (0, 60)
         >>> q = f(*p, radians=False)
-        >>> print(my_round(q, 15))
+        >>> print(tuple(x.tolist() for x in my_round(q, 15)))
         (-0.574951359778215, 2.145747686573111)
-        >>> print(my_round(f(*q, radians=False, inverse=True), 15))
+        >>> print(tuple(x.tolist() for x in my_round(f(*q, radians=False, inverse=True), 15)))
         (6e-15, 59.999999999999986)
         >>> print(my_round(p, 15))
         (0, 60)

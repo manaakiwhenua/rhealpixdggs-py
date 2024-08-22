@@ -104,7 +104,7 @@ class Ellipsoid(object):
             else:
                 self.f = f
                 self.b = self.a * (1 - f)
-                self.e = sqrt(f * (1 - f))
+                self.e = sqrt(f * (2 - f))
             self.R_A = auth_rad(self.a, self.e)
         self.phi_0 = auth_lat(arcsin(2.0 / 3), e=self.e, radians=True, inverse=True)
         if not self.radians:
@@ -333,7 +333,7 @@ class Ellipsoid(object):
         EXAMPLES::
 
             >>> E = UNIT_SPHERE
-            >>> print(my_round(E.xyz(0, 45), 15))
+            >>> print(tuple(x.tolist() for x in my_round(E.xyz(0, 45), 15)))
             (0.707106781186548, 0.0, 0.707106781186548)
 
         NOTES:: .. Issue #1 was ..

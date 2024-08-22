@@ -121,9 +121,9 @@ def healpix_ellipsoid(lam: float, phi: float, e: float = 0) -> tuple[float, floa
 
     EXAMPLES::
 
-        >>> print(my_round(healpix_ellipsoid(0, pi/7), 15))
+        >>> print(tuple(x if type(x) is int else x.tolist() for x in my_round(healpix_ellipsoid(0, pi/7), 15)))
         (0, 0.511157237746422)
-        >>> print(my_round(healpix_ellipsoid(0, pi/7, e=0.8), 15))
+        >>> print(tuple(x if type(x) is int else x.tolist() for x in my_round(healpix_ellipsoid(0, pi/7, e=0.8), 15)))
         (0, 0.268484450857837)
 
     """
@@ -139,7 +139,7 @@ def healpix_ellipsoid_inverse(x: float, y: float, e: float = 0) -> tuple[float, 
 
         >>> p = (0, pi/7)
         >>> q = healpix_ellipsoid(*p)
-        >>> print(my_round(healpix_ellipsoid_inverse(*q), 15))
+        >>> print(tuple(x if type(x) is int else x.tolist() for x in my_round(healpix_ellipsoid_inverse(*q), 15)))
         (0, 0.448798950512828)
         >>> print(my_round(p, 15))
         (0, 0.448798950512828)
@@ -260,12 +260,12 @@ def healpix(
     EXAMPLES::
 
         >>> f = healpix(a=2, e=0)
-        >>> print(my_round(f(0, pi/3, radians=True), 15))
+        >>> print(tuple(x.tolist() for x in my_round(f(0, pi/3, radians=True), 15)))
         (0.574951359778215, 2.145747686573111)
         >>> p = (0, 60)
-        >>> q = f(*p, radians=False); print(my_round(q, 15))
+        >>> q = f(*p, radians=False); print(tuple(x.tolist() for x in my_round(q, 15)))
         (0.574951359778215, 2.145747686573111)
-        >>> print(my_round(f(*q, radians=False, inverse=True), 15))
+        >>> print(tuple(x.tolist() for x in my_round(f(*q, radians=False, inverse=True), 15)))
         (6e-15, 59.999999999999986)
         >>> print(my_round(p, 15))
         (0, 60)
