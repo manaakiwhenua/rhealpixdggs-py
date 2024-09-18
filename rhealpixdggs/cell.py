@@ -549,52 +549,40 @@ class Cell(object):
             >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> rdggs = RHEALPixDGGS()
             >>> c = rdggs.cell(['P', 5, 7]) # Quad cell.
-            >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-2225148.7007489, -556287.1751872245)
-            >>> print(my_round(c.nw_vertex(plane=True), 14))
-            (-2225148.7007489, -556287.1751872245)
-
-        NOTES:: .. Issue #1 was ..
-            (-2225148.7007489, -556287.17518722452) * for both above tests
+            >>> print(tuple(x.tolist() for x in my_round(c.ul_vertex(plane=True), 14)))
+            (-2223901.0395045895, -555975.2598761478)
+            >>> print(tuple(x.tolist() for x in my_round(c.nw_vertex(plane=True), 14)))
+            (-2223901.0395045895, -555975.2598761478)
 
             >>> c = rdggs.cell(['S', 4])  # Cap cell.
-            >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-16688615.255616743, -8344307.627808371)
-            >>> print(my_round(c.nw_vertex(plane=True), 14))
-            (-16688615.255616743, -8344307.627808371)
-
-        NOTES:: .. Issue #1 was ..
-            (-16688615.255616743, -8344307.6278083706) * for both above tests
+            >>> print(tuple(x.tolist() for x in my_round(c.ul_vertex(plane=True), 14)))
+            (-16679257.796284417, -8339628.898142208)
+            >>> print(tuple(x.tolist() for x in my_round(c.nw_vertex(plane=True), 14)))
+            (-16679257.796284417, -8339628.898142208)
 
             >>> c = rdggs.cell(['N', 4, 3]) # Skew quad cell.
-            >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-16688615.255616743, 10569456.32855727)
-            >>> print(my_round(c.nw_vertex(plane=True), 14))
-            (-15576040.905242294, 10569456.32855727)
+            >>> print(tuple(x.tolist() for x in my_round(c.ul_vertex(plane=True), 14)))
+            (-16679257.796284417, 10563529.937646799)
+            >>> print(tuple(x.tolist() for x in my_round(c.nw_vertex(plane=True), 14)))
+            (-15567307.276532121, 10563529.937646799)
 
             >>> c = rdggs.cell(['S', 4, 3])  # Skew quad cell.
-            >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-16688615.255616743, -9456881.97818282)
-            >>> print(my_round(c.nw_vertex(plane=True), 14))
-            (-16688615.255616743, -10569456.32855727)
-
-        NOTES:: .. Issue #1 was ..
-            (-16688615.255616743, -9456881.9781828206) *
+            >>> print(tuple(x.tolist() for x in my_round(c.ul_vertex(plane=True), 14)))
+            (-16679257.796284417, -9451579.417894501)
+            >>> print(tuple(x.tolist() for x in my_round(c.nw_vertex(plane=True), 14)))
+            (-16679257.796284417, -10563529.937646795)
 
             >>> c = rdggs.cell(['N', 6, 2])  # Dart cell.
-            >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-17801189.605991192, 8344307.627808372)
-            >>> print(my_round(c.nw_vertex(plane=True), 14))
-            (-16688615.255616743, 8344307.627808372)
-
-        NOTES:: .. Issue #1 was ..
-            (-16688615.255616743, 8344307.6278083716) * for both above tests
+            >>> print(tuple(x.tolist() for x in my_round(c.ul_vertex(plane=True), 14)))
+            (-17791208.316036712, 8339628.898142208)
+            >>> print(tuple(x.tolist() for x in my_round(c.nw_vertex(plane=True), 14)))
+            (-16679257.796284417, 8339628.898142208)
 
             >>> c = rdggs.cell(['S', 6, 2])  # Dart cell.
-            >>> print(my_round(c.ul_vertex(plane=True), 14))
-            (-17801189.605991192, -11682030.678931719)
-            >>> print(my_round(c.nw_vertex(plane=True), 14))
-            (-16688615.255616743, -12794605.029306168)
+            >>> print(tuple(x.tolist() for x in my_round(c.ul_vertex(plane=True), 14)))
+            (-17791208.316036712, -11675480.457399093)
+            >>> print(tuple(x.tolist() for x in my_round(c.nw_vertex(plane=True), 14)))
+            (-16679257.796284417, -12787430.977151388)
 
         """
         v = self.vertices(plane=True)  # Planar vertices.
@@ -652,11 +640,8 @@ class Cell(object):
             >>> from rhealpixdggs.dggs import UNIT_003
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
-            >>> print(my_round(c.nucleus(), 14))
+            >>> print(tuple(x.tolist() for x in my_round(c.nucleus(), 14)))
             (-2.35619449019234, 1.5707963267949)
-
-        NOTES:: .. Issue #1 was ..
-            (-2.35619449019234, 1.5707963267949001) *
 
         """
         ul = self.ul_vertex(plane=True)
@@ -686,52 +671,38 @@ class Cell(object):
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> for p in c.vertices():
-            ...     print(my_round(p, 14))
+            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
             (-3.14159265358979, 2.35619449019234)
             (-1.5707963267949, 2.35619449019234)
             (-1.5707963267949, 0.78539816339745)
             (-3.14159265358979, 0.78539816339745)
 
-        NOTES:: .. Issue #1 was ..
-            (-3.14159265358979, 2.35619449019234)
-            (-1.5707963267949001, 2.35619449019234) *
-            (-1.5707963267949001, 0.78539816339745006) *
-            (-3.14159265358979, 0.78539816339745006) *
-
             >>> rdggs = WGS84_003
             >>> c = rdggs.cell(['N', 0])
             >>> for p in c.vertices(plane=False):
-            ...     print(my_round(p, 14))
-            (89.99999999999993, 74.39069094879062)
-            (119.99999999999999, 41.87385774220941)
-            (90.0, 41.87385774220941)
-            (60.00000000000001, 41.87385774220941)
+            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
+            (89.99999999999993, 74.42400670199599)
+            (119.99999999999999, 41.93785391016014)
+            (90.0, 41.93785391016014)
+            (59.99999999999999, 41.93785391016014)
             >>> for p in c.vertices(plane=False, trim_dart=True):
-            ...     print(my_round(p, 14))
-            (89.99999999999993, 74.39069094879062)
-            (119.99999999999999, 41.87385774220941)
-            (60.00000000000001, 41.87385774220941)
-
-        NOTES:: .. Issue #1 was ..
-            (89.999999999999929, 74.39069094879062) * for both of the above
-            <skip>
-            (60.000000000000007, 41.87385774220941) * for both of the above
+            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
+            (89.99999999999993, 74.42400670199599)
+            (119.99999999999999, 41.93785391016014)
+            (59.99999999999999, 41.93785391016014)
 
             >>> c = rdggs.cell(['S', 0])
             >>> for p in c.vertices(plane=False):
-            ...     print(my_round(p, 14))
-            (149.99999999999997, -41.87385774220941)
-            (-180.0, -41.87385774220941)
-            (-150.0, -41.87385774220941)
-            (-180.0, -74.39069094879065)
+            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
+            (150.0, -41.93785391016014)
+            (-180.0, -41.93785391016014)
+            (-149.99999999999997, -41.93785391016014)
+            (-179.99999999999991, -74.42400670199598)
             >>> for p in c.vertices(plane=False, trim_dart=True):
-            ...     print(my_round(p, 14))
-            (149.99999999999997, -41.87385774220941)
-            (-150.0, -41.87385774220941)
-            (-180.0, -74.39069094879065)
-
-        NOTES:: .. Issue #1 was ..
-            (-180.0, -74.390690948790649) * for both of the above
+            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
+            (150.0, -41.93785391016014)
+            (-149.99999999999997, -41.93785391016014)
+            (-179.99999999999991, -74.42400670199598)
 
         """
         ul = self.ul_vertex(plane=True)
@@ -803,7 +774,7 @@ class Cell(object):
             >>> c.boundary(n=2, plane=True) == c.vertices(plane=True)
             True
             >>> for p in c.boundary(n=3, plane=True):
-            ...     print(my_round(p, 14))
+            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
             (-3.14159265358979, 1.30899693899575)
             (-2.87979326579064, 1.30899693899575)
             (-2.61799387799149, 1.30899693899575)
@@ -813,19 +784,8 @@ class Cell(object):
             (-3.14159265358979, 0.78539816339745)
             (-3.14159265358979, 1.0471975511966)
 
-        NOTES::  .. Issue #1 was ..
-            (-3.14159265358979, 1.3089969389957501) *
-            (-2.87979326579064, 1.3089969389957501) *
-            (-2.61799387799149, 1.3089969389957501) *
-            (-2.61799387799149, 1.0471975511966001) *
-            (-2.61799387799149, 0.78539816339745006) *
-            (-2.87979326579064, 0.78539816339745006) *
-            (-3.14159265358979, 0.78539816339745006) *
-            (-3.14159265358979, 1.0471975511966001) *
-
-
             >>> for p in c.boundary(n=3, plane=False):
-            ...     print(my_round(p, 14))
+            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
             (-180.0, 74.35752898700072)
             (-157.50000000000003, 58.41366190347208)
             (-150.0, 41.8103148957786)
@@ -834,16 +794,6 @@ class Cell(object):
             (165.0, 41.8103148957786)
             (149.99999999999997, 41.8103148957786)
             (157.49999999999997, 58.41366190347208)
-
-        NOTES::  .. Issue #1 was ..
-            (-180.0, 74.35752898700072)
-            (-157.50000000000003, 58.413661903472082) *
-            (-150.0, 41.810314895778603) *
-            (-165.00000000000003, 41.810314895778603) *
-            (-180.0, 41.810314895778603) *
-            (165.0, 41.810314895778603) *
-            (149.99999999999997, 41.810314895778603) *
-            (157.49999999999997, 58.413661903472082) *
 
         """
         ul = self.ul_vertex(plane=True)
@@ -898,17 +848,11 @@ class Cell(object):
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
             >>> for p in c.interior(n=2, plane=False, flatten=True):
-            ...     print(my_round(p, 14))
-            (90.0, 41.81038014535389)
-            (-180.0, 41.81038014535389)
-            (-1e-14, 41.81038014535389)
-            (-90.0, 41.81038014535389)
-
-        NOTES::  .. Issue #1 was ..
-            (90.0, 41.810380145353903) *
-            (-180.0, 41.810380145353903) *
-            (-1e-14, 41.810380145353903) *
-            (-90.0, 41.810380145353903) *
+            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
+            (90.0, 41.8103801453539)
+            (-180.0, 41.8103801453539)
+            (-1e-14, 41.8103801453539)
+            (-90.0, 41.8103801453539)
 
             >>> all([c.contains(p) for p in c.interior(n=5, plane=True, flatten=True)])
             True

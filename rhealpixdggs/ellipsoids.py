@@ -336,9 +336,6 @@ class Ellipsoid(object):
             >>> print(tuple(x.tolist() for x in my_round(E.xyz(0, 45), 15)))
             (0.707106781186548, 0.0, 0.707106781186548)
 
-        NOTES:: .. Issue #1 was ..
-            (0.70710678118654802, 0.0, 0.70710678118654802)
-
         """
         a = self.a
         e = self.e
