@@ -31,8 +31,8 @@ from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 # Homemade map projections, as opposed to those in the PROJ.4 library.
 # Remove 'healpix' and 'rhealpix' to use the PROJ.4 versions instead,
 # assuming you have the *correct/patched* PROJ.4 versions.
-# HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
-HOMEMADE_PROJECTIONS = {"isea", "csea", "qsc"}
+HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
+# HOMEMADE_PROJECTIONS = {"isea", "csea", "qsc"}
 
 
 class Projection(object):
