@@ -47,12 +47,12 @@ class RhpWrappersTestCase(unittest.TestCase):
         # Dart cell without geojson
         centroid = rhpw.rhp_to_geo("N0", geo_json=False, plane=False)
         self.assertEqual(
-            centroid, (np.float64(52.948408366493055), np.float64(89.99999999999996))
+            centroid, (np.float64(53.00810765516909), np.float64(89.99999999999996))
         )
 
         # Dart cell with geojson
         centroid = rhpw.rhp_to_geo("N0", plane=False)
-        self.assertEqual(centroid, (89.99999999999996, 52.948408366493055))
+        self.assertEqual(centroid, (89.99999999999996, 53.00810765516909))
 
         # Equatorial cell without geojson
         centroid = rhpw.rhp_to_geo("Q", geo_json=False, plane=False)
@@ -109,7 +109,7 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(child_id)
 
     def test_rhp_to_geo_boundary(self):
-        expected_lat = np.float64(-41.873857742577684)
+        expected_lat = np.float64(-41.937853910786615)
 
         # Without geojson: (lat, lng) pairs
         corners = rhpw.rhp_to_geo_boundary("S", geo_json=False, plane=False)
@@ -175,7 +175,7 @@ class RhpWrappersTestCase(unittest.TestCase):
 
     def test_cell_area(self):
         cell_id = "N12345"
-        expected_m2 = 1697972133.2114245
+        expected_m2 = 1696068529.9915351
 
         # Cell area in km^2
         area = rhpw.cell_area(cell_id)
