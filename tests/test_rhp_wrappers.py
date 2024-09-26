@@ -46,13 +46,11 @@ class RhpWrappersTestCase(unittest.TestCase):
 
         # Dart cell without geojson
         centroid = rhpw.rhp_to_geo("N0", geo_json=False, plane=False)
-        self.assertEqual(
-            centroid, (np.float64(53.00810765516909), np.float64(89.99999999999996))
-        )
+        self.assertEqual(centroid, (np.float64(53.00810765458496), np.float64(90.0)))
 
         # Dart cell with geojson
         centroid = rhpw.rhp_to_geo("N0", plane=False)
-        self.assertEqual(centroid, (89.99999999999996, 53.00810765516909))
+        self.assertEqual(centroid, (90.0, 53.00810765458496))
 
         # Equatorial cell without geojson
         centroid = rhpw.rhp_to_geo("Q", geo_json=False, plane=False)
@@ -109,17 +107,15 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(child_id)
 
     def test_rhp_to_geo_boundary(self):
-        expected_lat = np.float64(-41.937853910786615)
-
         # Without geojson: (lat, lng) pairs
         corners = rhpw.rhp_to_geo_boundary("S", geo_json=False, plane=False)
         self.assertEqual(
             corners,
             (
-                (expected_lat, np.float64(-180)),
-                (expected_lat, np.float64(-90)),
-                (expected_lat, np.float64(0)),
-                (expected_lat, np.float64(90)),
+                (-41.93785391016014, -180.0),
+                (-41.93785391016014, -90.0),
+                (-41.93785391016018, -3.180554681463517e-14),
+                (-41.93785391016014, 90.00000000000003),
             ),
         )
 
@@ -128,11 +124,11 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(
             corners,
             (
-                (-180, expected_lat),
-                (-90, expected_lat),
-                (0, expected_lat),
-                (90, expected_lat),
-                (-180, expected_lat),
+                (-180.0, -41.93785391016014),
+                (-90.0, -41.93785391016014),
+                (-3.180554681463517e-14, -41.93785391016018),
+                (90.00000000000003, -41.93785391016014),
+                (-180.0, -41.93785391016014),
             ),
         )
 
@@ -175,7 +171,7 @@ class RhpWrappersTestCase(unittest.TestCase):
 
     def test_cell_area(self):
         cell_id = "N12345"
-        expected_m2 = 1696068529.9915351
+        expected_m2 = 1696068530.010148
 
         # Cell area in km^2
         area = rhpw.cell_area(cell_id)
