@@ -25,7 +25,8 @@ from random import randint, uniform
 
 # Import my modules.
 import rhealpixdggs.dggs as dggs
-from rhealpixdggs.dggs import RHEALPixDGGS, Cell, WGS84_003, WGS84_003_RADIANS
+from rhealpixdggs.cell import Cell, CELLS0
+from rhealpixdggs.dggs import RHEALPixDGGS, WGS84_003, WGS84_003_RADIANS
 from rhealpixdggs.ellipsoids import (
     Ellipsoid,
     WGS84_ASPHERE_RADIANS,
@@ -45,7 +46,6 @@ def rel_err(get, expect):
 
 
 # Level 0 cell names
-CELLS0 = RHEALPixDGGS.cells0
 N = CELLS0[0]
 O = CELLS0[1]
 P = CELLS0[2]
@@ -529,10 +529,10 @@ class SCENZGridTestCase(unittest.TestCase):
 
     def test_ellipsoidal_shape(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
-            for s in rdggs.cells0[1:5]:
+            for s in CELLS0[1:5]:
                 X = rdggs.cell([s])
                 self.assertEqual(X.ellipsoidal_shape(), "quad")
-            for s in [rdggs.cells0[0], rdggs.cells0[5]]:
+            for s in [CELLS0[0], CELLS0[5]]:
                 for t in [[], [4], [4, 4]]:
                     u = [s] + t
                     X = rdggs.cell(u)
