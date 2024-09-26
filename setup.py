@@ -36,7 +36,7 @@ setup(
     long_description_content_type="text/x-rst",
     keywords=[
         "DGGS",
-        "Discreet Global Grid System",
+        "Discrete Global Grid System",
         "reference system",
         "spatial",
         "geospatial",
