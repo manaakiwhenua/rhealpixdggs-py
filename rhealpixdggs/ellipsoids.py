@@ -20,6 +20,7 @@ Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordin
 # *****************************************************************************
 
 # Import third-party modules.
+import pyproj
 from numpy import pi, sqrt, sin, cos, arcsin, arctanh, deg2rad, rad2deg
 
 # Import standard modules.
@@ -29,16 +30,12 @@ from random import uniform
 from rhealpixdggs.utils import my_round, auth_lat, auth_rad
 
 # Parameters of some common ellipsoids.
-WGS84_A = 6378137.0
-WGS84_F = (
-    1 / 298.257222101
-)  # ORIGINAL: GRS80 from EPSG:42310 298.257222101, based on WGS84+GRS80
-# WGS84_F = 1 / 298.257222100882711  # GRS80 from https://en.wikipedia.org/wiki/World_Geodetic_System
-# WGS84_F = 1 / 298.257223563  # new value from EPSG:7030
+WGS84_A = pyproj.get_ellps_map()["WGS84"]["a"]  # 6378137.0
+WGS84_F = 1 / pyproj.get_ellps_map()["WGS84"]["rf"]  # 298.257223563
 WGS84_B = WGS84_A * (1 - WGS84_F)
 WGS84_E = sqrt(WGS84_F * (2 - WGS84_F))
 WGS84_R_A = sqrt(WGS84_A**2 / 2 + WGS84_B**2 / 2 * (arctanh(WGS84_E) / WGS84_E))
-R_EM = 6371000  # Earth's mean radius
+R_EM = pyproj.get_ellps_map()["sphere"]["a"]  # 6371000 (Earth's mean radius)
 
 
 class Ellipsoid(object):
@@ -64,7 +61,7 @@ class Ellipsoid(object):
       the north polar region in the context of the (r)HEALPix projection.
 
     Except for phi_0, these attribute names match the names of the
-    `PROJ.4 ellipsoid parameters <http://trac.osgeo.org/proj/wiki/GenParms>`_.
+    `PROJ ellipsoid parameters <https://proj.org/en/9.4/usage/ellipsoids.html#ellipsoid-spherification-parameters>`
     """
 
     def __init__(
@@ -338,9 +335,6 @@ class Ellipsoid(object):
             >>> E = UNIT_SPHERE
             >>> print(tuple(x.tolist() for x in my_round(E.xyz(0, 45), 15)))
             (0.707106781186548, 0.0, 0.707106781186548)
-
-        NOTES:: .. Issue #1 was ..
-            (0.70710678118654802, 0.0, 0.70710678118654802)
 
         """
         a = self.a

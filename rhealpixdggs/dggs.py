@@ -35,11 +35,11 @@ Create the (1, 2)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellip
         max_areal_resolution = 1
         max_resolution = 15
         ellipsoid:
-            R_A = 6371007.180883517
+            R_A = 6371007.180918476
             a = 6378137.0
-            b = 6356752.314140356
-            e = 0.08181919104281579
-            f = 0.003352810681182319
+            b = 6356752.314245179
+            e = 0.08181919084262149
+            f = 0.0033528106647474805
             lat_0 = 0
             lon_0 = 0
             radians = False
@@ -84,14 +84,14 @@ Compute the ellipsoidal nuclei of these cells ::
 
     >>> expected_results = [
     ...    [
-    ...        (0.0, 58.5280174826231),
-    ...        (45.000000000000036, 58.5280174826231),
-    ...        (89.99999999999996, 58.528017482623085)
+    ...        (1.90833280887811e-14, 58.52801748206219),
+    ...        (45.00000000000002, 58.52801748206219),
+    ...        (89.99999999999997, 58.52801748206219)
     ...    ], [
-    ...        (14.999999999999998, 26.49011875194297),
-    ...        (45.0, 26.49011875194297),
-    ...        (74.99999999999999, 26.49011875194297),
-    ...        (105.00000000000001, 26.49011875194297)
+    ...        (14.999999999999998, 26.490118751439734),
+    ...        (45.0, 26.490118751439734),
+    ...        (74.99999999999999, 26.490118751439734),
+    ...        (105.00000000000001, 26.490118751439734)
     ...    ], [
     ...        (14.999999999999998, 0),
     ...        (45.0, 0),
@@ -129,23 +129,15 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
         max_areal_resolution = 1
         max_resolution = 15
         ellipsoid:
-            R_A = 6371007.180883517
+            R_A = 6371007.180918476
             a = 6378137.0
-            b = 6356752.314140356
-            e = 0.08181919104281579
-            f = 0.003352810681182319
+            b = 6356752.314245179
+            e = 0.08181919084262149
+            f = 0.0033528106647474805
             lat_0 = -37
             lon_0 = 174
             radians = False
             sphere = False
-
-NOTES::  .. Issue #1 was ..
-        ellipsoid:
-            R_A = 6374581.4671 *
-            a = 6378137.0
-            b = 6356752.314140356
-            e = 0.0578063088401 *
-            f = 0.003352810681182319
 
     >>> print(rdggs.cell_from_point(1, p, plane=False))
     Q3
@@ -423,7 +415,7 @@ class RHEALPixDGGS(object):
             south_square=self.south_square,
             region=region,
         )
-        return f(u, v, inverse=inverse, region=region)
+        return f(u, v, inverse=inverse)
 
     def combine_triangles(self, u, v, inverse=False, region="none"):
         """
@@ -538,9 +530,6 @@ class RHEALPixDGGS(object):
             >>> rdggs = UNIT_003
             >>> print(tuple(x.tolist() for x in my_round(rdggs.xyz_cube(0, 0), 14)))
             (0.78539816339745, 0.0, -0.78539816339745)
-
-        NOTES:: Issue #1 was ..
-            (0.78539816339745006, 0.0, -0.78539816339745006)
 
         """
         if lonlat:
@@ -788,6 +777,7 @@ class RHEALPixDGGS(object):
         else:
             # (x, y) doesn't lie in the DGGS.
             return None
+
         suid = [s0]
         if resolution == 0:
             # Done.
@@ -927,28 +917,20 @@ class RHEALPixDGGS(object):
             >>> rdggs = WGS84_003_RADIANS
             >>> for phi in rdggs.cell_latitudes(1, -pi/2, pi/2, plane=False):
             ...     print(my_round(phi, 14))
-            -1.02150660973658
-            -0.4623397914657
+            -1.02150660972679
+            -0.46233979145691
             0.0
-            0.4623397914657
-            1.02150660973658
+            0.46233979145691
+            1.02150660972679
 
             >>> for phi in rdggs.cell_latitudes(1, -pi/2, pi/2, nucleus=False, plane=False):
             ...     print(my_round(phi, 14))
-            -1.29894395948184
-            -0.73195363196361
-            -0.22506566920323
-            0.22506566920323
-            0.73195363196361
-            1.29894395948184
-
-        NOTES:: .. Issue @1 was ..
-            -1.29836248989
-            -0.730836688113
-            -0.224577156195
-            0.224577156195
-            0.730836688113
-            1.29836248989
+            -1.29894395947616
+            -0.73195363195267
+            -0.22506566919844
+            0.22506566919844
+            0.73195363195267
+            1.29894395947616
 
         """
         if phi_min > phi_max:

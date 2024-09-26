@@ -32,6 +32,7 @@ from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 # Remove 'healpix' and 'rhealpix' to use the PROJ.4 versions instead,
 # assuming you have the *correct/patched* PROJ.4 versions.
 HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
+# HOMEMADE_PROJECTIONS = {"isea", "csea", "qsc"}
 
 
 class Projection(object):
@@ -53,10 +54,10 @@ class Projection(object):
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
         >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='rhealpix', north_square=1, south_square=0)
         >>> print(tuple(x.tolist() for x in my_round(f(0, 30), 15)))
-        (0.0, 3740232.893283906)
+        (0.0, 3740232.8933662786)
         >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='cea')
         >>> print(my_round(f(0, 30), 15))
-        (0.0, 3171259.3154312936)
+        (0.0, 3171259.315518537)
 
     NOTES:
 
@@ -85,7 +86,7 @@ class Projection(object):
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 
-    def __call__(self, u, v, inverse=False, region="none"):
+    def __call__(self, u, v, inverse=False):
         ellipsoid = self.ellipsoid
         proj = self.proj
         kwargs = self.kwargs
@@ -103,7 +104,7 @@ class Projection(object):
                 print("Oops! Projection %s is not implemented." % proj)
                 return
         else:
-            # Use a projection from the PROJ.4 library.
+            # Use a projection from the PROJ library.
             f = pyproj.Proj(proj=proj, a=a, e=e, **kwargs)
         if not inverse:
             # Translate longitudes and latitudes so that
