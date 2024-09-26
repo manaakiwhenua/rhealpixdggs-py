@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Raichev"
+    given-names: "Alex"
+  - family-names: "Gibb"
+    given-names: "Robert"
+    orcid: "https://orcid.org/0000-0001-9032-7733"
+  - family-names: "Car"
+    given-names: "Nicholas"
+    orcid: "https://orcid.org/0000-0002-8742-7730"
+  - family-names: "De Maio"
+    given-names: "Nicoletta"
+  - family-names: "Gilić"
+    given-names: "Frane"
+    orcid: "https://orcid.org/0000-0003-4957-3400"
+  - family-names: "Law"
+    given-names: "Richard"
+    orcid: "https://orcid.org/0000-0002-7400-2530"
+title: "rHEALPixDGGS"
+version: 0.5.4
+date-released: 2023-12-18
+url: "https://github.com/manaakiwhenua/rhealpixdggs-py"
