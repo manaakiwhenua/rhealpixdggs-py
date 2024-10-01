@@ -159,10 +159,9 @@ def rhp_to_geo_boundary(
 
     If geojson is NOT requested as the output format:
         - Will return (latitude, longitude) coordinate pairs in order to be consistent with
-          h3 coordinate ordering.
+          rHEALPix coordinate ordering.
 
     TODO: give the option to select another predefined DGGS, or pass in a custom one
-    TODO: give the option to set n to something other than 3
     TODO: give the option of requesting corner coordinates in radians
     """
     # Stop early if the cell index is invalid
@@ -258,8 +257,8 @@ def cell_area(
 
 def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
     """
-    Returns the ring of cell indices around rhpindex at distance k, in clockwise order and
-    without duplicates (or None if rhpindex is invalid).
+    Returns the ring of cell indices around rhpindex at distance k, or None if rhpindex
+    is invalid.
 
     Also returns None if k < 0.
 
@@ -288,7 +287,7 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
         for direction in directions:
             ring.append(cell.neighbor(direction).suid[0])
 
-    # Start in the upper left corner of the ring: it's k times up and k times left
+    # Start in the upper left corner of the ring: it's k times left and k times up
     else:
         # Mapping to detect direction changes
         direction_inverse = {
@@ -297,38 +296,19 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
             "left": "right",
             "up": "down",
         }
-        # Always start by going left
-        dir_idx = directions.index("left")
 
-        # Work your way to the starting point
-        for _ in range(0, k):
-            # One step to local left
-            direction = directions[dir_idx]
-            next = cell.neighbor(direction)
-            # Looking back not being the same as looking ahead means we need to realign
-            if next.neighbor(direction_inverse[direction]) != cell:
-                dir_idx = directions.index(
-                    direction_inverse[_neighbor_direction(next, cell)]
-                )
-            cell = next
+        # Initialise iteration parameters
+        k_eff, max_steps, cell = _cell_ring_setup(cell, rhpindex, k)
 
-            # One step to local up
-            direction = directions[(dir_idx + 1) % len(directions)]
-            next = cell.neighbor(direction)
-            # Looking back not being the same as looking ahead means we need to realign
-            if next.neighbor(direction_inverse[direction]) != cell:
-                dir_idx = (
-                    directions.index(direction_inverse[_neighbor_direction(next, cell)])
-                    - 1
-                ) % len(directions)
-            cell = next
-
-        # Initialise walking direction
-        direction = direction_inverse[directions[dir_idx]]
+        # Set starting point
+        cell, direction, n_steps = _find_cell_ring_start(
+            cell, k_eff, max_steps, directions, direction_inverse
+        )
 
         # Walk around the ring one side at a time and collect cell addresses
         for _ in range(0, len(directions)):
-            for _ in range(0, 2 * k):
+            step = 0
+            while step < n_steps:
                 # Add index to ring, take a step
                 ring.append("".join([str(d) for d in cell.suid]))
                 next = cell.neighbor(direction)
@@ -337,10 +317,15 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
                 if next.neighbor(direction_inverse[direction]) != cell:
                     direction = direction_inverse[_neighbor_direction(next, cell)]
 
+                # Take the step
                 cell = next
+                step = step + 1
 
-            # Update walking direction before going around a corner
+            # Prepare walking direction for next ring side
             direction = directions[(directions.index(direction) + 1) % len(directions)]
+
+            # Reset number of steps along a side
+            n_steps = max_steps
 
     return ring
 
@@ -355,6 +340,8 @@ def k_ring(rhpindex: str, k: int = 1) -> list[str]:
     Returns the k-ring of cell indices around rhpindex at distance k (or None if rhpindex is invalid).
 
     Also returns None if k < 0.
+
+    TODO: give the option to select another predefined DGGS, or pass in a custom one
     """
     if not rhp_is_valid(rhpindex) or (k < 0):
         return None
@@ -363,7 +350,7 @@ def k_ring(rhpindex: str, k: int = 1) -> list[str]:
     if k == 0:
         return [rhpindex]
 
-    distance = _clamp_distance(rhpindex, k)
+    distance = min(2 * WGS84_003.N_side ** rhp_get_resolution(rhpindex), k)
     kring = [rhpindex]
 
     for d in range(1, distance + 1):
@@ -397,12 +384,121 @@ def _neighbor_direction(cell: Cell, neighbor: Cell) -> str:
     return None
 
 
-def _clamp_distance(rhpindex: str, k: int) -> int:
-    """
-    TODO: give the option to select another predefined DGGS, or pass in a custom one
-    """
-    resolution = len(rhpindex) - 1
-    circumference = 4 * resolution * WGS84_003.N_side
-    max_dist = int(circumference / 2)
+def _mirror_cell_on_cube(cell: Cell) -> Cell:
+    # Cube faces map to their opposites
+    face_mapping = {"N": "S", "S": "N", "O": "Q", "P": "R", "Q": "O", "R": "P"}
+    transformed_suid = [face_mapping[cell.suid[0]]]
 
-    return min(k, max_dist)
+    # Transform row or column indices depending on region and rearrange into pairs
+    region = cell.region()
+    rowcolidxs = cell.suid_rowcol()
+    rowidxs = rowcolidxs[0][1:]
+    colidxs = rowcolidxs[1][1:]
+    transformed_idxs = [
+        cell.N_side - idx - 1
+        for idx in (rowidxs if region == "equatorial" else colidxs)
+    ]
+    rowcols = (
+        zip(transformed_idxs, colidxs)
+        if region == "equatorial"
+        else zip(rowidxs, transformed_idxs)
+    )
+
+    # Reapply transformed indices to suid digits
+    for row, col in rowcols:
+        transformed_suid.append(cell.N_side * row + col)
+
+    return Cell(cell.rdggs, transformed_suid)
+
+
+def _cell_ring_setup(cell: Cell, rhpindex: str, k: int) -> tuple[int, int, Cell, bool]:
+    # Maximum ring distance from centre cell on a hemisphere
+    d_max = cell.N_side ** rhp_get_resolution(rhpindex)
+
+    # Cell ring distance farther than the hemisphere equator requires mirroring
+    if k > d_max:
+        k_eff = 2 * d_max - k
+        starting_cell = _mirror_cell_on_cube(cell)
+    else:
+        k_eff = k
+        starting_cell = cell
+
+    # Cell ring distance taking k beyond resolution requires clamping
+    if 2 * k_eff > d_max:
+        max_steps = d_max
+    else:
+        max_steps = 2 * k_eff
+
+    return (k_eff, max_steps, starting_cell)
+
+
+def _find_cell_ring_start(
+    cell: Cell,
+    k: int,
+    max_steps: int,
+    directions: list[str],
+    direction_inverse: dict[str, str],
+) -> tuple[Cell, str, int]:
+    # Always start by going left
+    dir_idx = directions.index("left")
+
+    # Work your way to the starting point one (left, up) pair of steps at a time
+    steps_from_start = -1
+    num_edges = 0
+    d = 0
+    while d < k:
+        # Prep for later
+        d = d + 1
+
+        # One step to local left
+        direction = directions[dir_idx]
+        next = cell.neighbor(direction)
+
+        # Detect edge crossing on cube
+        if cell.suid[0] != next.suid[0]:
+            num_edges = num_edges + 1
+            # Looking back not being the same as looking ahead means we need to realign as well
+            if next.neighbor(direction_inverse[direction]) != cell:
+                dir_idx = directions.index(
+                    direction_inverse[_neighbor_direction(next, cell)]
+                )
+
+        # Take the step
+        cell = next
+
+        # One step to local up
+        direction = directions[(dir_idx + 1) % len(directions)]
+        next = cell.neighbor(direction)
+
+        # Detect edge crossing on cube
+        if cell.suid[0] != next.suid[0]:
+            num_edges = num_edges + 1
+
+            # Looking back not being the same as looking ahead means we need to realign as well
+            if next.neighbor(direction_inverse[direction]) != cell:
+                dir_idx = (
+                    directions.index(direction_inverse[_neighbor_direction(next, cell)])
+                    - 1
+                ) % len(directions)
+
+            # Handle unexpected corner and end the loop
+            if num_edges > 1:
+                dir_idx = (dir_idx - 1) % len(directions)
+                steps_from_start = d
+                d = k
+
+        # Take the step
+        cell = next
+
+    # Initialise walking direction and side length
+    direction = direction_inverse[directions[dir_idx]]
+    if steps_from_start >= 0:
+        n_steps = k + steps_from_start - 1
+        local_up = directions[(directions.index(direction) - 1) % len(directions)]
+        for _ in range(0, k - steps_from_start):
+            next = cell.neighbor(local_up)
+            cell = next
+    else:
+        n_steps = max_steps
+
+    return (cell, direction, n_steps)
