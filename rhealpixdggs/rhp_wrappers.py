@@ -35,7 +35,7 @@ def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> s
         return None
 
     # Return the cell ID after converting int digits to str
-    return "".join([str(d) for d in cell.suid])
+    return _suid_to_str(cell.suid)
 
 
 def rhp_to_geo(
@@ -278,6 +278,14 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
     suid = [int(d) if d.isdigit() else d for d in rhpindex]
     cell = WGS84_003.cell(suid)
 
+    # Maximum ring distance from centre cell
+    half_circle = 2 * cell.N_side ** rhp_get_resolution(rhpindex)
+
+    # Just return the opposite cell if k > d_max
+    if k > half_circle:
+        cell = _mirror_cell_on_cube(cell)
+        return [_suid_to_str(cell.suid)]
+
     # Init the ring and directions
     ring = []
     directions = ["right", "down", "left", "up"]
@@ -298,34 +306,42 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
         }
 
         # Initialise iteration parameters
-        k_eff, max_steps, cell = _cell_ring_setup(cell, rhpindex, k)
+        k_eff, max_steps, cell = _cell_ring_setup(cell, half_circle / 2, k)
 
-        # Set starting point
-        cell, direction, n_steps = _find_cell_ring_start(
-            cell, k_eff, max_steps, directions, direction_inverse
-        )
+        # We're done if k_eff takes us all the way to the opposite cell
+        if k_eff == 0:
+            ring.append(_suid_to_str(cell.suid))
 
-        # Walk around the ring one side at a time and collect cell addresses
-        for _ in range(0, len(directions)):
-            step = 0
-            while step < n_steps:
-                # Add index to ring, take a step
-                ring.append("".join([str(d) for d in cell.suid]))
-                next = cell.neighbor(direction)
+        # We have to do the full walk around the ring
+        else:
+            # Set starting point
+            cell, direction, n_steps = _find_cell_ring_start(
+                cell, k_eff, max_steps, directions, direction_inverse
+            )
 
-                # Looking back not being the same as looking ahead means we need to realign
-                if next.neighbor(direction_inverse[direction]) != cell:
-                    direction = direction_inverse[_neighbor_direction(next, cell)]
+            # Walk around the ring one side at a time and collect cell addresses
+            for _ in range(0, len(directions)):
+                step = 0
+                while step < n_steps:
+                    # Add index to ring, take a step
+                    ring.append(_suid_to_str(cell.suid))
+                    next = cell.neighbor(direction)
 
-                # Take the step
-                cell = next
-                step = step + 1
+                    # Looking back not being the same as looking ahead means we need to realign
+                    if next.neighbor(direction_inverse[direction]) != cell:
+                        direction = direction_inverse[_neighbor_direction(next, cell)]
 
-            # Prepare walking direction for next ring side
-            direction = directions[(directions.index(direction) + 1) % len(directions)]
+                    # Take the step
+                    cell = next
+                    step = step + 1
 
-            # Reset number of steps along a side
-            n_steps = max_steps
+                # Prepare walking direction for next ring side
+                direction = directions[
+                    (directions.index(direction) + 1) % len(directions)
+                ]
+
+                # Reset number of steps along a side
+                n_steps = max_steps
 
     return ring
 
@@ -375,6 +391,10 @@ def linetrace(geometry, resolution: int) -> list[str]:
 # ======== Helper functions ======== #
 
 
+def _suid_to_str(suid: tuple) -> str:
+    return "".join([str(d) for d in suid])
+
+
 def _neighbor_direction(cell: Cell, neighbor: Cell) -> str:
     n_dict = cell.neighbors()
     for dir in n_dict:
@@ -389,43 +409,44 @@ def _mirror_cell_on_cube(cell: Cell) -> Cell:
     face_mapping = {"N": "S", "S": "N", "O": "Q", "P": "R", "Q": "O", "R": "P"}
     transformed_suid = [face_mapping[cell.suid[0]]]
 
-    # Transform row or column indices depending on region and rearrange into pairs
-    region = cell.region()
-    rowcolidxs = cell.suid_rowcol()
-    rowidxs = rowcolidxs[0][1:]
-    colidxs = rowcolidxs[1][1:]
-    transformed_idxs = [
-        cell.N_side - idx - 1
-        for idx in (rowidxs if region == "equatorial" else colidxs)
-    ]
-    rowcols = (
-        zip(transformed_idxs, colidxs)
-        if region == "equatorial"
-        else zip(rowidxs, transformed_idxs)
-    )
+    # Skip the numerical digits part for top-level cells
+    if len(cell.suid) > 1:
+        # Transform row or column indices depending on region and rearrange into pairs
+        region = cell.region()
+        rowcolidxs = cell.suid_rowcol()
+        rowidxs = rowcolidxs[0][1:]
+        colidxs = rowcolidxs[1][1:]
+        transformed_idxs = [
+            cell.N_side - idx - 1
+            for idx in (rowidxs if region == "equatorial" else colidxs)
+        ]
+        rowcols = (
+            zip(transformed_idxs, colidxs)
+            if region == "equatorial"
+            else zip(rowidxs, transformed_idxs)
+        )
 
-    # Reapply transformed indices to suid digits
-    for row, col in rowcols:
-        transformed_suid.append(cell.N_side * row + col)
+        # Reapply transformed indices to suid digits
+        for row, col in rowcols:
+            transformed_suid.append(cell.N_side * row + col)
 
     return Cell(cell.rdggs, transformed_suid)
 
 
-def _cell_ring_setup(cell: Cell, rhpindex: str, k: int) -> tuple[int, int, Cell, bool]:
-    # Maximum ring distance from centre cell on a hemisphere
-    d_max = cell.N_side ** rhp_get_resolution(rhpindex)
-
+def _cell_ring_setup(
+    cell: Cell, quarter_circle: int, k: int
+) -> tuple[int, int, Cell, bool]:
     # Cell ring distance farther than the hemisphere equator requires mirroring
-    if k > d_max:
-        k_eff = 2 * d_max - k
+    if k > quarter_circle:
+        k_eff = max(2 * quarter_circle - k, 0)
         starting_cell = _mirror_cell_on_cube(cell)
     else:
         k_eff = k
         starting_cell = cell
 
     # Cell ring distance taking k beyond resolution requires clamping
-    if 2 * k_eff > d_max:
-        max_steps = d_max
+    if 2 * k_eff > quarter_circle:
+        max_steps = quarter_circle
     else:
         max_steps = 2 * k_eff
 

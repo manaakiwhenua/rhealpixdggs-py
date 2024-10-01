@@ -374,8 +374,19 @@ class RhpWrappersTestCase(unittest.TestCase):
             ring, ["N20", "N21", "N22", "N25", "N28", "N27", "N26", "N23"]
         )
 
-        # Cell ring at a distance beyond the resolution
-        # TODO: k should clamp to farthest possible distance at the given resolution
+        # Cell ring at a distance beyond the resolution (regular case)
+        ring = rhpw.cell_ring("Q0", 7)
+        self.assertListEqual(ring, ["O6"])
+
+        ring = rhpw.cell_ring("N3", 7)
+        self.assertListEqual(ring, ["S5"])
+
+        # Cell ring at a distance beyond the resolution (top-level case)
+        ring = rhpw.cell_ring(cellidx[0], 3)
+        self.assertListEqual(ring, ["O"])
+
+        ring = rhpw.cell_ring("N", 3)
+        self.assertListEqual(ring, ["S"])
 
         # Top-level cell (regular case)
         ring = rhpw.cell_ring(cellidx[0])
