@@ -5,6 +5,11 @@ from rhealpixdggs.dggs import WGS84_003
 
 from rhealpixdggs.cell import Cell, CELLS0
 
+# ======== Messages and constants ======== #
+
+
+CELL_RING_WARNING = "WARNING: Implementation of cell rings is incomplete. Requesting a {0} ring that involves more than two resolution 0 cube faces will return unexpected results."
+
 
 # ======== Main API ======== #
 
@@ -255,7 +260,7 @@ def cell_area(
     return area
 
 
-def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
+def cell_ring(rhpindex: str, k: int = 1, verbose=True) -> list[str]:
     """
     Returns the ring of cell indices around rhpindex at distance k, or None if rhpindex
     is invalid.
@@ -267,6 +272,9 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
     Returns the four neighbouring faces at resolution 0 if k > 0 and cell resolution is 0
     (by convention).
     """
+    if verbose:
+        print(str.format(CELL_RING_WARNING, "cell"))
+
     if not rhp_is_valid(rhpindex) or (k < 0):
         return None
 
@@ -281,7 +289,7 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
     # Maximum ring distance from centre cell
     half_circle = 2 * cell.N_side ** rhp_get_resolution(rhpindex)
 
-    # Just return the opposite cell if k > d_max
+    # Just return the opposite cell if k is beyond what the resolution can do
     if k > half_circle:
         cell = _mirror_cell_on_cube(cell)
         return [_suid_to_str(cell.suid)]
@@ -308,8 +316,8 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
         # Initialise iteration parameters
         k_eff, max_steps, cell = _cell_ring_setup(cell, half_circle / 2, k)
 
-        # We're done if k_eff takes us all the way to the opposite cell
-        if k_eff == 0:
+        # We're done if k_eff takes us all the way to the opposite cell (shouldn't happen at this point...)
+        if k_eff < 1:
             ring.append(_suid_to_str(cell.suid))
 
         # We have to do the full walk around the ring
@@ -336,9 +344,10 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
                     step = step + 1
 
                 # Prepare walking direction for next ring side
-                direction = directions[
-                    (directions.index(direction) + 1) % len(directions)
-                ]
+                if n_steps == 2 * k_eff:
+                    direction = directions[
+                        (directions.index(direction) + 1) % len(directions)
+                    ]
 
                 # Reset number of steps along a side
                 n_steps = max_steps
@@ -351,7 +360,7 @@ def cell_ring(rhpindex: str, k: int = 1) -> list[str]:
 #    pass
 
 
-def k_ring(rhpindex: str, k: int = 1) -> list[str]:
+def k_ring(rhpindex: str, k: int = 1, verbose=True) -> list[str]:
     """
     Returns the k-ring of cell indices around rhpindex at distance k (or None if rhpindex is invalid).
 
@@ -359,6 +368,9 @@ def k_ring(rhpindex: str, k: int = 1) -> list[str]:
 
     TODO: give the option to select another predefined DGGS, or pass in a custom one
     """
+    if verbose:
+        print(str.format(CELL_RING_WARNING, "k"))
+
     if not rhp_is_valid(rhpindex) or (k < 0):
         return None
 
@@ -370,7 +382,7 @@ def k_ring(rhpindex: str, k: int = 1) -> list[str]:
     kring = [rhpindex]
 
     for d in range(1, distance + 1):
-        kring = kring + cell_ring(rhpindex, d)
+        kring = kring + cell_ring(rhpindex, d, verbose=False)
 
     return kring
 
@@ -514,7 +526,7 @@ def _find_cell_ring_start(
     # Initialise walking direction and side length
     direction = direction_inverse[directions[dir_idx]]
     if steps_from_start >= 0:
-        n_steps = k + steps_from_start - 1
+        n_steps = min(k + steps_from_start - 1, max_steps)  # TODO: this is wrong
         local_up = directions[(directions.index(direction) - 1) % len(directions)]
         for _ in range(0, k - steps_from_start):
             next = cell.neighbor(local_up)
