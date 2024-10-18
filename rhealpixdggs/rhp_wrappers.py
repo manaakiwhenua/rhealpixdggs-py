@@ -1,4 +1,5 @@
 from typing import Literal
+from warnings import warn
 
 # Pre-defined DGGS using WGS84 ellipsoid and n == 3 for cell side subpartitioning
 from rhealpixdggs.dggs import WGS84_003
@@ -273,7 +274,7 @@ def cell_ring(rhpindex: str, k: int = 1, verbose=True) -> list[str]:
     (by convention).
     """
     if verbose:
-        print(str.format(CELL_RING_WARNING, "cell"))
+        warn(str.format(CELL_RING_WARNING, "cell"))
 
     if not rhp_is_valid(rhpindex) or (k < 0):
         return None
@@ -369,7 +370,7 @@ def k_ring(rhpindex: str, k: int = 1, verbose=True) -> list[str]:
     TODO: give the option to select another predefined DGGS, or pass in a custom one
     """
     if verbose:
-        print(str.format(CELL_RING_WARNING, "k"))
+        warn(str.format(CELL_RING_WARNING, "k"))
 
     if not rhp_is_valid(rhpindex) or (k < 0):
         return None
