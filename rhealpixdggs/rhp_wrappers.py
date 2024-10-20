@@ -261,7 +261,7 @@ def cell_area(
     return area
 
 
-def cell_ring(rhpindex: str, k: int = 1, verbose=True) -> list[str]:
+def cell_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
     """
     Returns the ring of cell indices around rhpindex at distance k, or None if rhpindex
     is invalid.
@@ -361,7 +361,7 @@ def cell_ring(rhpindex: str, k: int = 1, verbose=True) -> list[str]:
 #    pass
 
 
-def k_ring(rhpindex: str, k: int = 1, verbose=True) -> list[str]:
+def k_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
     """
     Returns the k-ring of cell indices around rhpindex at distance k (or None if rhpindex is invalid).
 
