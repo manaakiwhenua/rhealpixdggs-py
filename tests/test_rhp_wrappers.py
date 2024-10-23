@@ -31,6 +31,21 @@ class RhpWrappersTestCase(unittest.TestCase):
         cell_id = rhpw.geo_to_rhp(0, 0, 7)
         self.assertEqual(cell_id, "Q3333333")
 
+        cell_id = rhpw.geo_to_rhp(90, 0, 1)
+        self.assertEqual(cell_id, 'Q3')
+        
+        cell_id = rhpw.geo_to_rhp(90, -180, 0, plane=False)
+        self.assertEqual(cell_id, 'N')
+        
+        cell_id = rhpw.geo_to_rhp(90, -180, 0, plane=True)
+        self.assertEqual(cell_id, 'P')
+
+        cell_id = rhpw.geo_to_rhp(11500249, 56898969, 4)
+        self.assertIsNone(cell_id)
+
+        cell_id = rhpw.geo_to_rhp(270, 650, 4)
+        self.assertIsNone(cell_id)
+
     def test_rhp_to_geo(self):
         # Invalid cell address
         centroid = rhpw.rhp_to_geo("X")
