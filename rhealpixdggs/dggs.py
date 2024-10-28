@@ -739,6 +739,11 @@ class RHEALPixDGGS(object):
             >>> c = rdggs.cell_from_point(1, p)
             >>> print(c)
             Q3
+            >>> rdggs = RHEALPixDGGS(N_side=15)
+            >>> p = (80, -20)
+            >>> c = rdggs.cell_from_point(1, p, plane=False)
+            >>> print(c)
+            (Q, 178)
 
         """
         # Get the rectangular coordinates of p.
@@ -811,7 +816,7 @@ class RHEALPixDGGS(object):
 
         # Use the column and row SUIDs of c to get the SUID of c.
         for i in range(resolution):
-            suid.append(self.child_order[(int(suid_row[i]), int(suid_col[i]))])
+            suid.append(self.child_order[(int(suid_row[i], N), int(suid_col[i], N))])
         return Cell(self, suid)
 
     def cell_from_region(self, ul, dr, plane=True):
