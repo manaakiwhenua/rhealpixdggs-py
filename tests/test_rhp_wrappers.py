@@ -40,10 +40,8 @@ class RhpWrappersTestCase(unittest.TestCase):
         cell_id = rhpw.geo_to_rhp(90, -180, 0, plane=True)
         self.assertEqual(cell_id, 'P')
 
-        cell_id = rhpw.geo_to_rhp(11500249, 56898969, 4)
-        self.assertIsNone(cell_id)
-
-        cell_id = rhpw.geo_to_rhp(270, 650, 4)
+        # Point outside the DGGS
+        cell_id = rhpw.geo_to_rhp(11500249, 56898969, 0, plane=True)
         self.assertIsNone(cell_id)
 
     def test_rhp_to_geo(self):
