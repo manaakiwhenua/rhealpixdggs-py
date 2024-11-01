@@ -743,7 +743,7 @@ class SCENZGridTestCase(unittest.TestCase):
 
         # Assert inequality of non-coincident points
         p1 = (0, 0)
-        p2 = (p1[0]+25,p1[1]+360)
+        p2 = (p1[0]+45,p1[1]+360)
         E = Ellipsoid(lon_0=0, lat_0=0, radians=False)
         rdggs = RHEALPixDGGS(E)
         c1 = rdggs.cell_from_point(1, p1, plane=False)
