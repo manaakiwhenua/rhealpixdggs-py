@@ -734,6 +734,32 @@ class SCENZGridTestCase(unittest.TestCase):
         expect = rdggs.cell_from_point(1, (0, 0))
         self.assertEqual(get, expect)
 
+        # Test extreme value (point outside the planar DGGS)
+        p = (11500249, 56898969)
+        E = Ellipsoid(lon_0=0, lat_0=0, radians=False)
+        rdggs = RHEALPixDGGS(E)
+        get = rdggs.cell_from_point(0, p, plane=True)
+        self.assertIsNone(get)
+
+        # Assert inequality of non-coincident points
+        p1 = (0, 0)
+        p2 = (p1[0]+45,p1[1]+360)
+        E = Ellipsoid(lon_0=0, lat_0=0, radians=False)
+        rdggs = RHEALPixDGGS(E)
+        c1 = rdggs.cell_from_point(1, p1, plane=False)
+        c2 = rdggs.cell_from_point(1, p2, plane=False)
+        self.assertNotEqual(c1, c2)
+
+        # Assert equality of coincident points
+        # (Given a comparison point with >90 latitude, >180 longitude; i.e. assert that lat/lon wrap)
+        p1 = (0, 0)
+        p2 = (p1[0]+360,p1[1]+360)
+        E = Ellipsoid(lon_0=0, lat_0=0, radians=False)
+        rdggs = RHEALPixDGGS(E)
+        c1 = rdggs.cell_from_point(1, p1, plane=False)
+        c2 = rdggs.cell_from_point(1, p2, plane=False)
+        self.assertEqual(c1, c2)
+
     def test_cell_from_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
             # For any planar cell X with nucleus c and width w,
