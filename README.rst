@@ -34,7 +34,36 @@ This package is available on PyPI, the Python Package Index from where it can be
     pip install rhealpixdggs
 
 rHEALPixDGGS is also available for download from the github repository `<https://github.com/manaakiwhenua/rhealpixdggs-py>`_ from where the latest version can be cloned.
-  
+
+You can install from source using setuptools in a virtual environment (MacOS and Linux):
+
+::
+
+    python3 -m venv rhealpixdggs
+    source rhealpixdggs/bin/activate
+    python -m pip install --upgrade pip setuptools
+    python setup.py install
+
+Or on Windows:
+
+::
+
+    python3 -m venv rhealpixdggs
+    rhealpixdggs\Scripts\activate
+    python -m pip install --upgrade pip setuptools
+    python setup.py install
+
+
+For development:
+
+::
+    python setup.py develop
+
+Or:
+
+::
+    pip install -e .
+
 Tests
 ------
 The files in the ``tests`` directory test the rHEALPixDGGS modules. These files are plain ``unittest`` files (the Python testing framework contained within the standard distribution). Tests for examples in documents need the ``doctest`` module installed (see ``requirements.dev.txt``).
