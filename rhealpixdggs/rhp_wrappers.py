@@ -41,8 +41,7 @@ def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> s
         return None
 
     # Return the cell ID after converting int digits to str
-    return _suid_to_str(cell.suid)
-
+    return str(cell)
 
 def rhp_to_geo(
     rhpindex: str, geo_json: bool = True, plane: bool = True
@@ -293,7 +292,7 @@ def cell_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
     # Just return the opposite cell if k is beyond what the resolution can do
     if k > half_circle:
         cell = _mirror_cell_on_cube(cell)
-        return [_suid_to_str(cell.suid)]
+        return [str(cell)]
 
     # Init the ring and directions
     ring = []
@@ -319,7 +318,7 @@ def cell_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
 
         # We're done if k_eff takes us all the way to the opposite cell (shouldn't happen at this point...)
         if k_eff < 1:
-            ring.append(_suid_to_str(cell.suid))
+            ring.append(str(cell))
 
         # We have to do the full walk around the ring
         else:
@@ -333,7 +332,7 @@ def cell_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
                 step = 0
                 while step < n_steps:
                     # Add index to ring, take a step
-                    ring.append(_suid_to_str(cell.suid))
+                    ring.append(str(cell))
                     next = cell.neighbor(direction)
 
                     # Looking back not being the same as looking ahead means we need to realign
@@ -402,10 +401,6 @@ def linetrace(geometry, resolution: int) -> list[str]:
 
 
 # ======== Helper functions ======== #
-
-
-def _suid_to_str(suid: tuple) -> str:
-    return "".join([str(d) for d in suid])
 
 
 def _neighbor_direction(cell: Cell, neighbor: Cell) -> str:
