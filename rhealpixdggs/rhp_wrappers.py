@@ -1,5 +1,6 @@
-from typing import Literal
+from typing import Literal, Union
 from warnings import warn
+from shapely import Point, Polygon, MultiPolygon
 
 # Pre-defined DGGS using WGS84 ellipsoid and n == 3 for cell side subpartitioning
 from rhealpixdggs.dggs import WGS84_003
@@ -42,6 +43,7 @@ def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> s
 
     # Return the cell ID after converting int digits to str
     return str(cell)
+
 
 def rhp_to_geo(
     rhpindex: str, geo_json: bool = True, plane: bool = True
@@ -392,8 +394,66 @@ def k_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
 #    pass
 
 
-def polyfill(geometry, resolution: int) -> list[str]:
-    raise NotImplementedError()
+def polyfill(geometry: Union[Polygon, MultiPolygon], res: int) -> list[str]:
+    """
+    Turn the area contained in a shapely polygon or multipolygon into a list of cell
+    indices at the requested resolution. A cell index is included if its centroid is
+    inside the geometry defined by the boundaries and holes.
+
+    Returns None if the geom_type field in the input geometry is anything other than
+    'Polygon' or 'MultiPolygon'.
+
+    Returns None if the geometry is empty, or if it has no area.
+
+    Returns None if no cells match the geometry for some reason.
+
+    TODO: define what happens if the holes are not completely inside the outer
+          boundary - return None? Return polyfill for the outer boundary? (Check
+          what h3 does...)
+
+    TODO: give the option to select another predefined DGGS, or pass in a custom one
+    TODO: give the option to set n to something other than 3
+    """
+    # Stop early if the geometry is malformed
+    if _malformed_geometry(geometry):
+        return None
+
+    # Extract list of polygons from geometry: Polygon needs to be wrapped in
+    # one, MultiPolygon has it stashed in a property
+    if geometry.geom_type == "Polygon":
+        geoms = [geometry]
+    else:
+        geoms = geometry.geoms
+
+    # Collect cells in regions of interest
+    cells = []
+    for geom in geoms:
+        # rhealpixdggs wants nw and se corners of region of interest
+        nw, se = _roi_corners_from_bbox(geom)
+
+        # Cells in bounding box at requested resolution
+        roi_cells = WGS84_003.cells_from_region(res, nw, se, False)
+
+        if roi_cells:
+            # Flatten list of lists of cells in bbox
+            roi_cells = [cell for nested_list in roi_cells for cell in nested_list]
+
+            # Aggregate results
+            cells = cells + roi_cells
+
+    # Bail out if no cells match the geometry for some reason
+    if not cells:
+        return None
+
+    # Pre-fetch centroids for all cells and turn them into Point instances
+    centroids = [Point(cell.centroid(False)) for cell in cells]
+
+    # Check each cell against geometry, discard if outside polygon
+    for cell, centroid in zip(cells, centroids):
+        if not geometry.contains(centroid):
+            cells.remove(cell)
+
+    return [str(cell) for cell in cells]
 
 
 def linetrace(geometry, resolution: int) -> list[str]:
@@ -531,3 +591,48 @@ def _find_cell_ring_start(
         n_steps = max_steps
 
     return (cell, direction, n_steps)
+
+
+def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
+    # Geometry has to have things in it
+    if geometry is None or geometry.is_empty:
+        return True
+
+    # Geometry needs to be of the correct type
+    if geometry.geom_type != "Polygon" and geometry.geom_type != "MultiPolygon":
+        return True
+
+    # Geometry has to have an area, i.e. not be collapsed to a line
+    if geometry.area == 0:
+        return True
+
+    return False
+
+
+def _roi_corners_from_bbox(
+    geometry: Polygon,
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    # Region of interest is the bounding box around the geometry
+    bbox = geometry.bounds
+
+    # Bounds describe a polygon separating two areas on the ellipsoid
+    p = Polygon(
+        shell=[
+            (bbox[0], bbox[1]),
+            (bbox[2], bbox[1]),
+            (bbox[2], bbox[3]),
+            (bbox[0], bbox[3]),
+            (bbox[0], bbox[1]),
+        ]
+    )
+
+    # The area containing the input geometry is our region of interest
+    # (handles the antimeridian TODO: doesn't work yet)
+    if p.contains_properly(geometry.centroid):
+        nw = (bbox[0], bbox[3])
+        se = (bbox[2], bbox[1])
+    else:
+        nw = (bbox[2], bbox[3])
+        se = (bbox[0], bbox[1])
+
+    return (nw, se)

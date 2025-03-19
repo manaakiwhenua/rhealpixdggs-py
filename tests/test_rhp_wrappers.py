@@ -19,6 +19,7 @@ import rhealpixdggs.rhp_wrappers as rhpw
 
 # Import helper modules
 import numpy as np
+import shapely as sh
 
 
 class RhpWrappersTestCase(unittest.TestCase):
@@ -32,13 +33,13 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(cell_id, "Q3333333")
 
         cell_id = rhpw.geo_to_rhp(90, 0, 1)
-        self.assertEqual(cell_id, 'Q3')
-        
+        self.assertEqual(cell_id, "Q3")
+
         cell_id = rhpw.geo_to_rhp(90, -180, 0, plane=False)
-        self.assertEqual(cell_id, 'N')
-        
+        self.assertEqual(cell_id, "N")
+
         cell_id = rhpw.geo_to_rhp(90, -180, 0, plane=True)
-        self.assertEqual(cell_id, 'P')
+        self.assertEqual(cell_id, "P")
 
         # Point outside the DGGS
         cell_id = rhpw.geo_to_rhp(11500249, 56898969, 0, plane=True)
@@ -434,6 +435,48 @@ class RhpWrappersTestCase(unittest.TestCase):
         # Invalid case
         kring = rhpw.k_ring("X", verbose=False)
         self.assertIsNone(kring)
+
+    def test_polyfill(self):
+        # Test data
+        equatorial_poly_n = sh.Polygon(
+            shell=[(-10, -10), (50, -10), (50, 40), (-10, 40), (-10, -10)]
+        )
+        equatorial_poly_s = sh.Polygon(
+            shell=[(-10, 10), (-10, -40), (50, -40), (50, 10), (-10, 10)]
+        )
+        equatorial_poly_opp = sh.Polygon(
+            shell=[(130, 10), (130, -40), (-170, -40), (-170, 10), (130, 10)]
+        )
+        # equatorial_multipoly = sh.MultiPolygon(
+        #     polygons=[equatorial_poly_n, equatorial_poly_opp]
+        # )
+
+        # Equatorial polygons and multipolygons without holes
+        self.assertEqual(rhpw.polyfill(equatorial_poly_n, 0), ["Q"])
+        self.assertEqual(rhpw.polyfill(equatorial_poly_s, 0), ["Q"])
+        # self.assertEqual(rhpw.polyfill(equatorial_poly_opp, 0), ["R"])
+        # self.assertEqual(rhpw.polyfill(equatorial_multipoly, 0), ["Q"])
+
+        # TODO: polygon with hole
+        # TODO: multipolygon
+        # TODO: multipolygon with holes
+
+        # TODO: test cases for a set of test geometries and resolutions (equatorial
+        #       cases, cases involving the polar caps)
+
+        # Test data - malformed
+        no_area = sh.Polygon(shell=((0, 0), (0, 0), (0, 0), (0, 0)))
+        geom_res_mismatch = sh.Polygon(
+            shell=[(0, 0), (0, -40), (40, -40), (40, 0), (0, 0)]
+        )
+
+        # Malformed input geometries
+        self.assertIsNone(rhpw.polyfill(None, 0))
+        self.assertIsNone(rhpw.polyfill(sh.Polygon(), 0))
+        self.assertIsNone(rhpw.polyfill(sh.MultiPolygon(), 0))
+        self.assertIsNone(rhpw.polyfill(sh.Point(), 0))
+        self.assertIsNone(rhpw.polyfill(no_area, 0))
+        self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0), [])
 
 
 # ------------------------------------------------------------------------------
