@@ -448,12 +448,18 @@ def polyfill(geometry: Union[Polygon, MultiPolygon], res: int) -> list[str]:
     # Pre-fetch centroids for all cells and turn them into Point instances
     centroids = [Point(cell.centroid(False)) for cell in cells]
 
+    # Turn cells into string ids
+    cells = [str(cell) for cell in cells]
+
     # Check each cell against geometry, discard if outside polygon
     for cell, centroid in zip(cells, centroids):
-        if not geometry.contains(centroid):
+        if not geometry.contains_properly(centroid):
             cells.remove(cell)
 
-    return [str(cell) for cell in cells]
+    # Eliminate duplicates (can occur with overlapping polygons)
+    cells = list(set(cells))
+
+    return cells
 
 
 def linetrace(geometry, resolution: int) -> list[str]:
@@ -615,24 +621,8 @@ def _roi_corners_from_bbox(
     # Region of interest is the bounding box around the geometry
     bbox = geometry.bounds
 
-    # Bounds describe a polygon separating two areas on the ellipsoid
-    p = Polygon(
-        shell=[
-            (bbox[0], bbox[1]),
-            (bbox[2], bbox[1]),
-            (bbox[2], bbox[3]),
-            (bbox[0], bbox[3]),
-            (bbox[0], bbox[1]),
-        ]
-    )
-
-    # The area containing the input geometry is our region of interest
-    # (handles the antimeridian TODO: doesn't work yet)
-    if p.contains_properly(geometry.centroid):
-        nw = (bbox[0], bbox[3])
-        se = (bbox[2], bbox[1])
-    else:
-        nw = (bbox[2], bbox[3])
-        se = (bbox[0], bbox[1])
+    # (TODO: handle the antimeridian)
+    nw = (bbox[0], bbox[3])
+    se = (bbox[2], bbox[1])
 
     return (nw, se)

@@ -438,31 +438,35 @@ class RhpWrappersTestCase(unittest.TestCase):
 
     def test_polyfill(self):
         # Test data
-        equatorial_poly_n = sh.Polygon(
+        eq_poly_n = sh.Polygon(
             shell=[(-10, -10), (50, -10), (50, 40), (-10, 40), (-10, -10)]
         )
-        equatorial_poly_s = sh.Polygon(
+        eq_poly_s = sh.Polygon(
             shell=[(-10, 10), (-10, -40), (50, -40), (50, 10), (-10, 10)]
         )
-        equatorial_poly_opp = sh.Polygon(
+        eq_poly_am = sh.Polygon(
             shell=[(130, 10), (130, -40), (-170, -40), (-170, 10), (130, 10)]
         )
-        # equatorial_multipoly = sh.MultiPolygon(
-        #     polygons=[equatorial_poly_n, equatorial_poly_opp]
-        # )
 
         # Equatorial polygons and multipolygons without holes
-        self.assertEqual(rhpw.polyfill(equatorial_poly_n, 0), ["Q"])
-        self.assertEqual(rhpw.polyfill(equatorial_poly_s, 0), ["Q"])
-        # self.assertEqual(rhpw.polyfill(equatorial_poly_opp, 0), ["R"])
-        # self.assertEqual(rhpw.polyfill(equatorial_multipoly, 0), ["Q"])
+        self.assertEqual(rhpw.polyfill(eq_poly_n, 0), ["Q"])
+        self.assertEqual(rhpw.polyfill(eq_poly_s, 0), ["Q"])
+        # self.assertEqual(rhpw.polyfill(eq_poly_am, 0), ["R"])
+        self.assertEqual(
+            rhpw.polyfill(sh.MultiPolygon(polygons=[eq_poly_n, eq_poly_s]), 0), ["Q"]
+        )
+        # self.assertEqual(
+        #     rhpw.polyfill(sh.MultiPolygon(polygons=[eq_poly_n, eq_poly_am]), 0)[
+        #         "Q", "R"
+        #     ]
+        # )
 
-        # TODO: polygon with hole
-        # TODO: multipolygon
-        # TODO: multipolygon with holes
+        # TODO: polar caps
 
-        # TODO: test cases for a set of test geometries and resolutions (equatorial
-        #       cases, cases involving the polar caps)
+        # TODO: polygon with hole (fold into equatorial and polar cap sections)
+        # TODO: multipolygon with holes (fold into equatorial and polar cap sections)
+
+        # TODO: test cases for higher resolutions?
 
         # Test data - malformed
         no_area = sh.Polygon(shell=((0, 0), (0, 0), (0, 0), (0, 0)))
