@@ -2,6 +2,7 @@ from typing import Literal, Union
 from warnings import warn
 from shapely import Point, Polygon, MultiPolygon
 
+from rhealpixdggs.dggs import RHEALPixDGGS
 from rhealpixdggs.cell import Cell
 from rhealpixdggs.conversion import CellZoneFromPoly, compress_order_cells
 
@@ -432,7 +433,7 @@ def polyfill(
     # We'll be working on the projected cube surface from here on (may deal with the
     # antimeridian?)
     if not plane:
-        geoms = _polygons_sphere_to_plane(geoms)
+        geoms = _polygons_sphere_to_plane(geoms, WGS84_003)
 
     # Collect cells in regions of interest
     cells = []
@@ -631,17 +632,19 @@ def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
     return False
 
 
-def _polygons_sphere_to_plane(geoms: list[Polygon]) -> list[Polygon]:
+def _polygons_sphere_to_plane(
+    geoms: list[Polygon], dggs: RHEALPixDGGS
+) -> list[Polygon]:
     geoms_proj = []
 
     for geom in geoms:
         # Outer polygon boundary
-        shell = [WGS84_003.rhealpix(*coord) for coord in geom.exterior.coords]
+        shell = [dggs.rhealpix(*coord) for coord in geom.exterior.coords]
 
         # Holes in polygon
         holes = []
         for interior in geom.interiors:
-            hole = [WGS84_003.rhealpix(*coord) for coord in interior.coords]
+            hole = [dggs.rhealpix(*coord) for coord in interior.coords]
             holes.append(hole)
 
         # Repackaging
