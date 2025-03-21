@@ -2,13 +2,17 @@ from typing import Literal, Union
 from warnings import warn
 from shapely import Point, Polygon, MultiPolygon
 
-# Pre-defined DGGS using WGS84 ellipsoid and n == 3 for cell side subpartitioning
-from rhealpixdggs.dggs import WGS84_003
-
-from rhealpixdggs.cell import Cell, CELLS0
+from rhealpixdggs.cell import Cell
+from rhealpixdggs.conversion import CellZoneFromPoly, compress_order_cells
 
 # ======== Messages and constants ======== #
 
+
+# Pre-defined DGGS using WGS84 ellipsoid and n == 3 for cell side subpartitioning
+from rhealpixdggs.dggs import WGS84_003
+
+# List of resolution 0 cell addresses (i.e. cube faces)
+from rhealpixdggs.cell import CELLS0
 
 CELL_RING_WARNING = "WARNING: Implementation of cell rings is incomplete. Requesting a {0} ring that involves more than two resolution 0 cube faces will return unexpected results."
 
@@ -31,8 +35,6 @@ def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> s
     Returns None if no cell matching the coordinates is found.
 
     TODO: give the option to select another predefined DGGS, or pass in a custom one
-    TODO: give the option to set n to something other than 3
-    TODO: give the option to enter the coordinates in radians
     """
     # Get the grid cell corresponding to the coordinates
     cell = WGS84_003.cell_from_point(resolution, (lng, lat), plane)
@@ -61,8 +63,6 @@ def rhp_to_geo(
           h3 coordinate ordering.
 
     TODO: give the option to select another predefined DGGS, or pass in a custom one
-    TODO: give the option to set n to something other than 3
-    TODO: give the option of requesting centroid coordinates in radians
     """
     # Stop early if the cell index is invalid
     if not rhp_is_valid(rhpindex):
@@ -169,7 +169,6 @@ def rhp_to_geo_boundary(
           rHEALPix coordinate ordering.
 
     TODO: give the option to select another predefined DGGS, or pass in a custom one
-    TODO: give the option of requesting corner coordinates in radians
     """
     # Stop early if the cell index is invalid
     if not rhp_is_valid(rhpindex):
@@ -213,13 +212,10 @@ def rhp_get_base_cell(rhpindex: str) -> str:
 
 
 def rhp_is_valid(rhpindex: str) -> bool:
-    # TODO: call this function in those that include address-based functionality
-    #       i.e. anything that accepts a string 'rhpindex' as an argument
     """
     Checks if the given cell address is valid within the DGGS
 
     TODO: give the option to select another predefined DGGS, or pass in a custom one
-    TODO: give the option to set n to something other than 3
     """
     # Empty strings are invalid
     if rhpindex is None or len(rhpindex) == 0:
@@ -394,11 +390,18 @@ def k_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
 #    pass
 
 
-def polyfill(geometry: Union[Polygon, MultiPolygon], res: int) -> list[str]:
+def polyfill(
+    geometry: Union[Polygon, MultiPolygon],
+    res: int,
+    plane: bool = True,
+    compress: bool = False,
+) -> list[str]:
     """
     Turn the area contained in a shapely polygon or multipolygon into a list of cell
     indices at the requested resolution. A cell index is included if its centroid is
     inside the geometry defined by the boundaries and holes.
+
+    Returns an empty list if no cell centroids fall within the input geometry.
 
     Returns None if the geom_type field in the input geometry is anything other than
     'Polygon' or 'MultiPolygon'.
@@ -407,12 +410,13 @@ def polyfill(geometry: Union[Polygon, MultiPolygon], res: int) -> list[str]:
 
     Returns None if no cells match the geometry for some reason.
 
+    NOTE: The list of cell indices is not guaranteed to be ordered.
+
     TODO: define what happens if the holes are not completely inside the outer
           boundary - return None? Return polyfill for the outer boundary? (Check
-          what h3 does...)
+          what h3 does...or go with what shapely geometries can do?)
 
     TODO: give the option to select another predefined DGGS, or pass in a custom one
-    TODO: give the option to set n to something other than 3
     """
     # Stop early if the geometry is malformed
     if _malformed_geometry(geometry):
@@ -425,14 +429,23 @@ def polyfill(geometry: Union[Polygon, MultiPolygon], res: int) -> list[str]:
     else:
         geoms = geometry.geoms
 
+    # We'll be working on the projected cube surface from here on (may deal with the
+    # antimeridian?)
+    if not plane:
+        geoms = _polygons_sphere_to_plane(geoms)
+
     # Collect cells in regions of interest
     cells = []
     for geom in geoms:
+        # Region of interest is the bounding box around the geometry
+        bbox = geom.bounds
+
         # rhealpixdggs wants nw and se corners of region of interest
-        nw, se = _roi_corners_from_bbox(geom)
+        nw = (bbox[0], bbox[3])
+        se = (bbox[2], bbox[1])
 
         # Cells in bounding box at requested resolution
-        roi_cells = WGS84_003.cells_from_region(res, nw, se, False)
+        roi_cells = WGS84_003.cells_from_region(res, nw, se)
 
         if roi_cells:
             # Flatten list of lists of cells in bbox
@@ -446,7 +459,7 @@ def polyfill(geometry: Union[Polygon, MultiPolygon], res: int) -> list[str]:
         return None
 
     # Pre-fetch centroids for all cells and turn them into Point instances
-    centroids = [Point(cell.centroid(False)) for cell in cells]
+    centroids = [Point(cell.centroid()) for cell in cells]
 
     # Turn cells into string ids
     cells = [str(cell) for cell in cells]
@@ -458,6 +471,9 @@ def polyfill(geometry: Union[Polygon, MultiPolygon], res: int) -> list[str]:
 
     # Eliminate duplicates (can occur with overlapping polygons)
     cells = list(set(cells))
+
+    if compress:
+        cells = compress_order_cells(cells)
 
     return cells
 
@@ -615,14 +631,21 @@ def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
     return False
 
 
-def _roi_corners_from_bbox(
-    geometry: Polygon,
-) -> tuple[tuple[float, float], tuple[float, float]]:
-    # Region of interest is the bounding box around the geometry
-    bbox = geometry.bounds
+def _polygons_sphere_to_plane(geoms: list[Polygon]) -> list[Polygon]:
+    geoms_proj = []
 
-    # (TODO: handle the antimeridian)
-    nw = (bbox[0], bbox[3])
-    se = (bbox[2], bbox[1])
+    for geom in geoms:
+        # Outer polygon boundary
+        shell = [WGS84_003.rhealpix(*coord) for coord in geom.exterior.coords]
 
-    return (nw, se)
+        # Holes in polygon
+        holes = []
+        for interior in geom.interiors:
+            hole = [WGS84_003.rhealpix(*coord) for coord in interior.coords]
+            holes.append(hole)
+
+        # Repackaging
+        geom_proj = Polygon(shell, holes)
+        geoms_proj.append(geom_proj)
+
+    return geoms_proj

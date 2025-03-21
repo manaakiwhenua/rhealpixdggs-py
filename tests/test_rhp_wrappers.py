@@ -445,21 +445,17 @@ class RhpWrappersTestCase(unittest.TestCase):
             shell=[(-10, 10), (-10, -40), (50, -40), (50, 10), (-10, 10)]
         )
         eq_poly_am = sh.Polygon(
-            shell=[(130, 10), (130, -40), (-170, -40), (-170, 10), (130, 10)]
+            shell=[(170, 40), (170, -10), (-170, -10), (-170, 40), (170, 40)]
         )
 
         # Equatorial polygons and multipolygons without holes
-        self.assertEqual(rhpw.polyfill(eq_poly_n, 0), ["Q"])
-        self.assertEqual(rhpw.polyfill(eq_poly_s, 0), ["Q"])
-        # self.assertEqual(rhpw.polyfill(eq_poly_am, 0), ["R"])
+        self.assertEqual(rhpw.polyfill(eq_poly_n, 0, False), ["Q"])
+        self.assertEqual(rhpw.polyfill(eq_poly_s, 0, False), ["Q"])
+        # self.assertEqual(rhpw.polyfill(eq_poly_am, 0, False), ["R"])
         self.assertEqual(
-            rhpw.polyfill(sh.MultiPolygon(polygons=[eq_poly_n, eq_poly_s]), 0), ["Q"]
-        )
-        # self.assertEqual(
-        #     rhpw.polyfill(sh.MultiPolygon(polygons=[eq_poly_n, eq_poly_am]), 0)[
-        #         "Q", "R"
-        #     ]
-        # )
+            rhpw.polyfill(sh.MultiPolygon(polygons=[eq_poly_n, eq_poly_s]), 0, False),
+            ["Q"],
+        )  # TODO: add eq_poly_am, add "R" to results list
 
         # TODO: polar caps
 
@@ -469,7 +465,7 @@ class RhpWrappersTestCase(unittest.TestCase):
         # TODO: test cases for higher resolutions?
 
         # Test data - malformed
-        no_area = sh.Polygon(shell=((0, 0), (0, 0), (0, 0), (0, 0)))
+        no_area = sh.Polygon(shell=((0, 0), (1, 0), (2, 0), (0, 0)))
         geom_res_mismatch = sh.Polygon(
             shell=[(0, 0), (0, -40), (40, -40), (40, 0), (0, 0)]
         )
@@ -480,7 +476,7 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(rhpw.polyfill(sh.MultiPolygon(), 0))
         self.assertIsNone(rhpw.polyfill(sh.Point(), 0))
         self.assertIsNone(rhpw.polyfill(no_area, 0))
-        self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0), [])
+        self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0, False), [])
 
 
 # ------------------------------------------------------------------------------
