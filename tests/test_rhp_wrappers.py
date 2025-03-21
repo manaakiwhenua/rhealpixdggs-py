@@ -439,10 +439,18 @@ class RhpWrappersTestCase(unittest.TestCase):
     def test_polyfill(self):
         # Test data
         eq_poly_n = sh.Polygon(
-            shell=[(-10, -10), (50, -10), (50, 40), (-10, 40), (-10, -10)]
+            shell=[(-10, -10), (50, -10), (50, 40), (-10, 40), (-10, -10)],
+            holes=[
+                [(-5, 5), (25, 20), (45, 5), (-5, 5)],
+                [(-5, 25), (25, 30), (45, 25), (-5, 25)],
+            ],
         )
         eq_poly_s = sh.Polygon(
-            shell=[(-10, 10), (-10, -40), (50, -40), (50, 10), (-10, 10)]
+            shell=[(-10, 10), (-10, -40), (50, -40), (50, 10), (-10, 10)],
+            holes=[
+                [(-5, -5), (25, -20), (45, -5), (-5, -5)],
+                [(-5, -25), (25, -30), (45, -25), (-5, -25)],
+            ],
         )
         eq_poly_am = sh.Polygon(
             shell=[(170, 40), (170, -10), (-170, -10), (-170, 40), (170, 40)]
@@ -459,8 +467,8 @@ class RhpWrappersTestCase(unittest.TestCase):
 
         # TODO: polar caps
 
-        # TODO: polygon with hole (fold into equatorial and polar cap sections)
-        # TODO: multipolygon with holes (fold into equatorial and polar cap sections)
+        # TODO: polygon with hole (fold into polar cap section)
+        # TODO: multipolygon with holes (fold into polar cap section)
 
         # TODO: test cases for higher resolutions?
 
