@@ -453,7 +453,7 @@ class RhpWrappersTestCase(unittest.TestCase):
             ],
         )
         eq_poly_am = sh.Polygon(
-            shell=[(170, 40), (170, -10), (-170, -10), (-170, 40), (170, 40)]
+            shell=[(130, 40), (130, -10), (-170, -10), (-170, 40), (130, 40)]
         )
 
         # Equatorial polygons and multipolygons without holes

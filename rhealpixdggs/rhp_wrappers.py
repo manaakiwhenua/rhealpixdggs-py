@@ -433,7 +433,9 @@ def polyfill(
     # We'll be working on the projected cube surface from here on (may deal with the
     # antimeridian?)
     if not plane:
-        geoms = _polygons_sphere_to_plane(geoms, WGS84_003)
+        transformed_geom, geoms = _transform_geometry(geoms, WGS84_003)
+    else:
+        transformed_geom = geometry
 
     # Collect cells in regions of interest
     cells = []
@@ -459,20 +461,19 @@ def polyfill(
     if not cells:
         return None
 
-    # Pre-fetch centroids for all cells and turn them into Point instances
-    centroids = [Point(cell.centroid()) for cell in cells]
+    # Check each cell against (transformed) geometry, discard if outside polygon
+    for cell in cells:
+        if not transformed_geom.contains_properly(Point(cell.centroid())):
+            cells.remove(cell)
 
     # Turn cells into string ids
     cells = [str(cell) for cell in cells]
 
-    # Check each cell against geometry, discard if outside polygon
-    for cell, centroid in zip(cells, centroids):
-        if not geometry.contains_properly(centroid):
-            cells.remove(cell)
-
     # Eliminate duplicates (can occur with overlapping polygons)
     cells = list(set(cells))
 
+    # Merge cells inside polygon into larger ones where possible
+    # TODO: test this
     if compress:
         cells = compress_order_cells(cells)
 
@@ -632,23 +633,34 @@ def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
     return False
 
 
-def _polygons_sphere_to_plane(
+def _polygon_sphere_to_plane(poly: Polygon, dggs: RHEALPixDGGS) -> Polygon:
+    # Outer polygon boundary
+    shell = [dggs.rhealpix(*coord) for coord in poly.exterior.coords]
+
+    # Holes in polygon
+    holes = []
+    for interior in poly.interiors:
+        hole = [dggs.rhealpix(*coord) for coord in interior.coords]
+        holes.append(hole)
+
+    # Repackaging
+    geom_proj = Polygon(shell, holes)
+
+    return geom_proj
+
+
+def _transform_geometry(
     geoms: list[Polygon], dggs: RHEALPixDGGS
-) -> list[Polygon]:
+) -> tuple[Union[Polygon, MultiPolygon], list[Polygon]]:
+    # Transform individual polygons
     geoms_proj = []
-
     for geom in geoms:
-        # Outer polygon boundary
-        shell = [dggs.rhealpix(*coord) for coord in geom.exterior.coords]
+        geoms_proj.append(_polygon_sphere_to_plane(geom, dggs))
 
-        # Holes in polygon
-        holes = []
-        for interior in geom.interiors:
-            hole = [dggs.rhealpix(*coord) for coord in interior.coords]
-            holes.append(hole)
+    # Rebuild transformed shapely object
+    if len(geoms_proj) < 2:
+        geometry_proj = geoms_proj[0]
+    else:
+        geometry_proj = MultiPolygon(polygons=geoms_proj)
 
-        # Repackaging
-        geom_proj = Polygon(shell, holes)
-        geoms_proj.append(geom_proj)
-
-    return geoms_proj
+    return geometry_proj, geoms_proj
