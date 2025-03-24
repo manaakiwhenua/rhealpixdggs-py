@@ -9,7 +9,7 @@ from rhealpixdggs.conversion import CellZoneFromPoly, compress_order_cells
 # ======== Messages and constants ======== #
 
 
-# Pre-defined DGGS using WGS84 ellipsoid and n == 3 for cell side subpartitioning
+# Pre-defined DGGS with WGS84 ellipsoid, coordinates in degrees and n == 3 to subdivide cell sides
 from rhealpixdggs.dggs import WGS84_003
 
 # List of resolution 0 cell addresses (i.e. cube faces)
@@ -21,24 +21,25 @@ CELL_RING_WARNING = "WARNING: Implementation of cell rings is incomplete. Reques
 # ======== Main API ======== #
 
 
-def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> str:
+def geo_to_rhp(
+    lat: float,
+    lng: float,
+    resolution: int,
+    plane: bool = True,
+    dggs: RHEALPixDGGS = WGS84_003,
+) -> str:
     """
     Turn a latitute and longitude (in degrees) into an rHEALPix cell address at
     the requested resolution.
-
-    Uses the predefined WGS84_003 DGGS with the WGS84 ellipsoid and n = 3 to
-    subdivide the cell sides.
 
     Mostly passes through the parameters to the function turning coordinate points
     into cells, but converts the address tuple from the resulting cell into a
     string.
 
     Returns None if no cell matching the coordinates is found.
-
-    TODO: give the option to select another predefined DGGS, or pass in a custom one
     """
     # Get the grid cell corresponding to the coordinates
-    cell = WGS84_003.cell_from_point(resolution, (lng, lat), plane)
+    cell = dggs.cell_from_point(resolution, (lng, lat), plane)
 
     # Bail out if there's no matching cell
     if cell is None:
@@ -49,7 +50,10 @@ def geo_to_rhp(lat: float, lng: float, resolution: int, plane: bool = True) -> s
 
 
 def rhp_to_geo(
-    rhpindex: str, geo_json: bool = True, plane: bool = True
+    rhpindex: str,
+    geo_json: bool = True,
+    plane: bool = True,
+    dggs: RHEALPixDGGS = WGS84_003,
 ) -> tuple[float, float]:
     """
     Look up the centroid (in degrees) of the cell identified by rhpindex.
@@ -62,16 +66,14 @@ def rhp_to_geo(
     if geojson is NOT requested as the output format:
         - Will return a (latitude, longitude) coordinate pair in order to be consistent with
           h3 coordinate ordering.
-
-    TODO: give the option to select another predefined DGGS, or pass in a custom one
     """
     # Stop early if the cell index is invalid
-    if not rhp_is_valid(rhpindex):
+    if not rhp_is_valid(rhpindex, dggs):
         return None
 
     # Grab cell centroid matching rhpindex string
     suid = [int(d) if d.isdigit() else d for d in rhpindex]
-    cell = WGS84_003.cell(suid)
+    cell = dggs.cell(suid)
     centroid = cell.centroid(plane=plane)
 
     # rhealpix coordinates come out natively as lng/lat, h3 ones as lat/lng
@@ -82,14 +84,16 @@ def rhp_to_geo(
     return centroid
 
 
-def rhp_to_parent(rhpindex: str, res: int = None, verbose: bool = True) -> str:
+def rhp_to_parent(
+    rhpindex: str, res: int = None, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+) -> str:
     """
     Returns parent of rhpindex at resolution res (immediate parent if res == None).
 
     Returns None if the cell index is invalid.
     """
     # Stop early if the cell index is invalid
-    if not rhp_is_valid(rhpindex):
+    if not rhp_is_valid(rhpindex, dggs):
         return None
 
     # Top-level cells are their own parent, regardless of the requested resolution (by convention)
@@ -114,7 +118,9 @@ def rhp_to_parent(rhpindex: str, res: int = None, verbose: bool = True) -> str:
         return rhpindex[: res + 1]
 
 
-def rhp_to_center_child(rhpindex: str, res: int = None, verbose: bool = True) -> str:
+def rhp_to_center_child(
+    rhpindex: str, res: int = None, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+) -> str:
     """
     Returns central child of rhpindex at resolution res (immediate central
     child if res == None).
@@ -124,7 +130,7 @@ def rhp_to_center_child(rhpindex: str, res: int = None, verbose: bool = True) ->
     TODO: come up with a scheme for even numbers on a side
     """
     # Stop early if the cell index is invalid
-    if not rhp_is_valid(rhpindex):
+    if not rhp_is_valid(rhpindex, dggs):
         return None
 
     # Handle mismatch between cell resolution and requested child resolution
@@ -143,7 +149,7 @@ def rhp_to_center_child(rhpindex: str, res: int = None, verbose: bool = True) ->
 
         # Derive index of centre child and append that to rhpindex
         # NOTE: only works for odd values of N_side
-        c_index = int((WGS84_003.N_side**2 - 1) / 2)
+        c_index = int((dggs.N_side**2 - 1) / 2)
 
         # Append the required number of child digits to cell index
         child_index = rhpindex + "".join(str(c_index) for _ in range(0, added_levels))
@@ -152,7 +158,10 @@ def rhp_to_center_child(rhpindex: str, res: int = None, verbose: bool = True) ->
 
 
 def rhp_to_geo_boundary(
-    rhpindex: str, geo_json: bool = True, plane: bool = True
+    rhpindex: str,
+    geo_json: bool = True,
+    plane: bool = True,
+    dggs: RHEALPixDGGS = WGS84_003,
 ) -> tuple[tuple[float, float]]:
     """
     Extract the corner coordinates of a cell at a given cell ID and returns them as
@@ -168,16 +177,14 @@ def rhp_to_geo_boundary(
     If geojson is NOT requested as the output format:
         - Will return (latitude, longitude) coordinate pairs in order to be consistent with
           rHEALPix coordinate ordering.
-
-    TODO: give the option to select another predefined DGGS, or pass in a custom one
     """
     # Stop early if the cell index is invalid
-    if not rhp_is_valid(rhpindex):
+    if not rhp_is_valid(rhpindex, dggs):
         return None
 
     # Grab the cell vertices (includes non-corner point in darts if plane == False)
     suid = [int(d) if d.isdigit() else d for d in rhpindex]
-    cell = WGS84_003.cell(suid)
+    cell = dggs.cell(suid)
     verts = tuple(cell.vertices(plane=plane))
 
     # rhealpix coordinates come out natively as lng/lat, h3 ones as lat/lng
@@ -192,31 +199,29 @@ def rhp_to_geo_boundary(
     return verts
 
 
-def rhp_get_resolution(rhpindex: str) -> int:
+def rhp_get_resolution(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> int:
     """
     Returns the resolution of a given cell index (or None if invalid).
     """
-    if not rhp_is_valid(rhpindex):
+    if not rhp_is_valid(rhpindex, dggs):
         return None
 
     return len(rhpindex) - 1
 
 
-def rhp_get_base_cell(rhpindex: str) -> str:
+def rhp_get_base_cell(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> str:
     """
     Returns the resolution 0 cell id of a given cell index (or None if invalid).
     """
-    if not rhp_is_valid(rhpindex):
+    if not rhp_is_valid(rhpindex, dggs):
         return None
 
     return rhpindex[0]
 
 
-def rhp_is_valid(rhpindex: str) -> bool:
+def rhp_is_valid(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> bool:
     """
     Checks if the given cell address is valid within the DGGS
-
-    TODO: give the option to select another predefined DGGS, or pass in a custom one
     """
     # Empty strings are invalid
     if rhpindex is None or len(rhpindex) == 0:
@@ -227,7 +232,7 @@ def rhp_is_valid(rhpindex: str) -> bool:
         return False
 
     # Addresses that have digits out of range are invalid
-    num_subcells = WGS84_003.N_side**2
+    num_subcells = dggs.N_side**2
     for d in rhpindex[1:]:
         if not d.isdigit() or (int(d) >= num_subcells):
             return False
@@ -237,19 +242,22 @@ def rhp_is_valid(rhpindex: str) -> bool:
 
 
 def cell_area(
-    rhpindex: str, unit: Literal["km^2", "m^2"] = "km^2", plane=True
+    rhpindex: str,
+    unit: Literal["km^2", "m^2"] = "km^2",
+    plane=True,
+    dggs: RHEALPixDGGS = WGS84_003,
 ) -> float:
     """
     Returns the area of a cell in the requested unit (or None if rhpindex is invalid).
 
     TODO: investigate use case where unit is 'rads^2'
     """
-    if not rhp_is_valid(rhpindex):
+    if not rhp_is_valid(rhpindex, dggs):
         return None
 
     # Grab cell area in native unit (m^2)
     suid = [int(d) if d.isdigit() else d for d in rhpindex]
-    cell = WGS84_003.cell(suid)
+    cell = dggs.cell(suid)
     area = cell.area(plane=plane)
 
     # Scale area if needed
@@ -259,7 +267,9 @@ def cell_area(
     return area
 
 
-def cell_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
+def cell_ring(
+    rhpindex: str, k: int = 1, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+) -> list[str]:
     """
     Returns the ring of cell indices around rhpindex at distance k, or None if rhpindex
     is invalid.
@@ -274,7 +284,7 @@ def cell_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
     if verbose:
         warn(str.format(CELL_RING_WARNING, "cell"))
 
-    if not rhp_is_valid(rhpindex) or (k < 0):
+    if not rhp_is_valid(rhpindex, dggs) or (k < 0):
         return None
 
     # A cell ring at distance 0 just consists of the cell itself
@@ -283,7 +293,7 @@ def cell_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
 
     # Grab the centre cell
     suid = [int(d) if d.isdigit() else d for d in rhpindex]
-    cell = WGS84_003.cell(suid)
+    cell = dggs.cell(suid)
 
     # Maximum ring distance from centre cell
     half_circle = 2 * cell.N_side ** rhp_get_resolution(rhpindex)
@@ -354,41 +364,31 @@ def cell_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
     return ring
 
 
-# TODO: placeholder, find out if rhp needs that function
-# def weighted_cell_ring(rphindex: str, k: int = 1) -> list[str]:
-#    pass
-
-
-def k_ring(rhpindex: str, k: int = 1, verbose: bool = True) -> list[str]:
+def k_ring(
+    rhpindex: str, k: int = 1, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+) -> list[str]:
     """
     Returns the k-ring of cell indices around rhpindex at distance k (or None if rhpindex is invalid).
 
     Also returns None if k < 0.
-
-    TODO: give the option to select another predefined DGGS, or pass in a custom one
     """
     if verbose:
         warn(str.format(CELL_RING_WARNING, "k"))
 
-    if not rhp_is_valid(rhpindex) or (k < 0):
+    if not rhp_is_valid(rhpindex, dggs) or (k < 0):
         return None
 
     # A k-ring at distance 0 just consists of the centre cell itself
     if k == 0:
         return [rhpindex]
 
-    distance = min(2 * WGS84_003.N_side ** rhp_get_resolution(rhpindex), k)
+    distance = min(2 * dggs.N_side ** rhp_get_resolution(rhpindex), k)
     kring = [rhpindex]
 
     for d in range(1, distance + 1):
-        kring = kring + cell_ring(rhpindex, d, verbose=False)
+        kring = kring + cell_ring(rhpindex, d, verbose=False, dggs=dggs)
 
     return kring
-
-
-# TODO: placeholder, find out if rhp needs that function
-# def k_ring_smoothing(rhpindex: str, k: int = 1) -> list[str]:
-#    pass
 
 
 def polyfill(
@@ -396,6 +396,7 @@ def polyfill(
     res: int,
     plane: bool = True,
     compress: bool = False,
+    dggs: RHEALPixDGGS = WGS84_003,
 ) -> list[str]:
     """
     Turn the area contained in a shapely polygon or multipolygon into a list of cell
@@ -416,8 +417,6 @@ def polyfill(
     TODO: define what happens if the holes are not completely inside the outer
           boundary - return None? Return polyfill for the outer boundary? (Check
           what h3 does...or go with what shapely geometries can do?)
-
-    TODO: give the option to select another predefined DGGS, or pass in a custom one
     """
     # Stop early if the geometry is malformed
     if _malformed_geometry(geometry):
@@ -433,7 +432,7 @@ def polyfill(
     # We'll be working on the projected cube surface from here on (may deal with the
     # antimeridian?)
     if not plane:
-        transformed_geom, geoms = _transform_geometry(geoms, WGS84_003)
+        transformed_geom, geoms = _transform_geometry(geoms, dggs)
     else:
         transformed_geom = geometry
 
@@ -448,7 +447,7 @@ def polyfill(
         se = (bbox[2], bbox[1])
 
         # Cells in bounding box at requested resolution
-        roi_cells = WGS84_003.cells_from_region(res, nw, se)
+        roi_cells = dggs.cells_from_region(res, nw, se)
 
         if roi_cells:
             # Flatten list of lists of cells in bbox
@@ -480,7 +479,9 @@ def polyfill(
     return cells
 
 
-def linetrace(geometry, resolution: int) -> list[str]:
+def linetrace(
+    geometry, res: int, plane: bool = True, dggs: RHEALPixDGGS = WGS84_003
+) -> list[str]:
     raise NotImplementedError()
 
 
