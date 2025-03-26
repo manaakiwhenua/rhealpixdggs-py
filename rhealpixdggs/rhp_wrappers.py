@@ -399,9 +399,9 @@ def polyfill(
     dggs: RHEALPixDGGS = WGS84_003,
 ) -> list[str]:
     """
-    Turn the area contained in a shapely polygon or multipolygon into a list of cell
-    indices at the requested resolution. A cell index is included if its centroid is
-    inside the geometry defined by the boundaries and holes.
+    Turn the area contained in a shapely polygon or multipolygon into a sorted list
+    of cell indices at the requested resolution. A cell index is included if its
+    centroid is inside the geometry defined by the boundaries and holes.
 
     Returns an empty list if no cell centroids fall within the input geometry.
 
@@ -412,11 +412,9 @@ def polyfill(
 
     Returns None if no cells match the geometry for some reason.
 
-    NOTE: The list of cell indices is not guaranteed to be ordered.
-
-    TODO: define what happens if the holes are not completely inside the outer
-          boundary - return None? Return polyfill for the outer boundary? (Check
-          what h3 does...or go with what shapely geometries can do?)
+    Throws an error if the geometry is invalid in other ways, e.g. if a point on a hole
+    boundary is outside the exterior boundary of its polygon, or if two polygons in a
+    multipolygon overlap.
 
     TODO: deal with the antimeridian
     """
@@ -461,12 +459,12 @@ def polyfill(
         if geometry.contains(Point(cell.centroid(plane))):
             poly_cells.append(str(cell))
 
-    # Eliminate duplicates (can occur with overlapping polygons)
-    poly_cells = list(set(poly_cells))
-
-    # Merge cells inside polygon into larger ones where possible
+    # Merge cells inside polygon into larger ones where possible (will sort cell ids)
     if compress:
         poly_cells = compress_order_cells(poly_cells)
+    # Sort cell ids separately
+    else:
+        poly_cells.sort()
 
     return poly_cells
 
