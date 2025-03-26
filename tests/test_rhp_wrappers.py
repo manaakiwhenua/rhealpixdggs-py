@@ -437,7 +437,32 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(kring)
 
     def test_polyfill(self):
-        # Test data
+        # Test data - plane
+        idx = ("N", 2, 1, 6, 0, 5, 5, 6, 1, 1)
+        cell = rhpw.Cell(rdggs=rhpw.WGS84_003, suid=idx)
+        plane_poly = sh.Polygon(cell.vertices())
+
+        # Uncompressed from polygon - plane
+        result = rhpw.polyfill(plane_poly, 10)
+        self.assertEqual(
+            result,
+            [
+                "N2160556110",
+                "N2160556111",
+                "N2160556112",
+                "N2160556113",
+                "N2160556114",
+                "N2160556115",
+                "N2160556116",
+                "N2160556117",
+                "N2160556118",
+            ],
+        )
+
+        # Compressed from polygon - plane
+        self.assertEqual(rhpw.polyfill(plane_poly, 10, compress=True), ["N216055611"])
+
+        # Test data - sphere
         eq_poly_n = sh.Polygon(
             shell=[(-10, -10), (50, -10), (50, 40), (-10, 40), (-10, -10)],
             holes=[
@@ -448,35 +473,41 @@ class RhpWrappersTestCase(unittest.TestCase):
         eq_poly_s = sh.Polygon(
             shell=[(-10, 10), (-10, -40), (50, -40), (50, 10), (-10, 10)],
             holes=[
-                [(-5, -5), (25, -20), (45, -5), (-5, -5)],
-                [(-5, -25), (25, -30), (45, -25), (-5, -25)],
+                [(-5, -5), (45, -5), (25, -20), (-5, -5)],
+                [(-5, -25), (45, -25), (25, -30), (-5, -25)],
             ],
         )
-        eq_poly_am = sh.Polygon(
-            shell=[(130, 40), (130, -10), (-170, -10), (-170, 40), (130, 40)]
+        po_poly_n = sh.Polygon(
+            shell=[(0, 75), (-30, 42), (0, 42), (30, 42), (0, 75)],
+            holes=[[(0, 70), (5, 60), (-5, 60), (0, 70)]],
         )
+        po_poly_s = sh.Polygon(
+            shell=[(30, -42), (0, -75), (90, -75), (60, -42), (30, -42)],
+            holes=[[(10, -70), (20, -65), (10, -65), (10, -70)]],
+        )
+        # eq_poly_am = sh.Polygon(
+        #     shell=[(130, 40), (130, -10), (-170, -10), (-170, 40), (130, 40)]
+        # )  # TODO: hole
 
-        # Equatorial polygons and multipolygons without holes
+        # Polygon tests - sphere
         self.assertEqual(rhpw.polyfill(eq_poly_n, 0, False), ["Q"])
         self.assertEqual(rhpw.polyfill(eq_poly_s, 0, False), ["Q"])
+        self.assertEqual(rhpw.polyfill(po_poly_n, 1, False), ["N2"])
+        self.assertEqual(rhpw.polyfill(po_poly_s, 1, False), ["S7"])
         # self.assertEqual(rhpw.polyfill(eq_poly_am, 0, False), ["R"])
-        self.assertEqual(
-            rhpw.polyfill(sh.MultiPolygon(polygons=[eq_poly_n, eq_poly_s]), 0, False),
-            ["Q"],
-        )  # TODO: add eq_poly_am, add "R" to results list
 
-        # TODO: polar caps
-
-        # TODO: polygon with hole (fold into polar cap section)
-        # TODO: multipolygon with holes (fold into polar cap section)
-
-        # TODO: test cases for higher resolutions?
+        # Multipolygon tests - sphere
+        result = rhpw.polyfill(
+            sh.MultiPolygon(polygons=[eq_poly_n, po_poly_n, po_poly_s]), 1, False
+        )  # TODO: add eq_poly_am, add "R*" to results list
+        self.assertEqual(result, ["N2", "Q1", "Q3", "Q4", "S7"])
 
         # Test data - malformed
         no_area = sh.Polygon(shell=((0, 0), (1, 0), (2, 0), (0, 0)))
         geom_res_mismatch = sh.Polygon(
             shell=[(0, 0), (0, -40), (40, -40), (40, 0), (0, 0)]
         )
+        multi_overlap = sh.MultiPolygon(polygons=[eq_poly_n, eq_poly_s])
 
         # Malformed input geometries
         self.assertIsNone(rhpw.polyfill(None, 0))
@@ -484,7 +515,11 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(rhpw.polyfill(sh.MultiPolygon(), 0))
         self.assertIsNone(rhpw.polyfill(sh.Point(), 0))
         self.assertIsNone(rhpw.polyfill(no_area, 0))
+        self.assertEqual(rhpw.polyfill(plane_poly, 1), [])
         self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0, False), [])
+        self.assertRaises(
+            sh.errors.GEOSException, rhpw.polyfill, multi_overlap, 0, False
+        )
 
 
 # ------------------------------------------------------------------------------
