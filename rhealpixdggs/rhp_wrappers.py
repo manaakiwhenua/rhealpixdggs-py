@@ -417,6 +417,8 @@ def polyfill(
     TODO: define what happens if the holes are not completely inside the outer
           boundary - return None? Return polyfill for the outer boundary? (Check
           what h3 does...or go with what shapely geometries can do?)
+
+    TODO: deal with the antimeridian
     """
     # Stop early if the geometry is malformed
     if _malformed_geometry(geometry):
@@ -429,13 +431,6 @@ def polyfill(
     else:
         geoms = geometry.geoms
 
-    # We'll be working on the projected cube surface from here on (may deal with the
-    # antimeridian?)
-    if not plane:
-        transformed_geom, geoms = _transform_geometry(geoms, dggs)
-    else:
-        transformed_geom = geometry
-
     # Collect cells in regions of interest
     cells = []
     for geom in geoms:
@@ -447,7 +442,7 @@ def polyfill(
         se = (bbox[2], bbox[1])
 
         # Cells in bounding box at requested resolution
-        roi_cells = dggs.cells_from_region(res, nw, se)
+        roi_cells = dggs.cells_from_region(res, nw, se, plane)
 
         if roi_cells:
             # Flatten list of lists of cells in bbox
@@ -460,23 +455,20 @@ def polyfill(
     if not cells:
         return None
 
-    # Check each cell against (transformed) geometry, discard if outside polygon
+    # Check each cell against geometry, add to results if inside polygon
+    poly_cells = []
     for cell in cells:
-        if not transformed_geom.contains_properly(Point(cell.centroid())):
-            cells.remove(cell)
-
-    # Turn cells into string ids
-    cells = [str(cell) for cell in cells]
+        if geometry.contains(Point(cell.centroid(plane))):
+            poly_cells.append(str(cell))
 
     # Eliminate duplicates (can occur with overlapping polygons)
-    cells = list(set(cells))
+    poly_cells = list(set(poly_cells))
 
     # Merge cells inside polygon into larger ones where possible
-    # TODO: test this
     if compress:
-        cells = compress_order_cells(cells)
+        poly_cells = compress_order_cells(poly_cells)
 
-    return cells
+    return poly_cells
 
 
 def linetrace(
@@ -648,20 +640,3 @@ def _polygon_sphere_to_plane(poly: Polygon, dggs: RHEALPixDGGS) -> Polygon:
     geom_proj = Polygon(shell, holes)
 
     return geom_proj
-
-
-def _transform_geometry(
-    geoms: list[Polygon], dggs: RHEALPixDGGS
-) -> tuple[Union[Polygon, MultiPolygon], list[Polygon]]:
-    # Transform individual polygons
-    geoms_proj = []
-    for geom in geoms:
-        geoms_proj.append(_polygon_sphere_to_plane(geom, dggs))
-
-    # Rebuild transformed shapely object
-    if len(geoms_proj) < 2:
-        geometry_proj = geoms_proj[0]
-    else:
-        geometry_proj = MultiPolygon(polygons=geoms_proj)
-
-    return geometry_proj, geoms_proj
