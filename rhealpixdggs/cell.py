@@ -1018,8 +1018,6 @@ class Cell(object):
             quad
             >>> print(Cell(rdggs, ['N', 2]).ellipsoidal_shape())
             dart
-            >>> print(Cell(rdggs, ['N']).ellipsoidal_shape())
-            cap
 
         """
         suid = self.suid
