@@ -446,7 +446,7 @@ class RhpWrappersTestCase(unittest.TestCase):
         result = rhpw.polyfill(plane_poly, 10)
         self.assertEqual(
             result,
-            {
+            [
                 "N2160556110",
                 "N2160556111",
                 "N2160556112",
@@ -456,11 +456,11 @@ class RhpWrappersTestCase(unittest.TestCase):
                 "N2160556116",
                 "N2160556117",
                 "N2160556118",
-            },
+            ],
         )
 
         # Compressed from polygon - plane
-        self.assertEqual(rhpw.polyfill(plane_poly, 10, compress=True), {"N216055611"})
+        self.assertEqual(rhpw.polyfill(plane_poly, 10, compress=True), ["N216055611"])
 
         # Test data - sphere
         eq_poly_n = sh.Polygon(
@@ -490,17 +490,17 @@ class RhpWrappersTestCase(unittest.TestCase):
         # )  # TODO: hole
 
         # Polygon tests - sphere
-        self.assertEqual(rhpw.polyfill(eq_poly_n, 0, False), {"Q"})
-        self.assertEqual(rhpw.polyfill(eq_poly_s, 0, False), {"Q"})
-        self.assertEqual(rhpw.polyfill(po_poly_n, 1, False), {"N2"})
-        self.assertEqual(rhpw.polyfill(po_poly_s, 1, False), {"S7"})
+        self.assertEqual(rhpw.polyfill(eq_poly_n, 0, False), ["Q"])
+        self.assertEqual(rhpw.polyfill(eq_poly_s, 0, False), ["Q"])
+        self.assertEqual(rhpw.polyfill(po_poly_n, 1, False), ["N2"])
+        self.assertEqual(rhpw.polyfill(po_poly_s, 1, False), ["S7"])
         # self.assertEqual(rhpw.polyfill(eq_poly_am, 0, False), ["R"])
 
         # Multipolygon tests - sphere
         result = rhpw.polyfill(
             sh.MultiPolygon(polygons=[eq_poly_n, po_poly_n, po_poly_s]), 1, False
         )  # TODO: add eq_poly_am, add "R*" to results list
-        self.assertEqual(result, {"N2", "Q1", "Q3", "Q4", "S7"})
+        self.assertEqual(result, ["N2", "Q1", "Q3", "Q4", "S7"])
 
         # Test data - malformed
         no_area = sh.Polygon(shell=((0, 0), (1, 0), (2, 0), (0, 0)))
@@ -516,8 +516,8 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(rhpw.polyfill(sh.Point(), 0))
         self.assertIsNone(rhpw.polyfill(no_area, 0))
         self.assertIsNone(rhpw.polyfill(multi_overlap, 0, False))
-        self.assertEqual(rhpw.polyfill(plane_poly, 1), set())
-        self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0, False), set())
+        self.assertEqual(rhpw.polyfill(plane_poly, 1), [])
+        self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0, False), [])
 
 
 # ------------------------------------------------------------------------------
