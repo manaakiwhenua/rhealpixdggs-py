@@ -1,10 +1,10 @@
 from typing import Literal, Union
 from warnings import warn
-from shapely import Point, Polygon, MultiPolygon
+from shapely import Point, Polygon, MultiPolygon, is_valid_reason
 
 from rhealpixdggs.dggs import RHEALPixDGGS
 from rhealpixdggs.cell import Cell
-from rhealpixdggs.conversion import CellZoneFromPoly, compress_order_cells
+from rhealpixdggs.conversion import compress_order_cells
 
 # ======== Messages and constants ======== #
 
@@ -412,7 +412,7 @@ def polyfill(
 
     Returns None if no cells match the geometry for some reason.
 
-    Throws an error if the geometry is invalid in other ways, e.g. if a point on a hole
+    Returns None if the geometry is invalid in other ways, e.g. if a point on a hole
     boundary is outside the exterior boundary of its polygon, or if two polygons in a
     multipolygon overlap.
 
@@ -446,27 +446,20 @@ def polyfill(
             # Flatten list of lists of cells in bbox
             roi_cells = [cell for nested_list in roi_cells for cell in nested_list]
 
-            # Aggregate results
-            cells = cells + roi_cells
-
-    # Bail out if no cells match the geometry for some reason
-    if not cells:
-        return None
-
-    # Check each cell against geometry, add to results if inside polygon
-    poly_cells = []
-    for cell in cells:
-        if geometry.contains(Point(cell.centroid(plane))):
-            poly_cells.append(str(cell))
+            # Check each cell against geometry, add to results if inside polygon
+            for cell in roi_cells:
+                if geom.contains(Point(cell.centroid(plane))):
+                    cells.append(str(cell))
 
     # Merge cells inside polygon into larger ones where possible (will sort cell ids)
     if compress:
-        poly_cells = compress_order_cells(poly_cells)
+        cells = compress_order_cells(cells)
+
     # Sort cell ids separately
     else:
-        poly_cells.sort()
+        cells.sort()
 
-    return set(poly_cells)
+    return set(cells)
 
 
 def linetrace(
@@ -617,24 +610,11 @@ def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
     if geometry.geom_type != "Polygon" and geometry.geom_type != "MultiPolygon":
         return True
 
+    if not geometry.is_valid:
+        return True
+
     # Geometry has to have an area, i.e. not be collapsed to a line
     if geometry.area == 0:
         return True
 
     return False
-
-
-def _polygon_sphere_to_plane(poly: Polygon, dggs: RHEALPixDGGS) -> Polygon:
-    # Outer polygon boundary
-    shell = [dggs.rhealpix(*coord) for coord in poly.exterior.coords]
-
-    # Holes in polygon
-    holes = []
-    for interior in poly.interiors:
-        hole = [dggs.rhealpix(*coord) for coord in interior.coords]
-        holes.append(hole)
-
-    # Repackaging
-    geom_proj = Polygon(shell, holes)
-
-    return geom_proj
