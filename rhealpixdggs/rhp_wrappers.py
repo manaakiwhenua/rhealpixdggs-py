@@ -466,7 +466,7 @@ def polyfill(
     else:
         poly_cells.sort()
 
-    return poly_cells
+    return set(poly_cells)
 
 
 def linetrace(
