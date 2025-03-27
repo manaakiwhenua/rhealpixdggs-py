@@ -1018,11 +1018,15 @@ class Cell(object):
             quad
             >>> print(Cell(rdggs, ['N', 2]).ellipsoidal_shape())
             dart
+            >>> print(Cell(rdggs, ['N']).ellipsoidal_shape())
+            cap
 
         """
         suid = self.suid
         if suid[0] in CELLS0[1:5]:
             return "quad"
+        if suid == tuple(CELLS0[0]) or suid == tuple(CELLS0[5]):
+            return "cap"
         N = self.N_side
         # Cap check.
         cap = True
