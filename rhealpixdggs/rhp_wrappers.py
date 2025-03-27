@@ -15,8 +15,10 @@ from rhealpixdggs.dggs import WGS84_003
 # List of resolution 0 cell addresses (i.e. cube faces)
 from rhealpixdggs.cell import CELLS0
 
+PARENT_RESOLUTION_WARNING = "WARNING: You requested a parent resolution that is higher than the cell resolution. Returning the cell address itself."
+CHILD_RESOLUTION_WARNING = "WARNING: You requested a child resolution that is lower than the cell resolution. Returning the cell address itself."
 CELL_RING_WARNING = "WARNING: Implementation of cell rings is incomplete. Requesting a {0} ring that involves more than two resolution 0 cube faces will return unexpected results."
-
+POLYFILL_GEOMETRY_WARNING = "WARNING: Empty or missing geometry, unsupported geometry type (not Polygon or MultiPolygon), or geometry with no area. Returning None."
 
 # ======== Main API ======== #
 
@@ -108,9 +110,7 @@ def rhp_to_parent(
     # Handle mismatch between cell resolution and requested parent resolution
     elif res > child_res:
         if verbose:
-            print(
-                f"Warning: You requested a parent resolution that is higher than the cell resolution. Returning the cell address itself."
-            )
+            print(PARENT_RESOLUTION_WARNING)
         return rhpindex
 
     # Standard case (including child_res == res)
@@ -137,9 +137,7 @@ def rhp_to_center_child(
     parent_res = len(rhpindex)
     if res is not None and res < parent_res:
         if verbose:
-            print(
-                f"Warning: You requested a child resolution that is lower than the cell resolution. Returning the cell address itself."
-            )
+            print(CHILD_RESOLUTION_WARNING)
         return rhpindex
 
     # Standard case (including parent_res == res)
@@ -396,14 +394,15 @@ def polyfill(
     res: int,
     plane: bool = True,
     compress: bool = False,
+    verbose: bool = False,
     dggs: RHEALPixDGGS = WGS84_003,
 ) -> list[str]:
     """
-    Turn the area contained in a shapely polygon or multipolygon into a sorted list
+    Turn the area contained in a shapely polygon or multipolygon into a sorted set
     of cell indices at the requested resolution. A cell index is included if its
     centroid is inside the geometry defined by the boundaries and holes.
 
-    Returns an empty list if no cell centroids fall within the input geometry.
+    Returns an empty set if no cell centroids fall within the input geometry.
 
     Returns None if the geom_type field in the input geometry is anything other than
     'Polygon' or 'MultiPolygon'.
@@ -416,10 +415,17 @@ def polyfill(
     boundary is outside the exterior boundary of its polygon, or if two polygons in a
     multipolygon overlap.
 
-    TODO: deal with the antimeridian
+    TODO: decide what to do with the antimeridian (if anything)
     """
     # Stop early if the geometry is malformed
     if _malformed_geometry(geometry):
+        if verbose:
+            message = is_valid_reason(geometry)
+            if not message or message == "Valid Geometry":
+                warn(POLYFILL_GEOMETRY_WARNING)
+            else:
+                warn(str.format("WARNING: {0}. Returning None.", message))
+
         return None
 
     # Extract list of polygons from geometry: Polygon needs to be wrapped in

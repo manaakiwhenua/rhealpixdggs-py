@@ -515,9 +515,9 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(rhpw.polyfill(sh.MultiPolygon(), 0))
         self.assertIsNone(rhpw.polyfill(sh.Point(), 0))
         self.assertIsNone(rhpw.polyfill(no_area, 0))
+        self.assertIsNone(rhpw.polyfill(multi_overlap, 0, False))
         self.assertEqual(rhpw.polyfill(plane_poly, 1), set())
         self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0, False), set())
-        self.assertEqual(rhpw.polyfill(multi_overlap, 0, False), None)
 
 
 # ------------------------------------------------------------------------------
