@@ -1023,6 +1023,8 @@ class Cell(object):
         suid = self.suid
         if suid[0] in CELLS0[1:5]:
             return "quad"
+        if suid == tuple(CELLS0[0]) or suid == tuple(CELLS0[5]):
+            return "cap"
         N = self.N_side
         # Cap check.
         cap = True

@@ -60,6 +60,9 @@ WGS84_123 = dggs.RHEALPixDGGS(
 WGS84_123_RADIANS = dggs.RHEALPixDGGS(
     ellipsoid=WGS84_ELLIPSOID_RADIANS, north_square=1, south_square=2, N_side=3
 )
+WGS84_122 = dggs.RHEALPixDGGS(
+            ellipsoid=WGS84_ELLIPSOID, north_square=1, south_square=2, N_side=2
+        )
 
 
 class SCENZGridTestCase(unittest.TestCase):
@@ -545,6 +548,11 @@ class SCENZGridTestCase(unittest.TestCase):
                     u = [s] + t
                     X = rdggs.cell(u)
                     self.assertEqual(X.ellipsoidal_shape(), "skew_quad")
+        rdggs = WGS84_122
+        cell_n = rdggs.cell((CELLS0[0],))
+        cell_s = rdggs.cell((CELLS0[5],))
+        self.assertEqual(cell_n.ellipsoidal_shape(), "cap")
+        self.assertEqual(cell_s.ellipsoidal_shape(), "cap")
 
     def test_centroid(self):
         # Warning: This test is slow.
