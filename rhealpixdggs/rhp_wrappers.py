@@ -398,9 +398,9 @@ def polyfill(
     dggs: RHEALPixDGGS = WGS84_003,
 ) -> set[str]:
     """
-    Turn the area contained in a shapely polygon or multipolygon into a sorted set
-    of cell indices at the requested resolution. A cell index is included if its
-    centroid is inside the geometry defined by the boundaries and holes.
+    Turn the area contained in a shapely polygon or multipolygon into a set of cell
+    indices at the requested resolution. A cell index is included if its centroid is
+    inside the geometry defined by the boundaries and holes.
 
     Returns an empty set if no cell centroids fall within the input geometry.
 
@@ -436,7 +436,7 @@ def polyfill(
         geoms = geometry.geoms
 
     # Collect cells in regions of interest
-    cells = []
+    cells = set()
     for geom in geoms:
         # Region of interest is the bounding box around the geometry
         bbox = geom.bounds
@@ -455,17 +455,13 @@ def polyfill(
             # Check each cell against geometry, add to results if inside polygon
             for cell in roi_cells:
                 if geom.contains(Point(cell.centroid(plane))):
-                    cells.append(str(cell))
+                    cells.add(str(cell))
 
-    # Merge cells inside polygon into larger ones where possible (will sort cell ids)
+    # Merge cells inside polygon into larger ones where possible
     if compress:
-        cells = compress_order_cells(cells)
+        cells = set(compress_order_cells(cells))
 
-    # Sort cell ids separately
-    else:
-        cells.sort()
-
-    return set(cells)
+    return cells
 
 
 def linetrace(
