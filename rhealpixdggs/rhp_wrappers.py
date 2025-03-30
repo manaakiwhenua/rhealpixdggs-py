@@ -396,7 +396,7 @@ def polyfill(
     compress: bool = False,
     verbose: bool = False,
     dggs: RHEALPixDGGS = WGS84_003,
-) -> list[str]:
+) -> set[str]:
     """
     Turn the area contained in a shapely polygon or multipolygon into a sorted set
     of cell indices at the requested resolution. A cell index is included if its
@@ -465,7 +465,7 @@ def polyfill(
     else:
         cells.sort()
 
-    return cells
+    return set(cells)
 
 
 def linetrace(
