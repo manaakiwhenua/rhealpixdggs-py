@@ -1,3 +1,7 @@
+0.5.4
+^^^^^
+Code unchanged from 0.5.3 other than updating to Python 3.11
+
 0.5.3
 ^^^^^
 - v0.5.3: 0.5.1 with:
