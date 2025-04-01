@@ -485,21 +485,17 @@ class RhpWrappersTestCase(unittest.TestCase):
             shell=[(30, -42), (0, -75), (90, -75), (60, -42), (30, -42)],
             holes=[[(10, -70), (20, -65), (10, -65), (10, -70)]],
         )
-        # eq_poly_am = sh.Polygon(
-        #     shell=[(130, 40), (130, -10), (-170, -10), (-170, 40), (130, 40)]
-        # )  # TODO: hole
 
         # Polygon tests - sphere
         self.assertEqual(rhpw.polyfill(eq_poly_n, 0, False), {"Q"})
         self.assertEqual(rhpw.polyfill(eq_poly_s, 0, False), {"Q"})
         self.assertEqual(rhpw.polyfill(po_poly_n, 1, False), {"N2"})
         self.assertEqual(rhpw.polyfill(po_poly_s, 1, False), {"S7"})
-        # self.assertEqual(rhpw.polyfill(eq_poly_am, 0, False), {"R"})
 
         # Multipolygon tests - sphere
         result = rhpw.polyfill(
             sh.MultiPolygon(polygons=[eq_poly_n, po_poly_n, po_poly_s]), 1, False
-        )  # TODO: add eq_poly_am, add "R*" to results list
+        )
         self.assertEqual(result, {"N2", "Q1", "Q3", "Q4", "S7"})
 
         # Test data - malformed
