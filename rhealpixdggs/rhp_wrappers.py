@@ -17,6 +17,7 @@ from rhealpixdggs.cell import CELLS0
 
 PARENT_RESOLUTION_WARNING = "WARNING: You requested a parent resolution that is higher than the cell resolution. Returning the cell address itself."
 CHILD_RESOLUTION_WARNING = "WARNING: You requested a child resolution that is lower than the cell resolution. Returning the cell address itself."
+CELL_CENTRE_WARNING = "WARNING: You requested a centre cell for a DGGS that has an even number of cells on a side. Returning None."
 CELL_RING_WARNING = "WARNING: Implementation of cell rings is incomplete. Requesting a {0} ring that involves more than two resolution 0 cube faces will return unexpected results."
 POLYFILL_GEOMETRY_WARNING = "WARNING: Empty or missing geometry, unsupported geometry type (not Polygon or MultiPolygon), or geometry with no area. Returning None."
 
@@ -110,7 +111,7 @@ def rhp_to_parent(
     # Handle mismatch between cell resolution and requested parent resolution
     elif res > child_res:
         if verbose:
-            print(PARENT_RESOLUTION_WARNING)
+            warn(PARENT_RESOLUTION_WARNING)
         return rhpindex
 
     # Standard case (including child_res == res)
@@ -127,17 +128,23 @@ def rhp_to_center_child(
 
     Returns None if the cell index is invalid.
 
-    TODO: come up with a scheme for even numbers on a side
+    Returns None if the DGGS has an even number of cells on a side.
     """
     # Stop early if the cell index is invalid
     if not rhp_is_valid(rhpindex, dggs):
+        return None
+
+    # DGGSs with even numbers of cells on a side never have a cell at the centre
+    if (dggs.N_side % 2) == 0:
+        if verbose:
+            warn(CELL_CENTRE_WARNING)
         return None
 
     # Handle mismatch between cell resolution and requested child resolution
     parent_res = len(rhpindex)
     if res is not None and res < parent_res:
         if verbose:
-            print(CHILD_RESOLUTION_WARNING)
+            warn(CHILD_RESOLUTION_WARNING)
         return rhpindex
 
     # Standard case (including parent_res == res)

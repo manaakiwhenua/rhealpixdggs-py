@@ -14,8 +14,9 @@ Keep adding tests!
 # Import standard modules
 import unittest
 
-# Import my modules
+# Import my modules and classes
 import rhealpixdggs.rhp_wrappers as rhpw
+import rhealpixdggs.dggs as gs
 
 # Import helper modules
 import numpy as np
@@ -118,6 +119,10 @@ class RhpWrappersTestCase(unittest.TestCase):
 
         # Invalid parent id
         child_id = rhpw.rhp_to_center_child("X")
+        self.assertIsNone(child_id)
+
+        # DGGS with even number of cells on a side
+        child_id = rhpw.rhp_to_center_child(parent_id, dggs=gs.WGS84_002)
         self.assertIsNone(child_id)
 
     def test_rhp_to_geo_boundary(self):
