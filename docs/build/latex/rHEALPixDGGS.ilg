@@ -1,7 +1,7 @@
 This is makeindex, version 2.15 [TeX Live 2022/dev] (kpathsea + Thai support).
 Scanning style file ./python.ist.......done (7 attributes redefined, 0 ignored).
-Scanning input file rHEALPixDGGS.idx....done (98 entries accepted, 0 rejected).
-Sorting entries....done (651 comparisons).
-Generating output file rHEALPixDGGS.ind....done (187 lines written, 0 warnings).
+Scanning input file rHEALPixDGGS.idx....done (66 entries accepted, 0 rejected).
+Sorting entries....done (405 comparisons).
+Generating output file rHEALPixDGGS.ind....done (138 lines written, 0 warnings).
 Output written in rHEALPixDGGS.ind.
 Transcript written in rHEALPixDGGS.ilg.

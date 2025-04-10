@@ -1,27 +1,24 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>The pj_healpix Module &#8212; rHEALPixDGGS 0.5.4 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=16cbd302" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
+    <script src="_static/documentation_options.js?v=c3dca1ed"></script>
+    <script src="_static/doctools.js?v=4184ea2e"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The pj_rhealpix Module" href="pj_rhealpix.html" />
     <link rel="prev" title="The utils Module" href="utils.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -47,7 +44,7 @@
           <div class="body" role="main">
             
   <section id="module-rhealpixdggs.pj_healpix">
-<span id="the-pj-healpix-module"></span><h1>The pj_healpix Module<a class="headerlink" href="#module-rhealpixdggs.pj_healpix" title="Permalink to this heading">¶</a></h1>
+<span id="the-pj-healpix-module"></span><h1>The pj_healpix Module<a class="headerlink" href="#module-rhealpixdggs.pj_healpix" title="Link to this heading">¶</a></h1>
 <p>This Python 3.11 module implements the HEALPix map projection as described in <a class="reference internal" href="#caro2007" id="id1"><span>[CaRo2007]</span></a>.</p>
 <div role="list" class="citation-list">
 <div class="citation" id="caro2007" role="doc-biblioentry">
@@ -64,17 +61,17 @@ unless indicated otherwise.
 By ‘ellipsoid’ below, I mean an oblate ellipsoid of revolution.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="rhealpixdggs.pj_healpix.healpix">
-<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix" title="Link to this definition">¶</a></dt>
 <dd><p>Return a function object that wraps the HEALPix projection and its inverse
 of an ellipsoid with major radius <cite>a</cite> and eccentricity <cite>e</cite>.</p>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">healpix</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">)))</span>
 <span class="go">(0.574951359778215, 2.145747686573111)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">);</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">);</span> <span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="mi">15</span><span class="p">)))</span>
 <span class="go">(0.574951359778215, 2.145747686573111)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">15</span><span class="p">)))</span>
 <span class="go">(6e-15, 59.999999999999986)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">(0, 60)</span>
@@ -88,7 +85,7 @@ of an ellipsoid with major radius <cite>a</cite> and eccentricity <cite>e</cite>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rhealpixdggs.pj_healpix.healpix_ellipsoid">
-<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_ellipsoid" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_ellipsoid" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the signature functions of the HEALPix projection of an oblate
 ellipsoid with eccentricity <cite>e</cite> whose authalic sphere is the unit sphere.
 Works when <cite>e</cite> = 0 (spherical case) too.</p>
@@ -99,9 +96,9 @@ Assume -pi &lt;= <cite>lam</cite> &lt; pi and -pi/2 &lt;= <cite>phi</cite> &lt;=
 <li><p><cite>e</cite> - Eccentricity of the oblate ellipsoid.</p></li>
 </ul>
 <p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">7</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span> <span class="k">else</span> <span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">7</span><span class="p">),</span> <span class="mi">15</span><span class="p">)))</span>
 <span class="go">(0, 0.511157237746422)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">7</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="mf">0.8</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span> <span class="k">else</span> <span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">7</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="mf">0.8</span><span class="p">),</span> <span class="mi">15</span><span class="p">)))</span>
 <span class="go">(0, 0.268484450857837)</span>
 </pre></div>
 </div>
@@ -109,12 +106,12 @@ Assume -pi &lt;= <cite>lam</cite> &lt; pi and -pi/2 &lt;= <cite>phi</cite> &lt;=
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rhealpixdggs.pj_healpix.healpix_ellipsoid_inverse">
-<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_ellipsoid_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_ellipsoid_inverse" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_ellipsoid_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_ellipsoid_inverse" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the inverse of healpix_ellipsoid().</p>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">7</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">healpix_ellipsoid</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">healpix_ellipsoid_inverse</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span> <span class="k">else</span> <span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">healpix_ellipsoid_inverse</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">),</span> <span class="mi">15</span><span class="p">)))</span>
 <span class="go">(0, 0.448798950512828)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
 <span class="go">(0, 0.448798950512828)</span>
@@ -124,7 +121,7 @@ Assume -pi &lt;= <cite>lam</cite> &lt; pi and -pi/2 &lt;= <cite>phi</cite> &lt;=
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rhealpixdggs.pj_healpix.healpix_sphere">
-<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_sphere" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_sphere" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the signature function of the HEALPix
 projection of the unit sphere.</p>
 <p>INPUT:</p>
@@ -141,7 +138,7 @@ Assume -pi &lt;= <cite>lam</cite> &lt; pi and -pi/2 &lt;= <cite>phi</cite> &lt;=
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rhealpixdggs.pj_healpix.healpix_sphere_inverse">
-<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_sphere_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_sphere_inverse" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_sphere_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_sphere_inverse" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the inverse of the healpix_sphere().</p>
 <p>INPUT:</p>
 <ul class="simple">
@@ -157,14 +154,14 @@ HEALPix projection of the unit sphere.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rhealpixdggs.pj_healpix.healpix_vertices">
-<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_vertices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_vertices" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">healpix_vertices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.healpix_vertices" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of the planar vertices of the HEALPix projection of
 the unit sphere.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="rhealpixdggs.pj_healpix.in_healpix_image">
-<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">in_healpix_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.in_healpix_image" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">rhealpixdggs.pj_healpix.</span></span><span class="sig-name descname"><span class="pre">in_healpix_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#rhealpixdggs.pj_healpix.in_healpix_image" title="Link to this definition">¶</a></dt>
 <dd><p>Return True if and only if <cite>(x, y)</cite> lies in the image of the HEALPix
 projection of the unit sphere.</p>
 <p>EXAMPLES:</p>
@@ -208,8 +205,24 @@ projection of the unit sphere.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">The pj_healpix Module</a><ul>
+<li><a class="reference internal" href="#rhealpixdggs.pj_healpix.healpix"><code class="docutils literal notranslate"><span class="pre">healpix()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.pj_healpix.healpix_ellipsoid"><code class="docutils literal notranslate"><span class="pre">healpix_ellipsoid()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.pj_healpix.healpix_ellipsoid_inverse"><code class="docutils literal notranslate"><span class="pre">healpix_ellipsoid_inverse()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.pj_healpix.healpix_sphere"><code class="docutils literal notranslate"><span class="pre">healpix_sphere()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.pj_healpix.healpix_sphere_inverse"><code class="docutils literal notranslate"><span class="pre">healpix_sphere_inverse()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.pj_healpix.healpix_vertices"><code class="docutils literal notranslate"><span class="pre">healpix_vertices()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.pj_healpix.in_healpix_image"><code class="docutils literal notranslate"><span class="pre">in_healpix_image()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="utils.html"
@@ -227,7 +240,7 @@ projection of the unit sphere.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -235,13 +248,13 @@ projection of the unit sphere.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -261,8 +274,8 @@ projection of the unit sphere.</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013, Alexander Raichev.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    &#169; Copyright 2013, Alexander Raichev.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

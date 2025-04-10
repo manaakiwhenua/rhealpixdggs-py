@@ -5,94 +5,62 @@
 \indexentry{my\_round() (in module rhealpixdggs.utils)@\spxentry{my\_round()}\spxextra{in module rhealpixdggs.utils}|hyperpage}{8}
 \indexentry{wrap\_latitude() (in module rhealpixdggs.utils)@\spxentry{wrap\_latitude()}\spxextra{in module rhealpixdggs.utils}|hyperpage}{8}
 \indexentry{wrap\_longitude() (in module rhealpixdggs.utils)@\spxentry{wrap\_longitude()}\spxextra{in module rhealpixdggs.utils}|hyperpage}{8}
-\indexentry{module@\spxentry{module}!rhealpixdggs.pj\_healpix@\spxentry{rhealpixdggs.pj\_healpix}|hyperpage}{10}
-\indexentry{rhealpixdggs.pj\_healpix@\spxentry{rhealpixdggs.pj\_healpix}!module@\spxentry{module}|hyperpage}{10}
-\indexentry{healpix() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{10}
-\indexentry{healpix\_ellipsoid() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_ellipsoid()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{10}
-\indexentry{healpix\_ellipsoid\_inverse() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_ellipsoid\_inverse()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{11}
-\indexentry{healpix\_sphere() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_sphere()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{11}
-\indexentry{healpix\_sphere\_inverse() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_sphere\_inverse()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{11}
-\indexentry{healpix\_vertices() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_vertices()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{11}
-\indexentry{in\_healpix\_image() (in module rhealpixdggs.pj\_healpix)@\spxentry{in\_healpix\_image()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{11}
-\indexentry{module@\spxentry{module}!rhealpixdggs.pj\_rhealpix@\spxentry{rhealpixdggs.pj\_rhealpix}|hyperpage}{13}
-\indexentry{rhealpixdggs.pj\_rhealpix@\spxentry{rhealpixdggs.pj\_rhealpix}!module@\spxentry{module}|hyperpage}{13}
-\indexentry{combine\_triangles() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{combine\_triangles()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{13}
-\indexentry{in\_rhealpix\_image() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{in\_rhealpix\_image()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{13}
-\indexentry{rhealpix() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{14}
-\indexentry{rhealpix\_ellipsoid() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_ellipsoid()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{14}
-\indexentry{rhealpix\_ellipsoid\_inverse() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_ellipsoid\_inverse()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{15}
-\indexentry{rhealpix\_sphere() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_sphere()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{15}
-\indexentry{rhealpix\_sphere\_inverse() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_sphere\_inverse()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{15}
-\indexentry{rhealpix\_vertices() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_vertices()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{16}
-\indexentry{triangle() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{triangle()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{16}
-\indexentry{module@\spxentry{module}!rhealpixdggs.ellipsoids@\spxentry{rhealpixdggs.ellipsoids}|hyperpage}{18}
-\indexentry{rhealpixdggs.ellipsoids@\spxentry{rhealpixdggs.ellipsoids}!module@\spxentry{module}|hyperpage}{18}
-\indexentry{Ellipsoid (class in rhealpixdggs.ellipsoids)@\spxentry{Ellipsoid}\spxextra{class in rhealpixdggs.ellipsoids}|hyperpage}{18}
-\indexentry{get\_points() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{get\_points()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{18}
-\indexentry{graticule() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{graticule()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{18}
-\indexentry{lattice() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{lattice()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{19}
-\indexentry{meridian() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{meridian()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{19}
-\indexentry{parallel() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{parallel()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{19}
-\indexentry{pi() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{pi()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{19}
-\indexentry{random\_point() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{random\_point()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{19}
-\indexentry{xyz() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{xyz()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{19}
-\indexentry{module@\spxentry{module}!rhealpixdggs.projection\_wrapper@\spxentry{rhealpixdggs.projection\_wrapper}|hyperpage}{21}
-\indexentry{rhealpixdggs.projection\_wrapper@\spxentry{rhealpixdggs.projection\_wrapper}!module@\spxentry{module}|hyperpage}{21}
-\indexentry{Proj (class in rhealpixdggs.projection\_wrapper)@\spxentry{Proj}\spxextra{class in rhealpixdggs.projection\_wrapper}|hyperpage}{21}
-\indexentry{module@\spxentry{module}!rhealpixdggs.dggs@\spxentry{rhealpixdggs.dggs}|hyperpage}{23}
-\indexentry{rhealpixdggs.dggs@\spxentry{rhealpixdggs.dggs}!module@\spxentry{module}|hyperpage}{23}
-\indexentry{Cell (class in rhealpixdggs.dggs)@\spxentry{Cell}\spxextra{class in rhealpixdggs.dggs}|hyperpage}{25}
-\indexentry{area() (rhealpixdggs.dggs.Cell method)@\spxentry{area()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{26}
-\indexentry{boundary() (rhealpixdggs.dggs.Cell method)@\spxentry{boundary()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{26}
-\indexentry{centroid() (rhealpixdggs.dggs.Cell method)@\spxentry{centroid()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{27}
-\indexentry{color() (rhealpixdggs.dggs.Cell method)@\spxentry{color()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{27}
-\indexentry{contains() (rhealpixdggs.dggs.Cell method)@\spxentry{contains()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{27}
-\indexentry{ellipsoidal\_shape() (rhealpixdggs.dggs.Cell method)@\spxentry{ellipsoidal\_shape()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{27}
-\indexentry{index() (rhealpixdggs.dggs.Cell method)@\spxentry{index()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{27}
-\indexentry{interior() (rhealpixdggs.dggs.Cell method)@\spxentry{interior()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{28}
-\indexentry{intersects\_meridian() (rhealpixdggs.dggs.Cell method)@\spxentry{intersects\_meridian()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{28}
-\indexentry{intersects\_parallel() (rhealpixdggs.dggs.Cell method)@\spxentry{intersects\_parallel()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{28}
-\indexentry{neighbor() (rhealpixdggs.dggs.Cell method)@\spxentry{neighbor()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{28}
-\indexentry{neighbors() (rhealpixdggs.dggs.Cell method)@\spxentry{neighbors()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{29}
-\indexentry{nucleus() (rhealpixdggs.dggs.Cell method)@\spxentry{nucleus()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{29}
-\indexentry{nw\_vertex() (rhealpixdggs.dggs.Cell method)@\spxentry{nw\_vertex()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{30}
-\indexentry{overlaps() (rhealpixdggs.dggs.Cell method)@\spxentry{overlaps()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{31}
-\indexentry{predecessor() (rhealpixdggs.dggs.Cell method)@\spxentry{predecessor()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{31}
-\indexentry{random\_point() (rhealpixdggs.dggs.Cell method)@\spxentry{random\_point()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{31}
-\indexentry{region() (rhealpixdggs.dggs.Cell method)@\spxentry{region()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{31}
-\indexentry{region\_overlaps() (rhealpixdggs.dggs.Cell method)@\spxentry{region\_overlaps()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{31}
-\indexentry{rotate() (rhealpixdggs.dggs.Cell method)@\spxentry{rotate()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{32}
-\indexentry{rotate\_entry() (rhealpixdggs.dggs.Cell method)@\spxentry{rotate\_entry()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{32}
-\indexentry{subcell() (rhealpixdggs.dggs.Cell method)@\spxentry{subcell()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{32}
-\indexentry{subcells() (rhealpixdggs.dggs.Cell method)@\spxentry{subcells()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{32}
-\indexentry{successor() (rhealpixdggs.dggs.Cell method)@\spxentry{successor()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{33}
-\indexentry{suid\_from\_index() (rhealpixdggs.dggs.Cell static method)@\spxentry{suid\_from\_index()}\spxextra{rhealpixdggs.dggs.Cell static method}|hyperpage}{33}
-\indexentry{suid\_rowcol() (rhealpixdggs.dggs.Cell method)@\spxentry{suid\_rowcol()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{33}
-\indexentry{ul\_vertex() (rhealpixdggs.dggs.Cell method)@\spxentry{ul\_vertex()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{33}
-\indexentry{vertices() (rhealpixdggs.dggs.Cell method)@\spxentry{vertices()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{33}
-\indexentry{width() (rhealpixdggs.dggs.Cell method)@\spxentry{width()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{34}
-\indexentry{xy\_range() (rhealpixdggs.dggs.Cell method)@\spxentry{xy\_range()}\spxextra{rhealpixdggs.dggs.Cell method}|hyperpage}{35}
-\indexentry{RHEALPixDGGS (class in rhealpixdggs.dggs)@\spxentry{RHEALPixDGGS}\spxextra{class in rhealpixdggs.dggs}|hyperpage}{35}
-\indexentry{cell() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{35}
-\indexentry{cell\_area() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_area()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{36}
-\indexentry{cell\_from\_point() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_from\_point()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{36}
-\indexentry{cell\_from\_region() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_from\_region()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{36}
-\indexentry{cell\_latitudes() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_latitudes()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{36}
-\indexentry{cell\_width() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_width()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{37}
-\indexentry{cells0 (rhealpixdggs.dggs.RHEALPixDGGS attribute)@\spxentry{cells0}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS attribute}|hyperpage}{37}
-\indexentry{cells\_from\_meridian() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cells\_from\_meridian()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{37}
-\indexentry{cells\_from\_parallel() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cells\_from\_parallel()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{38}
-\indexentry{cells\_from\_region() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cells\_from\_region()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{38}
-\indexentry{combine\_triangles() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{combine\_triangles()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{39}
-\indexentry{grid() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{grid()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{39}
-\indexentry{healpix() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{healpix()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{39}
-\indexentry{interval() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{interval()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{40}
-\indexentry{minimal\_cover() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{minimal\_cover()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{40}
-\indexentry{num\_cells() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{num\_cells()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{40}
-\indexentry{random\_cell() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{random\_cell()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{41}
-\indexentry{random\_point() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{random\_point()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{41}
-\indexentry{rhealpix() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{rhealpix()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{41}
-\indexentry{triangle() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{triangle()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{41}
-\indexentry{xyz() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{xyz()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{42}
-\indexentry{xyz\_cube() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{xyz\_cube()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{42}
-\indexentry{RhealPolygon (class in rhealpixdggs.dggs)@\spxentry{RhealPolygon}\spxextra{class in rhealpixdggs.dggs}|hyperpage}{42}
+\indexentry{module@\spxentry{module}!rhealpixdggs.pj\_healpix@\spxentry{rhealpixdggs.pj\_healpix}|hyperpage}{9}
+\indexentry{rhealpixdggs.pj\_healpix@\spxentry{rhealpixdggs.pj\_healpix}!module@\spxentry{module}|hyperpage}{9}
+\indexentry{healpix() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{9}
+\indexentry{healpix\_ellipsoid() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_ellipsoid()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{9}
+\indexentry{healpix\_ellipsoid\_inverse() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_ellipsoid\_inverse()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{10}
+\indexentry{healpix\_sphere() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_sphere()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{10}
+\indexentry{healpix\_sphere\_inverse() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_sphere\_inverse()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{10}
+\indexentry{healpix\_vertices() (in module rhealpixdggs.pj\_healpix)@\spxentry{healpix\_vertices()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{10}
+\indexentry{in\_healpix\_image() (in module rhealpixdggs.pj\_healpix)@\spxentry{in\_healpix\_image()}\spxextra{in module rhealpixdggs.pj\_healpix}|hyperpage}{10}
+\indexentry{module@\spxentry{module}!rhealpixdggs.pj\_rhealpix@\spxentry{rhealpixdggs.pj\_rhealpix}|hyperpage}{12}
+\indexentry{rhealpixdggs.pj\_rhealpix@\spxentry{rhealpixdggs.pj\_rhealpix}!module@\spxentry{module}|hyperpage}{12}
+\indexentry{combine\_triangles() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{combine\_triangles()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{12}
+\indexentry{in\_rhealpix\_image() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{in\_rhealpix\_image()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{12}
+\indexentry{rhealpix() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{13}
+\indexentry{rhealpix\_ellipsoid() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_ellipsoid()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{13}
+\indexentry{rhealpix\_ellipsoid\_inverse() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_ellipsoid\_inverse()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{14}
+\indexentry{rhealpix\_sphere() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_sphere()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{14}
+\indexentry{rhealpix\_sphere\_inverse() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_sphere\_inverse()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{14}
+\indexentry{rhealpix\_vertices() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{rhealpix\_vertices()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{15}
+\indexentry{triangle() (in module rhealpixdggs.pj\_rhealpix)@\spxentry{triangle()}\spxextra{in module rhealpixdggs.pj\_rhealpix}|hyperpage}{15}
+\indexentry{module@\spxentry{module}!rhealpixdggs.ellipsoids@\spxentry{rhealpixdggs.ellipsoids}|hyperpage}{17}
+\indexentry{rhealpixdggs.ellipsoids@\spxentry{rhealpixdggs.ellipsoids}!module@\spxentry{module}|hyperpage}{17}
+\indexentry{Ellipsoid (class in rhealpixdggs.ellipsoids)@\spxentry{Ellipsoid}\spxextra{class in rhealpixdggs.ellipsoids}|hyperpage}{17}
+\indexentry{get\_points() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{get\_points()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{17}
+\indexentry{graticule() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{graticule()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{17}
+\indexentry{lattice() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{lattice()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{18}
+\indexentry{meridian() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{meridian()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{18}
+\indexentry{parallel() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{parallel()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{18}
+\indexentry{pi() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{pi()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{18}
+\indexentry{random\_point() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{random\_point()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{18}
+\indexentry{xyz() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{xyz()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}|hyperpage}{18}
+\indexentry{module@\spxentry{module}!rhealpixdggs.projection\_wrapper@\spxentry{rhealpixdggs.projection\_wrapper}|hyperpage}{20}
+\indexentry{rhealpixdggs.projection\_wrapper@\spxentry{rhealpixdggs.projection\_wrapper}!module@\spxentry{module}|hyperpage}{20}
+\indexentry{Projection (class in rhealpixdggs.projection\_wrapper)@\spxentry{Projection}\spxextra{class in rhealpixdggs.projection\_wrapper}|hyperpage}{20}
+\indexentry{module@\spxentry{module}!rhealpixdggs.dggs@\spxentry{rhealpixdggs.dggs}|hyperpage}{21}
+\indexentry{rhealpixdggs.dggs@\spxentry{rhealpixdggs.dggs}!module@\spxentry{module}|hyperpage}{21}
+\indexentry{RHEALPixDGGS (class in rhealpixdggs.dggs)@\spxentry{RHEALPixDGGS}\spxextra{class in rhealpixdggs.dggs}|hyperpage}{23}
+\indexentry{cell() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{24}
+\indexentry{cell\_area() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_area()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{24}
+\indexentry{cell\_from\_point() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_from\_point()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{24}
+\indexentry{cell\_from\_region() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_from\_region()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{24}
+\indexentry{cell\_latitudes() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_latitudes()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{25}
+\indexentry{cell\_width() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cell\_width()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{25}
+\indexentry{cells\_from\_meridian() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cells\_from\_meridian()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{25}
+\indexentry{cells\_from\_parallel() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cells\_from\_parallel()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{26}
+\indexentry{cells\_from\_region() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cells\_from\_region()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{26}
+\indexentry{combine\_triangles() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{combine\_triangles()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{27}
+\indexentry{grid() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{grid()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{27}
+\indexentry{healpix() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{healpix()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{27}
+\indexentry{interval() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{interval()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{28}
+\indexentry{minimal\_cover() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{minimal\_cover()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{28}
+\indexentry{num\_cells() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{num\_cells()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{28}
+\indexentry{random\_cell() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{random\_cell()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{29}
+\indexentry{random\_point() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{random\_point()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{29}
+\indexentry{rhealpix() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{rhealpix()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{29}
+\indexentry{triangle() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{triangle()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{29}
+\indexentry{xyz() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{xyz()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{30}
+\indexentry{xyz\_cube() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{xyz\_cube()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}|hyperpage}{30}
+\indexentry{RhealPolygon (class in rhealpixdggs.dggs)@\spxentry{RhealPolygon}\spxextra{class in rhealpixdggs.dggs}|hyperpage}{30}

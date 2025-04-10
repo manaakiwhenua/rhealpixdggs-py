@@ -1,27 +1,24 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>The ellipsoids Module &#8212; rHEALPixDGGS 0.5.4 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=16cbd302" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
+    <script src="_static/documentation_options.js?v=c3dca1ed"></script>
+    <script src="_static/doctools.js?v=4184ea2e"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The projection_wrapper Module" href="projection_wrapper.html" />
     <link rel="prev" title="The pj_rhealpix Module" href="pj_rhealpix.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -47,7 +44,7 @@
           <div class="body" role="main">
             
   <section id="module-rhealpixdggs.ellipsoids">
-<span id="the-ellipsoids-module"></span><h1>The ellipsoids Module<a class="headerlink" href="#module-rhealpixdggs.ellipsoids" title="Permalink to this heading">¶</a></h1>
+<span id="the-ellipsoids-module"></span><h1>The ellipsoids Module<a class="headerlink" href="#module-rhealpixdggs.ellipsoids" title="Link to this heading">¶</a></h1>
 <p>This Python 3.11 code implements ellipsoids of revolution.</p>
 <ul class="simple">
 <li><p>Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.</p></li>
@@ -59,7 +56,7 @@ unless indicated otherwise.</p>
 Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordinates.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="rhealpixdggs.ellipsoids.Ellipsoid">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rhealpixdggs.ellipsoids.</span></span><span class="sig-name descname"><span class="pre">Ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6378137.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.003352810681182319</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radians</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rhealpixdggs.ellipsoids.</span></span><span class="sig-name descname"><span class="pre">Ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6378137.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0033528106647474805</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radians</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Represents an ellipsoid of revolution (possibly a sphere) with a
 geodetic longitude-latitude coordinate frame.</p>
@@ -81,10 +78,10 @@ Use degrees otherwise.</p></li>
 the north polar region in the context of the (r)HEALPix projection.</p></li>
 </ul>
 <p>Except for phi_0, these attribute names match the names of the
-<a class="reference external" href="http://trac.osgeo.org/proj/wiki/GenParms">PROJ.4 ellipsoid parameters</a>.</p>
+<cite>PROJ ellipsoid parameters &lt;https://proj.org/en/9.4/usage/ellipsoids.html#ellipsoid-spherification-parameters&gt;</cite></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.ellipsoids.Ellipsoid.get_points">
-<span class="sig-name descname"><span class="pre">get_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.get_points" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.get_points" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of longitude-latitude points contained in
 the file with filename <cite>filename</cite>.
 Assume the file is a text file containing at most one
@@ -94,7 +91,7 @@ whitespace and angles given in degrees.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.ellipsoids.Ellipsoid.graticule">
-<span class="sig-name descname"><span class="pre">graticule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">400</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.graticule" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">graticule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">400</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.graticule" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of longitude-latitude points sampled from a
 longitude-latitude graticule on this ellipsoid with the given
 spacing between meridians and between parallels.
@@ -112,7 +109,7 @@ If <cite>spacing=None</cite>, then a default spacing of pi/16 radians will be se
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.ellipsoids.Ellipsoid.lattice">
-<span class="sig-name descname"><span class="pre">lattice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.lattice" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">lattice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.lattice" title="Link to this definition">¶</a></dt>
 <dd><p>Return a 2n x n square lattice of longitude-latitude points.</p>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">UNIT_SPHERE</span>
@@ -142,7 +139,7 @@ If <cite>spacing=None</cite>, then a default spacing of pi/16 radians will be se
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.ellipsoids.Ellipsoid.meridian">
-<span class="sig-name descname"><span class="pre">meridian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.meridian" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">meridian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.meridian" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of <cite>n</cite> equispaced longitude-latitude
 points lying along the meridian of longitude <cite>lam</cite>.
 Avoid the poles.</p>
@@ -150,20 +147,20 @@ Avoid the poles.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.ellipsoids.Ellipsoid.parallel">
-<span class="sig-name descname"><span class="pre">parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.parallel" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.parallel" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of <cite>2*n</cite> equispaced longitude-latitude
 points lying along the parallel of latitude <cite>phi</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.ellipsoids.Ellipsoid.pi">
-<span class="sig-name descname"><span class="pre">pi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.pi" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.pi" title="Link to this definition">¶</a></dt>
 <dd><p>Return pi if <cite>self.radians</cite> = True and 180 otherwise.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.ellipsoids.Ellipsoid.random_point">
-<span class="sig-name descname"><span class="pre">random_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.random_point" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">random_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.random_point" title="Link to this definition">¶</a></dt>
 <dd><p>Return a point (given in geodetic coordinates) sampled uniformly at
 random from the section of this ellipsoid with longitude in the range
 <cite>lam_min &lt;= lam &lt; lam_max</cite> and latitude in the range
@@ -179,19 +176,15 @@ But avoid the poles.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.ellipsoids.Ellipsoid.xyz">
-<span class="sig-name descname"><span class="pre">xyz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.xyz" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">xyz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.ellipsoids.Ellipsoid.xyz" title="Link to this definition">¶</a></dt>
 <dd><p>Given a point on this ellipsoid with longitude-latitude coordinates
 <cite>(lam, phi)</cite>, return the point’s 3D rectangular coordinates.</p>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">UNIT_SPHERE</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">xyz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="mi">15</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">xyz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="mi">15</span><span class="p">)))</span>
 <span class="go">(0.707106781186548, 0.0, 0.707106781186548)</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>(0.70710678118654802, 0.0, 0.70710678118654802)</p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
@@ -203,8 +196,28 @@ But avoid the poles.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">The ellipsoids Module</a><ul>
+<li><a class="reference internal" href="#rhealpixdggs.ellipsoids.Ellipsoid"><code class="docutils literal notranslate"><span class="pre">Ellipsoid</span></code></a><ul>
+<li><a class="reference internal" href="#rhealpixdggs.ellipsoids.Ellipsoid.get_points"><code class="docutils literal notranslate"><span class="pre">Ellipsoid.get_points()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.ellipsoids.Ellipsoid.graticule"><code class="docutils literal notranslate"><span class="pre">Ellipsoid.graticule()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.ellipsoids.Ellipsoid.lattice"><code class="docutils literal notranslate"><span class="pre">Ellipsoid.lattice()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.ellipsoids.Ellipsoid.meridian"><code class="docutils literal notranslate"><span class="pre">Ellipsoid.meridian()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.ellipsoids.Ellipsoid.parallel"><code class="docutils literal notranslate"><span class="pre">Ellipsoid.parallel()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.ellipsoids.Ellipsoid.pi"><code class="docutils literal notranslate"><span class="pre">Ellipsoid.pi()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.ellipsoids.Ellipsoid.random_point"><code class="docutils literal notranslate"><span class="pre">Ellipsoid.random_point()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.ellipsoids.Ellipsoid.xyz"><code class="docutils literal notranslate"><span class="pre">Ellipsoid.xyz()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="pj_rhealpix.html"
@@ -222,7 +235,7 @@ But avoid the poles.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -230,13 +243,13 @@ But avoid the poles.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -256,8 +269,8 @@ But avoid the poles.</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013, Alexander Raichev.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    &#169; Copyright 2013, Alexander Raichev.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

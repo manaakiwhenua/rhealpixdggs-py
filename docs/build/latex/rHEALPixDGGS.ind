@@ -5,183 +5,134 @@
 \let\spxextra \sphinxstyleindexextra
 
   \bigletter A
-  \item \spxentry{area()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{26}
   \item \spxentry{auth\_lat()}\spxextra{in module rhealpixdggs.utils}, \hyperpage{7}
   \item \spxentry{auth\_rad()}\spxextra{in module rhealpixdggs.utils}, \hyperpage{7}
 
   \indexspace
-  \bigletter B
-  \item \spxentry{boundary()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{26}
-
-  \indexspace
   \bigletter C
-  \item \spxentry{Cell}\spxextra{class in rhealpixdggs.dggs}, \hyperpage{25}
-  \item \spxentry{cell()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{35}
-  \item \spxentry{cell\_area()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{36}
+  \item \spxentry{cell()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{24}
+  \item \spxentry{cell\_area()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{24}
   \item \spxentry{cell\_from\_point()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, 
-		\hyperpage{36}
+		\hyperpage{24}
   \item \spxentry{cell\_from\_region()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, 
-		\hyperpage{36}
+		\hyperpage{24}
   \item \spxentry{cell\_latitudes()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, 
-		\hyperpage{36}
-  \item \spxentry{cell\_width()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{37}
-  \item \spxentry{cells0}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS attribute}, \hyperpage{37}
+		\hyperpage{25}
+  \item \spxentry{cell\_width()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{25}
   \item \spxentry{cells\_from\_meridian()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, 
-		\hyperpage{37}
+		\hyperpage{25}
   \item \spxentry{cells\_from\_parallel()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, 
-		\hyperpage{38}
+		\hyperpage{26}
   \item \spxentry{cells\_from\_region()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, 
-		\hyperpage{38}
-  \item \spxentry{centroid()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{27}
-  \item \spxentry{color()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{27}
+		\hyperpage{26}
   \item \spxentry{combine\_triangles()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, 
-		\hyperpage{13}
+		\hyperpage{12}
   \item \spxentry{combine\_triangles()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, 
-		\hyperpage{39}
-  \item \spxentry{contains()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{27}
+		\hyperpage{27}
 
   \indexspace
   \bigletter E
-  \item \spxentry{Ellipsoid}\spxextra{class in rhealpixdggs.ellipsoids}, \hyperpage{18}
-  \item \spxentry{ellipsoidal\_shape()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{27}
+  \item \spxentry{Ellipsoid}\spxextra{class in rhealpixdggs.ellipsoids}, \hyperpage{17}
 
   \indexspace
   \bigletter G
-  \item \spxentry{get\_points()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{18}
-  \item \spxentry{graticule()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{18}
-  \item \spxentry{grid()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{39}
+  \item \spxentry{get\_points()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{17}
+  \item \spxentry{graticule()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{17}
+  \item \spxentry{grid()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{27}
 
   \indexspace
   \bigletter H
-  \item \spxentry{healpix()}\spxextra{in module rhealpixdggs.pj\_healpix}, \hyperpage{10}
-  \item \spxentry{healpix()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{39}
-  \item \spxentry{healpix\_ellipsoid()}\spxextra{in module rhealpixdggs.pj\_healpix}, 
-		\hyperpage{10}
+  \item \spxentry{healpix()}\spxextra{in module rhealpixdggs.pj\_healpix}, \hyperpage{9}
+  \item \spxentry{healpix()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{27}
+  \item \spxentry{healpix\_ellipsoid()}\spxextra{in module rhealpixdggs.pj\_healpix}, \hyperpage{9}
   \item \spxentry{healpix\_ellipsoid\_inverse()}\spxextra{in module rhealpixdggs.pj\_healpix}, 
-		\hyperpage{11}
-  \item \spxentry{healpix\_sphere()}\spxextra{in module rhealpixdggs.pj\_healpix}, \hyperpage{11}
+		\hyperpage{10}
+  \item \spxentry{healpix\_sphere()}\spxextra{in module rhealpixdggs.pj\_healpix}, \hyperpage{10}
   \item \spxentry{healpix\_sphere\_inverse()}\spxextra{in module rhealpixdggs.pj\_healpix}, 
-		\hyperpage{11}
-  \item \spxentry{healpix\_vertices()}\spxextra{in module rhealpixdggs.pj\_healpix}, \hyperpage{11}
+		\hyperpage{10}
+  \item \spxentry{healpix\_vertices()}\spxextra{in module rhealpixdggs.pj\_healpix}, \hyperpage{10}
 
   \indexspace
   \bigletter I
   \item \spxentry{in\_healpix\_image()}\spxextra{in module rhealpixdggs.pj\_healpix}, 
-		\hyperpage{11}
+		\hyperpage{10}
   \item \spxentry{in\_rhealpix\_image()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, 
-		\hyperpage{13}
-  \item \spxentry{index()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{27}
-  \item \spxentry{interior()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{28}
-  \item \spxentry{intersects\_meridian()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{28}
-  \item \spxentry{intersects\_parallel()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{28}
-  \item \spxentry{interval()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{40}
+		\hyperpage{12}
+  \item \spxentry{interval()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{28}
 
   \indexspace
   \bigletter L
-  \item \spxentry{lattice()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{19}
+  \item \spxentry{lattice()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{18}
 
   \indexspace
   \bigletter M
-  \item \spxentry{meridian()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{19}
-  \item \spxentry{minimal\_cover()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{40}
+  \item \spxentry{meridian()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{18}
+  \item \spxentry{minimal\_cover()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{28}
   \item \spxentry{module}
-    \subitem \spxentry{rhealpixdggs.dggs}, \hyperpage{23}
-    \subitem \spxentry{rhealpixdggs.ellipsoids}, \hyperpage{18}
-    \subitem \spxentry{rhealpixdggs.pj\_healpix}, \hyperpage{10}
-    \subitem \spxentry{rhealpixdggs.pj\_rhealpix}, \hyperpage{13}
-    \subitem \spxentry{rhealpixdggs.projection\_wrapper}, \hyperpage{21}
+    \subitem \spxentry{rhealpixdggs.dggs}, \hyperpage{21}
+    \subitem \spxentry{rhealpixdggs.ellipsoids}, \hyperpage{17}
+    \subitem \spxentry{rhealpixdggs.pj\_healpix}, \hyperpage{9}
+    \subitem \spxentry{rhealpixdggs.pj\_rhealpix}, \hyperpage{12}
+    \subitem \spxentry{rhealpixdggs.projection\_wrapper}, \hyperpage{20}
     \subitem \spxentry{rhealpixdggs.utils}, \hyperpage{7}
   \item \spxentry{my\_round()}\spxextra{in module rhealpixdggs.utils}, \hyperpage{8}
 
   \indexspace
   \bigletter N
-  \item \spxentry{neighbor()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{28}
-  \item \spxentry{neighbors()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{29}
-  \item \spxentry{nucleus()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{29}
-  \item \spxentry{num\_cells()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{40}
-  \item \spxentry{nw\_vertex()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{30}
-
-  \indexspace
-  \bigletter O
-  \item \spxentry{overlaps()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{31}
+  \item \spxentry{num\_cells()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{28}
 
   \indexspace
   \bigletter P
-  \item \spxentry{parallel()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{19}
-  \item \spxentry{pi()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{19}
-  \item \spxentry{predecessor()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{31}
-  \item \spxentry{Proj}\spxextra{class in rhealpixdggs.projection\_wrapper}, \hyperpage{21}
+  \item \spxentry{parallel()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{18}
+  \item \spxentry{pi()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{18}
+  \item \spxentry{Projection}\spxextra{class in rhealpixdggs.projection\_wrapper}, \hyperpage{20}
 
   \indexspace
   \bigletter R
-  \item \spxentry{random\_cell()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{41}
-  \item \spxentry{random\_point()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{31}
-  \item \spxentry{random\_point()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{41}
+  \item \spxentry{random\_cell()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{29}
+  \item \spxentry{random\_point()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{29}
   \item \spxentry{random\_point()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, 
-		\hyperpage{19}
-  \item \spxentry{region()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{31}
-  \item \spxentry{region\_overlaps()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{31}
-  \item \spxentry{rhealpix()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, \hyperpage{14}
-  \item \spxentry{rhealpix()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{41}
+		\hyperpage{18}
+  \item \spxentry{rhealpix()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, \hyperpage{13}
+  \item \spxentry{rhealpix()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{29}
   \item \spxentry{rhealpix\_ellipsoid()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, 
-		\hyperpage{14}
+		\hyperpage{13}
   \item \spxentry{rhealpix\_ellipsoid\_inverse()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, 
-		\hyperpage{15}
-  \item \spxentry{rhealpix\_sphere()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, \hyperpage{15}
+		\hyperpage{14}
+  \item \spxentry{rhealpix\_sphere()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, \hyperpage{14}
   \item \spxentry{rhealpix\_sphere\_inverse()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, 
-		\hyperpage{15}
+		\hyperpage{14}
   \item \spxentry{rhealpix\_vertices()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, 
-		\hyperpage{16}
-  \item \spxentry{RHEALPixDGGS}\spxextra{class in rhealpixdggs.dggs}, \hyperpage{35}
+		\hyperpage{15}
+  \item \spxentry{RHEALPixDGGS}\spxextra{class in rhealpixdggs.dggs}, \hyperpage{23}
   \item \spxentry{rhealpixdggs.dggs}
-    \subitem \spxentry{module}, \hyperpage{23}
-  \item \spxentry{rhealpixdggs.ellipsoids}
-    \subitem \spxentry{module}, \hyperpage{18}
-  \item \spxentry{rhealpixdggs.pj\_healpix}
-    \subitem \spxentry{module}, \hyperpage{10}
-  \item \spxentry{rhealpixdggs.pj\_rhealpix}
-    \subitem \spxentry{module}, \hyperpage{13}
-  \item \spxentry{rhealpixdggs.projection\_wrapper}
     \subitem \spxentry{module}, \hyperpage{21}
+  \item \spxentry{rhealpixdggs.ellipsoids}
+    \subitem \spxentry{module}, \hyperpage{17}
+  \item \spxentry{rhealpixdggs.pj\_healpix}
+    \subitem \spxentry{module}, \hyperpage{9}
+  \item \spxentry{rhealpixdggs.pj\_rhealpix}
+    \subitem \spxentry{module}, \hyperpage{12}
+  \item \spxentry{rhealpixdggs.projection\_wrapper}
+    \subitem \spxentry{module}, \hyperpage{20}
   \item \spxentry{rhealpixdggs.utils}
     \subitem \spxentry{module}, \hyperpage{7}
-  \item \spxentry{RhealPolygon}\spxextra{class in rhealpixdggs.dggs}, \hyperpage{42}
-  \item \spxentry{rotate()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{32}
-  \item \spxentry{rotate\_entry()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{32}
-
-  \indexspace
-  \bigletter S
-  \item \spxentry{subcell()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{32}
-  \item \spxentry{subcells()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{32}
-  \item \spxentry{successor()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{33}
-  \item \spxentry{suid\_from\_index()}\spxextra{rhealpixdggs.dggs.Cell static method}, 
-		\hyperpage{33}
-  \item \spxentry{suid\_rowcol()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{33}
+  \item \spxentry{RhealPolygon}\spxextra{class in rhealpixdggs.dggs}, \hyperpage{30}
 
   \indexspace
   \bigletter T
-  \item \spxentry{triangle()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, \hyperpage{16}
-  \item \spxentry{triangle()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{41}
-
-  \indexspace
-  \bigletter U
-  \item \spxentry{ul\_vertex()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{33}
-
-  \indexspace
-  \bigletter V
-  \item \spxentry{vertices()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{33}
+  \item \spxentry{triangle()}\spxextra{in module rhealpixdggs.pj\_rhealpix}, \hyperpage{15}
+  \item \spxentry{triangle()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{29}
 
   \indexspace
   \bigletter W
-  \item \spxentry{width()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{34}
   \item \spxentry{wrap\_latitude()}\spxextra{in module rhealpixdggs.utils}, \hyperpage{8}
   \item \spxentry{wrap\_longitude()}\spxextra{in module rhealpixdggs.utils}, \hyperpage{8}
 
   \indexspace
   \bigletter X
-  \item \spxentry{xy\_range()}\spxextra{rhealpixdggs.dggs.Cell method}, \hyperpage{35}
-  \item \spxentry{xyz()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{42}
-  \item \spxentry{xyz()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{19}
-  \item \spxentry{xyz\_cube()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{42}
+  \item \spxentry{xyz()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{30}
+  \item \spxentry{xyz()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}, \hyperpage{18}
+  \item \spxentry{xyz\_cube()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}, \hyperpage{30}
 
 \end{sphinxtheindex}

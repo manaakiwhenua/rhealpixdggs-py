@@ -10,6 +10,9 @@
 %% let collapsible pdf bookmarks panel have high depth per default
 \PassOptionsToPackage{bookmarksdepth=5}{hyperref}
 
+\PassOptionsToPackage{booktabs}{sphinx}
+\PassOptionsToPackage{colorrows}{sphinx}
+
 \PassOptionsToPackage{warn}{textcomp}
 \usepackage[utf8]{inputenc}
 \ifdefined\DeclareUnicodeCharacter
@@ -60,7 +63,7 @@
 
 
 \title{rHEALPixDGGS Documentation}
-\date{Dec 18, 2023}
+\date{Apr 10, 2025}
 \release{0.5.4}
 \author{Alexander Raichev}
 \newcommand{\sphinxlogo}{\vbox{}}
@@ -156,8 +159,8 @@ Alternatively, you can download a corrected version of \sphinxcode{\sphinxupquot
 Import all the classes, methods, and constants from the module:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{projection\PYGZus{}wrapper} \PYG{k+kn}{import} \PYG{o}{*}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids} \PYG{k+kn}{import} \PYG{o}{*}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{projection\PYGZus{}wrapper}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{o}{*}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{o}{*}
 \end{sphinxVerbatim}
 
 \sphinxAtStartPar
@@ -219,22 +222,22 @@ Some common ellipsoids are predefined as constants.
 \PYG{g+go}{    sphere = True}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{WGS84\PYGZus{}ELLIPSOID}\PYG{p}{)}
 \PYG{g+go}{ellipsoid:}
-\PYG{g+go}{    R\PYGZus{}A = 6374581.467096525}
+\PYG{g+go}{    R\PYGZus{}A = 6371007.180918476}
 \PYG{g+go}{    a = 6378137.0}
-\PYG{g+go}{    b = 6356752.314140356}
-\PYG{g+go}{    e = 0.057806308840112}
-\PYG{g+go}{    f = 0.003352810681182}
+\PYG{g+go}{    b = 6356752.314245179}
+\PYG{g+go}{    e = 0.081819190842621}
+\PYG{g+go}{    f = 0.003352810664747}
 \PYG{g+go}{    lat\PYGZus{}0 = 0}
 \PYG{g+go}{    lon\PYGZus{}0 = 0}
 \PYG{g+go}{    radians = False}
 \PYG{g+go}{    sphere = False}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{WGS84\PYGZus{}ELLIPSOID\PYGZus{}RADIANS}\PYG{p}{)}
 \PYG{g+go}{ellipsoid:}
-\PYG{g+go}{    R\PYGZus{}A = 6374581.467096525}
+\PYG{g+go}{    R\PYGZus{}A = 6371007.180918476}
 \PYG{g+go}{    a = 6378137.0}
-\PYG{g+go}{    b = 6356752.314140356}
-\PYG{g+go}{    e = 0.057806308840112}
-\PYG{g+go}{    f = 0.003352810681182}
+\PYG{g+go}{    b = 6356752.314245179}
+\PYG{g+go}{    e = 0.081819190842621}
+\PYG{g+go}{    f = 0.003352810664747}
 \PYG{g+go}{    lat\PYGZus{}0 = 0}
 \PYG{g+go}{    lon\PYGZus{}0 = 0}
 \PYG{g+go}{    radians = True}
@@ -248,7 +251,7 @@ Ellipsoid instances are parametrized by geographic longitude and latitude with t
 Project some points of the ellipsoid using the HEALPix and rHEALPix projections:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{numpy}\PYG{n+nn}{.}\PYG{n+nn}{testing} \PYG{k+kn}{import} \PYG{n}{assert\PYGZus{}allclose}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{n+nn}{.}\PYG{n+nn}{testing}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{assert\PYGZus{}allclose}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{h} \PYG{o}{=} \PYG{n}{Projection}\PYG{p}{(}\PYG{n}{ellps\PYGZus{}1}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{healpix}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rh} \PYG{o}{=} \PYG{n}{Projection}\PYG{p}{(}\PYG{n}{ellps\PYGZus{}1}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{rhealpix}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{north\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{south\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{assert\PYGZus{}allclose}\PYG{p}{(}\PYG{n}{h}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{60}\PYG{p}{)}\PYG{p}{,} \PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{3.35127855017803}\PYG{p}{)}\PYG{p}{,} \PYG{n}{rtol}\PYG{o}{=}\PYG{l+m+mf}{1e\PYGZhy{}14}\PYG{p}{,} \PYG{n}{atol}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{==} \PYG{k+kc}{None}
@@ -271,14 +274,14 @@ The module \sphinxcode{\sphinxupquote{dggs}} implements the rHEALPix DGGS and va
 Import all the classes, methods, and constants from the module
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{dggs} \PYG{k+kn}{import} \PYG{o}{*}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{dggs}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{o}{*}
 \end{sphinxVerbatim}
 
 \sphinxAtStartPar
 Create the (0, 0)\sphinxhyphen{}rHEALPix DGGS with N\_side=3 that is based upon the WGS84 ellipsoid:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids} \PYG{k+kn}{import} \PYG{n}{WGS84\PYGZus{}ELLIPSOID}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{WGS84\PYGZus{}ELLIPSOID}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{E} \PYG{o}{=} \PYG{n}{WGS84\PYGZus{}ELLIPSOID}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{n}{ellipsoid}\PYG{o}{=}\PYG{n}{E}\PYG{p}{,} \PYG{n}{north\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{south\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{N\PYGZus{}side}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{)}
@@ -289,11 +292,11 @@ Create the (0, 0)\sphinxhyphen{}rHEALPix DGGS with N\_side=3 that is based upon 
 \PYG{g+go}{    max\PYGZus{}areal\PYGZus{}resolution = 1}
 \PYG{g+go}{    max\PYGZus{}resolution = 15}
 \PYG{g+go}{    ellipsoid:}
-\PYG{g+go}{        R\PYGZus{}A = 6374581.467096525}
+\PYG{g+go}{        R\PYGZus{}A = 6371007.180918476}
 \PYG{g+go}{        a = 6378137.0}
-\PYG{g+go}{        b = 6356752.314140356}
-\PYG{g+go}{        e = 0.0578063088401125}
-\PYG{g+go}{        f = 0.003352810681182319}
+\PYG{g+go}{        b = 6356752.314245179}
+\PYG{g+go}{        e = 0.08181919084262149}
+\PYG{g+go}{        f = 0.0033528106647474805}
 \PYG{g+go}{        lat\PYGZus{}0 = 0}
 \PYG{g+go}{        lon\PYGZus{}0 = 0}
 \PYG{g+go}{        radians = False}
@@ -330,11 +333,11 @@ Some common rHEALPix DGGSs are predefined as constants:
 \PYG{g+go}{    max\PYGZus{}areal\PYGZus{}resolution = 1}
 \PYG{g+go}{    max\PYGZus{}resolution = 15}
 \PYG{g+go}{    ellipsoid:}
-\PYG{g+go}{        R\PYGZus{}A = 6374581.467096525}
+\PYG{g+go}{        R\PYGZus{}A = 6371007.180918476}
 \PYG{g+go}{        a = 6378137.0}
-\PYG{g+go}{        b = 6356752.314140356}
-\PYG{g+go}{        e = 0.0578063088401125}
-\PYG{g+go}{        f = 0.003352810681182319}
+\PYG{g+go}{        b = 6356752.314245179}
+\PYG{g+go}{        e = 0.08181919084262149}
+\PYG{g+go}{        f = 0.0033528106647474805}
 \PYG{g+go}{        lat\PYGZus{}0 = 0}
 \PYG{g+go}{        lon\PYGZus{}0 = 0}
 \PYG{g+go}{        radians = False}
@@ -412,19 +415,19 @@ Compute the ellipsoidal shape and ellipsoidal nuclei of these cells
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{expected\PYGZus{}results} \PYG{o}{=} \PYG{p}{[}
 \PYG{g+gp}{... }   \PYG{p}{[}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{5.088887490341627e\PYGZhy{}14}\PYG{p}{,} \PYG{l+m+mf}{58.47067782962734}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.000000000000036}\PYG{p}{,} \PYG{l+m+mf}{58.47067782962734}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{89.99999999999996}\PYG{p}{,} \PYG{l+m+mf}{58.47067782962736}\PYG{p}{)}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{58.52801748206219}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{44.999999999999964}\PYG{p}{,} \PYG{l+m+mf}{58.52801748206219}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{90.0}\PYG{p}{,} \PYG{l+m+mf}{58.52801748206219}\PYG{p}{)}
 \PYG{g+gp}{... }   \PYG{p}{]}\PYG{p}{,} \PYG{p}{[}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{14.999999999999998}\PYG{p}{,} \PYG{l+m+mf}{26.438744923100096}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{l+m+mf}{26.438744923100096}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{74.99999999999999}\PYG{p}{,} \PYG{l+m+mf}{26.438744923100096}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{105.00000000000001}\PYG{p}{,} \PYG{l+m+mf}{26.438744923100096}\PYG{p}{)}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{14.999999999999998}\PYG{p}{,} \PYG{l+m+mf}{26.490118751439734}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{l+m+mf}{26.490118751439734}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{74.99999999999999}\PYG{p}{,} \PYG{l+m+mf}{26.490118751439734}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{105.00000000000001}\PYG{p}{,} \PYG{l+m+mf}{26.490118751439734}\PYG{p}{)}
 \PYG{g+gp}{... }   \PYG{p}{]}\PYG{p}{,} \PYG{p}{[}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{14.999999999999998}\PYG{p}{,} \PYG{l+m+mf}{3.560649871414923e\PYGZhy{}15}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{l+m+mf}{3.560649871414923e\PYGZhy{}15}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{74.99999999999999}\PYG{p}{,} \PYG{l+m+mf}{3.560649871414923e\PYGZhy{}15}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{105.00000000000001}\PYG{p}{,} \PYG{l+m+mf}{3.560649871414923e\PYGZhy{}15}\PYG{p}{)}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{14.999999999999998}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{74.99999999999999}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{105.00000000000001}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
 \PYG{g+gp}{... }   \PYG{p}{]}\PYG{p}{]}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{row} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{cells}\PYG{p}{)}\PYG{p}{:}
 \PYG{g+gp}{... }    \PYG{k}{for} \PYG{n}{j}\PYG{p}{,} \PYG{n}{cell} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{row}\PYG{p}{)}\PYG{p}{:}
@@ -448,7 +451,7 @@ Orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{174}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{37}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Approximate Auckland lon\PYGZhy{}lat coordinates}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{projection\PYGZus{}wrapper} \PYG{k+kn}{import} \PYG{o}{*}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{projection\PYGZus{}wrapper}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{o}{*}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{E} \PYG{o}{=} \PYG{n}{Ellipsoid}\PYG{p}{(}\PYG{n}{a}\PYG{o}{=}\PYG{n}{WGS84\PYGZus{}A}\PYG{p}{,} \PYG{n}{f}\PYG{o}{=}\PYG{n}{WGS84\PYGZus{}F}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{lon\PYGZus{}0}\PYG{o}{=}\PYG{n}{p}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{n}{lat\PYGZus{}0}\PYG{o}{=}\PYG{n}{p}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{n}{E}\PYG{p}{,} \PYG{n}{N\PYGZus{}side}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{north\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{south\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{)}
@@ -459,11 +462,11 @@ Orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand:
 \PYG{g+go}{    max\PYGZus{}areal\PYGZus{}resolution = 1}
 \PYG{g+go}{    max\PYGZus{}resolution = 15}
 \PYG{g+go}{    ellipsoid:}
-\PYG{g+go}{        R\PYGZus{}A = 6374581.467096525}
+\PYG{g+go}{        R\PYGZus{}A = 6371007.180918476}
 \PYG{g+go}{        a = 6378137.0}
-\PYG{g+go}{        b = 6356752.314140356}
-\PYG{g+go}{        e = 0.0578063088401125}
-\PYG{g+go}{        f = 0.003352810681182319}
+\PYG{g+go}{        b = 6356752.314245179}
+\PYG{g+go}{        e = 0.08181919084262149}
+\PYG{g+go}{        f = 0.0033528106647474805}
 \PYG{g+go}{        lat\PYGZus{}0 = \PYGZhy{}37}
 \PYG{g+go}{        lon\PYGZus{}0 = 174}
 \PYG{g+go}{        radians = False}
@@ -497,7 +500,10 @@ unless indicated otherwise.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.auth_lat}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{auth\_lat}}}{\emph{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{inverse}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{bool}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{False}}, \emph{\DUrole{n}{radians}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{bool}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{False}}}{{ $\rightarrow$ float}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{auth\_lat}}}
+{\sphinxparam{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inverse}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{bool}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{False}}\sphinxparamcomma \sphinxparam{\DUrole{n}{radians}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{bool}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{False}}}
+{{ $\rightarrow$ float}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point of geographic latitude \sphinxtitleref{phi} on an ellipse of
@@ -508,38 +514,29 @@ If \sphinxtitleref{inverse} =True, then compute its inverse approximately.
 EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{beta} \PYG{o}{=} \PYG{n}{auth\PYGZus{}lat}\PYG{p}{(}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mf}{0.5}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{beta} \PYG{o}{=} \PYG{n}{auth\PYGZus{}lat}\PYG{p}{(}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mf}{0.08181919104281579}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{beta}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{0.68951821243544}
+\PYG{g+go}{1.045256493205824}
+
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{auth\PYGZus{}lat}\PYG{p}{(}\PYG{n}{beta}\PYG{p}{,} \PYG{l+m+mf}{0.08181919104281579}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+go}{1.047197551196598}
+
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+go}{1.047197551196598}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-0.689518212435
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{auth\PYGZus{}lat}\PYG{p}{(}\PYG{n}{beta}\PYG{p}{,} \PYG{l+m+mf}{0.5}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{0.785126523581272}
-\end{sphinxVerbatim}
-
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-0.785126523581
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{0.785398163397448}
-\end{sphinxVerbatim}
-
-\end{description}
 
 \sphinxAtStartPar
 NOTES:
 
 \sphinxAtStartPar
-The power series approximation used for the inverse is
-standard in cartography (PROJ.4 uses it, for instance)
-and accurate for small eccentricities.
+For small flattenings f (f \textless{} 1/150), when calculating
+authalic from common latitude, power series approximation
+(from \sphinxurl{https://doi.org/10.48550/arXiv.2212.05818}) gives
+more accurate results than direct formula (for
+double\sphinxhyphen{}precission accuracy). For the inverse, again power
+series approximation is used, which is standard in
+cartography for small flattenings. The one used in this
+case is from \sphinxurl{https://doi.org/10.48550/arXiv.2212.05818}
 
 \end{fulllineitems}
 
@@ -548,7 +545,10 @@ and accurate for small eccentricities.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.auth_rad}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{auth\_rad}}}{\emph{\DUrole{n}{a}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{inverse}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{bool}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{False}}}{{ $\rightarrow$ float}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{auth\_rad}}}
+{\sphinxparam{\DUrole{n}{a}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inverse}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{bool}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{False}}}
+{{ $\rightarrow$ float}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the radius of the authalic sphere of the ellipsoid with major
@@ -575,20 +575,6 @@ EXAMPLES:
 \PYG{g+go}{(0.012345679012346, 0.999974596271211)}
 \PYG{g+go}{(0.01, 0.999983332861089)}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-(0.25, 0.98939325967009495) *
-(0.111111111111111, 0.99793514742994305) *
-(0.0625, 0.99934823645582505) *
-(0.04, 0.99973321235361001) *
-(0.027777777777778, 0.99987137105187995) *
-(0.020408163265306, 0.99993057628561399) *
-(0.015625, 0.99995930708084702) *
-(0.012345679012346, 0.99997459627121099) *
-(0.01, 0.99998333286108898) *
-
-\end{description}
 
 \end{fulllineitems}
 
@@ -597,7 +583,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.my_round}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{my\_round}}}{\emph{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{Any}}, \emph{\DUrole{n}{digits}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}}{{ $\rightarrow$ Any}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{my\_round}}}
+{\sphinxparam{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{Any}}\sphinxparamcomma \sphinxparam{\DUrole{n}{digits}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}}
+{{ $\rightarrow$ Any}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Round the floating point number or list/tuple of floating point
@@ -621,7 +610,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.wrap_latitude}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{wrap\_latitude}}}{\emph{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{radians}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{bool}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{False}}}{{ $\rightarrow$ float}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{wrap\_latitude}}}
+{\sphinxparam{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{radians}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{bool}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{False}}}
+{{ $\rightarrow$ float}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point p on the unit circle at angle \sphinxtitleref{phi} from the positive x\sphinxhyphen{}axis,
@@ -637,17 +629,17 @@ Otherwise, they are given in degrees.
 EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{l+m+mi}{45}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
 \PYG{g+go}{45.0}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{45}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
 \PYG{g+go}{\PYGZhy{}45.0}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{l+m+mi}{90}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{l+m+mf}{90.0}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
 \PYG{g+go}{90.0}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{90}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{90.0}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
 \PYG{g+go}{\PYGZhy{}90.0}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{l+m+mi}{135}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{l+m+mf}{135.0}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
 \PYG{g+go}{\PYGZhy{}45.0}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{135}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}latitude}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{135.0}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
 \PYG{g+go}{45.0}
 \end{sphinxVerbatim}
 
@@ -658,7 +650,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{utils:rhealpixdggs.utils.wrap_longitude}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{wrap\_longitude}}}{\emph{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{radians}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{bool}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{False}}}{{ $\rightarrow$ float}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.utils.}}\sphinxbfcode{\sphinxupquote{wrap\_longitude}}}
+{\sphinxparam{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{radians}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{bool}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{False}}}
+{{ $\rightarrow$ float}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point p on the unit circle at angle \sphinxtitleref{lam} from the positive
@@ -673,21 +668,6 @@ EXAMPLES:
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}longitude}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{pi} \PYG{o}{+} \PYG{n}{pi}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
 \PYG{g+go}{\PYGZhy{}3.141592653589793}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-\sphinxhyphen{}3.1415926535897931
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}longitude}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{185}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
-\PYG{g+go}{175.0}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}longitude}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{180}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
-\PYG{g+go}{\PYGZhy{}180.0}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wrap\PYGZus{}longitude}\PYG{p}{(}\PYG{l+m+mi}{185}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
-\PYG{g+go}{\PYGZhy{}175.0}
-\end{sphinxVerbatim}
-
-\end{description}
 
 \end{fulllineitems}
 
@@ -718,7 +698,10 @@ By ‘ellipsoid’ below, I mean an oblate ellipsoid of revolution.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix}}}{\emph{\DUrole{n}{a}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{1}}, \emph{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}}{{ $\rightarrow$ Callable\DUrole{p}{{[}}\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{,}\DUrole{w}{  }bool\DUrole{p}{,}\DUrole{w}{  }bool\DUrole{p}{{]}}\DUrole{p}{,}\DUrole{w}{  }tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix}}}
+{\sphinxparam{\DUrole{n}{a}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}}
+{{ $\rightarrow$ Callable\DUrole{p}{{[}}\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{,}\DUrole{w}{ }bool\DUrole{p}{,}\DUrole{w}{ }bool\DUrole{p}{{]}}\DUrole{p}{,}\DUrole{w}{ }tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a function object that wraps the HEALPix projection and its inverse
@@ -729,12 +712,12 @@ EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{f} \PYG{o}{=} \PYG{n}{healpix}\PYG{p}{(}\PYG{n}{a}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{e}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0.574951359778215, 2.145747686573111)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{60}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{q} \PYG{o}{=} \PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{;} \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{q}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{q} \PYG{o}{=} \PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{;} \PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{q}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0.574951359778215, 2.145747686573111)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(6e\PYGZhy{}15, 59.999999999999986)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 60)}
@@ -756,7 +739,10 @@ A function object of the form f(u, v, radians=False, inverse=False).
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix_ellipsoid}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_ellipsoid}}}{\emph{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_ellipsoid}}}
+{\sphinxparam{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the signature functions of the HEALPix projection of an oblate
@@ -781,9 +767,9 @@ Assume \sphinxhyphen{}pi \textless{}= \sphinxtitleref{lam} \textless{} pi and \s
 EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{healpix\PYGZus{}ellipsoid}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{7}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x} \PYG{k}{if} \PYG{n+nb}{type}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)} \PYG{o+ow}{is} \PYG{n+nb}{int} \PYG{k}{else} \PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{healpix\PYGZus{}ellipsoid}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{7}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 0.511157237746422)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{healpix\PYGZus{}ellipsoid}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{7}\PYG{p}{,} \PYG{n}{e}\PYG{o}{=}\PYG{l+m+mf}{0.8}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x} \PYG{k}{if} \PYG{n+nb}{type}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)} \PYG{o+ow}{is} \PYG{n+nb}{int} \PYG{k}{else} \PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{healpix\PYGZus{}ellipsoid}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{7}\PYG{p}{,} \PYG{n}{e}\PYG{o}{=}\PYG{l+m+mf}{0.8}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 0.268484450857837)}
 \end{sphinxVerbatim}
 
@@ -794,7 +780,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix_ellipsoid_inverse}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_ellipsoid\_inverse}}}{\emph{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_ellipsoid\_inverse}}}
+{\sphinxparam{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the inverse of healpix\_ellipsoid().
@@ -805,7 +794,7 @@ EXAMPLES:
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{7}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{q} \PYG{o}{=} \PYG{n}{healpix\PYGZus{}ellipsoid}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{healpix\PYGZus{}ellipsoid\PYGZus{}inverse}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x} \PYG{k}{if} \PYG{n+nb}{type}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)} \PYG{o+ow}{is} \PYG{n+nb}{int} \PYG{k}{else} \PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{healpix\PYGZus{}ellipsoid\PYGZus{}inverse}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 0.448798950512828)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 0.448798950512828)}
@@ -818,7 +807,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix_sphere}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_sphere}}}{\emph{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_sphere}}}
+{\sphinxparam{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the signature function of the HEALPix
@@ -849,7 +841,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix_sphere_inverse}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_sphere\_inverse}}}{\emph{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_sphere\_inverse}}}
+{\sphinxparam{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the inverse of the healpix\_sphere().
@@ -879,7 +874,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.healpix_vertices}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_vertices}}}{}{{ $\rightarrow$ list\DUrole{p}{{[}}tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{healpix\_vertices}}}
+{}
+{{ $\rightarrow$ list\DUrole{p}{{[}}tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of the planar vertices of the HEALPix projection of
@@ -892,7 +890,10 @@ the unit sphere.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_healpix:rhealpixdggs.pj_healpix.in_healpix_image}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{in\_healpix\_image}}}{\emph{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}}{{ $\rightarrow$ bool}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_healpix.}}\sphinxbfcode{\sphinxupquote{in\_healpix\_image}}}
+{\sphinxparam{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}}
+{{ $\rightarrow$ bool}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return True if and only if \sphinxtitleref{(x, y)} lies in the image of the HEALPix
@@ -962,7 +963,10 @@ By ‘ellipsoid’ below, I mean an oblate ellipsoid of revolution.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.combine_triangles}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{combine\_triangles}}}{\emph{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{inverse}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{bool}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{False}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{combine\_triangles}}}
+{\sphinxparam{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inverse}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{bool}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{False}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Rearrange point \sphinxtitleref{(x, y)} in the HEALPix projection by
@@ -998,9 +1002,9 @@ EXAMPLES:
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{u}\PYG{p}{,} \PYG{n}{v} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{x}\PYG{p}{,} \PYG{n}{y} \PYG{o}{=} \PYG{n}{combine\PYGZus{}triangles}\PYG{p}{(}\PYG{n}{u}\PYG{p}{,} \PYG{n}{v}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}1.832595714594046, 1.570796326794896)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{combine\PYGZus{}triangles}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{combine\PYGZus{}triangles}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}0.785398163397448, 1.047197551196598)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{p}{(}\PYG{n}{u}\PYG{p}{,} \PYG{n}{v}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}0.785398163397448, 1.047197551196598)}
@@ -1013,7 +1017,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.in_rhealpix_image}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{in\_rhealpix\_image}}}{\emph{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}}{{ $\rightarrow$ bool}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{in\_rhealpix\_image}}}
+{\sphinxparam{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}}
+{{ $\rightarrow$ bool}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return True if and only if the point \sphinxtitleref{(x, y)} lies in the image of
@@ -1056,7 +1063,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix}}}{\emph{\DUrole{n}{a}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{1}}, \emph{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{str}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{{ $\rightarrow$ Callable\DUrole{p}{{[}}\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{,}\DUrole{w}{  }bool\DUrole{p}{,}\DUrole{w}{  }bool\DUrole{p}{{]}}\DUrole{p}{,}\DUrole{w}{  }tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix}}}
+{\sphinxparam{\DUrole{n}{a}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{str}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}
+{{ $\rightarrow$ Callable\DUrole{p}{{[}}\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{,}\DUrole{w}{ }bool\DUrole{p}{,}\DUrole{w}{ }bool\DUrole{p}{{]}}\DUrole{p}{,}\DUrole{w}{ }tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a function object that wraps the rHEALPix projection and its inverse
@@ -1067,13 +1077,13 @@ EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{f} \PYG{o}{=} \PYG{n}{rhealpix}\PYG{p}{(}\PYG{n}{a}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{e}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{north\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{south\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}0.574951359778215, 2.145747686573111)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{60}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{q} \PYG{o}{=} \PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{q}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{q}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}0.574951359778215, 2.145747686573111)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{inverse}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(6e\PYGZhy{}15, 59.999999999999986)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 60)}
@@ -1095,7 +1105,10 @@ A function object of the form f(u, v, radians=False, inverse=False).
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_ellipsoid}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_ellipsoid}}}{\emph{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{str}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_ellipsoid}}}
+{\sphinxparam{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{str}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the signature functions of the rHEALPix map
@@ -1130,8 +1143,8 @@ See rhealpix\_sphere() docstring for a diagram.
 EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{numpy} \PYG{k+kn}{import} \PYG{n}{arcsin}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rhealpix\PYGZus{}ellipsoid}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{arcsin}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{)}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{arcsin}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x} \PYG{k}{if} \PYG{n+nb}{type}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)} \PYG{o+ow}{is} \PYG{n+nb}{int} \PYG{k}{else} \PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rhealpix\PYGZus{}ellipsoid}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{arcsin}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{)}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 0.785398163397448)}
 \end{sphinxVerbatim}
 
@@ -1142,7 +1155,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_ellipsoid_inverse}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_ellipsoid\_inverse}}}{\emph{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{str}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_ellipsoid\_inverse}}}
+{\sphinxparam{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{e}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{str}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the inverse of rhealpix\_ellipsoid().
@@ -1153,7 +1169,7 @@ EXAMPLES:
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{q} \PYG{o}{=} \PYG{n}{rhealpix\PYGZus{}ellipsoid}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rhealpix\PYGZus{}ellipsoid\PYGZus{}inverse}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rhealpix\PYGZus{}ellipsoid\PYGZus{}inverse}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0.0, 0.785398163397448)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 0.785398163397448)}
@@ -1166,7 +1182,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_sphere}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_sphere}}}{\emph{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{str}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_sphere}}}
+{\sphinxparam{\DUrole{n}{lam}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{str}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the signature functions of the rHEALPix map projection of
@@ -1194,7 +1213,7 @@ south polar squares, respectively.
 EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rhealpix\PYGZus{}sphere}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rhealpix\PYGZus{}sphere}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}1.619978633413937, 2.307012183573304)}
 \end{sphinxVerbatim}
 
@@ -1222,7 +1241,10 @@ The polar squares are labeled 0, 1, 2, 3 from east to west like this:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_sphere_inverse}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_sphere\_inverse}}}{\emph{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{str}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_sphere\_inverse}}}
+{\sphinxparam{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{str}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Compute the inverse of rhealpix\_sphere().
@@ -1233,7 +1255,7 @@ EXAMPLES:
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{q} \PYG{o}{=} \PYG{n}{rhealpix\PYGZus{}sphere}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rhealpix\PYGZus{}sphere\PYGZus{}inverse}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rhealpix\PYGZus{}sphere\PYGZus{}inverse}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0.0, 0.785398163397448)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0, 0.785398163397448)}
@@ -1246,7 +1268,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.rhealpix_vertices}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_vertices}}}{\emph{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}}{{ $\rightarrow$ list\DUrole{p}{{[}}tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{  }float\DUrole{p}{{]}}\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{rhealpix\_vertices}}}
+{\sphinxparam{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}}
+{{ $\rightarrow$ list\DUrole{p}{{[}}tuple\DUrole{p}{{[}}float\DUrole{p}{,}\DUrole{w}{ }float\DUrole{p}{{]}}\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of the planar vertices of the rHEALPix projection of
@@ -1259,7 +1284,10 @@ the unit sphere.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{pj_rhealpix:rhealpixdggs.pj_rhealpix.triangle}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{triangle}}}{\emph{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{float}}, \emph{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{int}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{0}}, \emph{\DUrole{n}{inverse}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{bool}\DUrole{w}{  }\DUrole{o}{=}\DUrole{w}{  }\DUrole{default_value}{False}}}{{ $\rightarrow$ tuple\DUrole{p}{{[}}int\DUrole{p}{,}\DUrole{w}{  }str\DUrole{p}{{]}}}}
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{rhealpixdggs.pj\_rhealpix.}}\sphinxbfcode{\sphinxupquote{triangle}}}
+{\sphinxparam{\DUrole{n}{x}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{float}}\sphinxparamcomma \sphinxparam{\DUrole{n}{north\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{int}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inverse}\DUrole{p}{:}\DUrole{w}{ }\DUrole{n}{bool}\DUrole{w}{ }\DUrole{o}{=}\DUrole{w}{ }\DUrole{default_value}{False}}}
+{{ $\rightarrow$ tuple\DUrole{p}{{[}}int\DUrole{p}{,}\DUrole{w}{ }str\DUrole{p}{{]}}}}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the number of the polar triangle and region that \sphinxtitleref{(x, y)} lies in.
@@ -1386,7 +1414,10 @@ Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordin
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.ellipsoids.}}\sphinxbfcode{\sphinxupquote{Ellipsoid}}}{\emph{\DUrole{n}{R}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{a}\DUrole{o}{=}\DUrole{default_value}{6378137.0}}, \emph{\DUrole{n}{b}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{e}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{f}\DUrole{o}{=}\DUrole{default_value}{0.003352810681182319}}, \emph{\DUrole{n}{lon\_0}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{lat\_0}\DUrole{o}{=}\DUrole{default_value}{0}}, \emph{\DUrole{n}{radians}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{rhealpixdggs.ellipsoids.}}\sphinxbfcode{\sphinxupquote{Ellipsoid}}}
+{\sphinxparam{\DUrole{n}{R}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{a}\DUrole{o}{=}\DUrole{default_value}{6378137.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{b}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{e}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{f}\DUrole{o}{=}\DUrole{default_value}{0.0033528106647474805}}\sphinxparamcomma \sphinxparam{\DUrole{n}{lon\_0}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{lat\_0}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{radians}\DUrole{o}{=}\DUrole{default_value}{False}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Bases: \sphinxcode{\sphinxupquote{object}}
@@ -1449,13 +1480,16 @@ the north polar region in the context of the (r)HEALPix projection.
 
 \sphinxAtStartPar
 Except for phi\_0, these attribute names match the names of the
-\sphinxhref{http://trac.osgeo.org/proj/wiki/GenParms}{PROJ.4 ellipsoid parameters}.
+\sphinxtitleref{PROJ ellipsoid parameters \textless{}https://proj.org/en/9.4/usage/ellipsoids.html\#ellipsoid\sphinxhyphen{}spherification\sphinxhyphen{}parameters\textgreater{}}
 \index{get\_points() (rhealpixdggs.ellipsoids.Ellipsoid method)@\spxentry{get\_points()}\spxextra{rhealpixdggs.ellipsoids.Ellipsoid method}}
 
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.get_points}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{get\_points}}}{\emph{\DUrole{n}{filename}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_points}}}
+{\sphinxparam{\DUrole{n}{filename}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of longitude\sphinxhyphen{}latitude points contained in
@@ -1471,7 +1505,10 @@ whitespace and angles given in degrees.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.graticule}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{graticule}}}{\emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{400}}, \emph{\DUrole{n}{spacing}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{graticule}}}
+{\sphinxparam{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{400}}\sphinxparamcomma \sphinxparam{\DUrole{n}{spacing}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of longitude\sphinxhyphen{}latitude points sampled from a
@@ -1498,7 +1535,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.lattice}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{lattice}}}{\emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{90}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{lattice}}}
+{\sphinxparam{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{90}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a 2n x n square lattice of longitude\sphinxhyphen{}latitude points.
@@ -1537,7 +1577,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.meridian}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{meridian}}}{\emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{200}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{meridian}}}
+{\sphinxparam{\DUrole{n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{200}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of \sphinxtitleref{n} equispaced longitude\sphinxhyphen{}latitude
@@ -1551,7 +1594,10 @@ Avoid the poles.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.parallel}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{parallel}}}{\emph{\DUrole{n}{phi}}, \emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{200}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{parallel}}}
+{\sphinxparam{\DUrole{n}{phi}}\sphinxparamcomma \sphinxparam{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{200}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of \sphinxtitleref{2*n} equispaced longitude\sphinxhyphen{}latitude
@@ -1564,7 +1610,10 @@ points lying along the parallel of latitude \sphinxtitleref{phi}.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.pi}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{pi}}}{}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{pi}}}
+{}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return pi if \sphinxtitleref{self.radians} = True and 180 otherwise.
@@ -1576,7 +1625,10 @@ Return pi if \sphinxtitleref{self.radians} = True and 180 otherwise.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.random_point}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_point}}}{\emph{\DUrole{n}{lam\_min}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{lam\_max}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{phi\_min}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{phi\_max}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{random\_point}}}
+{\sphinxparam{\DUrole{n}{lam\_min}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{lam\_max}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi\_min}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi\_max}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a point (given in geodetic coordinates) sampled uniformly at
@@ -1601,7 +1653,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{ellipsoids:rhealpixdggs.ellipsoids.Ellipsoid.xyz}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xyz}}}{\emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{phi}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{xyz}}}
+{\sphinxparam{\DUrole{n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point on this ellipsoid with longitude\sphinxhyphen{}latitude coordinates
@@ -1612,15 +1667,9 @@ EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{E} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}SPHERE}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{E}\PYG{o}{.}\PYG{n}{xyz}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{45}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{E}\PYG{o}{.}\PYG{n}{xyz}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{45}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0.707106781186548, 0.0, 0.707106781186548)}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-(0.70710678118654802, 0.0, 0.70710678118654802)
-
-\end{description}
 
 \end{fulllineitems}
 
@@ -1654,7 +1703,10 @@ By ‘ellipsoid’ below, I mean an oblate ellipsoid of revolution.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{projection_wrapper:rhealpixdggs.projection_wrapper.Projection}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.projection\_wrapper.}}\sphinxbfcode{\sphinxupquote{Projection}}}{\emph{\DUrole{n}{ellipsoid=\textless{}rhealpixdggs.ellipsoids.Ellipsoid object\textgreater{}}}, \emph{\DUrole{n}{proj=None}}, \emph{\DUrole{n}{**kwargs}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{rhealpixdggs.projection\_wrapper.}}\sphinxbfcode{\sphinxupquote{Projection}}}
+{\sphinxparam{\DUrole{n}{ellipsoid=\textless{}rhealpixdggs.ellipsoids.Ellipsoid object\textgreater{}}}\sphinxparamcomma \sphinxparam{\DUrole{n}{proj=None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{**kwargs}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Bases: \sphinxcode{\sphinxupquote{object}}
@@ -1687,20 +1739,14 @@ projection.
 EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids} \PYG{k+kn}{import} \PYG{n}{WGS84\PYGZus{}ELLIPSOID}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{WGS84\PYGZus{}ELLIPSOID}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{f} \PYG{o}{=} \PYG{n}{Projection}\PYG{p}{(}\PYG{n}{ellipsoid}\PYG{o}{=}\PYG{n}{WGS84\PYGZus{}ELLIPSOID}\PYG{p}{,} \PYG{n}{proj}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{rhealpix}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{north\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{south\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{30}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(0.0, 3748655.1150495014)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{30}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+go}{(0.0, 3740232.8933662786)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{f} \PYG{o}{=} \PYG{n}{Projection}\PYG{p}{(}\PYG{n}{ellipsoid}\PYG{o}{=}\PYG{n}{WGS84\PYGZus{}ELLIPSOID}\PYG{p}{,} \PYG{n}{proj}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{cea}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{30}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(0.0, 3180183.4857749646)}
+\PYG{g+go}{(0.0, 3171259.315518537)}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: .. Issue \#1 was !!! ..}
-\sphinxAtStartPar
-(0.0, 3180183.485774971) *
-
-\end{description}
 
 \sphinxAtStartPar
 NOTES:
@@ -1760,7 +1806,7 @@ EXAMPLES:
 Create the (1, 2)\sphinxhyphen{}rHEALPix DGGS with N\_side = 3 that is based on the WGS84 ellipsoid. Use degrees instead of the default radians for angular measurements
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids} \PYG{k+kn}{import} \PYG{n}{WGS84\PYGZus{}ELLIPSOID}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{WGS84\PYGZus{}ELLIPSOID}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{E} \PYG{o}{=} \PYG{n}{WGS84\PYGZus{}ELLIPSOID}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{n}{ellipsoid}\PYG{o}{=}\PYG{n}{E}\PYG{p}{,} \PYG{n}{north\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{south\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{N\PYGZus{}side}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{)}
@@ -1771,29 +1817,16 @@ Create the (1, 2)\sphinxhyphen{}rHEALPix DGGS with N\_side = 3 that is based on 
 \PYG{g+go}{    max\PYGZus{}areal\PYGZus{}resolution = 1}
 \PYG{g+go}{    max\PYGZus{}resolution = 15}
 \PYG{g+go}{    ellipsoid:}
-\PYG{g+go}{        R\PYGZus{}A = 6374581.467096525}
+\PYG{g+go}{        R\PYGZus{}A = 6371007.180918476}
 \PYG{g+go}{        a = 6378137.0}
-\PYG{g+go}{        b = 6356752.314140356}
-\PYG{g+go}{        e = 0.0578063088401125}
-\PYG{g+go}{        f = 0.003352810681182319}
+\PYG{g+go}{        b = 6356752.314245179}
+\PYG{g+go}{        e = 0.08181919084262149}
+\PYG{g+go}{        f = 0.0033528106647474805}
 \PYG{g+go}{        lat\PYGZus{}0 = 0}
 \PYG{g+go}{        lon\PYGZus{}0 = 0}
 \PYG{g+go}{        radians = False}
 \PYG{g+go}{        sphere = False}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES::  .. Issue \#1 was ..}\begin{description}
-\sphinxlineitem{ellipsoid:}
-\sphinxAtStartPar
-R\_A = 6374581.4671 *
-a = 6378137.0
-b = 6356752.314140356 *
-e = 0.0578063088401
-f = 0.003352810681182319
-
-\end{description}
-
-\end{description}
 
 \sphinxAtStartPar
 Pick a (longitude\sphinxhyphen{}latitude) point on the ellipsoid and find the resolution 1 cell that contains it
@@ -1848,19 +1881,19 @@ Compute the ellipsoidal nuclei of these cells
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{expected\PYGZus{}results} \PYG{o}{=} \PYG{p}{[}
 \PYG{g+gp}{... }   \PYG{p}{[}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{58.47067782962736}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.000000000000036}\PYG{p}{,} \PYG{l+m+mf}{58.47067782962734}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{89.99999999999996}\PYG{p}{,} \PYG{l+m+mf}{58.47067782962736}\PYG{p}{)}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{1.90833280887811e\PYGZhy{}14}\PYG{p}{,} \PYG{l+m+mf}{58.52801748206219}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.00000000000002}\PYG{p}{,} \PYG{l+m+mf}{58.52801748206219}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{89.99999999999997}\PYG{p}{,} \PYG{l+m+mf}{58.52801748206219}\PYG{p}{)}
 \PYG{g+gp}{... }   \PYG{p}{]}\PYG{p}{,} \PYG{p}{[}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{14.999999999999998}\PYG{p}{,} \PYG{l+m+mf}{26.438744923100096}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{l+m+mf}{26.438744923100096}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{74.99999999999999}\PYG{p}{,} \PYG{l+m+mf}{26.438744923100096}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{105.00000000000001}\PYG{p}{,} \PYG{l+m+mf}{26.438744923100096}\PYG{p}{)}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{14.999999999999998}\PYG{p}{,} \PYG{l+m+mf}{26.490118751439734}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{l+m+mf}{26.490118751439734}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{74.99999999999999}\PYG{p}{,} \PYG{l+m+mf}{26.490118751439734}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{105.00000000000001}\PYG{p}{,} \PYG{l+m+mf}{26.490118751439734}\PYG{p}{)}
 \PYG{g+gp}{... }   \PYG{p}{]}\PYG{p}{,} \PYG{p}{[}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{14.999999999999998}\PYG{p}{,} \PYG{l+m+mf}{3.560649871414923e\PYGZhy{}15}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{l+m+mf}{3.560649871414923e\PYGZhy{}15}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{74.99999999999999}\PYG{p}{,} \PYG{l+m+mf}{3.560649871414923e\PYGZhy{}15}\PYG{p}{)}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{105.00000000000001}\PYG{p}{,} \PYG{l+m+mf}{3.560649871414923e\PYGZhy{}15}\PYG{p}{)}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{14.999999999999998}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{45.0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{74.99999999999999}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{,}
+\PYG{g+gp}{... }       \PYG{p}{(}\PYG{l+m+mf}{105.00000000000001}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
 \PYG{g+gp}{... }   \PYG{p}{]}\PYG{p}{]}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{row} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{cells}\PYG{p}{)}\PYG{p}{:}
 \PYG{g+gp}{... }    \PYG{k}{for} \PYG{n}{j}\PYG{p}{,} \PYG{n}{cell} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{row}\PYG{p}{)}\PYG{p}{:}
@@ -1885,7 +1918,7 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{174}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{37}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Approximate Auckland lon\PYGZhy{}lat coordinates}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from} \PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids} \PYG{k+kn}{import} \PYG{o}{*}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{rhealpixdggs}\PYG{n+nn}{.}\PYG{n+nn}{ellipsoids}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{o}{*}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{E} \PYG{o}{=} \PYG{n}{Ellipsoid}\PYG{p}{(}\PYG{n}{a}\PYG{o}{=}\PYG{n}{WGS84\PYGZus{}A}\PYG{p}{,} \PYG{n}{f}\PYG{o}{=}\PYG{n}{WGS84\PYGZus{}F}\PYG{p}{,} \PYG{n}{radians}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{lon\PYGZus{}0}\PYG{o}{=}\PYG{n}{p}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,} \PYG{n}{lat\PYGZus{}0}\PYG{o}{=}\PYG{n}{p}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{n}{E}\PYG{p}{,} \PYG{n}{N\PYGZus{}side}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{north\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{south\PYGZus{}square}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{)}
@@ -1896,1075 +1929,34 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand
 \PYG{g+go}{    max\PYGZus{}areal\PYGZus{}resolution = 1}
 \PYG{g+go}{    max\PYGZus{}resolution = 15}
 \PYG{g+go}{    ellipsoid:}
-\PYG{g+go}{        R\PYGZus{}A = 6374581.467096525}
+\PYG{g+go}{        R\PYGZus{}A = 6371007.180918476}
 \PYG{g+go}{        a = 6378137.0}
-\PYG{g+go}{        b = 6356752.314140356}
-\PYG{g+go}{        e = 0.0578063088401125}
-\PYG{g+go}{        f = 0.003352810681182319}
+\PYG{g+go}{        b = 6356752.314245179}
+\PYG{g+go}{        e = 0.08181919084262149}
+\PYG{g+go}{        f = 0.0033528106647474805}
 \PYG{g+go}{        lat\PYGZus{}0 = \PYGZhy{}37}
 \PYG{g+go}{        lon\PYGZus{}0 = 174}
 \PYG{g+go}{        radians = False}
 \PYG{g+go}{        sphere = False}
-\end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES::  .. Issue \#1 was ..}\begin{quote}
-\begin{description}
-\sphinxlineitem{ellipsoid:}
-\sphinxAtStartPar
-R\_A = 6374581.4671 *
-a = 6378137.0
-b = 6356752.314140356
-e = 0.0578063088401 *
-f = 0.003352810681182319
 
-\end{description}
-\end{quote}
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell\PYGZus{}from\PYGZus{}point}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{p}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{Q3}
 \end{sphinxVerbatim}
-
-\end{description}
-\index{Cell (class in rhealpixdggs.dggs)@\spxentry{Cell}\spxextra{class in rhealpixdggs.dggs}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{Cell}}}{\emph{\DUrole{n}{rdggs=\textless{}rhealpixdggs.dggs.RHEALPixDGGS object\textgreater{}}}, \emph{\DUrole{n}{suid=None}}, \emph{\DUrole{n}{level\_order\_index=None}}, \emph{\DUrole{n}{post\_order\_index=None}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Bases: \sphinxcode{\sphinxupquote{object}}
-
-\sphinxAtStartPar
-Represents a cell of the planar or ellipsoidal rHEALPix grid hierarchies.
-Cell identifiers are of the form (p\_0, p\_1,…,p\_l), where p\_0 is one of
-the characters ‘A’, ‘B’, ‘C’, ‘D’, ‘E’, ‘F’ and p\_i for i \textgreater{} 0 is one of
-the integers 0, 1,…, N\_side**2 \sphinxhyphen{} 1, where N\_side is the instance
-attribute from RHEALPixDGGS (the number of children cells along a cell’s
-side).
-
-\sphinxAtStartPar
-INSTANCE ATTRIBUTES:
-\begin{itemize}
-\item {} 
-\sphinxAtStartPar
-\sphinxtitleref{rdggs} \sphinxhyphen{} The DGGS that the cell comes from.
-
-\item {} 
-\sphinxAtStartPar
-\sphinxtitleref{ellipsoid} \sphinxhyphen{} The underlying ellipsoid of the DGGS.
-
-\item {} 
-\sphinxAtStartPar
-\sphinxtitleref{N\_side} \sphinxhyphen{} The N\_side attribute of the DGGS
-
-\item {} 
-\sphinxAtStartPar
-\sphinxtitleref{suid} \sphinxhyphen{} The cell’s ID (tuple).  SUID = spatially unique identifier.
-(‘id’ is a reserved word in Python)
-
-\item {} 
-\sphinxAtStartPar
-\sphinxtitleref{resolution} \sphinxhyphen{} The cell’s resolution (nonnegative integer).
-
-\end{itemize}
-
-\sphinxAtStartPar
-NOTE:
-
-\sphinxAtStartPar
-Several Cell methods have the keyword argument ‘plane’.
-Setting it to True indicates that all input and output points and cells are
-to be interpreted as lying in the planar DGGS.
-Setting it to False indicates that they are to be interpreted as lying in
-the ellipsoidal DGGS.
-\index{area() (rhealpixdggs.dggs.Cell method)@\spxentry{area()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.area}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{area}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the area of this cell.
-
-\end{fulllineitems}
-
-\index{boundary() (rhealpixdggs.dggs.Cell method)@\spxentry{boundary()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.boundary}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{boundary}}}{\emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{2}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}, \emph{\DUrole{n}{interior}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return a list of \sphinxtitleref{4*n \sphinxhyphen{} 4} boundary points of this cell,
-\sphinxtitleref{n} on each edge, where \sphinxtitleref{n} \textgreater{}= 2.
-List the points in clockwise order starting from the cell’s upper left
-corner if \sphinxtitleref{plane} = True, or from the cell’s northwest corner
-if \sphinxtitleref{plane} = False.
-
-\sphinxAtStartPar
-If \sphinxtitleref{n} = 2, then the output is the same as vertices().
-If \sphinxtitleref{interior} = True, then push the boundary points slighly into the
-interior of the cell, which is convenient for some graphics methods.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{6}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c}\PYG{o}{.}\PYG{n}{boundary}\PYG{p}{(}\PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)} \PYG{o}{==} \PYG{n}{c}\PYG{o}{.}\PYG{n}{vertices}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
-\PYG{g+go}{True}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{boundary}\PYG{p}{(}\PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{:}
-\PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}3.14159265358979, 1.30899693899575)}
-\PYG{g+go}{(\PYGZhy{}2.87979326579064, 1.30899693899575)}
-\PYG{g+go}{(\PYGZhy{}2.61799387799149, 1.30899693899575)}
-\PYG{g+go}{(\PYGZhy{}2.61799387799149, 1.0471975511966)}
-\PYG{g+go}{(\PYGZhy{}2.61799387799149, 0.78539816339745)}
-\PYG{g+go}{(\PYGZhy{}2.87979326579064, 0.78539816339745)}
-\PYG{g+go}{(\PYGZhy{}3.14159265358979, 0.78539816339745)}
-\PYG{g+go}{(\PYGZhy{}3.14159265358979, 1.0471975511966)}
-\end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES::  .. Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}3.14159265358979, 1.3089969389957501) *
-(\sphinxhyphen{}2.87979326579064, 1.3089969389957501) *
-(\sphinxhyphen{}2.61799387799149, 1.3089969389957501) *
-(\sphinxhyphen{}2.61799387799149, 1.0471975511966001) *
-(\sphinxhyphen{}2.61799387799149, 0.78539816339745006) *
-(\sphinxhyphen{}2.87979326579064, 0.78539816339745006) *
-(\sphinxhyphen{}3.14159265358979, 0.78539816339745006) *
-(\sphinxhyphen{}3.14159265358979, 1.0471975511966001) *
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{boundary}\PYG{p}{(}\PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{:}
-\PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}180.0, 74.35752898700072)}
-\PYG{g+go}{(\PYGZhy{}157.50000000000003, 58.41366190347208)}
-\PYG{g+go}{(\PYGZhy{}150.0, 41.8103148957786)}
-\PYG{g+go}{(\PYGZhy{}165.00000000000003, 41.8103148957786)}
-\PYG{g+go}{(\PYGZhy{}180.0, 41.8103148957786)}
-\PYG{g+go}{(165.0, 41.8103148957786)}
-\PYG{g+go}{(149.99999999999997, 41.8103148957786)}
-\PYG{g+go}{(157.49999999999997, 58.41366190347208)}
-\end{sphinxVerbatim}
-
-\sphinxlineitem{NOTES::  .. Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}180.0, 74.35752898700072)
-(\sphinxhyphen{}157.50000000000003, 58.413661903472082) *
-(\sphinxhyphen{}150.0, 41.810314895778603) *
-(\sphinxhyphen{}165.00000000000003, 41.810314895778603) *
-(\sphinxhyphen{}180.0, 41.810314895778603) *
-(165.0, 41.810314895778603) *
-(149.99999999999997, 41.810314895778603) *
-(157.49999999999997, 58.413661903472082) *
-
-\end{description}
-
-\end{fulllineitems}
-
-\index{centroid() (rhealpixdggs.dggs.Cell method)@\spxentry{centroid()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.centroid}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{centroid}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the centroid of this planar or ellipsoidal cell.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{P}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{centroid} \PYG{o}{=} \PYG{n}{c}\PYG{o}{.}\PYG{n}{centroid}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{nucleus} \PYG{o}{=} \PYG{n}{c}\PYG{o}{.}\PYG{n}{nucleus}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{centroid} \PYG{o}{==} \PYG{n}{nucleus}\PYG{p}{)}
-\PYG{g+go}{True}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{color() (rhealpixdggs.dggs.Cell method)@\spxentry{color()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.color}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{color}}}{\emph{\DUrole{n}{saturation}\DUrole{o}{=}\DUrole{default_value}{0.5}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return a unique RGB color tuple for this cell.
-Inessential graphics method.
-
-\end{fulllineitems}
-
-\index{contains() (rhealpixdggs.dggs.Cell method)@\spxentry{contains()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.contains}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{contains}}}{\emph{\DUrole{n}{p}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return True if this cell contains point \sphinxtitleref{p}, and return False
-otherwise.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{WGS84\PYGZus{}003\PYGZus{}RADIANS}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell\PYGZus{}from\PYGZus{}point}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{p}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}
-\PYG{g+go}{Q44}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{contains}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{True}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{ellipsoidal\_shape() (rhealpixdggs.dggs.Cell method)@\spxentry{ellipsoidal\_shape()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.ellipsoidal_shape}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{ellipsoidal\_shape}}}{}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the shape of this cell (‘quad’, ‘cap’, ‘dart’, or
-‘skew\_quad’) when viewed on the ellipsoid.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{Cell}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{P}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}\PYG{o}{.}\PYG{n}{ellipsoidal\PYGZus{}shape}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{quad}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{Cell}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}\PYG{o}{.}\PYG{n}{ellipsoidal\PYGZus{}shape}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{dart}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{index() (rhealpixdggs.dggs.Cell method)@\spxentry{index()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.index}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{index}}}{\emph{\DUrole{n}{order}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}resolution\textquotesingle{}}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the index of \sphinxtitleref{self} when it’s ordered according to \sphinxtitleref{order}.
-Here \sphinxtitleref{order} can be ‘resolution’ (default) or ‘post’.
-Indices start at 0.
-The empty cell has index None.
-
-\sphinxAtStartPar
-The ordering comes from the way of traversing the tree T
-of all cells defined as follows.
-The root of T is a non\sphinxhyphen{}cell place holder.
-The children of the root are the cells A \textless{} B \textless{} … \textless{} F.
-The children of a cell in T with suid s are s0 \textless{} s1 \textless{} … \textless{} sn,
-where n = self.N\_side**2.
-
-\sphinxAtStartPar
-The level order index of a nonempty cell is its position
-(starting from 0) in the level order traversal of T starting at cell A.
-
-\sphinxAtStartPar
-The post order index of a nonempty cell is its position
-(starting from 0) in the post order traversal of T.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{index}\PYG{p}{(}\PYG{n}{order}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{resolution}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{8}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{index}\PYG{p}{(}\PYG{n}{order}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{post}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{2}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{interior() (rhealpixdggs.dggs.Cell method)@\spxentry{interior()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.interior}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{interior}}}{\emph{\DUrole{n}{n}\DUrole{o}{=}\DUrole{default_value}{2}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}, \emph{\DUrole{n}{flatten}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return an \sphinxtitleref{n} x \sphinxtitleref{n} matrix of interior points of this cell.
-If the cell is planar, space the interior points on a regular
-square grid.
-List the points in standard, row\sphinxhyphen{}major matrix order.
-If the cell is ellipsoidal, project the matrix of points to the
-ellipsoid (longitude\sphinxhyphen{}latitude points).
-If \sphinxtitleref{flatten} = True, then flatten the matrix into a one dimensional
-array of pairs.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{interior}\PYG{p}{(}\PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{flatten}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{:}
-\PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{13}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(90.0, 41.8103801453539)}
-\PYG{g+go}{(\PYGZhy{}180.0, 41.8103801453539)}
-\PYG{g+go}{(\PYGZhy{}0.0, 41.8103801453539)}
-\PYG{g+go}{(\PYGZhy{}90.0, 41.8103801453539)}
-
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{all}\PYG{p}{(}\PYG{p}{[}\PYG{n}{c}\PYG{o}{.}\PYG{n}{contains}\PYG{p}{(}\PYG{n}{p}\PYG{p}{)} \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{interior}\PYG{p}{(}\PYG{n}{n}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{,} \PYG{n}{flatten}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+go}{True}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{intersects\_meridian() (rhealpixdggs.dggs.Cell method)@\spxentry{intersects\_meridian()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.intersects_meridian}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{intersects\_meridian}}}{\emph{\DUrole{n}{lam}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return True if this ellipsoidal cell’s boundary intersects the
-meridian of longitude \sphinxtitleref{lam}, and return False otherwise.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{WGS84\PYGZus{}003\PYGZus{}RADIANS}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{6}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{intersects\PYGZus{}meridian}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{True}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{intersects\PYGZus{}meridian}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{False}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{intersects\_parallel() (rhealpixdggs.dggs.Cell method)@\spxentry{intersects\_parallel()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.intersects_parallel}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{intersects\_parallel}}}{\emph{\DUrole{n}{phi}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return True if this cell’s boundary intersects the parallel of latitude
-\sphinxtitleref{phi}, and return False otherwise.
-
-\end{fulllineitems}
-
-\index{neighbor() (rhealpixdggs.dggs.Cell method)@\spxentry{neighbor()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.neighbor}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{neighbor}}}{\emph{\DUrole{n}{direction}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return this cell’s (edge) neighbor in the given direction.
-If \sphinxtitleref{plane} = True, then the direction is one of the strings
-‘up’, ‘right’, ‘down’, ‘left’, which indicates the desired neighbor
-relative to x\sphinxhyphen{}y coordinates
-in the following planar neighbor diagram, (drawn for self.N\_side = 3)
-where \sphinxtitleref{self} is the middle cell
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-             \PYG{n}{up}
-           \PYG{o}{*}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{*}
-           \PYG{o}{|}     \PYG{o}{|}
-           \PYG{o}{|}     \PYG{o}{|}
-           \PYG{o}{|}     \PYG{o}{|}
-     \PYG{o}{*}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{*}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{*}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{*}
-     \PYG{o}{|}     \PYG{o}{|} \PYG{l+m+mi}{012} \PYG{o}{|}     \PYG{o}{|}
-\PYG{n}{left} \PYG{o}{|}     \PYG{o}{|} \PYG{l+m+mi}{345} \PYG{o}{|}     \PYG{o}{|} \PYG{n}{right}
-     \PYG{o}{|}     \PYG{o}{|} \PYG{l+m+mi}{678} \PYG{o}{|}     \PYG{o}{|}
-     \PYG{o}{*}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{*}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{*}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{*}
-           \PYG{o}{|}     \PYG{o}{|}
-           \PYG{o}{|}     \PYG{o}{|}
-           \PYG{o}{|}     \PYG{o}{|}
-           \PYG{o}{*}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}}\PYG{o}{*}
-            \PYG{n}{down}
-\end{sphinxVerbatim}
-
-\sphinxAtStartPar
-If \sphinxtitleref{plane} = False, then the direction is relative to
-longitude\sphinxhyphen{}latitude coordinates and is one of the strings
-‘west’, ‘east’, ‘north’, ‘south’ for a quad or skew quad cell;
-‘west’, ‘east’, ‘southwest’, ‘southeast’ for a northern dart cell;
-‘west’, ‘east’, ‘northwest’, ‘northeast’ for a southern dart cell;
-‘south\_0’, ‘south\_1’, ‘south\_2’, ‘south\_3’ for a northern cap cell;
-‘north\_0’, ‘north\_1’, ‘north\_2’, ‘north\_3’ for a southern cap cell;
-For a cap cell, neighbor directions are numbered in increasing
-longitude, so that the longitude of the (nucleus of) north\_0 is less
-than the longitude of north\_1 is less than the longitude of north\_2 is
-less than the longitude of north\_3, and the longitude of the south\_0 is
-less than the longitude of south\_1, etc.
-
-\sphinxAtStartPar
-The tricky part in the planar scenario is that the neighbor
-relationships of the six resolution 0 cells is determined by the
-positions of those cells on the surface of a cube,
-one cell on each face, and not on a plane.
-So sometimes rotating cells is needed to compute neighbors.
-
-\sphinxAtStartPar
-Return None if the given direction is invalid for this cell.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{neighbor}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{down}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{N3}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{neighbors() (rhealpixdggs.dggs.Cell method)@\spxentry{neighbors()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.neighbors}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{neighbors}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return this cell’s planar or ellipsoidal (edge) neighbors
-as a dictionary whose keys are the directions of the neighbors.
-See neighbor() for a list of valid directions.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{k}\PYG{p}{,} \PYG{n}{v} \PYG{o+ow}{in} \PYG{n+nb}{sorted}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{neighbors}\PYG{p}{(}\PYG{p}{)}\PYG{o}{.}\PYG{n}{items}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}\PYG{p}{:}
-\PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{k}\PYG{p}{,} \PYG{n}{v}\PYG{p}{)}
-\PYG{g+gp}{...}
-\PYG{g+go}{down N3}
-\PYG{g+go}{left R0}
-\PYG{g+go}{right N1}
-\PYG{g+go}{up Q2}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{nucleus() (rhealpixdggs.dggs.Cell method)@\spxentry{nucleus()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.nucleus}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{nucleus}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the nucleus and vertices of this planar or ellipsoidal cell
-in the order (nucleus, upper left corner, lower left corner,
-lower right corner, upper right corner) with reference to the
-planar cell.
-The output for ellipsoidal cells is the projection onto the ellipsoid
-of the output for planar cells.  In particular, while the
-nucleus of a planar cell is its centroid, the nucleus
-of an ellipsoidal cell is not its centroid.
-To compute the centroid of a cell, use centroid() below.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{nucleus}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}2.35619449019234, 1.5707963267949)}
-\end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}2.35619449019234, 1.5707963267949001) *
-
-\end{description}
-
-\end{fulllineitems}
-
-\index{nw\_vertex() (rhealpixdggs.dggs.Cell method)@\spxentry{nw\_vertex()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.nw_vertex}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{nw\_vertex}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-If \sphinxtitleref{plane} = False, then return the northwest vertex of this
-ellipsoidal cell.
-If \sphinxtitleref{plane} = True, then return the projection onto the plane
-of the ellipsoidal northwest vertex.
-On quad cells and cap cells, this function returns the same output
-as ul\_vertex().
-On skew quad cells and dart cells, this function returns output
-different from ul\_vertex().
-
-\sphinxAtStartPar
-WARNING: The northwest vertex of a cell might not lie in the cell,
-because not all cells contain their boundary.
-\begin{description}
-\sphinxlineitem{EXAMPLES::}
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{P}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{7}\PYG{p}{]}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} Quad cell.}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{ul\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}2225148.7007489, \PYGZhy{}556287.1751872245)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{nw\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}2225148.7007489, \PYGZhy{}556287.1751872245)}
-\end{sphinxVerbatim}
-
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}2225148.7007489, \sphinxhyphen{}556287.17518722452) * for both above tests
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{S}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{]}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Cap cell.}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{ul\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}16688615.255616743, \PYGZhy{}8344307.627808371)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{nw\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}16688615.255616743, \PYGZhy{}8344307.627808371)}
-\end{sphinxVerbatim}
-
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}16688615.255616743, \sphinxhyphen{}8344307.6278083706) * for both above tests
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{]}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} Skew quad cell.}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{ul\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}16688615.255616743, 10569456.32855727)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{nw\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}15576040.905242294, 10569456.32855727)}
-\end{sphinxVerbatim}
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{S}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{]}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Skew quad cell.}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{ul\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}16688615.255616743, \PYGZhy{}9456881.97818282)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{nw\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}16688615.255616743, \PYGZhy{}10569456.32855727)}
-\end{sphinxVerbatim}
-
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}16688615.255616743, \sphinxhyphen{}9456881.9781828206) *
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{6}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Dart cell.}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{ul\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}17801189.605991192, 8344307.627808372)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{nw\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}16688615.255616743, 8344307.627808372)}
-\end{sphinxVerbatim}
-
-\sphinxlineitem{NOTES:: .. Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}16688615.255616743, 8344307.6278083716) * for both above tests
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{S}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{6}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Dart cell.}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{ul\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}17801189.605991192, \PYGZhy{}11682030.678931719)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{nw\PYGZus{}vertex}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}16688615.255616743, \PYGZhy{}12794605.029306168)}
-\end{sphinxVerbatim}
-
-\end{description}
-
-\end{fulllineitems}
-
-\index{overlaps() (rhealpixdggs.dggs.Cell method)@\spxentry{overlaps()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.overlaps}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{overlaps}}}{\emph{\DUrole{n}{other\_cell}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Determines whether two DGGS cells overlap.
-Where cells are of different resolution, they will have different suid lengths. The zip function truncates the longer
-to be the same length as the shorter, producing two lists for comparison. If these lists are equal, the cells overlap.
-:param cell\_one: the first DGGS cell
-:param cell\_two: the second DGGS cell
-:return: True if overlaps
-
-\end{fulllineitems}
-
-\index{predecessor() (rhealpixdggs.dggs.Cell method)@\spxentry{predecessor()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.predecessor}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{predecessor}}}{\emph{\DUrole{n}{resolution}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the greatest resolution \sphinxtitleref{resolution} cell less than \sphinxtitleref{self}.
-Note: \sphinxtitleref{self} need not be a resolution \sphinxtitleref{resolution} cell.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{8}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{predecessor}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{N07}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{predecessor}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{None}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{predecessor}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{None}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{predecessor}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{N088}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{random\_point() (rhealpixdggs.dggs.Cell method)@\spxentry{random\_point()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.random_point}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_point}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return a random point in this cell.
-If \sphinxtitleref{plane} = True, then choose the point from
-the planar cell.
-Otherwise, choose the point from the ellipsoidal cell.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{random\PYGZus{}point}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{)}  
-\PYG{g+go}{(1.4840291937583836, 0.90042819146088571)}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{region() (rhealpixdggs.dggs.Cell method)@\spxentry{region()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.region}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{region}}}{}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the region of this cell: ‘equatorial’, ‘north\_polar’, or
-‘south\_polar’.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{Cell}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{P}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}\PYG{o}{.}\PYG{n}{region}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{equatorial}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{Cell}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}\PYG{o}{.}\PYG{n}{region}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{north\PYGZus{}polar}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{region\_overlaps() (rhealpixdggs.dggs.Cell method)@\spxentry{region\_overlaps()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.region_overlaps}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{region\_overlaps}}}{\emph{\DUrole{n}{region}\DUrole{p}{:}\DUrole{w}{  }\DUrole{n}{list}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Determine whether a cell overlaps with any cell in a list of cells
-:param cell: a DGGS cell
-:param region: a list of DGGS cells
-:return: True if any overlapping cells
-
-\end{fulllineitems}
-
-\index{rotate() (rhealpixdggs.dggs.Cell method)@\spxentry{rotate()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.rotate}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{rotate}}}{\emph{\DUrole{n}{quarter\_turns}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the cell that is the result of rotating this cell’s
-resolution 0 supercell by \sphinxtitleref{quarter\_turns} quarter turns anticlockwise.
-Used in neighbor().
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{rotate}\PYG{p}{(}\PYG{n}{t}\PYG{p}{)}\PYG{p}{)} \PYG{k}{for} \PYG{n}{t} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+go}{[\PYGZsq{}N0\PYGZsq{}, \PYGZsq{}N2\PYGZsq{}, \PYGZsq{}N8\PYGZsq{}, \PYGZsq{}N6\PYGZsq{}]}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{rotate\_entry() (rhealpixdggs.dggs.Cell method)@\spxentry{rotate\_entry()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.rotate_entry}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{rotate\_entry}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{quarter\_turns}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Let N = self.N\_side and rotate the N x N matrix of subcell numbers
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{l+m+mi}{0}        \PYG{l+m+mi}{1}          \PYG{o}{.}\PYG{o}{.}\PYG{o}{.} \PYG{n}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}
-\PYG{n}{N}        \PYG{n}{N}\PYG{o}{+}\PYG{l+m+mi}{1}        \PYG{o}{.}\PYG{o}{.}\PYG{o}{.} \PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}
-\PYG{o}{.}\PYG{o}{.}\PYG{o}{.}
-\PYG{p}{(}\PYG{n}{N}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{*}\PYG{n}{N}  \PYG{p}{(}\PYG{n}{N}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{o}{*}\PYG{n}{N}\PYG{o}{+}\PYG{l+m+mi}{1}  \PYG{o}{.}\PYG{o}{.}\PYG{o}{.} \PYG{n}{N}\PYG{o}{*}\PYG{o}{*}\PYG{l+m+mi}{2}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
-\end{sphinxVerbatim}
-
-\sphinxAtStartPar
-anticlockwise by \sphinxtitleref{quarter\_turns} quarter turns to obtain a
-new table with entries f(0), f(1), …, f(N**2 \sphinxhyphen{} 1) read from
-left to right and top to bottom.
-Given entry number \sphinxtitleref{x} in the original matrix, return \sphinxtitleref{f(x)}.
-Used in rotate().
-
-\sphinxAtStartPar
-INPUT:
-\begin{itemize}
-\item {} 
-\sphinxAtStartPar
-\sphinxtitleref{x} \sphinxhyphen{} A letter from RHEALPixDGGS.cells0 or one of the integers
-0, 1, …, N**2 \sphinxhyphen{} 1.
-
-\item {} 
-\sphinxAtStartPar
-\sphinxtitleref{quarter\_turns} \sphinxhyphen{} 0, 1, 2, or 3.
-
-\end{itemize}
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{P}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{p}{[}\PYG{n}{c}\PYG{o}{.}\PYG{n}{rotate\PYGZus{}entry}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{t}\PYG{p}{)} \PYG{k}{for} \PYG{n}{t} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+go}{[0, 2, 8, 6]}
-\end{sphinxVerbatim}
-
-\sphinxAtStartPar
-NOTES:
-
-\sphinxAtStartPar
-Operates on letters from RHEALPixDGGS.cells0 too.
-They stay fixed under f.
-Only depends on \sphinxtitleref{self} through \sphinxtitleref{self.N\_side}.
-
-\end{fulllineitems}
-
-\index{subcell() (rhealpixdggs.dggs.Cell method)@\spxentry{subcell()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.subcell}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{subcell}}}{\emph{\DUrole{n}{other}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Subcell (subset) relation on cells.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{a} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{b} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{a}\PYG{o}{.}\PYG{n}{subcell}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{True}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{b}\PYG{o}{.}\PYG{n}{subcell}\PYG{p}{(}\PYG{n}{a}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{False}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{subcells() (rhealpixdggs.dggs.Cell method)@\spxentry{subcells()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.subcells}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{subcells}}}{\emph{\DUrole{n}{resolution}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Generator function for the set of all resolution \sphinxtitleref{resolution} subcells
-of this cell.
-If \sphinxtitleref{resolution=None}, then return a generator function for the children
-of this cell.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{(}\PYG{n}{cell}\PYG{p}{)} \PYG{k}{for} \PYG{n}{cell} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{subcells}\PYG{p}{(}\PYG{p}{)}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+go}{[\PYGZsq{}N0\PYGZsq{}, \PYGZsq{}N1\PYGZsq{}, \PYGZsq{}N2\PYGZsq{}, \PYGZsq{}N3\PYGZsq{}, \PYGZsq{}N4\PYGZsq{}, \PYGZsq{}N5\PYGZsq{}, \PYGZsq{}N6\PYGZsq{}, \PYGZsq{}N7\PYGZsq{}, \PYGZsq{}N8\PYGZsq{}]}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{successor() (rhealpixdggs.dggs.Cell method)@\spxentry{successor()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.successor}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{successor}}}{\emph{\DUrole{n}{resolution}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the least resolution \sphinxtitleref{resolution} cell greater than \sphinxtitleref{self}.
-Note: \sphinxtitleref{self} need not be a resolution \sphinxtitleref{resolution} cell.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{8}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{successor}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{N83}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{successor}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{O}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{successor}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{O0}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{successor}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{N830}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{suid\_from\_index() (rhealpixdggs.dggs.Cell static method)@\spxentry{suid\_from\_index()}\spxextra{rhealpixdggs.dggs.Cell static method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.suid_from_index}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{static\DUrole{w}{  }}}\sphinxbfcode{\sphinxupquote{suid\_from\_index}}}{\emph{\DUrole{n}{rdggs}}, \emph{\DUrole{n}{index}}, \emph{\DUrole{n}{order}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}resolution\textquotesingle{}}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the suid of a cell from its index.
-The index is according to the cell ordering \sphinxtitleref{order},
-which can be ‘resolution’ (default) or ‘post’.
-See the \sphinxtitleref{index()} docstring for more details on orderings.
-For internal use.
-
-\end{fulllineitems}
-
-\index{suid\_rowcol() (rhealpixdggs.dggs.Cell method)@\spxentry{suid\_rowcol()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.suid_rowcol}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{suid\_rowcol}}}{}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the pair of row\sphinxhyphen{} and column\sphinxhyphen{}suids of \sphinxtitleref{self}, each as tuples.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{rdggs}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{7}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rsuid}\PYG{p}{,} \PYG{n}{csuid} \PYG{o}{=} \PYG{n}{c}\PYG{o}{.}\PYG{n}{suid\PYGZus{}rowcol}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{rsuid} \PYG{o}{==} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{True}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{csuid} \PYG{o}{==} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{True}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{ul\_vertex() (rhealpixdggs.dggs.Cell method)@\spxentry{ul\_vertex()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.ul_vertex}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{ul\_vertex}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-If \sphinxtitleref{plane} = True, then return the upper left vertex of this
-planar cell.
-If \sphinxtitleref{plane} = False, then return the projection onto the ellipsoid
-of the planar upper left vertex.
-Note that for polar cells, this projection is not necessarily the
-northwest vertex.
-For the latter vertex use nw\_vertex().
-
-\sphinxAtStartPar
-WARNING: The upper left vertex of a cell might not lie in the cell,
-because not all cells contain their boundary.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{UNIT\PYGZus{}003}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{ul\PYGZus{}vertex}\PYG{p}{(}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{o}{*}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{True}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{vertices() (rhealpixdggs.dggs.Cell method)@\spxentry{vertices()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.vertices}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{vertices}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}, \emph{\DUrole{n}{trim\_dart}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-If \sphinxtitleref{plane} = True, then assume this cell is planar and return
-its four vertices in the order (upper left corner, upper right corner,
-lower right corner, lower left corner).
-If \sphinxtitleref{plane} = False, then assume this cell is ellipsoidal and return
-the projection of the planar vertices in the order
-(northwest, northeast, southeast, southwest).
-If \sphinxtitleref{plane} = False, this cell is a dart cell, and
-\sphinxtitleref{trim\_dart} = True, then remove the one non\sphinxhyphen{}vertex point from
-the output. (Dart cells only have three vertices.)
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{vertices}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
-\PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(\PYGZhy{}3.14159265358979, 2.35619449019234)}
-\PYG{g+go}{(\PYGZhy{}1.5707963267949, 2.35619449019234)}
-\PYG{g+go}{(\PYGZhy{}1.5707963267949, 0.78539816339745)}
-\PYG{g+go}{(\PYGZhy{}3.14159265358979, 0.78539816339745)}
-
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{WGS84\PYGZus{}003}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{vertices}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{:}
-\PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{13}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(89.9999999999999, 74.3906909487906)}
-\PYG{g+go}{(120.0, 41.8738577422094)}
-\PYG{g+go}{(90.0, 41.8738577422094)}
-\PYG{g+go}{(60.0, 41.8738577422094)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{vertices}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{trim\PYGZus{}dart}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{:}
-\PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{13}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(89.9999999999999, 74.3906909487906)}
-\PYG{g+go}{(120.0, 41.8738577422094)}
-\PYG{g+go}{(60.0, 41.8738577422094)}
-
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{S}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{vertices}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{:}
-\PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(149.99999999999997, \PYGZhy{}41.87385774220941)}
-\PYG{g+go}{(\PYGZhy{}180.0, \PYGZhy{}41.87385774220941)}
-\PYG{g+go}{(\PYGZhy{}150.0, \PYGZhy{}41.87385774220941)}
-\PYG{g+go}{(\PYGZhy{}180.0, \PYGZhy{}74.39069094879065)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{c}\PYG{o}{.}\PYG{n}{vertices}\PYG{p}{(}\PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{trim\PYGZus{}dart}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{:}
-\PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{(149.99999999999997, \PYGZhy{}41.87385774220941)}
-\PYG{g+go}{(\PYGZhy{}150.0, \PYGZhy{}41.87385774220941)}
-\PYG{g+go}{(\PYGZhy{}180.0, \PYGZhy{}74.39069094879065)}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{width() (rhealpixdggs.dggs.Cell method)@\spxentry{width()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.width}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{width}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the width of this cell.
-If \sphinxtitleref{plane} = False, then return None, because ellipsoidal cells
-don’t have a fixed width.
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{Cell}\PYG{p}{(}\PYG{n}{UNIT\PYGZus{}003}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{8}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}
-\PYG{g+go}{N8}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c}\PYG{o}{.}\PYG{n}{width}\PYG{p}{(}\PYG{p}{)} \PYG{o}{==} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{l+m+mi}{3}\PYG{o}{*}\PYG{o}{*}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}
-\PYG{g+go}{True}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-\index{xy\_range() (rhealpixdggs.dggs.Cell method)@\spxentry{xy\_range()}\spxextra{rhealpixdggs.dggs.Cell method}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.Cell.xy_range}}
-\pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xy\_range}}}{}{}
-\pysigstopsignatures
-\sphinxAtStartPar
-Return the x\sphinxhyphen{} and y\sphinxhyphen{}coordinate extremes of the planar version of
-this cell in the format ((x\_min, x\_max), (y\_min, y\_max)).
-
-\sphinxAtStartPar
-EXAMPLES:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell}\PYG{p}{(}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{N}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c}\PYG{o}{.}\PYG{n}{xy\PYGZus{}range}\PYG{p}{(}\PYG{p}{)} \PYG{o}{==} \PYG{p}{(}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{,} \PYG{p}{(}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{o}{*}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{True}
-\end{sphinxVerbatim}
-
-\end{fulllineitems}
-
-
-\end{fulllineitems}
-
 \index{RHEALPixDGGS (class in rhealpixdggs.dggs)@\spxentry{RHEALPixDGGS}\spxextra{class in rhealpixdggs.dggs}}
 
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{RHEALPixDGGS}}}{\emph{\DUrole{n}{ellipsoid=\textless{}rhealpixdggs.ellipsoids.Ellipsoid object\textgreater{}}}, \emph{\DUrole{n}{N\_side=3}}, \emph{\DUrole{n}{north\_square=0}}, \emph{\DUrole{n}{south\_square=0}}, \emph{\DUrole{n}{max\_areal\_resolution=1}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{RHEALPixDGGS}}}
+{\sphinxparam{\DUrole{n}{ellipsoid=\textless{}rhealpixdggs.ellipsoids.Ellipsoid object\textgreater{}}}\sphinxparamcomma \sphinxparam{\DUrole{n}{N\_side=3}}\sphinxparamcomma \sphinxparam{\DUrole{n}{north\_square=0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{south\_square=0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{max\_areal\_resolution=1}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Bases: \sphinxcode{\sphinxupquote{object}}
 
 \sphinxAtStartPar
 Represents an rHEALPix DGGS on a given ellipsoid.
-
-\sphinxAtStartPar
-CLASS ATTRIBUTES:
-\begin{itemize}
-\item {} 
-\sphinxAtStartPar
-\sphinxtitleref{cells0} \sphinxhyphen{} A list of the resolution 0 cell IDs (strings).
-
-\end{itemize}
 
 \sphinxAtStartPar
 INSTANCE ATTRIBUTES:
@@ -3005,14 +1997,14 @@ left to right and top to bottom.
 \item {} 
 \sphinxAtStartPar
 \sphinxtitleref{ul\_vertex} \sphinxhyphen{} A dictionary with key\sphinxhyphen{}value pairs (c, (x, y)), where
-c is an element of \sphinxtitleref{cells0} and (x, y) is the upper left corner point
+c is an element of \sphinxtitleref{CELLS0} and (x, y) is the upper left corner point
 of the resolution 0 planar cell c.
 
 \item {} 
 \sphinxAtStartPar
 \sphinxtitleref{atomic\_neighbors} \sphinxhyphen{} A dictionary with key\sphinxhyphen{}value pairs
 (n, \{‘up’: a, ‘down’: b, ‘left’: c, ‘right’: d\}),
-where n, a, b, c, and d are elements of \sphinxtitleref{cells0} or
+where n, a, b, c, and d are elements of \sphinxtitleref{CELLS0} or
 \{0, 1, …, \sphinxtitleref{N\_side**2 \sphinxhyphen{}1}\}.
 Describes the planar (edge) neighbors of cell0 letter / child cell number
 n.
@@ -3033,7 +2025,10 @@ the ellipsoidal DGGS.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell}}}{\emph{\DUrole{n}{suid}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{level\_order\_index}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{post\_order\_index}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{cell}}}
+{\sphinxparam{\DUrole{n}{suid}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{level\_order\_index}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{post\_order\_index}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a cell (Cell instance) of this DGGS either from its ID or
@@ -3058,7 +2053,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_area}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_area}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{cell\_area}}}
+{\sphinxparam{\DUrole{n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the area of a planar or ellipsoidal cell at the given
@@ -3083,7 +2081,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_from\_point}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{p}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{cell\_from\_point}}}
+{\sphinxparam{\DUrole{n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n}{p}}\sphinxparamcomma \sphinxparam{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the resolution \sphinxtitleref{resolution} cell that contains the point \sphinxtitleref{p}.
@@ -3100,6 +2101,11 @@ EXAMPLES:
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell\PYGZus{}from\PYGZus{}point}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{p}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}
 \PYG{g+go}{Q3}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{RHEALPixDGGS}\PYG{p}{(}\PYG{n}{N\PYGZus{}side}\PYG{o}{=}\PYG{l+m+mi}{15}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{80}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{20}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{c} \PYG{o}{=} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell\PYGZus{}from\PYGZus{}point}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{p}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}
+\PYG{g+go}{(Q, 178)}
 \end{sphinxVerbatim}
 
 \end{fulllineitems}
@@ -3109,7 +2115,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_from_region}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_from\_region}}}{\emph{\DUrole{n}{ul}}, \emph{\DUrole{n}{dr}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{cell\_from\_region}}}
+{\sphinxparam{\DUrole{n}{ul}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dr}}\sphinxparamcomma \sphinxparam{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the smallest planar or ellipsoidal cell wholly containing
@@ -3149,7 +2158,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_latitudes}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_latitudes}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{phi\_min}}, \emph{\DUrole{n}{phi\_max}}, \emph{\DUrole{n}{nucleus}\DUrole{o}{=}\DUrole{default_value}{True}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{cell\_latitudes}}}
+{\sphinxparam{\DUrole{n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi\_min}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi\_max}}\sphinxparamcomma \sphinxparam{\DUrole{n}{nucleus}\DUrole{o}{=}\DUrole{default_value}{True}}\sphinxparamcomma \sphinxparam{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of every latitude phi whose parallel intersects
@@ -3184,44 +2196,21 @@ EXAMPLES:
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{WGS84\PYGZus{}003\PYGZus{}RADIANS}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{phi} \PYG{o+ow}{in} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell\PYGZus{}latitudes}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{:}
 \PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{phi}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{\PYGZhy{}1.02050584399985}
-\PYG{g+go}{\PYGZhy{}0.46144314900303}
-\PYG{g+go}{\PYGZhy{}0.0}
-\PYG{g+go}{0.46144314900303}
-\PYG{g+go}{1.02050584399985}
-\PYG{g+go}{1.5707963267949}
-\end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: .. Issue @1 was ..}
-\sphinxAtStartPar
-\sphinxhyphen{}1.020505844
-\sphinxhyphen{}0.461443149003
-\sphinxhyphen{}0
-0.461443149003
-1.020505844
-1.57079632679
+\PYG{g+go}{\PYGZhy{}1.02150660972679}
+\PYG{g+go}{\PYGZhy{}0.46233979145691}
+\PYG{g+go}{0.0}
+\PYG{g+go}{0.46233979145691}
+\PYG{g+go}{1.02150660972679}
 
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k}{for} \PYG{n}{phi} \PYG{o+ow}{in} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{cell\PYGZus{}latitudes}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{nucleus}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{plane}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}\PYG{p}{:}
 \PYG{g+gp}{... }    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{phi}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
-\PYG{g+go}{\PYGZhy{}1.29836248988994}
-\PYG{g+go}{\PYGZhy{}0.73083668811327}
-\PYG{g+go}{\PYGZhy{}0.22457715619516}
-\PYG{g+go}{0.22457715619516}
-\PYG{g+go}{0.73083668811327}
-\PYG{g+go}{1.29836248988994}
+\PYG{g+go}{\PYGZhy{}1.29894395947616}
+\PYG{g+go}{\PYGZhy{}0.73195363195267}
+\PYG{g+go}{\PYGZhy{}0.22506566919844}
+\PYG{g+go}{0.22506566919844}
+\PYG{g+go}{0.73195363195267}
+\PYG{g+go}{1.29894395947616}
 \end{sphinxVerbatim}
-
-\sphinxlineitem{NOTES:: .. Issue @1 was ..}
-\sphinxAtStartPar
-\sphinxhyphen{}1.29836248989
-\sphinxhyphen{}0.730836688113
-\sphinxhyphen{}0.224577156195
-0.224577156195
-0.730836688113
-1.29836248989
-
-\end{description}
 
 \end{fulllineitems}
 
@@ -3230,7 +2219,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cell_width}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cell\_width}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{cell\_width}}}
+{\sphinxparam{\DUrole{n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the width of a planar cell at the given resolution.
@@ -3250,21 +2242,15 @@ EXAMPLES:
 
 \end{fulllineitems}
 
-\index{cells0 (rhealpixdggs.dggs.RHEALPixDGGS attribute)@\spxentry{cells0}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS attribute}}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cells0}}
-\pysigstartsignatures
-\pysigline{\sphinxbfcode{\sphinxupquote{cells0}}\sphinxbfcode{\sphinxupquote{\DUrole{w}{  }\DUrole{p}{=}\DUrole{w}{  }{[}\textquotesingle{}N\textquotesingle{}, \textquotesingle{}O\textquotesingle{}, \textquotesingle{}P\textquotesingle{}, \textquotesingle{}Q\textquotesingle{}, \textquotesingle{}R\textquotesingle{}, \textquotesingle{}S\textquotesingle{}{]}}}}
-\pysigstopsignatures
-\end{fulllineitems}
-
 \index{cells\_from\_meridian() (rhealpixdggs.dggs.RHEALPixDGGS method)@\spxentry{cells\_from\_meridian()}\spxextra{rhealpixdggs.dggs.RHEALPixDGGS method}}
 
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cells_from_meridian}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cells\_from\_meridian}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{lam}}, \emph{\DUrole{n}{phi\_min}}, \emph{\DUrole{n}{phi\_max}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{cells\_from\_meridian}}}
+{\sphinxparam{\DUrole{n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n}{lam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi\_min}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi\_max}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of the resolution \sphinxtitleref{resolution} cells that intersect
@@ -3291,7 +2277,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cells_from_parallel}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cells\_from\_parallel}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{phi}}, \emph{\DUrole{n}{lam\_min}}, \emph{\DUrole{n}{lam\_max}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{cells\_from\_parallel}}}
+{\sphinxparam{\DUrole{n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi}}\sphinxparamcomma \sphinxparam{\DUrole{n}{lam\_min}}\sphinxparamcomma \sphinxparam{\DUrole{n}{lam\_max}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a list of the resolution \sphinxtitleref{resolution} cells that intersect
@@ -3316,7 +2305,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.cells_from_region}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{cells\_from\_region}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{ul}}, \emph{\DUrole{n}{dr}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{cells\_from\_region}}}
+{\sphinxparam{\DUrole{n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n}{ul}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dr}}\sphinxparamcomma \sphinxparam{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 If \sphinxtitleref{plane} = True, then return a list of lists of resolution
@@ -3408,7 +2400,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.combine_triangles}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{combine\_triangles}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}, \emph{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{combine\_triangles}}}
+{\sphinxparam{\DUrole{n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}\sphinxparamcomma \sphinxparam{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the combine\_triangles() transformation of the point \sphinxtitleref{(u, v)}
@@ -3423,17 +2418,11 @@ EXAMPLES:
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{p} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{q} \PYG{o}{=} \PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{combine\PYGZus{}triangles}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{combine\PYGZus{}triangles}\PYG{p}{(}\PYG{o}{*}\PYG{n}{p}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0.0, 0.0)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{combine\PYGZus{}triangles}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{combine\PYGZus{}triangles}\PYG{p}{(}\PYG{o}{*}\PYG{n}{q}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}2.35619449019234, 1.5707963267949)}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}2.35619449019234, 1.5707963267949001)
-
-\end{description}
 
 \end{fulllineitems}
 
@@ -3442,7 +2431,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.grid}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{grid}}}{\emph{\DUrole{n}{resolution}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{grid}}}
+{\sphinxparam{\DUrole{n}{resolution}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Generator function for all the cells at resolution \sphinxtitleref{resolution}.
@@ -3464,7 +2456,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.healpix}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{healpix}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{healpix}}}
+{\sphinxparam{\DUrole{n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the HEALPix projection of point \sphinxtitleref{(u, v)} (or its inverse if
@@ -3475,15 +2470,9 @@ EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003\PYGZus{}RADIANS}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{healpix}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{healpix}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{pi}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}2.35619449019234, 1.5707963267949)}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}2.35619449019234, 1.5707963267949001) *
-
-\end{description}
 
 \sphinxAtStartPar
 NOTE:
@@ -3498,7 +2487,10 @@ Uses \sphinxcode{\sphinxupquote{pj\_healpix}} instead of the PROJ.4 version of H
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.interval}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{interval}}}{\emph{\DUrole{n}{a}}, \emph{\DUrole{n}{b}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{interval}}}
+{\sphinxparam{\DUrole{n}{a}}\sphinxparamcomma \sphinxparam{\DUrole{n}{b}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Generator function for all the resolution
@@ -3525,7 +2517,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.minimal_cover}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{minimal\_cover}}}{\emph{\DUrole{n}{resolution}}, \emph{\DUrole{n}{points}}, \emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{minimal\_cover}}}
+{\sphinxparam{\DUrole{n}{resolution}}\sphinxparamcomma \sphinxparam{\DUrole{n}{points}}\sphinxparamcomma \sphinxparam{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Find the minimal set of resolution \sphinxtitleref{resolution} cells that covers
@@ -3562,7 +2557,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.num_cells}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{num\_cells}}}{\emph{\DUrole{n}{res\_1}}, \emph{\DUrole{n}{res\_2}\DUrole{o}{=}\DUrole{default_value}{None}}, \emph{\DUrole{n}{subcells}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{num\_cells}}}
+{\sphinxparam{\DUrole{n}{res\_1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{res\_2}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{subcells}\DUrole{o}{=}\DUrole{default_value}{False}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the number of cells of resolutions \sphinxtitleref{res\_1} to \sphinxtitleref{res\_2}
@@ -3599,7 +2597,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.random_cell}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_cell}}}{\emph{\DUrole{n}{resolution}\DUrole{o}{=}\DUrole{default_value}{None}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{random\_cell}}}
+{\sphinxparam{\DUrole{n}{resolution}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a cell of the given resolution chosen uniformly at random
@@ -3622,7 +2623,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.random_point}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{random\_point}}}{\emph{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{random\_point}}}
+{\sphinxparam{\DUrole{n}{plane}\DUrole{o}{=}\DUrole{default_value}{True}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return a point in this DGGS sampled uniformly at
@@ -3644,7 +2648,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.rhealpix}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{rhealpix}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}, \emph{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{rhealpix}}}
+{\sphinxparam{\DUrole{n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{False}}\sphinxparamcomma \sphinxparam{\DUrole{n}{region}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}none\textquotesingle{}}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Return the rHEALPix projection of the point \sphinxtitleref{(u, v)} (or its inverse if
@@ -3655,15 +2662,9 @@ EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003\PYGZus{}RADIANS}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{rhealpix}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{rhealpix}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(\PYGZhy{}1.858272006684, 2.06871881030324)}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: Issue \#1 was ..}
-\sphinxAtStartPar
-(\sphinxhyphen{}1.8582720066839999, 2.0687188103032401)
-
-\end{description}
 
 \sphinxAtStartPar
 NOTE:
@@ -3678,7 +2679,10 @@ Uses \sphinxcode{\sphinxupquote{pj\_rhealpix}} instead of the PROJ.4 version of 
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.triangle}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{triangle}}}{\emph{\DUrole{n}{x}}, \emph{\DUrole{n}{y}}, \emph{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{True}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{triangle}}}
+{\sphinxparam{\DUrole{n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inverse}\DUrole{o}{=}\DUrole{default_value}{True}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 If \sphinxtitleref{inverse} = False, then assume \sphinxtitleref{(x,y)} lies in the image of the
@@ -3734,7 +2738,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.xyz}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xyz}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{lonlat}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{xyz}}}
+{\sphinxparam{\DUrole{n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n}{lonlat}\DUrole{o}{=}\DUrole{default_value}{False}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point \sphinxtitleref{(u, v)} in the planar image of the rHEALPix projection,
@@ -3748,15 +2755,9 @@ EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003\PYGZus{}RADIANS}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{xyz}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{lonlat}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{xyz}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{pi}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{lonlat}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0.70710678118655, 0.0, 0.70710678118655)}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: Issue \#1 was ..}
-\sphinxAtStartPar
-(0.70710678118655002, 0.0, 0.70710678118655002)
-
-\end{description}
 
 \end{fulllineitems}
 
@@ -3765,7 +2766,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RHEALPixDGGS.xyz_cube}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{xyz\_cube}}}{\emph{\DUrole{n}{u}}, \emph{\DUrole{n}{v}}, \emph{\DUrole{n}{lonlat}\DUrole{o}{=}\DUrole{default_value}{False}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{xyz\_cube}}}
+{\sphinxparam{\DUrole{n}{u}}\sphinxparamcomma \sphinxparam{\DUrole{n}{v}}\sphinxparamcomma \sphinxparam{\DUrole{n}{lonlat}\DUrole{o}{=}\DUrole{default_value}{False}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Given a point \sphinxtitleref{(u, v)} in the planar version of this rHEALPix DGGS,
@@ -3779,15 +2783,9 @@ EXAMPLES:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{rdggs} \PYG{o}{=} \PYG{n}{UNIT\PYGZus{}003}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{xyz\PYGZus{}cube}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{x}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{(}\PYG{p}{)} \PYG{k}{for} \PYG{n}{x} \PYG{o+ow}{in} \PYG{n}{my\PYGZus{}round}\PYG{p}{(}\PYG{n}{rdggs}\PYG{o}{.}\PYG{n}{xyz\PYGZus{}cube}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{,} \PYG{l+m+mi}{14}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}
 \PYG{g+go}{(0.78539816339745, 0.0, \PYGZhy{}0.78539816339745)}
 \end{sphinxVerbatim}
-\begin{description}
-\sphinxlineitem{NOTES:: Issue \#1 was ..}
-\sphinxAtStartPar
-(0.78539816339745006, 0.0, \sphinxhyphen{}0.78539816339745006)
-
-\end{description}
 
 \end{fulllineitems}
 
@@ -3799,7 +2797,10 @@ EXAMPLES:
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{dggs:rhealpixdggs.dggs.RhealPolygon}}
 \pysigstartsignatures
-\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{  }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{RhealPolygon}}}{\emph{\DUrole{n}{rdggs=\textless{}rhealpixdggs.dggs.RHEALPixDGGS object\textgreater{}}}, \emph{\DUrole{n}{suid\_list=None}}}{}
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{rhealpixdggs.dggs.}}\sphinxbfcode{\sphinxupquote{RhealPolygon}}}
+{\sphinxparam{\DUrole{n}{rdggs=\textless{}rhealpixdggs.dggs.RHEALPixDGGS object\textgreater{}}}\sphinxparamcomma \sphinxparam{\DUrole{n}{suid\_list=None}}}
+{}
 \pysigstopsignatures
 \sphinxAtStartPar
 Bases: \sphinxcode{\sphinxupquote{object}}
@@ -3812,15 +2813,15 @@ Bases: \sphinxcode{\sphinxupquote{object}}
 \label{\detokenize{index:indices-and-tables}}\begin{itemize}
 \item {} 
 \sphinxAtStartPar
-\DUrole{xref,std,std-ref}{genindex}
+\DUrole{xref}{\DUrole{std}{\DUrole{std-ref}{genindex}}}
 
 \item {} 
 \sphinxAtStartPar
-\DUrole{xref,std,std-ref}{modindex}
+\DUrole{xref}{\DUrole{std}{\DUrole{std-ref}{modindex}}}
 
 \item {} 
 \sphinxAtStartPar
-\DUrole{xref,std,std-ref}{search}
+\DUrole{xref}{\DUrole{std}{\DUrole{std-ref}{search}}}
 
 \end{itemize}
 

@@ -1,26 +1,23 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>The dggs Module &#8212; rHEALPixDGGS 0.5.4 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=16cbd302" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
+    <script src="_static/documentation_options.js?v=c3dca1ed"></script>
+    <script src="_static/doctools.js?v=4184ea2e"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="The projection_wrapper Module" href="projection_wrapper.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -43,7 +40,7 @@
           <div class="body" role="main">
             
   <section id="module-rhealpixdggs.dggs">
-<span id="the-dggs-module"></span><h1>The dggs Module<a class="headerlink" href="#module-rhealpixdggs.dggs" title="Permalink to this heading">¶</a></h1>
+<span id="the-dggs-module"></span><h1>The dggs Module<a class="headerlink" href="#module-rhealpixdggs.dggs" title="Link to this heading">¶</a></h1>
 <p>This Python 3.11 module implements the rHEALPix discrete global grid system.</p>
 <ul class="simple">
 <li><p>Alexander Raichev (AR), 2012-11-12: Initial version based upon grids.py.</p></li>
@@ -61,7 +58,7 @@ Java or C, and I don’t want to confuse people who are translating this code
 to those languages.</p>
 <p>EXAMPLES:</p>
 <p>Create the (1, 2)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellipsoid. Use degrees instead of the default radians for angular measurements</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rhealpixdggs.ellipsoids</span> <span class="kn">import</span> <span class="n">WGS84_ELLIPSOID</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">rhealpixdggs.ellipsoids</span><span class="w"> </span><span class="kn">import</span> <span class="n">WGS84_ELLIPSOID</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">WGS84_ELLIPSOID</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">RHEALPixDGGS</span><span class="p">(</span><span class="n">ellipsoid</span><span class="o">=</span><span class="n">E</span><span class="p">,</span> <span class="n">north_square</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">south_square</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">N_side</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rdggs</span><span class="p">)</span>
@@ -72,28 +69,17 @@ to those languages.</p>
 <span class="go">    max_areal_resolution = 1</span>
 <span class="go">    max_resolution = 15</span>
 <span class="go">    ellipsoid:</span>
-<span class="go">        R_A = 6374581.467096525</span>
+<span class="go">        R_A = 6371007.180918476</span>
 <span class="go">        a = 6378137.0</span>
-<span class="go">        b = 6356752.314140356</span>
-<span class="go">        e = 0.0578063088401125</span>
-<span class="go">        f = 0.003352810681182319</span>
+<span class="go">        b = 6356752.314245179</span>
+<span class="go">        e = 0.08181919084262149</span>
+<span class="go">        f = 0.0033528106647474805</span>
 <span class="go">        lat_0 = 0</span>
 <span class="go">        lon_0 = 0</span>
 <span class="go">        radians = False</span>
 <span class="go">        sphere = False</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>NOTES::  .. Issue #1 was ..</dt><dd><dl class="simple">
-<dt>ellipsoid:</dt><dd><p>R_A = 6374581.4671 *
-a = 6378137.0
-b = 6356752.314140356 *
-e = 0.0578063088401
-f = 0.003352810681182319</p>
-</dd>
-</dl>
-</dd>
-</dl>
 <p>Pick a (longitude-latitude) point on the ellipsoid and find the resolution 1 cell that contains it</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">45</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell_from_point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">);</span> <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
@@ -132,19 +118,19 @@ f = 0.003352810681182319</p>
 <p>Compute the ellipsoidal nuclei of these cells</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">expected_results</span> <span class="o">=</span> <span class="p">[</span>
 <span class="gp">... </span>   <span class="p">[</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">58.47067782962736</span><span class="p">),</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">45.000000000000036</span><span class="p">,</span> <span class="mf">58.47067782962734</span><span class="p">),</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">89.99999999999996</span><span class="p">,</span> <span class="mf">58.47067782962736</span><span class="p">)</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">1.90833280887811e-14</span><span class="p">,</span> <span class="mf">58.52801748206219</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">45.00000000000002</span><span class="p">,</span> <span class="mf">58.52801748206219</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">89.99999999999997</span><span class="p">,</span> <span class="mf">58.52801748206219</span><span class="p">)</span>
 <span class="gp">... </span>   <span class="p">],</span> <span class="p">[</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">14.999999999999998</span><span class="p">,</span> <span class="mf">26.438744923100096</span><span class="p">),</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">45.0</span><span class="p">,</span> <span class="mf">26.438744923100096</span><span class="p">),</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">74.99999999999999</span><span class="p">,</span> <span class="mf">26.438744923100096</span><span class="p">),</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">105.00000000000001</span><span class="p">,</span> <span class="mf">26.438744923100096</span><span class="p">)</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">14.999999999999998</span><span class="p">,</span> <span class="mf">26.490118751439734</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">45.0</span><span class="p">,</span> <span class="mf">26.490118751439734</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">74.99999999999999</span><span class="p">,</span> <span class="mf">26.490118751439734</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">105.00000000000001</span><span class="p">,</span> <span class="mf">26.490118751439734</span><span class="p">)</span>
 <span class="gp">... </span>   <span class="p">],</span> <span class="p">[</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">14.999999999999998</span><span class="p">,</span> <span class="mf">3.560649871414923e-15</span><span class="p">),</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">45.0</span><span class="p">,</span> <span class="mf">3.560649871414923e-15</span><span class="p">),</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">74.99999999999999</span><span class="p">,</span> <span class="mf">3.560649871414923e-15</span><span class="p">),</span>
-<span class="gp">... </span>       <span class="p">(</span><span class="mf">105.00000000000001</span><span class="p">,</span> <span class="mf">3.560649871414923e-15</span><span class="p">)</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">14.999999999999998</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">45.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">74.99999999999999</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="p">(</span><span class="mf">105.00000000000001</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="gp">... </span>   <span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cells</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
@@ -166,7 +152,7 @@ f = 0.003352810681182319</p>
 Use degrees instead of the default radians for angular measurements and
 orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">174</span><span class="p">,</span> <span class="o">-</span><span class="mi">37</span><span class="p">)</span>  <span class="c1"># Approximate Auckland lon-lat coordinates</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rhealpixdggs.ellipsoids</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">rhealpixdggs.ellipsoids</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Ellipsoid</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">WGS84_A</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">WGS84_F</span><span class="p">,</span> <span class="n">radians</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lon_0</span><span class="o">=</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lat_0</span><span class="o">=</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">RHEALPixDGGS</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">N_side</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">north_square</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">south_square</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rdggs</span><span class="p">)</span>
@@ -177,728 +163,25 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand</p>
 <span class="go">    max_areal_resolution = 1</span>
 <span class="go">    max_resolution = 15</span>
 <span class="go">    ellipsoid:</span>
-<span class="go">        R_A = 6374581.467096525</span>
+<span class="go">        R_A = 6371007.180918476</span>
 <span class="go">        a = 6378137.0</span>
-<span class="go">        b = 6356752.314140356</span>
-<span class="go">        e = 0.0578063088401125</span>
-<span class="go">        f = 0.003352810681182319</span>
+<span class="go">        b = 6356752.314245179</span>
+<span class="go">        e = 0.08181919084262149</span>
+<span class="go">        f = 0.0033528106647474805</span>
 <span class="go">        lat_0 = -37</span>
 <span class="go">        lon_0 = 174</span>
 <span class="go">        radians = False</span>
 <span class="go">        sphere = False</span>
-</pre></div>
-</div>
-<dl>
-<dt>NOTES::  .. Issue #1 was ..</dt><dd><blockquote>
-<div><dl class="simple">
-<dt>ellipsoid:</dt><dd><p>R_A = 6374581.4671 *
-a = 6378137.0
-b = 6356752.314140356
-e = 0.0578063088401 *
-f = 0.003352810681182319</p>
-</dd>
-</dl>
-</div></blockquote>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">cell_from_point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">cell_from_point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
 <span class="go">Q3</span>
 </pre></div>
 </div>
-</dd>
-</dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rhealpixdggs.dggs.</span></span><span class="sig-name descname"><span class="pre">Cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rdggs=&lt;rhealpixdggs.dggs.RHEALPixDGGS</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suid=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_order_index=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_order_index=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Represents a cell of the planar or ellipsoidal rHEALPix grid hierarchies.
-Cell identifiers are of the form (p_0, p_1,…,p_l), where p_0 is one of
-the characters ‘A’, ‘B’, ‘C’, ‘D’, ‘E’, ‘F’ and p_i for i &gt; 0 is one of
-the integers 0, 1,…, N_side**2 - 1, where N_side is the instance
-attribute from RHEALPixDGGS (the number of children cells along a cell’s
-side).</p>
-<p>INSTANCE ATTRIBUTES:</p>
-<ul class="simple">
-<li><p><cite>rdggs</cite> - The DGGS that the cell comes from.</p></li>
-<li><p><cite>ellipsoid</cite> - The underlying ellipsoid of the DGGS.</p></li>
-<li><p><cite>N_side</cite> - The N_side attribute of the DGGS</p></li>
-<li><p><cite>suid</cite> - The cell’s ID (tuple).  SUID = spatially unique identifier.
-(‘id’ is a reserved word in Python)</p></li>
-<li><p><cite>resolution</cite> - The cell’s resolution (nonnegative integer).</p></li>
-</ul>
-<p>NOTE:</p>
-<p>Several Cell methods have the keyword argument ‘plane’.
-Setting it to True indicates that all input and output points and cells are
-to be interpreted as lying in the planar DGGS.
-Setting it to False indicates that they are to be interpreted as lying in
-the ellipsoidal DGGS.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.area">
-<span class="sig-name descname"><span class="pre">area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.area" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the area of this cell.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.boundary">
-<span class="sig-name descname"><span class="pre">boundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.boundary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of <cite>4*n - 4</cite> boundary points of this cell,
-<cite>n</cite> on each edge, where <cite>n</cite> &gt;= 2.
-List the points in clockwise order starting from the cell’s upper left
-corner if <cite>plane</cite> = True, or from the cell’s northwest corner
-if <cite>plane</cite> = False.</p>
-<p>If <cite>n</cite> = 2, then the output is the same as vertices().
-If <cite>interior</cite> = True, then push the boundary points slighly into the
-interior of the cell, which is convenient for some graphics methods.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">boundary</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">==</span> <span class="n">c</span><span class="o">.</span><span class="n">vertices</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">boundary</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-3.14159265358979, 1.30899693899575)</span>
-<span class="go">(-2.87979326579064, 1.30899693899575)</span>
-<span class="go">(-2.61799387799149, 1.30899693899575)</span>
-<span class="go">(-2.61799387799149, 1.0471975511966)</span>
-<span class="go">(-2.61799387799149, 0.78539816339745)</span>
-<span class="go">(-2.87979326579064, 0.78539816339745)</span>
-<span class="go">(-3.14159265358979, 0.78539816339745)</span>
-<span class="go">(-3.14159265358979, 1.0471975511966)</span>
-</pre></div>
-</div>
-<dl>
-<dt>NOTES::  .. Issue #1 was ..</dt><dd><p>(-3.14159265358979, 1.3089969389957501) *
-(-2.87979326579064, 1.3089969389957501) *
-(-2.61799387799149, 1.3089969389957501) *
-(-2.61799387799149, 1.0471975511966001) *
-(-2.61799387799149, 0.78539816339745006) *
-(-2.87979326579064, 0.78539816339745006) *
-(-3.14159265358979, 0.78539816339745006) *
-(-3.14159265358979, 1.0471975511966001) *</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">boundary</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-180.0, 74.35752898700072)</span>
-<span class="go">(-157.50000000000003, 58.41366190347208)</span>
-<span class="go">(-150.0, 41.8103148957786)</span>
-<span class="go">(-165.00000000000003, 41.8103148957786)</span>
-<span class="go">(-180.0, 41.8103148957786)</span>
-<span class="go">(165.0, 41.8103148957786)</span>
-<span class="go">(149.99999999999997, 41.8103148957786)</span>
-<span class="go">(157.49999999999997, 58.41366190347208)</span>
-</pre></div>
-</div>
-</dd>
-<dt>NOTES::  .. Issue #1 was ..</dt><dd><p>(-180.0, 74.35752898700072)
-(-157.50000000000003, 58.413661903472082) *
-(-150.0, 41.810314895778603) *
-(-165.00000000000003, 41.810314895778603) *
-(-180.0, 41.810314895778603) *
-(165.0, 41.810314895778603) *
-(149.99999999999997, 41.810314895778603) *
-(157.49999999999997, 58.413661903472082) *</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.centroid">
-<span class="sig-name descname"><span class="pre">centroid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.centroid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the centroid of this planar or ellipsoidal cell.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">RHEALPixDGGS</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">rdggs</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">centroid</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">centroid</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nucleus</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">nucleus</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">centroid</span> <span class="o">==</span> <span class="n">nucleus</span><span class="p">)</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.color">
-<span class="sig-name descname"><span class="pre">color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">saturation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.color" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a unique RGB color tuple for this cell.
-Inessential graphics method.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.contains">
-<span class="sig-name descname"><span class="pre">contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.contains" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return True if this cell contains point <cite>p</cite>, and return False
-otherwise.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">WGS84_003_RADIANS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell_from_point</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-<span class="go">Q44</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.ellipsoidal_shape">
-<span class="sig-name descname"><span class="pre">ellipsoidal_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.ellipsoidal_shape" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the shape of this cell (‘quad’, ‘cap’, ‘dart’, or
-‘skew_quad’) when viewed on the ellipsoid.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">RHEALPixDGGS</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Cell</span><span class="p">(</span><span class="n">rdggs</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">ellipsoidal_shape</span><span class="p">())</span>
-<span class="go">quad</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Cell</span><span class="p">(</span><span class="n">rdggs</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">ellipsoidal_shape</span><span class="p">())</span>
-<span class="go">dart</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.index">
-<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'resolution'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the index of <cite>self</cite> when it’s ordered according to <cite>order</cite>.
-Here <cite>order</cite> can be ‘resolution’ (default) or ‘post’.
-Indices start at 0.
-The empty cell has index None.</p>
-<p>The ordering comes from the way of traversing the tree T
-of all cells defined as follows.
-The root of T is a non-cell place holder.
-The children of the root are the cells A &lt; B &lt; … &lt; F.
-The children of a cell in T with suid s are s0 &lt; s1 &lt; … &lt; sn,
-where n = self.N_side**2.</p>
-<p>The level order index of a nonempty cell is its position
-(starting from 0) in the level order traversal of T starting at cell A.</p>
-<p>The post order index of a nonempty cell is its position
-(starting from 0) in the post order traversal of T.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">rdggs</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;resolution&#39;</span><span class="p">))</span>
-<span class="go">8</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">))</span>
-<span class="go">2</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.interior">
-<span class="sig-name descname"><span class="pre">interior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.interior" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return an <cite>n</cite> x <cite>n</cite> matrix of interior points of this cell.
-If the cell is planar, space the interior points on a regular
-square grid.
-List the points in standard, row-major matrix order.
-If the cell is ellipsoidal, project the matrix of points to the
-ellipsoid (longitude-latitude points).
-If <cite>flatten</cite> = True, then flatten the matrix into a one dimensional
-array of pairs.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;N&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">interior</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flatten</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">13</span><span class="p">))</span>
-<span class="go">(90.0, 41.8103801453539)</span>
-<span class="go">(-180.0, 41.8103801453539)</span>
-<span class="go">(-0.0, 41.8103801453539)</span>
-<span class="go">(-90.0, 41.8103801453539)</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">all</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">interior</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">flatten</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.intersects_meridian">
-<span class="sig-name descname"><span class="pre">intersects_meridian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.intersects_meridian" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return True if this ellipsoidal cell’s boundary intersects the
-meridian of longitude <cite>lam</cite>, and return False otherwise.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">WGS84_003_RADIANS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">intersects_meridian</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">intersects_meridian</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
-<span class="go">False</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.intersects_parallel">
-<span class="sig-name descname"><span class="pre">intersects_parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.intersects_parallel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return True if this cell’s boundary intersects the parallel of latitude
-<cite>phi</cite>, and return False otherwise.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.neighbor">
-<span class="sig-name descname"><span class="pre">neighbor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.neighbor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return this cell’s (edge) neighbor in the given direction.
-If <cite>plane</cite> = True, then the direction is one of the strings
-‘up’, ‘right’, ‘down’, ‘left’, which indicates the desired neighbor
-relative to x-y coordinates
-in the following planar neighbor diagram, (drawn for self.N_side = 3)
-where <cite>self</cite> is the middle cell</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>             <span class="n">up</span>
-           <span class="o">*-----*</span>
-           <span class="o">|</span>     <span class="o">|</span>
-           <span class="o">|</span>     <span class="o">|</span>
-           <span class="o">|</span>     <span class="o">|</span>
-     <span class="o">*-----*-----*-----*</span>
-     <span class="o">|</span>     <span class="o">|</span> <span class="mi">012</span> <span class="o">|</span>     <span class="o">|</span>
-<span class="n">left</span> <span class="o">|</span>     <span class="o">|</span> <span class="mi">345</span> <span class="o">|</span>     <span class="o">|</span> <span class="n">right</span>
-     <span class="o">|</span>     <span class="o">|</span> <span class="mi">678</span> <span class="o">|</span>     <span class="o">|</span>
-     <span class="o">*-----*-----*-----*</span>
-           <span class="o">|</span>     <span class="o">|</span>
-           <span class="o">|</span>     <span class="o">|</span>
-           <span class="o">|</span>     <span class="o">|</span>
-           <span class="o">*-----*</span>
-            <span class="n">down</span>
-</pre></div>
-</div>
-<p>If <cite>plane</cite> = False, then the direction is relative to
-longitude-latitude coordinates and is one of the strings
-‘west’, ‘east’, ‘north’, ‘south’ for a quad or skew quad cell;
-‘west’, ‘east’, ‘southwest’, ‘southeast’ for a northern dart cell;
-‘west’, ‘east’, ‘northwest’, ‘northeast’ for a southern dart cell;
-‘south_0’, ‘south_1’, ‘south_2’, ‘south_3’ for a northern cap cell;
-‘north_0’, ‘north_1’, ‘north_2’, ‘north_3’ for a southern cap cell;
-For a cap cell, neighbor directions are numbered in increasing
-longitude, so that the longitude of the (nucleus of) north_0 is less
-than the longitude of north_1 is less than the longitude of north_2 is
-less than the longitude of north_3, and the longitude of the south_0 is
-less than the longitude of south_1, etc.</p>
-<p>The tricky part in the planar scenario is that the neighbor
-relationships of the six resolution 0 cells is determined by the
-positions of those cells on the surface of a cube,
-one cell on each face, and not on a plane.
-So sometimes rotating cells is needed to compute neighbors.</p>
-<p>Return None if the given direction is invalid for this cell.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">neighbor</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">))</span>
-<span class="go">N3</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.neighbors">
-<span class="sig-name descname"><span class="pre">neighbors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.neighbors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return this cell’s planar or ellipsoidal (edge) neighbors
-as a dictionary whose keys are the directions of the neighbors.
-See neighbor() for a list of valid directions.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">neighbors</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
-<span class="gp">...</span>
-<span class="go">down N3</span>
-<span class="go">left R0</span>
-<span class="go">right N1</span>
-<span class="go">up Q2</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.nucleus">
-<span class="sig-name descname"><span class="pre">nucleus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.nucleus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the nucleus and vertices of this planar or ellipsoidal cell
-in the order (nucleus, upper left corner, lower left corner,
-lower right corner, upper right corner) with reference to the
-planar cell.
-The output for ellipsoidal cells is the projection onto the ellipsoid
-of the output for planar cells.  In particular, while the
-nucleus of a planar cell is its centroid, the nucleus
-of an ellipsoidal cell is not its centroid.
-To compute the centroid of a cell, use centroid() below.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;N&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">nucleus</span><span class="p">(),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-2.35619449019234, 1.5707963267949)</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>(-2.35619449019234, 1.5707963267949001) *</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.nw_vertex">
-<span class="sig-name descname"><span class="pre">nw_vertex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.nw_vertex" title="Permalink to this definition">¶</a></dt>
-<dd><p>If <cite>plane</cite> = False, then return the northwest vertex of this
-ellipsoidal cell.
-If <cite>plane</cite> = True, then return the projection onto the plane
-of the ellipsoidal northwest vertex.
-On quad cells and cap cells, this function returns the same output
-as ul_vertex().
-On skew quad cells and dart cells, this function returns output
-different from ul_vertex().</p>
-<p>WARNING: The northwest vertex of a cell might not lie in the cell,
-because not all cells contain their boundary.</p>
-<dl>
-<dt>EXAMPLES::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">RHEALPixDGGS</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span> <span class="c1"># Quad cell.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ul_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-2225148.7007489, -556287.1751872245)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">nw_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-2225148.7007489, -556287.1751872245)</span>
-</pre></div>
-</div>
-</dd>
-<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>(-2225148.7007489, -556287.17518722452) * for both above tests</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>  <span class="c1"># Cap cell.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ul_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-16688615.255616743, -8344307.627808371)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">nw_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-16688615.255616743, -8344307.627808371)</span>
-</pre></div>
-</div>
-</dd>
-<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>(-16688615.255616743, -8344307.6278083706) * for both above tests</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span> <span class="c1"># Skew quad cell.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ul_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-16688615.255616743, 10569456.32855727)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">nw_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-15576040.905242294, 10569456.32855727)</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>  <span class="c1"># Skew quad cell.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ul_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-16688615.255616743, -9456881.97818282)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">nw_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-16688615.255616743, -10569456.32855727)</span>
-</pre></div>
-</div>
-</dd>
-<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>(-16688615.255616743, -9456881.9781828206) *</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>  <span class="c1"># Dart cell.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ul_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-17801189.605991192, 8344307.627808372)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">nw_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-16688615.255616743, 8344307.627808372)</span>
-</pre></div>
-</div>
-</dd>
-<dt>NOTES:: .. Issue #1 was ..</dt><dd><p>(-16688615.255616743, 8344307.6278083716) * for both above tests</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>  <span class="c1"># Dart cell.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ul_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-17801189.605991192, -11682030.678931719)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">nw_vertex</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-16688615.255616743, -12794605.029306168)</span>
-</pre></div>
-</div>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.overlaps">
-<span class="sig-name descname"><span class="pre">overlaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_cell</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.overlaps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determines whether two DGGS cells overlap.
-Where cells are of different resolution, they will have different suid lengths. The zip function truncates the longer
-to be the same length as the shorter, producing two lists for comparison. If these lists are equal, the cells overlap.
-:param cell_one: the first DGGS cell
-:param cell_two: the second DGGS cell
-:return: True if overlaps</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.predecessor">
-<span class="sig-name descname"><span class="pre">predecessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.predecessor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the greatest resolution <cite>resolution</cite> cell less than <cite>self</cite>.
-Note: <cite>self</cite> need not be a resolution <cite>resolution</cite> cell.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">predecessor</span><span class="p">())</span>
-<span class="go">N07</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-<span class="go">None</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="go">None</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="go">N088</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.random_point">
-<span class="sig-name descname"><span class="pre">random_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.random_point" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a random point in this cell.
-If <cite>plane</cite> = True, then choose the point from
-the planar cell.
-Otherwise, choose the point from the ellipsoidal cell.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">random_point</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>  
-<span class="go">(1.4840291937583836, 0.90042819146088571)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.region">
-<span class="sig-name descname"><span class="pre">region</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.region" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the region of this cell: ‘equatorial’, ‘north_polar’, or
-‘south_polar’.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">RHEALPixDGGS</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Cell</span><span class="p">(</span><span class="n">rdggs</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">region</span><span class="p">())</span>
-<span class="go">equatorial</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Cell</span><span class="p">(</span><span class="n">rdggs</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">region</span><span class="p">())</span>
-<span class="go">north_polar</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.region_overlaps">
-<span class="sig-name descname"><span class="pre">region_overlaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.region_overlaps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determine whether a cell overlaps with any cell in a list of cells
-:param cell: a DGGS cell
-:param region: a list of DGGS cells
-:return: True if any overlapping cells</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.rotate">
-<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quarter_turns</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.rotate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the cell that is the result of rotating this cell’s
-resolution 0 supercell by <cite>quarter_turns</cite> quarter turns anticlockwise.
-Used in neighbor().</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)])</span>
-<span class="go">[&#39;N0&#39;, &#39;N2&#39;, &#39;N8&#39;, &#39;N6&#39;]</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.rotate_entry">
-<span class="sig-name descname"><span class="pre">rotate_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quarter_turns</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.rotate_entry" title="Permalink to this definition">¶</a></dt>
-<dd><p>Let N = self.N_side and rotate the N x N matrix of subcell numbers</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span>        <span class="mi">1</span>          <span class="o">...</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
-<span class="n">N</span>        <span class="n">N</span><span class="o">+</span><span class="mi">1</span>        <span class="o">...</span> <span class="mi">2</span><span class="o">*</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
-<span class="o">...</span>
-<span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">N</span>  <span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span>  <span class="o">...</span> <span class="n">N</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span>
-</pre></div>
-</div>
-<p>anticlockwise by <cite>quarter_turns</cite> quarter turns to obtain a
-new table with entries f(0), f(1), …, f(N**2 - 1) read from
-left to right and top to bottom.
-Given entry number <cite>x</cite> in the original matrix, return <cite>f(x)</cite>.
-Used in rotate().</p>
-<p>INPUT:</p>
-<ul class="simple">
-<li><p><cite>x</cite> - A letter from RHEALPixDGGS.cells0 or one of the integers
-0, 1, …, N**2 - 1.</p></li>
-<li><p><cite>quarter_turns</cite> - 0, 1, 2, or 3.</p></li>
-</ul>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">rotate_entry</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)])</span>
-<span class="go">[0, 2, 8, 6]</span>
-</pre></div>
-</div>
-<p>NOTES:</p>
-<p>Operates on letters from RHEALPixDGGS.cells0 too.
-They stay fixed under f.
-Only depends on <cite>self</cite> through <cite>self.N_side</cite>.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.subcell">
-<span class="sig-name descname"><span class="pre">subcell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.subcell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subcell (subset) relation on cells.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">subcell</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">subcell</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
-<span class="go">False</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.subcells">
-<span class="sig-name descname"><span class="pre">subcells</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.subcells" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generator function for the set of all resolution <cite>resolution</cite> subcells
-of this cell.
-If <cite>resolution=None</cite>, then return a generator function for the children
-of this cell.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">subcells</span><span class="p">()])</span>
-<span class="go">[&#39;N0&#39;, &#39;N1&#39;, &#39;N2&#39;, &#39;N3&#39;, &#39;N4&#39;, &#39;N5&#39;, &#39;N6&#39;, &#39;N7&#39;, &#39;N8&#39;]</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.successor">
-<span class="sig-name descname"><span class="pre">successor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.successor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the least resolution <cite>resolution</cite> cell greater than <cite>self</cite>.
-Note: <cite>self</cite> need not be a resolution <cite>resolution</cite> cell.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">RHEALPixDGGS</span><span class="p">(),</span> <span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">successor</span><span class="p">())</span>
-<span class="go">N83</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">successor</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-<span class="go">O</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">successor</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="go">O0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">successor</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="go">N830</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.suid_from_index">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">suid_from_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rdggs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'resolution'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.suid_from_index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the suid of a cell from its index.
-The index is according to the cell ordering <cite>order</cite>,
-which can be ‘resolution’ (default) or ‘post’.
-See the <cite>index()</cite> docstring for more details on orderings.
-For internal use.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.suid_rowcol">
-<span class="sig-name descname"><span class="pre">suid_rowcol</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.suid_rowcol" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the pair of row- and column-suids of <cite>self</cite>, each as tuples.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">RHEALPixDGGS</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">rdggs</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rsuid</span><span class="p">,</span> <span class="n">csuid</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">suid_rowcol</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rsuid</span> <span class="o">==</span> <span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">csuid</span> <span class="o">==</span> <span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.ul_vertex">
-<span class="sig-name descname"><span class="pre">ul_vertex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.ul_vertex" title="Permalink to this definition">¶</a></dt>
-<dd><p>If <cite>plane</cite> = True, then return the upper left vertex of this
-planar cell.
-If <cite>plane</cite> = False, then return the projection onto the ellipsoid
-of the planar upper left vertex.
-Note that for polar cells, this projection is not necessarily the
-northwest vertex.
-For the latter vertex use nw_vertex().</p>
-<p>WARNING: The upper left vertex of a cell might not lie in the cell,
-because not all cells contain their boundary.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">UNIT_003</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ul_vertex</span><span class="p">()</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">))</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.vertices">
-<span class="sig-name descname"><span class="pre">vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_dart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.vertices" title="Permalink to this definition">¶</a></dt>
-<dd><p>If <cite>plane</cite> = True, then assume this cell is planar and return
-its four vertices in the order (upper left corner, upper right corner,
-lower right corner, lower left corner).
-If <cite>plane</cite> = False, then assume this cell is ellipsoidal and return
-the projection of the planar vertices in the order
-(northwest, northeast, southeast, southwest).
-If <cite>plane</cite> = False, this cell is a dart cell, and
-<cite>trim_dart</cite> = True, then remove the one non-vertex point from
-the output. (Dart cells only have three vertices.)</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;N&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">vertices</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(-3.14159265358979, 2.35619449019234)</span>
-<span class="go">(-1.5707963267949, 2.35619449019234)</span>
-<span class="go">(-1.5707963267949, 0.78539816339745)</span>
-<span class="go">(-3.14159265358979, 0.78539816339745)</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">WGS84_003</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">vertices</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">13</span><span class="p">))</span>
-<span class="go">(89.9999999999999, 74.3906909487906)</span>
-<span class="go">(120.0, 41.8738577422094)</span>
-<span class="go">(90.0, 41.8738577422094)</span>
-<span class="go">(60.0, 41.8738577422094)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">vertices</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">trim_dart</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">13</span><span class="p">))</span>
-<span class="go">(89.9999999999999, 74.3906909487906)</span>
-<span class="go">(120.0, 41.8738577422094)</span>
-<span class="go">(60.0, 41.8738577422094)</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">vertices</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(149.99999999999997, -41.87385774220941)</span>
-<span class="go">(-180.0, -41.87385774220941)</span>
-<span class="go">(-150.0, -41.87385774220941)</span>
-<span class="go">(-180.0, -74.39069094879065)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">vertices</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">trim_dart</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">(149.99999999999997, -41.87385774220941)</span>
-<span class="go">(-150.0, -41.87385774220941)</span>
-<span class="go">(-180.0, -74.39069094879065)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.width">
-<span class="sig-name descname"><span class="pre">width</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.width" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the width of this cell.
-If <cite>plane</cite> = False, then return None, because ellipsoidal cells
-don’t have a fixed width.</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">(</span><span class="n">UNIT_003</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-<span class="go">N8</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">==</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="mi">3</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.Cell.xy_range">
-<span class="sig-name descname"><span class="pre">xy_range</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.Cell.xy_range" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the x- and y-coordinate extremes of the planar version of
-this cell in the format ((x_min, x_max), (y_min, y_max)).</p>
-<p>EXAMPLES:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell</span><span class="p">([</span><span class="s1">&#39;N&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">xy_range</span><span class="p">()</span> <span class="o">==</span> <span class="p">((</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">))</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py class">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rhealpixdggs.dggs.</span></span><span class="sig-name descname"><span class="pre">RHEALPixDGGS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ellipsoid=&lt;rhealpixdggs.ellipsoids.Ellipsoid</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_side=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_areal_resolution=1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rhealpixdggs.dggs.</span></span><span class="sig-name descname"><span class="pre">RHEALPixDGGS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ellipsoid=&lt;rhealpixdggs.ellipsoids.Ellipsoid</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_side=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_square=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">south_square=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_areal_resolution=1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Represents an rHEALPix DGGS on a given ellipsoid.</p>
-<p>CLASS ATTRIBUTES:</p>
-<ul class="simple">
-<li><p><cite>cells0</cite> - A list of the resolution 0 cell IDs (strings).</p></li>
-</ul>
 <p>INSTANCE ATTRIBUTES:</p>
 <ul class="simple">
 <li><p><cite>ellipsoid</cite> - The underlying ellipsoid (Ellipsoid instance).</p></li>
@@ -917,11 +200,11 @@ cells of a cell in terms of the row-column coordinates in the matrix
 of child cells.  Child cell are numbered 0 to <cite>N_side**2 -1</cite> from
 left to right and top to bottom.</p></li>
 <li><p><cite>ul_vertex</cite> - A dictionary with key-value pairs (c, (x, y)), where
-c is an element of <cite>cells0</cite> and (x, y) is the upper left corner point
+c is an element of <cite>CELLS0</cite> and (x, y) is the upper left corner point
 of the resolution 0 planar cell c.</p></li>
 <li><p><cite>atomic_neighbors</cite> - A dictionary with key-value pairs
 (n, {‘up’: a, ‘down’: b, ‘left’: c, ‘right’: d}),
-where n, a, b, c, and d are elements of <cite>cells0</cite> or
+where n, a, b, c, and d are elements of <cite>CELLS0</cite> or
 {0, 1, …, <cite>N_side**2 -1</cite>}.
 Describes the planar (edge) neighbors of cell0 letter / child cell number
 n.</p></li>
@@ -934,7 +217,7 @@ Setting it to False indicates that they are interpreted as lying in
 the ellipsoidal DGGS.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cell">
-<span class="sig-name descname"><span class="pre">cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_order_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_order_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_order_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_order_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell" title="Link to this definition">¶</a></dt>
 <dd><p>Return a cell (Cell instance) of this DGGS either from its ID or
 from its resolution and index.</p>
 <p>EXAMPLES:</p>
@@ -950,7 +233,7 @@ from its resolution and index.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cell_area">
-<span class="sig-name descname"><span class="pre">cell_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_area" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cell_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_area" title="Link to this definition">¶</a></dt>
 <dd><p>Return the area of a planar or ellipsoidal cell at the given
 resolution.</p>
 <p>EXAMPLES:</p>
@@ -966,7 +249,7 @@ resolution.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point">
-<span class="sig-name descname"><span class="pre">cell_from_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cell_from_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point" title="Link to this definition">¶</a></dt>
 <dd><p>Return the resolution <cite>resolution</cite> cell that contains the point <cite>p</cite>.
 If <cite>plane</cite> = True, then <cite>p</cite> and the output cell lie in the
 planar DGGS.
@@ -977,13 +260,18 @@ Otherwise, <cite>p</cite> and the output cell lie in the ellipsoidal DGGS.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell_from_point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
 <span class="go">Q3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">RHEALPixDGGS</span><span class="p">(</span><span class="n">N_side</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell_from_point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="go">(Q, 178)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cell_from_region">
-<span class="sig-name descname"><span class="pre">cell_from_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_from_region" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cell_from_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_from_region" title="Link to this definition">¶</a></dt>
 <dd><p>Return the smallest planar or ellipsoidal cell wholly containing
 the region bounded by the axis-aligned rectangle with upper left
 and lower right vertices given by the the points <cite>ul</cite> and <cite>dr</cite>,
@@ -1012,7 +300,7 @@ then use degrees instead of radians when specifying ul and dr.)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cell_latitudes">
-<span class="sig-name descname"><span class="pre">cell_latitudes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nucleus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_latitudes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cell_latitudes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nucleus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_latitudes" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of every latitude phi whose parallel intersects
 a resolution <cite>resolution</cite> cell nucleus and satisfies
 <cite>phi_min</cite> &lt; phi &lt; <cite>phi_max</cite>.
@@ -1035,45 +323,27 @@ even.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">WGS84_003_RADIANS</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">phi</span> <span class="ow">in</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell_latitudes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">-1.02050584399985</span>
-<span class="go">-0.46144314900303</span>
-<span class="go">-0.0</span>
-<span class="go">0.46144314900303</span>
-<span class="go">1.02050584399985</span>
-<span class="go">1.5707963267949</span>
-</pre></div>
-</div>
-<dl>
-<dt>NOTES:: .. Issue &#64;1 was ..</dt><dd><p>-1.020505844
--0.461443149003
--0
-0.461443149003
-1.020505844
-1.57079632679</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">phi</span> <span class="ow">in</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell_latitudes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">nucleus</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="go">-1.02150660972679</span>
+<span class="go">-0.46233979145691</span>
+<span class="go">0.0</span>
+<span class="go">0.46233979145691</span>
+<span class="go">1.02150660972679</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">phi</span> <span class="ow">in</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">cell_latitudes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">nucleus</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
-<span class="go">-1.29836248988994</span>
-<span class="go">-0.73083668811327</span>
-<span class="go">-0.22457715619516</span>
-<span class="go">0.22457715619516</span>
-<span class="go">0.73083668811327</span>
-<span class="go">1.29836248988994</span>
+<span class="go">-1.29894395947616</span>
+<span class="go">-0.73195363195267</span>
+<span class="go">-0.22506566919844</span>
+<span class="go">0.22506566919844</span>
+<span class="go">0.73195363195267</span>
+<span class="go">1.29894395947616</span>
 </pre></div>
 </div>
-</dd>
-<dt>NOTES:: .. Issue &#64;1 was ..</dt><dd><p>-1.29836248989
--0.730836688113
--0.224577156195
-0.224577156195
-0.730836688113
-1.29836248989</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cell_width">
-<span class="sig-name descname"><span class="pre">cell_width</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_width" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cell_width</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_width" title="Link to this definition">¶</a></dt>
 <dd><p>Return the width of a planar cell at the given resolution.
 If <cite>plane</cite> = False, then return None,
 because the ellipsoidal cells don’t have constant width.</p>
@@ -1087,14 +357,9 @@ because the ellipsoidal cells don’t have constant width.</p>
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cells0">
-<span class="sig-name descname"><span class="pre">cells0</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['N',</span> <span class="pre">'O',</span> <span class="pre">'P',</span> <span class="pre">'Q',</span> <span class="pre">'R',</span> <span class="pre">'S']</span></em><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells0" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cells_from_meridian">
-<span class="sig-name descname"><span class="pre">cells_from_meridian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_max</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells_from_meridian" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cells_from_meridian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_max</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells_from_meridian" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of the resolution <cite>resolution</cite> cells that intersect
 the meridian segment of longitude <cite>lam</cite> whose least latitude is
 <cite>phi_min</cite> and whose greatest latitude is <cite>phi_max</cite>.
@@ -1112,7 +377,7 @@ meridian.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cells_from_parallel">
-<span class="sig-name descname"><span class="pre">cells_from_parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam_max</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells_from_parallel" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cells_from_parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lam_max</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells_from_parallel" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of the resolution <cite>resolution</cite> cells that intersect
 the parallel segment of latitude <cite>phi</cite> whose least longitude is
 <cite>lam_min</cite> and whose greatest longitude is <cite>lam_max</cite>.
@@ -1128,7 +393,7 @@ Sort the list from west to east.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.cells_from_region">
-<span class="sig-name descname"><span class="pre">cells_from_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells_from_region" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cells_from_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ul</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells_from_region" title="Link to this definition">¶</a></dt>
 <dd><p>If <cite>plane</cite> = True, then return a list of lists of resolution
 <cite>resolution</cite> cells that cover the axis-aligned rectangle whose
 upper left and lower right vertices are the points <cite>ul</cite> and <cite>dr</cite>,
@@ -1199,7 +464,7 @@ each sublist has the same length.  This is not necessarily so if
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.combine_triangles">
-<span class="sig-name descname"><span class="pre">combine_triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.combine_triangles" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">combine_triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.combine_triangles" title="Link to this definition">¶</a></dt>
 <dd><p>Return the combine_triangles() transformation of the point <cite>(u, v)</cite>
 (or its inverse if <cite>inverse</cite> = True) appropriate to the underlying
 ellipsoid.
@@ -1208,21 +473,17 @@ It maps the HEALPix projection to the rHEALPix projection.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">combine_triangles</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">rdggs</span><span class="o">.</span><span class="n">combine_triangles</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)))</span>
 <span class="go">(0.0, 0.0)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">combine_triangles</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">combine_triangles</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">),</span> <span class="mi">14</span><span class="p">)))</span>
 <span class="go">(-2.35619449019234, 1.5707963267949)</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>NOTES:: Issue #1 was ..</dt><dd><p>(-2.35619449019234, 1.5707963267949001)</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.grid">
-<span class="sig-name descname"><span class="pre">grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.grid" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.grid" title="Link to this definition">¶</a></dt>
 <dd><p>Generator function for all the cells at resolution <cite>resolution</cite>.</p>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">RHEALPixDGGS</span><span class="p">()</span>
@@ -1235,26 +496,22 @@ It maps the HEALPix projection to the rHEALPix projection.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.healpix">
-<span class="sig-name descname"><span class="pre">healpix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.healpix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">healpix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.healpix" title="Link to this definition">¶</a></dt>
 <dd><p>Return the HEALPix projection of point <cite>(u, v)</cite> (or its inverse if
 <cite>inverse</cite> = True) appropriate to this rHEALPix DGGS.</p>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003_RADIANS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">healpix</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">healpix</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="mi">14</span><span class="p">)))</span>
 <span class="go">(-2.35619449019234, 1.5707963267949)</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>NOTES:: Issue #1 was ..</dt><dd><p>(-2.35619449019234, 1.5707963267949001) *</p>
-</dd>
-</dl>
 <p>NOTE:</p>
 <p>Uses <code class="docutils literal notranslate"><span class="pre">pj_healpix</span></code> instead of the PROJ.4 version of HEALPix.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.interval">
-<span class="sig-name descname"><span class="pre">interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.interval" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.interval" title="Link to this definition">¶</a></dt>
 <dd><p>Generator function for all the resolution
 <cite>max(a.resolution, b.resolution)</cite> cells between cell
 <cite>a</cite> and cell <cite>b</cite> (inclusive and with respect to the
@@ -1272,7 +529,7 @@ Note that <cite>a</cite> and <cite>b</cite> don’t have to lie at the same reso
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.minimal_cover">
-<span class="sig-name descname"><span class="pre">minimal_cover</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.minimal_cover" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">minimal_cover</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.minimal_cover" title="Link to this definition">¶</a></dt>
 <dd><p>Find the minimal set of resolution <cite>resolution</cite> cells that covers
 the list of points <cite>points</cite>.
 If <cite>plane</cite> = True, then assume <cite>points</cite> is a list of x-y
@@ -1300,7 +557,7 @@ tools that implement the rHEALPix projection.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.num_cells">
-<span class="sig-name descname"><span class="pre">num_cells</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subcells</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.num_cells" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">num_cells</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subcells</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.num_cells" title="Link to this definition">¶</a></dt>
 <dd><p>Return the number of cells of resolutions <cite>res_1</cite> to <cite>res_2</cite>
 (inclusive).
 Assume <cite>res_1 &lt;= res_2</cite>.
@@ -1328,7 +585,7 @@ subcells from resolution <cite>res_1</cite> to resolution <cite>self.max_resolut
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.random_cell">
-<span class="sig-name descname"><span class="pre">random_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.random_cell" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">random_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.random_cell" title="Link to this definition">¶</a></dt>
 <dd><p>Return a cell of the given resolution chosen uniformly at random
 from all cells at that resolution.
 If <cite>resolution=None</cite>, then the cell resolution is first chosen
@@ -1342,7 +599,7 @@ uniformly at random from [0,..,self.max_resolution].</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.random_point">
-<span class="sig-name descname"><span class="pre">random_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.random_point" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">random_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.random_point" title="Link to this definition">¶</a></dt>
 <dd><p>Return a point in this DGGS sampled uniformly at
 random from the plane or from the ellipsoid.</p>
 <p>EXAMPLES:</p>
@@ -1355,26 +612,22 @@ random from the plane or from the ellipsoid.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.rhealpix">
-<span class="sig-name descname"><span class="pre">rhealpix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.rhealpix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">rhealpix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.rhealpix" title="Link to this definition">¶</a></dt>
 <dd><p>Return the rHEALPix projection of the point <cite>(u, v)</cite> (or its inverse if
 <cite>inverse</cite> = True) appropriate to this rHEALPix DGGS.</p>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003_RADIANS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">rhealpix</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">rhealpix</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">),</span> <span class="mi">14</span><span class="p">)))</span>
 <span class="go">(-1.858272006684, 2.06871881030324)</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>NOTES:: Issue #1 was ..</dt><dd><p>(-1.8582720066839999, 2.0687188103032401)</p>
-</dd>
-</dl>
 <p>NOTE:</p>
 <p>Uses <code class="docutils literal notranslate"><span class="pre">pj_rhealpix</span></code> instead of the PROJ.4 version of rHEALPix.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.triangle">
-<span class="sig-name descname"><span class="pre">triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.triangle" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.triangle" title="Link to this definition">¶</a></dt>
 <dd><p>If <cite>inverse</cite> = False, then assume <cite>(x,y)</cite> lies in the image of the
 HEALPix projection that comes with this DGGS, and
 return the number of the HEALPix polar triangle (0, 1, 2, 3, or None)
@@ -1413,7 +666,7 @@ returned is None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.xyz">
-<span class="sig-name descname"><span class="pre">xyz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lonlat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.xyz" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">xyz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lonlat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.xyz" title="Link to this definition">¶</a></dt>
 <dd><p>Given a point <cite>(u, v)</cite> in the planar image of the rHEALPix projection,
 project it back to the ellipsoid and return its 3D rectangular
 coordinates.
@@ -1421,19 +674,15 @@ If <cite>lonlat</cite> = True, then assume <cite>(u, v)</cite> is a longitude-la
 point.</p>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003_RADIANS</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">xyz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">xyz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="mi">14</span><span class="p">)))</span>
 <span class="go">(0.70710678118655, 0.0, 0.70710678118655)</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>NOTES:: Issue #1 was ..</dt><dd><p>(0.70710678118655002, 0.0, 0.70710678118655002)</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RHEALPixDGGS.xyz_cube">
-<span class="sig-name descname"><span class="pre">xyz_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lonlat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.xyz_cube" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">xyz_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lonlat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RHEALPixDGGS.xyz_cube" title="Link to this definition">¶</a></dt>
 <dd><p>Given a point <cite>(u, v)</cite> in the planar version of this rHEALPix DGGS,
 fold the rHEALPix image into a cube centered at the origin,
 and return the resulting point’s 3D rectangular coordinates.
@@ -1441,21 +690,17 @@ If <cite>lonlat</cite> = True, then assume <cite>(u, v)</cite> is a longitude-la
 point.</p>
 <p>EXAMPLES:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rdggs</span> <span class="o">=</span> <span class="n">UNIT_003</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">xyz_cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">14</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">my_round</span><span class="p">(</span><span class="n">rdggs</span><span class="o">.</span><span class="n">xyz_cube</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">14</span><span class="p">)))</span>
 <span class="go">(0.78539816339745, 0.0, -0.78539816339745)</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>NOTES:: Issue #1 was ..</dt><dd><p>(0.78539816339745006, 0.0, -0.78539816339745006)</p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="rhealpixdggs.dggs.RhealPolygon">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rhealpixdggs.dggs.</span></span><span class="sig-name descname"><span class="pre">RhealPolygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rdggs=&lt;rhealpixdggs.dggs.RHEALPixDGGS</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suid_list=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RhealPolygon" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rhealpixdggs.dggs.</span></span><span class="sig-name descname"><span class="pre">RhealPolygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rdggs=&lt;rhealpixdggs.dggs.RHEALPixDGGS</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suid_list=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rhealpixdggs.dggs.RhealPolygon" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 </dd></dl>
 
@@ -1466,8 +711,42 @@ point.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">The dggs Module</a><ul>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS</span></code></a><ul>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.cell()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_area"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.cell_area()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.cell_from_point()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_from_region"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.cell_from_region()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_latitudes"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.cell_latitudes()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.cell_width"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.cell_width()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells_from_meridian"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.cells_from_meridian()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells_from_parallel"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.cells_from_parallel()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.cells_from_region"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.cells_from_region()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.combine_triangles"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.combine_triangles()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.grid"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.grid()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.healpix"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.healpix()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.interval"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.interval()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.minimal_cover"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.minimal_cover()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.num_cells"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.num_cells()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.random_cell"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.random_cell()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.random_point"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.random_point()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.rhealpix"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.rhealpix()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.triangle"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.triangle()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.xyz"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.xyz()</span></code></a></li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RHEALPixDGGS.xyz_cube"><code class="docutils literal notranslate"><span class="pre">RHEALPixDGGS.xyz_cube()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rhealpixdggs.dggs.RhealPolygon"><code class="docutils literal notranslate"><span class="pre">RhealPolygon</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="projection_wrapper.html"
@@ -1480,7 +759,7 @@ point.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -1488,13 +767,13 @@ point.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -1511,8 +790,8 @@ point.</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013, Alexander Raichev.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    &#169; Copyright 2013, Alexander Raichev.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>
