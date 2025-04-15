@@ -520,6 +520,53 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(rhpw.polyfill(plane_poly, 1), set())
         self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0, False), set())
 
+    def test_linetrace(self):
+        # Test data
+        p_ls = sh.LineString(
+            [
+                (-14.793092, -37.005372),
+                (-15.621138, -40.323142),
+                (-18.333333, -36.483403),
+                (-14, -37),
+            ]
+        )
+        r_ls = sh.LineString(
+            [
+                (174.793092, -37.005372),
+                (175.621138, -40.323142),
+                (178.333333, -36.483403),
+                (174, -37),
+            ]
+        )
+
+        # Equatorial faces - line string
+        result = rhpw.linetrace(p_ls, 3, plane=False)
+        # self.assertEqual(result, ["P874", "P877", "P873", "P874"])
+
+        result = rhpw.linetrace(r_ls, 3, plane=False)
+        # self.assertEqual(result, ["R884", "R887", "R885", "R884"])
+
+        # Equatorial faces - multiline string
+        result = rhpw.linetrace(sh.MultiLineString(lines=[p_ls, r_ls]), 3, plane=False)
+        # self.assertEqual(
+        #     result, ["P874", "P877", "P873", "P874", "R884", "R887", "R885", "R884"]
+        # )
+
+        # TODO: polar cap standard case (include same cell being touched more than once)
+        # TODO: lines crossing cube face boundaries
+
+        # Resolution mismatch (coarse resolution, short line segments)
+        result = rhpw.linetrace(p_ls, 2, plane=False)
+        self.assertEqual(result, ["P87"])
+
+        result = rhpw.linetrace(sh.MultiLineString(lines=[p_ls, r_ls]), 2, plane=False)
+        self.assertEqual(result, ["P87", "R88"])
+
+        # Malformed input geometries
+        self.assertIsNone(rhpw.linetrace(sh.LineString(), 0))
+        self.assertIsNone(rhpw.linetrace(sh.LineString([(1, 1), (1, 1)]), 0))
+        # TODO: invalid geometry (multilinestring with - what? Self intersecting segments?)
+
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
