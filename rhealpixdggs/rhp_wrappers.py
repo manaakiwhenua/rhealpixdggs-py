@@ -539,40 +539,11 @@ def linetrace(
                 i = i[::-1]
                 j = j[::-1]
 
-            # Turn vertex pair into dggs cells
-            start = dggs.cell_from_point(res, i, plane)
-            end = dggs.cell_from_point(res, j, plane)
+            # Convert line segment to cell ids
+            line_cells = cells_from_line(dggs, res, i, j, plane)
 
-            # Collect cells along path
-            if start is not None and end is not None:
-
-                # Special case: resolution is coarse and path is short
-                if start == end:
-                    line_cells = [start]
-
-                # Work your way along the line one cell at a time
-                else:
-                    direction = np.subtract(j, i)
-                    line_cells = []
-
-                    current_cell = start
-                    # while current_cell != end:
-                    #     line_cells.append(current_cell)
-
-                    #     # Next cell is neighbour of current_cell along direction
-                    #     next = _resolve_neighbour_on_line(
-                    #         current_cell, plane, direction, NEIGHBOURS
-                    #     )
-
-                    #     # Fail safe for strange cases
-                    #     if not next:
-                    #         current_cell = end
-                    #     else:
-                    #         current_cell = current_cell.neighbors(plane)[next]
-
-                    line_cells.append(end)
-
-                # Convert cells to string ids and add to collection
+            # Convert cells to string ids and add to collection
+            if line_cells:
                 cells = cells + [str(cell) for cell in line_cells]
 
         # Remove duplicates along sequence
@@ -753,20 +724,58 @@ def _malformed_lines(lines: Union[LineString, MultiLineString]) -> bool:
     return False
 
 
-def _resolve_neighbour_on_line(
-    cell: Cell, plane: bool, direction: tuple[float, float], neighbour_names: list[str]
-) -> str:
-    # TODO: extract cell boundaries as...something.
-    #       Longitude lines are great circles, latitude lines are not.
-    #       Equatorial cells have longitude lines as 'up' and 'down'
-    #       boundaries and 'left' and 'right' boundaries. Cap cells
-    #       have all boundaries on a latitude line. Dart cells have
-    #       an interesting arrangement of boundaries...
-    verts = cell.vertices(plane)
+def cells_from_line(
+    dggs: RHEALPixDGGS,
+    res: int,
+    lstart: tuple[float, float],
+    lend: tuple[float, float],
+    plane: bool = True,
+) -> list[Cell]:
+    # Turn vertex pair into dggs cells
+    start = dggs.cell_from_point(res, lstart, plane)
+    end = dggs.cell_from_point(res, lend, plane)
 
-    # TODO: find edge where line exits the current cell, determine
-    #       value of 'next' - will be string "up", "right", "down"
-    #       or "left"?
+    # Collect cells along path
+    line_cells = []
+    if start is not None and end is not None:
+        # Special case: resolution is coarse and path is short
+        if start == end:
+            line_cells = [start]
+
+        # Work your way along the line one cell at a time
+        else:
+            # Wrap points in a shapely linestring
+            line = LineString([lstart, lend])
+
+            iterations = 0  # TODO: DEBUG - To enforce end of loop during development
+            current = start
+            previous = None
+            while current != end and iterations < 100:  # TODO: DEBUG - iteration count
+                iterations = iterations + 1  # TODO: DEBUG
+                line_cells.append(current)
+
+                # Grab dictionary of nearest neighbours
+                nns = current.neighbors(plane)
+
+                # Find neighbour across edge crossed by line if it exists
+                next = None
+                for key in nns:
+                    nn = nns[key]
+                    poly = Polygon(shell=nn.vertices(plane))
+                    if line.intersects(poly):
+                        if nn != previous:
+                            next = nn
+
+                # Fail safe for strange cases
+                previous = current
+                if not next:
+                    current = end
+                else:
+                    current = next
+
+            line_cells.append(end)
+
+    return line_cells
 
 
 def _remove_sequential_duplicates(cells: list[str]) -> list[str]:
