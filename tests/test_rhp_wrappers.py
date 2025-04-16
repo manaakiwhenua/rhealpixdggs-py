@@ -538,19 +538,32 @@ class RhpWrappersTestCase(unittest.TestCase):
                 (174, -37),
             ]
         )
+        n_ls = sh.LineString(
+            [
+                (-134.998756, 86.549596),
+                (-179.141527, 88.504030),
+                (-44.874903, 86.549596),
+                (-89.669615, 86.549596),
+                (-134, 86),
+            ]
+        )
 
         # Equatorial faces - line string
         result = rhpw.linetrace(p_ls, 3, plane=False)
-        # self.assertEqual(result, ["P874", "P877", "P873", "P874"])
+        self.assertEqual(result, ["P874", "P877", "P876", "P873", "P874"])
 
         result = rhpw.linetrace(r_ls, 3, plane=False)
-        # self.assertEqual(result, ["R884", "R887", "R885", "R884"])
+        # self.assertEqual(result, ["R884", "R887", "R888", "R885", "R884"])
 
         # Equatorial faces - multiline string
         result = rhpw.linetrace(sh.MultiLineString(lines=[p_ls, r_ls]), 3, plane=False)
         # self.assertEqual(
-        #     result, ["P874", "P877", "P873", "P874", "R884", "R887", "R885", "R884"]
+        #     result, ["P874", "P877", "P876", "P873", "P874", "R884", "R887", "R885", "R884"]
         # )
+
+        # Cap faces - line string
+        result = rhpw.linetrace(n_ls, 3, plane=False)
+        # self.assertEqual(result, ["N447", "N444", "N445", "N448", "N447"])
 
         # TODO: polar cap standard case (include same cell being touched more than once)
         # TODO: lines crossing cube face boundaries
@@ -559,8 +572,10 @@ class RhpWrappersTestCase(unittest.TestCase):
         result = rhpw.linetrace(p_ls, 2, plane=False)
         self.assertEqual(result, ["P87"])
 
-        result = rhpw.linetrace(sh.MultiLineString(lines=[p_ls, r_ls]), 2, plane=False)
-        self.assertEqual(result, ["P87", "R88"])
+        result = rhpw.linetrace(
+            sh.MultiLineString(lines=[p_ls, r_ls, n_ls]), 2, plane=False
+        )
+        self.assertEqual(result, ["P87", "R88", "N44"])
 
         # Malformed input geometries
         self.assertIsNone(rhpw.linetrace(sh.LineString(), 0))
