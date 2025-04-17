@@ -39,7 +39,6 @@ CELL_CENTRE_WARNING = "WARNING: You requested a centre cell for a DGGS that has 
 CELL_RING_WARNING = "WARNING: Implementation of cell rings is incomplete. Requesting a {0} ring that involves more than two resolution 0 cube faces will return unexpected results."
 POLYFILL_GEOMETRY_WARNING = "WARNING: Empty or missing geometry, unsupported geometry type (not Polygon or MultiPolygon), or geometry with no area. Returning None."
 LINETRACE_GEOMETRY_WARNING = "WARNING: Empty or missing line geometry, unsupported line type (not LineString or MultiLineString), or line with no length. Returning None."
-LINETRACE_WARNING = "WARNING: Implementation of linetrace is incomplete. Requesting linetrace across polar cap cells or the antimeridian may return incorrect results."
 
 
 # ======== Main API ======== #
@@ -493,7 +492,8 @@ def linetrace(
 ) -> list[str]:
     """
     Returns the list of cell indices touched by a shapely linestring or multilinestring
-    at the requested resolution.
+    at the requested resolution. Removes internal sequences of duplicate cells before
+    returning result.
 
     Returns None if the geom_type field in the input geometry is anything other than
     'LineString' or 'MultiLineString'.
@@ -504,10 +504,9 @@ def linetrace(
 
     Returns None if the geometry is invalid in other ways, e.g. if a linestring contains
     self intersecting segments.
-    """
-    if verbose:
-        warn(LINETRACE_WARNING)
 
+    TODO: decide what to do with the antimeridian (if anything)
+    """
     # Stop early if the line geometry is malformed
     if _malformed_lines(geometry):
         if verbose:
