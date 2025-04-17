@@ -747,11 +747,9 @@ def cells_from_line(
             # Wrap points in a shapely linestring
             line = LineString([lstart, lend])
 
-            iterations = 0  # TODO: DEBUG - To enforce end of loop during development
             current = start
             previous = None
-            while current != end and iterations < 100:  # TODO: DEBUG - iteration count
-                iterations = iterations + 1  # TODO: DEBUG
+            while current != end:
                 line_cells.append(current)
 
                 # Grab dictionary of nearest neighbours
