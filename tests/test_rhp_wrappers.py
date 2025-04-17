@@ -553,19 +553,49 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(result, ["P874", "P877", "P876", "P873", "P874"])
 
         result = rhpw.linetrace(r_ls, 3, plane=False)
-        # self.assertEqual(result, ["R884", "R887", "R888", "R885", "R884"])
+        self.assertEqual(
+            result, ["R884", "R885", "R888", "R887", "R888", "R885", "R884"]
+        )
 
         # Equatorial faces - multiline string
         result = rhpw.linetrace(sh.MultiLineString(lines=[p_ls, r_ls]), 3, plane=False)
-        # self.assertEqual(
-        #     result, ["P874", "P877", "P876", "P873", "P874", "R884", "R887", "R885", "R884"]
-        # )
+        self.assertEqual(
+            result,
+            [
+                "P874",
+                "P877",
+                "P876",
+                "P873",
+                "P874",
+                "R884",
+                "R885",
+                "R888",
+                "R887",
+                "R888",
+                "R885",
+                "R884",
+            ],
+        )
 
         # Cap faces - line string
         result = rhpw.linetrace(n_ls, 3, plane=False)
-        # self.assertEqual(result, ["N447", "N444", "N445", "N448", "N447"])
+        self.assertEqual(
+            result,
+            [
+                "N447",
+                "N446",
+                "N443",
+                "N444",
+                "N443",
+                "N446",
+                "N447",
+                "N448",
+                "N445",
+                "N448",
+                "N447",
+            ],
+        )
 
-        # TODO: polar cap standard case (include same cell being touched more than once)
         # TODO: lines crossing cube face boundaries
 
         # Resolution mismatch (coarse resolution, short line segments)
