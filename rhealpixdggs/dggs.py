@@ -152,6 +152,7 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
 # *****************************************************************************
 # Import third-party modules.
 from numpy import array, base_repr, ceil, log, pi
+from shapely import LineString, Polygon
 
 # Import standard modules.
 from itertools import product
@@ -1068,6 +1069,56 @@ class RHEALPixDGGS(object):
             current = current.neighbor("east", plane=False)
         result.append(end)
         return result
+
+    def cells_from_line(
+        self,
+        res: int,
+        lstart: tuple[float, float],
+        lend: tuple[float, float],
+        plane: bool = True,
+    ) -> list[Cell]:
+        # Turn vertex pair into dggs cells
+        start = self.cell_from_point(res, lstart, plane)
+        end = self.cell_from_point(res, lend, plane)
+
+        # Collect cells along path
+        line_cells = []
+        if start is not None and end is not None:
+            # Special case: resolution is coarse and path is short
+            if start == end:
+                line_cells = [start]
+
+            # Work your way along the line one cell at a time
+            else:
+                # Wrap points in a shapely linestring
+                line = LineString([lstart, lend])
+
+                current = start
+                previous = None
+                while current != end:
+                    line_cells.append(current)
+
+                    # Grab dictionary of nearest neighbours
+                    nns = current.neighbors(plane)
+
+                    # Find neighbour across edge crossed by line if it exists
+                    next = None
+                    for key in nns:
+                        nn = nns[key]
+                        poly = Polygon(shell=nn.vertices(plane))
+                        if line.intersects(poly) and nn != previous:
+                            next = nn
+
+                    # Fail safe for strange cases
+                    previous = current
+                    if not next:
+                        current = end
+                    else:
+                        current = next
+
+                line_cells.append(end)
+
+        return line_cells
 
     def cells_from_region(self, resolution, ul, dr, plane=True):
         """

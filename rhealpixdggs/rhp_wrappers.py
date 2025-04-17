@@ -540,7 +540,7 @@ def linetrace(
                 j = j[::-1]
 
             # Convert line segment to cell ids
-            line_cells = cells_from_line(dggs, res, i, j, plane)
+            line_cells = dggs.cells_from_line(res, i, j, plane)
 
             # Convert cells to string ids and add to collection
             if line_cells:
@@ -722,58 +722,6 @@ def _malformed_lines(lines: Union[LineString, MultiLineString]) -> bool:
         return True
 
     return False
-
-
-def cells_from_line(
-    dggs: RHEALPixDGGS,
-    res: int,
-    lstart: tuple[float, float],
-    lend: tuple[float, float],
-    plane: bool = True,
-) -> list[Cell]:
-    # Turn vertex pair into dggs cells
-    start = dggs.cell_from_point(res, lstart, plane)
-    end = dggs.cell_from_point(res, lend, plane)
-
-    # Collect cells along path
-    line_cells = []
-    if start is not None and end is not None:
-        # Special case: resolution is coarse and path is short
-        if start == end:
-            line_cells = [start]
-
-        # Work your way along the line one cell at a time
-        else:
-            # Wrap points in a shapely linestring
-            line = LineString([lstart, lend])
-
-            current = start
-            previous = None
-            while current != end:
-                line_cells.append(current)
-
-                # Grab dictionary of nearest neighbours
-                nns = current.neighbors(plane)
-
-                # Find neighbour across edge crossed by line if it exists
-                next = None
-                for key in nns:
-                    nn = nns[key]
-                    poly = Polygon(shell=nn.vertices(plane))
-                    if line.intersects(poly):
-                        if nn != previous:
-                            next = nn
-
-                # Fail safe for strange cases
-                previous = current
-                if not next:
-                    current = end
-                else:
-                    current = next
-
-            line_cells.append(end)
-
-    return line_cells
 
 
 def _remove_sequential_duplicates(cells: list[str]) -> list[str]:
