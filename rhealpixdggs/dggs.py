@@ -1088,24 +1088,36 @@ class RHEALPixDGGS(object):
             if start == end:
                 line_cells = [start]
 
-            # Work your way along the line one cell at a time
+            # Line spans multiple cells
             else:
-                # Wrap points in a shapely linestring
-                line = LineString([lstart, lend])
+                # Always work on the plane so all cell types are treated the same
+                if plane:
+                    ls = lstart
+                    le = lend
+                else:
+                    ls = self.rhealpix(*lstart)
+                    le = self.rhealpix(*lend)
 
+                # Wrap points in a shapely linestring
+                line = LineString([ls, le])
+
+                # Work your way along the line one cell at a time
+                count = 0
                 current = start
                 previous = None
-                while current != end:
+                while current != end and count < 100:
+                    count = count + 1
                     line_cells.append(current)
 
                     # Grab dictionary of nearest neighbours
-                    nns = current.neighbors(plane)
+                    nns = current.neighbors()
 
                     # Find neighbour across edge crossed by line if it exists
                     next = None
                     for key in nns:
                         nn = nns[key]
-                        poly = Polygon(shell=nn.vertices(plane))
+                        poly = Polygon(shell=nn.vertices())
+                        # print(f"Vertex polygon is {str(poly)}")
                         if line.intersects(poly) and nn != previous:
                             next = nn
 
@@ -1116,7 +1128,11 @@ class RHEALPixDGGS(object):
                     else:
                         current = next
 
+                # Cap the sequence
                 line_cells.append(end)
+
+                if count >= 100:
+                    print("WARNING: iteration count capped out")
 
         return line_cells
 

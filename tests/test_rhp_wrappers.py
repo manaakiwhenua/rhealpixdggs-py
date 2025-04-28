@@ -553,9 +553,7 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(result, ["P874", "P877", "P876", "P873", "P874"])
 
         result = rhpw.linetrace(r_ls, 3, plane=False)
-        self.assertEqual(
-            result, ["R884", "R885", "R888", "R887", "R888", "R885", "R884"]
-        )
+        self.assertEqual(result, ["R884", "R887", "R888", "R885", "R884"])
 
         # Equatorial faces - multiline string
         result = rhpw.linetrace(sh.MultiLineString(lines=[p_ls, r_ls]), 3, plane=False)
@@ -568,8 +566,6 @@ class RhpWrappersTestCase(unittest.TestCase):
                 "P873",
                 "P874",
                 "R884",
-                "R885",
-                "R888",
                 "R887",
                 "R888",
                 "R885",
@@ -581,22 +577,16 @@ class RhpWrappersTestCase(unittest.TestCase):
         result = rhpw.linetrace(n_ls, 3, plane=False)
         self.assertEqual(
             result,
-            [
-                "N447",
-                "N446",
-                "N443",
-                "N444",
-                "N443",
-                "N446",
-                "N447",
-                "N448",
-                "N445",
-                "N448",
-                "N447",
-            ],
+            ["N447", "N444", "N445", "N448", "N447"],
         )
 
-        # TODO: lines crossing cube face boundaries
+        # Lines crossing cube face boundaries
+        s = gs.WGS84_003.cell(("N", 5))
+        e = gs.WGS84_003.cell(("P", 4))
+        result = rhpw.linetrace(
+            sh.LineString([s.centroid(False), e.centroid(False)]), 1, plane=False
+        )
+        self.assertEqual(result, ["N5", "P1", "P4"])
 
         # Resolution mismatch (coarse resolution, short line segments)
         result = rhpw.linetrace(p_ls, 2, plane=False)
