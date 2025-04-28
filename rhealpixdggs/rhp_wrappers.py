@@ -1,5 +1,3 @@
-import numpy as np
-
 from typing import Literal, Union
 from warnings import warn
 from shapely import (

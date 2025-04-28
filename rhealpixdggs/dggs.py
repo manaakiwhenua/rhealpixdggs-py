@@ -1080,6 +1080,7 @@ class RHEALPixDGGS(object):
         # Turn vertex pair into dggs cells
         start = self.cell_from_point(res, lstart, plane)
         end = self.cell_from_point(res, lend, plane)
+        print(f"Start is {str(start)}, end is {str(end)}")
 
         # Collect cells along path
         line_cells = []
@@ -1090,50 +1091,48 @@ class RHEALPixDGGS(object):
 
             # Line spans multiple cells
             else:
-                # Always work on the plane so all cell types are treated the same
-                if plane:
-                    ls = lstart
-                    le = lend
-                else:
-                    ls = self.rhealpix(*lstart)
-                    le = self.rhealpix(*lend)
-
                 # Wrap points in a shapely linestring
-                line = LineString([ls, le])
+                line = LineString([lstart, lend])
 
                 # Work your way along the line one cell at a time
-                count = 0
                 current = start
-                previous = None
-                while current != end and count < 100:
-                    count = count + 1
+                while current != end:
+                    print(f"Current cell is {str(current)}")
                     line_cells.append(current)
 
                     # Grab dictionary of nearest neighbours
-                    nns = current.neighbors()
+                    nns = current.neighbors(plane=plane)
 
                     # Find neighbour across edge crossed by line if it exists
-                    next = None
+                    candidates = []
                     for key in nns:
                         nn = nns[key]
-                        poly = Polygon(shell=nn.vertices())
-                        # print(f"Vertex polygon is {str(poly)}")
-                        if line.intersects(poly) and nn != previous:
-                            next = nn
+                        print(f"Neighbour key is {key}, neighbour is {str(nn)}")
+                        verts = nn.vertices(plane=plane)
+                        edges = zip(verts, verts[1:])
+                        while (edge := next(edges, None)) is not None:
+                            edge_line = LineString(edge)
+                            if line.intersects(edge_line) and nn not in line_cells:
+                                candidates.append(nn)
+
+                    # TODO: DEBUG - there should only ever really be 1 candidate
+                    print(
+                        f"Candidates are {[str(candidate) for candidate in candidates]}"
+                    )
+                    following = candidates[0] if candidates else None
 
                     # Fail safe for strange cases
-                    previous = current
-                    if not next:
+                    if not following:
                         current = end
                     else:
-                        current = next
+                        current = following
 
                 # Cap the sequence
                 line_cells.append(end)
 
-                if count >= 100:
-                    print("WARNING: iteration count capped out")
-
+        print(
+            f"Returning {[str(line_cell) for line_cell in line_cells]} for line segment"
+        )
         return line_cells
 
     def cells_from_region(self, resolution, ul, dr, plane=True):
