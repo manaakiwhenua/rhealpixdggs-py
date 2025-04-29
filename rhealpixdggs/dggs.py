@@ -1104,22 +1104,36 @@ class RHEALPixDGGS(object):
                     nns = current.neighbors(plane=plane)
 
                     # Find neighbour across edge crossed by line if it exists
-                    candidates = []
+                    candidates = (
+                        []
+                    )  # TODO: DEBUG - there should only ever really be 1 candidate
+                    following = None
                     for key in nns:
                         nn = nns[key]
                         print(f"Neighbour key is {key}, neighbour is {str(nn)}")
+                        # Grab current neighbour vertices as list of (lng, lat) tuples
                         verts = nn.vertices(plane=plane)
+                        verts = self.antimeridian_check_and_flip(verts, plane=plane)
+                        # TODO: pole check and flip?
+
+                        # Repeat first point to close the square
+                        verts.append(verts[0])
+
+                        # Turn vertices into point pairs describing cell edges
                         edges = zip(verts, verts[1:])
-                        while (edge := next(edges, None)) is not None:
+
+                        # Iterate over the edges to find the crossing one
+                        while (edge := next(edges, None)) is not None and not following:
                             edge_line = LineString(edge)
                             if line.intersects(edge_line) and nn not in line_cells:
-                                candidates.append(nn)
-
+                                following = nn
+                                candidates.append(
+                                    nn
+                                )  # TODO: DEBUG - there should only ever really be 1 candidate
                     # TODO: DEBUG - there should only ever really be 1 candidate
                     print(
                         f"Candidates are {[str(candidate) for candidate in candidates]}"
                     )
-                    following = candidates[0] if candidates else None
 
                     # Fail safe for strange cases
                     if not following:
@@ -1357,6 +1371,64 @@ class RHEALPixDGGS(object):
         # Sort cells by nuclei y-coordinate and then by x-coordinate.
         # cover.sort(key=lambda x: (x[2], -x[1]), reverse=True)
         # return [t[0] for t in cover]
+
+    def antimeridian_check_and_flip(self, cell_vertices, plane=True):
+        """
+        Check for cell vertices on the antimeridian and make sure their sign is
+        the same as that of the other vertices.
+
+        Used by cells_from_line before checking if a given line intersects a cell.
+
+        Returns the set of modified coordinates if sign flipping has occurred, or
+        the original set of coordinates if everything's on the same side of the
+        antimeridian already.
+        """
+        # No need to do anything in the planar case
+        if plane:
+            return cell_vertices
+
+        # Extract longitudes
+        lngs = [vert[0] for vert in cell_vertices]
+
+        # The potentially offending (absoulute) value
+        if self.ellipsoid.radians:
+            half_range = pi
+        else:
+            half_range = 180
+
+        # No need to do anything if no point lies on the antimeridian
+        if not half_range in lngs and not -half_range in lngs:
+            return cell_vertices
+
+        # Check which side of the antimeridian the point of interest is on
+        if half_range in lngs:
+            check_lng = half_range
+        else:
+            check_lng = -half_range
+
+        # Check sign of point at antimeridian against the others
+        fine = True
+        count = 0
+        while fine and count < len(lngs):
+            if lngs[count] != check_lng and lngs[count] * check_lng < 0:
+                fine = False
+
+            count = count + 1
+
+        # No need to do anything else if all points are on the same side of the antimeridian
+        if fine:
+            return cell_vertices
+
+        # Flip sign of longitudes at antimeridian
+        lngs = [lng if lng != check_lng else -lng for lng in lngs]
+
+        # Extract latitudes as separate list
+        lats = [vert[1] for vert in cell_vertices]
+
+        # Zip up the results in a new list of tuples
+        cell_vertices = [(lng, lat) for lng, lat in zip(lngs, lats)]
+
+        return cell_vertices
 
 
 # Some common rHEALPix DGGSs.
