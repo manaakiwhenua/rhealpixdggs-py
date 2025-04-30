@@ -1072,14 +1072,26 @@ class RHEALPixDGGS(object):
 
     def cells_from_line(
         self,
-        res: int,
+        resolution: int,
         lstart: tuple[float, float],
         lend: tuple[float, float],
         plane: bool = True,
     ) -> list[Cell]:
+        """
+        Return a list of the resolution `resolution` cells along an arbitrary line
+        given by two points on the sphere or plane.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> cells = rdggs.cells_from_line(3, (-89.669615, 86.549596), (-134, 86), False)
+            >>> print([str(cell) for cell in cells])
+            ['N448', 'N447']
+
+        """
         # Turn vertex pair into dggs cells
-        start = self.cell_from_point(res, lstart, plane)
-        end = self.cell_from_point(res, lend, plane)
+        start = self.cell_from_point(resolution, lstart, plane)
+        end = self.cell_from_point(resolution, lend, plane)
 
         # Collect cells along path
         line_cells = []

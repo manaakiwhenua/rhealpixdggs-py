@@ -574,6 +574,7 @@ class RhpWrappersTestCase(unittest.TestCase):
         )
 
         # Cap faces - line string
+        # TODO: this is still wrong - should be "N444", "N445" and not "N444", "N447", "N448", "N445"
         result = rhpw.linetrace(n_ls, 3, plane=False)
         self.assertEqual(
             result,
