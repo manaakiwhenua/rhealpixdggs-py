@@ -376,7 +376,7 @@ class RHEALPixDGGS(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def healpix(self, u, v, inverse=False):
+    def healpix(self, u: float, v: float, inverse: bool = False) -> tuple[float, float]:
         """
         Return the HEALPix projection of point `(u, v)` (or its inverse if
         `inverse` = True) appropriate to this rHEALPix DGGS.
@@ -394,7 +394,9 @@ class RHEALPixDGGS(object):
         f = pw.Projection(ellipsoid=self.ellipsoid, proj="healpix")
         return f(u, v, inverse=inverse)
 
-    def rhealpix(self, u, v, inverse=False, region="none"):
+    def rhealpix(
+        self, u: float, v: float, inverse: bool = False, region: str = "none"
+    ) -> tuple[float, float]:
         """
         Return the rHEALPix projection of the point `(u, v)` (or its inverse if
         `inverse` = True) appropriate to this rHEALPix DGGS.
@@ -418,7 +420,9 @@ class RHEALPixDGGS(object):
         )
         return f(u, v, inverse=inverse)
 
-    def combine_triangles(self, u, v, inverse=False, region="none"):
+    def combine_triangles(
+        self, u: float, v: float, inverse: bool = False, region: str = "none"
+    ) -> tuple[float, float]:
         """
         Return the combine_triangles() transformation of the point `(u, v)`
         (or its inverse if `inverse` = True) appropriate to the underlying
@@ -448,7 +452,7 @@ class RHEALPixDGGS(object):
         # Scale up.
         return tuple(R_A * array((u, v)))
 
-    def triangle(self, x, y, inverse=True):
+    def triangle(self, x: float, y: float, inverse: bool = True) -> tuple[int, str]:
         """
         If `inverse` = False, then assume `(x,y)` lies in the image of the
         HEALPix projection that comes with this DGGS, and
@@ -498,7 +502,9 @@ class RHEALPixDGGS(object):
         # Get triangle.
         return pjr.triangle(x, y, inverse=inverse, north_square=ns, south_square=ss)
 
-    def xyz(self, u, v, lonlat=False):
+    def xyz(
+        self, u: float, v: float, lonlat: bool = False
+    ) -> tuple[float, float, float]:
         """
         Given a point `(u, v)` in the planar image of the rHEALPix projection,
         project it back to the ellipsoid and return its 3D rectangular
@@ -518,7 +524,9 @@ class RHEALPixDGGS(object):
             lam, phi = self.rhealpix(u, v, inverse=True)
         return self.ellipsoid.xyz(lam, phi)
 
-    def xyz_cube(self, u, v, lonlat=False):
+    def xyz_cube(
+        self, u: float, v: float, lonlat: bool = False
+    ) -> tuple[float, float, float]:
         """
         Given a point `(u, v)` in the planar version of this rHEALPix DGGS,
         fold the rHEALPix image into a cube centered at the origin,
@@ -602,7 +610,7 @@ class RHEALPixDGGS(object):
         """
         return Cell(self, suid, level_order_index, post_order_index)
 
-    def grid(self, resolution):
+    def grid(self, resolution: int):
         """
         Generator function for all the cells at resolution `resolution`.
 
@@ -622,7 +630,7 @@ class RHEALPixDGGS(object):
             yield cs
             cs = cs.successor(resolution)
 
-    def num_cells(self, res_1, res_2=None, subcells=False):
+    def num_cells(self, res_1: int, res_2: int = None, subcells: bool = False) -> int:
         """
         Return the number of cells of resolutions `res_1` to `res_2`
         (inclusive).
@@ -660,7 +668,7 @@ class RHEALPixDGGS(object):
             num = int(6 * (k ** (res_2 + 1) - k**res_1) / (k - 1))
         return num
 
-    def cell_width(self, resolution, plane=True):
+    def cell_width(self, resolution: int, plane: bool = True) -> float:
         """
         Return the width of a planar cell at the given resolution.
         If `plane` = False, then return None,
@@ -678,7 +686,7 @@ class RHEALPixDGGS(object):
         if plane:
             return self.ellipsoid.R_A * (pi / 2) * self.N_side ** (-resolution)
 
-    def cell_area(self, resolution, plane=True):
+    def cell_area(self, resolution: int, plane: bool = True) -> float:
         """
         Return the area of a planar or ellipsoidal cell at the given
         resolution.
@@ -726,7 +734,9 @@ class RHEALPixDGGS(object):
             yield cell
             cell = cell.successor(resolution)
 
-    def cell_from_point(self, resolution, p, plane=True):
+    def cell_from_point(
+        self, resolution: int, p: tuple[float, float], plane: bool = True
+    ) -> Cell:
         """
         Return the resolution `resolution` cell that contains the point `p`.
         If `plane` = True, then `p` and the output cell lie in the
@@ -820,7 +830,9 @@ class RHEALPixDGGS(object):
             suid.append(self.child_order[(int(suid_row[i], N), int(suid_col[i], N))])
         return Cell(self, suid)
 
-    def cell_from_region(self, ul, dr, plane=True):
+    def cell_from_region(
+        self, ul: tuple[float, float], dr: tuple[float, float], plane: bool = True
+    ) -> Cell:
         """
         Return the smallest planar or ellipsoidal cell wholly containing
         the region bounded by the axis-aligned rectangle with upper left
@@ -894,7 +906,14 @@ class RHEALPixDGGS(object):
         else:
             return self.cell(ul_suid[:least])
 
-    def cell_latitudes(self, resolution, phi_min, phi_max, nucleus=True, plane=True):
+    def cell_latitudes(
+        self,
+        resolution: int,
+        phi_min: float,
+        phi_max: float,
+        nucleus: bool = True,
+        plane: bool = True,
+    ) -> list[float]:
         """
         Return a list of every latitude phi whose parallel intersects
         a resolution `resolution` cell nucleus and satisfies
@@ -984,7 +1003,9 @@ class RHEALPixDGGS(object):
             result = [self.healpix(R * pi / 4, y, inverse=True)[1] for y in result]
         return result
 
-    def cells_from_meridian(self, resolution, lam, phi_min, phi_max):
+    def cells_from_meridian(
+        self, resolution: int, lam: float, phi_min: float, phi_max: float
+    ) -> list[Cell]:
         """
         Return a list of the resolution `resolution` cells that intersect
         the meridian segment of longitude `lam` whose least latitude is
@@ -1036,7 +1057,9 @@ class RHEALPixDGGS(object):
             result.append(end)
         return result
 
-    def cells_from_parallel(self, resolution, phi, lam_min, lam_max):
+    def cells_from_parallel(
+        self, resolution: int, phi: float, lam_min: float, lam_max: float
+    ) -> list[Cell]:
         """
         Return a list of the resolution `resolution` cells that intersect
         the parallel segment of latitude `phi` whose least longitude is
@@ -1080,6 +1103,15 @@ class RHEALPixDGGS(object):
         """
         Return a list of the resolution `resolution` cells along an arbitrary line
         given by two points on the sphere or plane.
+
+        NOTE:
+
+        Cannot handle cells along a line that crosses the antimeridian.
+
+        TODO:
+
+        Cap cells are not handled correctly. Lines intersecting one of those may not
+        return the correct sequence of cells.
 
         EXAMPLES::
 
@@ -1135,7 +1167,7 @@ class RHEALPixDGGS(object):
                             if line.intersects(edge_line) and nn not in line_cells:
                                 following = nn
 
-                    # Fail safe for strange cases
+                    # Fail safe for strange cases (to make sure the iteration ends)
                     if not following:
                         current = end
                     else:
@@ -1146,7 +1178,13 @@ class RHEALPixDGGS(object):
 
         return line_cells
 
-    def cells_from_region(self, resolution, ul, dr, plane=True):
+    def cells_from_region(
+        self,
+        resolution: int,
+        ul: tuple[float, float],
+        dr: tuple[float, float],
+        plane: bool = True,
+    ) -> list[list[Cell]]:
         """
         If `plane` = True, then return a list of lists of resolution
         `resolution` cells that cover the axis-aligned rectangle whose
@@ -1292,7 +1330,7 @@ class RHEALPixDGGS(object):
             result.append(cells)
         return result
 
-    def random_point(self, plane=True):
+    def random_point(self, plane: bool = True) -> tuple[float, float]:
         """
         Return a point in this DGGS sampled uniformly at
         random from the plane or from the ellipsoid.
@@ -1310,7 +1348,7 @@ class RHEALPixDGGS(object):
         # Pick a random point in that cell.
         return c.random_point(plane=plane)
 
-    def random_cell(self, resolution=None):
+    def random_cell(self, resolution: int = None) -> Cell:
         """
         Return a cell of the given resolution chosen uniformly at random
         from all cells at that resolution.
@@ -1331,7 +1369,9 @@ class RHEALPixDGGS(object):
             suid.append(randint(0, self.N_side**2 - 1))
         return Cell(self, suid)
 
-    def minimal_cover(self, resolution, points, plane=True):
+    def minimal_cover(
+        self, resolution: int, points: list[tuple[float, float]], plane: bool = True
+    ) -> list[Cell]:
         """
         Find the minimal set of resolution `resolution` cells that covers
         the list of points `points`.
@@ -1369,7 +1409,9 @@ class RHEALPixDGGS(object):
         # cover.sort(key=lambda x: (x[2], -x[1]), reverse=True)
         # return [t[0] for t in cover]
 
-    def antimeridian_check_and_flip(self, vertices, plane=True):
+    def antimeridian_check_and_flip(
+        self, vertices: list[tuple[float, float]], plane: bool = True
+    ) -> list[tuple[float, float]]:
         """
         Check for cell vertices on the antimeridian and make sure their sign is
         the same as that of the other vertices.
