@@ -1,6 +1,13 @@
 from typing import Literal, Union
 from warnings import warn
-from shapely import Point, Polygon, MultiPolygon, is_valid_reason
+from shapely import (
+    Point,
+    Polygon,
+    MultiPolygon,
+    LineString,
+    MultiLineString,
+    is_valid_reason,
+)
 
 from rhealpixdggs.dggs import RHEALPixDGGS
 from rhealpixdggs.cell import Cell
@@ -9,17 +16,29 @@ from rhealpixdggs.conversion import compress_order_cells
 # ======== Messages and constants ======== #
 
 
-# Pre-defined DGGS with WGS84 ellipsoid, coordinates in degrees and n == 3 to subdivide cell sides
+# Pre-defined DGGS with WGS84 ellipsoid, coordinates in degrees, n == 3 to subdivide
+# cell sides, and both N and S polar cube face attached to O equatorial cube face:
+# N
+# O P Q R
+# S
 from rhealpixdggs.dggs import WGS84_003
 
 # List of resolution 0 cell addresses (i.e. cube faces)
 from rhealpixdggs.cell import CELLS0
 
+# Cell neighbour directions and reverse directions (to detect steps across cube face boundaries)
+NEIGHBOURS = ["right", "down", "left", "up"]
+NEIGHBOUR_INVERSE = {"right": "left", "down": "up", "left": "right", "up": "down"}
+
+# Warnings
 PARENT_RESOLUTION_WARNING = "WARNING: You requested a parent resolution that is higher than the cell resolution. Returning the cell address itself."
 CHILD_RESOLUTION_WARNING = "WARNING: You requested a child resolution that is lower than the cell resolution. Returning the cell address itself."
 CELL_CENTRE_WARNING = "WARNING: You requested a centre cell for a DGGS that has an even number of cells on a side. Returning None."
 CELL_RING_WARNING = "WARNING: Implementation of cell rings is incomplete. Requesting a {0} ring that involves more than two resolution 0 cube faces will return unexpected results."
 POLYFILL_GEOMETRY_WARNING = "WARNING: Empty or missing geometry, unsupported geometry type (not Polygon or MultiPolygon), or geometry with no area. Returning None."
+LINETRACE_GEOMETRY_WARNING = "WARNING: Empty or missing line geometry, unsupported line type (not LineString or MultiLineString), or line with no length. Returning None."
+LINETRACE_WARNING = "WARNING: Implementation of linetrace is incomplete. Lines crossing one of the cap cells may not be converted to the correct sequence of cells."
+
 
 # ======== Main API ======== #
 
@@ -308,25 +327,16 @@ def cell_ring(
         cell = _mirror_cell_on_cube(cell)
         return [str(cell)]
 
-    # Init the ring and directions
+    # Init the ring
     ring = []
-    directions = ["right", "down", "left", "up"]
 
     # Top-level cells (cube faces) are special
     if len(rhpindex) == 1:
-        for direction in directions:
+        for direction in NEIGHBOURS:
             ring.append(cell.neighbor(direction).suid[0])
 
     # Start in the upper left corner of the ring: it's k times left and k times up
     else:
-        # Mapping to detect direction changes
-        direction_inverse = {
-            "right": "left",
-            "down": "up",
-            "left": "right",
-            "up": "down",
-        }
-
         # Initialise iteration parameters
         k_eff, max_steps, cell = _cell_ring_setup(cell, half_circle / 2, k)
 
@@ -338,11 +348,11 @@ def cell_ring(
         else:
             # Set starting point
             cell, direction, n_steps = _find_cell_ring_start(
-                cell, k_eff, max_steps, directions, direction_inverse
+                cell, k_eff, max_steps, NEIGHBOURS, NEIGHBOUR_INVERSE
             )
 
             # Walk around the ring one side at a time and collect cell addresses
-            for _ in range(0, len(directions)):
+            for _ in range(0, len(NEIGHBOURS)):
                 step = 0
                 while step < n_steps:
                     # Add index to ring, take a step
@@ -350,8 +360,8 @@ def cell_ring(
                     next = cell.neighbor(direction)
 
                     # Looking back not being the same as looking ahead means we need to realign
-                    if next.neighbor(direction_inverse[direction]) != cell:
-                        direction = direction_inverse[_neighbor_direction(next, cell)]
+                    if next.neighbor(NEIGHBOUR_INVERSE[direction]) != cell:
+                        direction = NEIGHBOUR_INVERSE[_neighbor_direction(next, cell)]
 
                     # Take the step
                     cell = next
@@ -359,8 +369,8 @@ def cell_ring(
 
                 # Prepare walking direction for next ring side
                 if n_steps == 2 * k_eff:
-                    direction = directions[
-                        (directions.index(direction) + 1) % len(directions)
+                    direction = NEIGHBOURS[
+                        (NEIGHBOURS.index(direction) + 1) % len(NEIGHBOURS)
                     ]
 
                 # Reset number of steps along a side
@@ -405,7 +415,7 @@ def polyfill(
     dggs: RHEALPixDGGS = WGS84_003,
 ) -> set[str]:
     """
-    Turn the area contained in a shapely polygon or multipolygon into a set of cell
+    Turns the area contained in a shapely polygon or multipolygon into a set of cell
     indices at the requested resolution. A cell index is included if its centroid is
     inside the geometry defined by the boundaries and holes.
 
@@ -472,9 +482,75 @@ def polyfill(
 
 
 def linetrace(
-    geometry, res: int, plane: bool = True, dggs: RHEALPixDGGS = WGS84_003
+    geometry: Union[LineString, MultiLineString],
+    res: int,
+    geo_json: bool = True,
+    plane: bool = True,
+    verbose: bool = False,
+    dggs: RHEALPixDGGS = WGS84_003,
 ) -> list[str]:
-    raise NotImplementedError()
+    """
+    Returns the list of cell indices touched by a shapely linestring or multilinestring
+    at the requested resolution. Removes internal sequences of duplicate cells before
+    returning result.
+
+    Returns None if the geom_type field in the input geometry is anything other than
+    'LineString' or 'MultiLineString'.
+
+    Returns None if the geometry is empty, or if it has no length.
+
+    Returns None if no cells match the geometry for some reason.
+
+    Returns None if the geometry is invalid in other ways, e.g. if a linestring contains
+    self intersecting segments.
+
+    TODO: decide what to do with the antimeridian (if anything)
+    """
+    if verbose:
+        warn(LINETRACE_WARNING)
+
+    # Stop early if the line geometry is malformed
+    if _malformed_lines(geometry):
+        if verbose:
+            message = is_valid_reason(geometry)
+            if not message or message == "Valid Geometry":
+                warn(LINETRACE_GEOMETRY_WARNING)
+            else:
+                warn(str.format("WARNING: {0}. Returning None.", message))
+
+        return None
+
+    # Extract list of linestrings from geometry: LineString needs to be wrapped in
+    # one, MultiLineString has it stashed in a property
+    if geometry.geom_type == "LineString":
+        lines = [geometry]
+    else:
+        lines = geometry.geoms
+
+    cells = []
+    for linestring in lines:
+        # Extract coordinate pairs along the line segments
+        coords = zip(linestring.coords, linestring.coords[1:])
+
+        # Walk along line segments
+        while (vertex_pair := next(coords, None)) is not None:
+            # Extract vertex pair defining line segment in (lng, lat) order
+            i, j = vertex_pair
+            if not geo_json:
+                i = i[::-1]
+                j = j[::-1]
+
+            # Convert line segment to cell ids
+            line_cells = dggs.cells_from_line(res, i, j, plane)
+
+            # Convert cells to string ids and add to collection
+            if line_cells:
+                cells = cells + [str(cell) for cell in line_cells]
+
+        # Remove duplicates along sequence
+        cells = _remove_sequential_duplicates(cells)
+
+    return cells
 
 
 # ======== Helper functions ======== #
@@ -619,6 +695,7 @@ def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
     if geometry.geom_type != "Polygon" and geometry.geom_type != "MultiPolygon":
         return True
 
+    # This catches e.g. self intersecting hulls and holes, or overlapping polygons
     if not geometry.is_valid:
         return True
 
@@ -627,3 +704,36 @@ def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
         return True
 
     return False
+
+
+def _malformed_lines(lines: Union[LineString, MultiLineString]) -> bool:
+    # There have to be lines
+    if lines is None or lines.is_empty:
+        return True
+
+    # Lines need to be of the correct type
+    if lines.geom_type != "LineString" and lines.geom_type != "MultiLineString":
+        return True
+
+    if not lines.is_valid:
+        return True
+
+    # Lines need to have a length, i.e. not be collapsed into points
+    if lines.length == 0:
+        return True
+
+    return False
+
+
+def _remove_sequential_duplicates(cells: list[str]) -> list[str]:
+    if not cells:
+        return []
+
+    trimmed_cells = []
+    prev = None
+    for cell in cells:
+        if cell != prev:
+            trimmed_cells.append(cell)
+            prev = cell
+
+    return trimmed_cells

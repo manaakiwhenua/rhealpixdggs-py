@@ -520,6 +520,100 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(rhpw.polyfill(plane_poly, 1), set())
         self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0, False), set())
 
+    def test_linetrace(self):
+        # Test data
+        p_ls = sh.LineString(
+            [
+                (-14.793092, -37.005372),
+                (-15.621138, -40.323142),
+                (-18.333333, -36.483403),
+                (-14, -37),
+            ]
+        )
+        r_ls = sh.LineString(
+            [
+                (174.793092, -37.005372),
+                (175.621138, -40.323142),
+                (178.333333, -36.483403),
+                (174, -37),
+            ]
+        )
+        n_ls = sh.LineString(
+            [
+                (-134.998756, 86.549596),
+                (-179.141527, 88.504030),
+                (-44.874903, 86.549596),
+                (-89.669615, 86.549596),
+                (-134, 86),
+            ]
+        )
+
+        # Equatorial faces - line string
+        result = rhpw.linetrace(p_ls, 3, plane=False)
+        self.assertEqual(result, ["P874", "P877", "P876", "P873", "P874"])
+
+        result = rhpw.linetrace(r_ls, 3, plane=False)
+        self.assertEqual(result, ["R884", "R887", "R888", "R885", "R884"])
+
+        # Equatorial faces - multiline string
+        result = rhpw.linetrace(sh.MultiLineString(lines=[p_ls, r_ls]), 3, plane=False)
+        self.assertEqual(
+            result,
+            [
+                "P874",
+                "P877",
+                "P876",
+                "P873",
+                "P874",
+                "R884",
+                "R887",
+                "R888",
+                "R885",
+                "R884",
+            ],
+        )
+
+        # Lines crossing cube face boundaries (not involving cap cells)
+        s = gs.WGS84_003.cell(("S", 7))
+        e = gs.WGS84_003.cell(("P", 5))
+        result = rhpw.linetrace(
+            sh.LineString([s.centroid(False), e.centroid(False)]), 1, plane=False
+        )
+        self.assertEqual(result, ["S7", "S8", "P8", "P5"])
+
+        # Resolution mismatch (coarse resolution, short line segments)
+        result = rhpw.linetrace(p_ls, 2, plane=False)
+        self.assertEqual(result, ["P87"])
+
+        result = rhpw.linetrace(
+            sh.MultiLineString(lines=[p_ls, r_ls, n_ls]), 2, plane=False
+        )
+        self.assertEqual(result, ["P87", "R88", "N44"])
+
+        # Malformed input geometries
+        self.assertIsNone(rhpw.linetrace(sh.LineString(), 0))
+        self.assertIsNone(rhpw.linetrace(sh.LineString([(1, 1), (1, 1)]), 0))
+
+    @unittest.expectedFailure
+    def test_linetrace_known_failure(self):
+        n_ls = sh.LineString(
+            [
+                (-134.998756, 86.549596),
+                (-179.141527, 88.504030),
+                (-44.874903, 86.549596),
+                (-89.669615, 86.549596),
+                (-134, 86),
+            ]
+        )
+
+        # Cap faces - line string
+        # TODO: this is still wrong - should be "N444", "N445" and not "N444", "N447", "N448", "N445"
+        result = rhpw.linetrace(n_ls, 3, plane=False)
+        self.assertEqual(
+            result,
+            ["N447", "N444", "N445", "N448", "N447"],
+        )
+
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
