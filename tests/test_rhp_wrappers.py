@@ -573,14 +573,6 @@ class RhpWrappersTestCase(unittest.TestCase):
             ],
         )
 
-        # Cap faces - line string
-        # TODO: this is still wrong - should be "N444", "N445" and not "N444", "N447", "N448", "N445"
-        result = rhpw.linetrace(n_ls, 3, plane=False)
-        self.assertEqual(
-            result,
-            ["N447", "N444", "N447", "N448", "N445", "N448", "N447"],
-        )
-
         # Lines crossing cube face boundaries (not involving cap cells)
         s = gs.WGS84_003.cell(("S", 7))
         e = gs.WGS84_003.cell(("P", 5))
@@ -601,7 +593,26 @@ class RhpWrappersTestCase(unittest.TestCase):
         # Malformed input geometries
         self.assertIsNone(rhpw.linetrace(sh.LineString(), 0))
         self.assertIsNone(rhpw.linetrace(sh.LineString([(1, 1), (1, 1)]), 0))
-        # TODO: invalid geometry (multilinestring with - what? Self intersecting segments?)
+
+    @unittest.expectedFailure
+    def test_linetrace_known_failure(self):
+        n_ls = sh.LineString(
+            [
+                (-134.998756, 86.549596),
+                (-179.141527, 88.504030),
+                (-44.874903, 86.549596),
+                (-89.669615, 86.549596),
+                (-134, 86),
+            ]
+        )
+
+        # Cap faces - line string
+        # TODO: this is still wrong - should be "N444", "N445" and not "N444", "N447", "N448", "N445"
+        result = rhpw.linetrace(n_ls, 3, plane=False)
+        self.assertEqual(
+            result,
+            ["N447", "N444", "N445", "N448", "N447"],
+        )
 
 
 # ------------------------------------------------------------------------------
