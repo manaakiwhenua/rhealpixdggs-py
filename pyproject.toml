@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+ 
+[project]
+name = "rHEALPixDGGS"
+version = "0.5.6"
+description = "An implementation of the rHEALPix discrete global grid system"
+authors = [
+    { name = "Alexander Raichev", email = "alex@raichev.net" }
+]
+readme = "README.rst"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.25.2",
+    "scipy>=1.11.2",
+    "matplotlib>=3.7.2",
+    "pyproj>=3.6.1",
+    "shapely>=2.0.1"
+]
+ 
+keywords = [
+    "DGGS",
+    "Discrete Global Grid System",
+    "reference system",
+    "spatial",
+    "geospatial"
+]
+ 
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Topic :: Utilities",
+    ### "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+ 
+[project.urls]
+bug_reports = "https://github.com/manaakiwhenua/rhealpixdggs-py/issues"
+source = "https://github.com/manaakiwhenua/rhealpixdggs-py"
+ 
+[project.optional-dependencies]
+dev = [
+    "black>=23.7.0",
+    "pytest>=7.4.0",
+    "wheel>=0.41.2",
+    "twine>=4.0.2",
+    "sphinx>=7.2.4"
+]
+
+[tool.setuptools]
+packages = ["rhealpixdggs"]
+
+## if docs and tests were moved to rhealpixdggs/ then they would be
+## included in the package with this configuration
+# [tool.setuptools.package-data]
+# '*' = ["docs/**/*", "tests/**/*", "*.txt", "*.rst", "*.pdf", "*.sws", "*.dat"]
