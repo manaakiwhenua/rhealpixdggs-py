@@ -3,7 +3,7 @@ package:
   version: 0.5.6
 
 source:
-  url: file://PYTHON_DIST_DIR
+  url: file://PYTHON_DIST_ARCHIVE
   sha256: PYTHON_DIST_SHA26
 
 build:
