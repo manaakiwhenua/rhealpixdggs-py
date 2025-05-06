@@ -10,7 +10,7 @@ authors = [
     { name = "Alexander Raichev", email = "alex@raichev.net" }
 ]
 readme = "README.rst"
-license = { text = "GPL-3.0-or-later" }
+license = "GPL-3.0-or-later"
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.25.2",
@@ -31,7 +31,7 @@ keywords = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Topic :: Utilities",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    ### "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
@@ -46,8 +46,8 @@ classifiers = [
 bug_reports = "https://github.com/manaakiwhenua/rhealpixdggs-py/issues"
 source = "https://github.com/manaakiwhenua/rhealpixdggs-py"
  
-[tool.setuptools.packages.find]
-where = ["rhealpixdggs"]
+[tool.setuptools]
+packages = ["rhealpixdggs"]
  
 [project.optional-dependencies]
 dev = [
