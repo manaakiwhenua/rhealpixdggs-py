@@ -484,7 +484,6 @@ def polyfill(
 def linetrace(
     geometry: Union[LineString, MultiLineString],
     res: int,
-    geo_json: bool = True,
     plane: bool = True,
     verbose: bool = False,
     dggs: RHEALPixDGGS = WGS84_003,
@@ -536,9 +535,6 @@ def linetrace(
         while (vertex_pair := next(coords, None)) is not None:
             # Extract vertex pair defining line segment in (lng, lat) order
             i, j = vertex_pair
-            if not geo_json:
-                i = i[::-1]
-                j = j[::-1]
 
             # Convert line segment to cell ids
             line_cells = dggs.cells_from_line(res, i, j, plane)
