@@ -46,9 +46,6 @@ classifiers = [
 bug_reports = "https://github.com/manaakiwhenua/rhealpixdggs-py/issues"
 source = "https://github.com/manaakiwhenua/rhealpixdggs-py"
  
-[tool.setuptools]
-packages = ["rhealpixdggs"]
- 
 [project.optional-dependencies]
 dev = [
     "black>=23.7.0",
@@ -58,5 +55,10 @@ dev = [
     "sphinx>=7.2.4"
 ]
 
+[tool.setuptools]
+packages = ["rhealpixdggs"]
+
+## if docs and tests were moved to rhealpixdggs/ then they would be
+## included in the package with this configuration
 [tool.setuptools.package-data]
-'lagent' = ["docs/**/*", "*.txt", "*.rst", "*.pdf", "*.sws", "*.dat"]
+'*' = ["docs/**/*", "tests/**/*", "*.txt", "*.rst", "*.pdf", "*.sws", "*.dat"]
