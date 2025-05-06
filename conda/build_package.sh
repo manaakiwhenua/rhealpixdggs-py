@@ -4,28 +4,26 @@ trap exit int
 ## various safety features
 set -o nounset -o errexit -o pipefail
 
-
 echo "Make / empty build directory (see build/log for output)"
 rm -rf build || true
 mkdir build || true
 
-## I use a conda environment and micromamba to obtain the build dependcies
-echo "Install build dependencies.."
-micromamba create -p ./env
+echo "Install build dependencies (in a conda prefix with micromamba).."
+micromamba create -p ./build/env python==3.11 python-build rattler-build 
 eval "$(micromamba shell hook --shell bash)"
-micromamba activate ./env
-micromamba install python==3.11 python-build rattler-build 
+micromamba activate ./build/env
 
 echo "Build python dist.."
 python -m build .. --outdir=build/python_dist
 
-echo "Build conda recipe with correct local checksum and directory."
-PYTHON_DIST_ARCHIVE=$(realpath build/python_dist/rhealpixdggs-*.tar.gz)
-PYTHON_DIST_SHA26=$(sha256sum "$PYTHON_DIST_ARCHIVE" | awk '{print $1}')
-sed "s|PYTHON_DIST_SHA26|$PYTHON_DIST_SHA26|;s|PYTHON_DIST_ARCHIVE|$PYTHON_DIST_ARCHIVE|" conda_recipe.yaml > build/conda_recipe_build.yaml
+echo "Determine path to python dist and its checksum"
+export PYTHON_DIST_ARCHIVE=$(realpath build/python_dist/rhealpixdggs-*.tar.gz)
+export PYTHON_DIST_SHA26=$(sha256sum "$PYTHON_DIST_ARCHIVE" | awk '{print $1}')
 
 echo "Build conda package.."
-rattler-build build --recipe build/conda_recipe_build.yaml --output-dir=build/conda_package
+### rattler-build build --recipe meta.yaml --output-dir=build/conda_package
+micromamba install conda-build
+conda-build --override-channels --channel=conda-forge --output-folder=build/conda_package meta.yaml
 
 echo "Install locally.."
 micromamba install ./build/conda_package::rhealpixdggs 
