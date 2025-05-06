@@ -9,7 +9,7 @@ rm -rf build || true
 mkdir build || true
 
 echo "Install build dependencies (in a conda prefix with micromamba).."
-micromamba create -p ./build/env python==3.11 python-build rattler-build 
+micromamba create -p ./build/env python==3.11 python-build rattler-build conda-build
 eval "$(micromamba shell hook --shell bash)"
 micromamba activate ./build/env
 
@@ -21,9 +21,8 @@ export PYTHON_DIST_ARCHIVE=$(realpath build/python_dist/rhealpixdggs-*.tar.gz)
 export PYTHON_DIST_SHA26=$(sha256sum "$PYTHON_DIST_ARCHIVE" | awk '{print $1}')
 
 echo "Build conda package.."
-### rattler-build build --recipe meta.yaml --output-dir=build/conda_package
-micromamba install conda-build
-conda-build --override-channels --channel=conda-forge --output-folder=build/conda_package meta.yaml
+rattler-build build --recipe meta.yaml --output-dir=build/conda_package
+### conda-build --override-channels --channel=conda-forge --output-folder=build/conda_package .
 
 echo "Install locally.."
 micromamba install ./build/conda_package::rhealpixdggs 
