@@ -10,10 +10,9 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.5 - current
+0.5.6 - current
 ^^^^^^^^^^^^^^^
-Added a series of wrapper functions that expose some of the rHEALPix functionality in an API roughly
-in line with what Uber's H3 provides.
+Added support for a "linetrace" algorithm. This is a new algorithm that allows for the representation of lines on the sphere using a series of cells.
 
 Refer to file CHANGES.rst for a more detailed history of changes.
 
