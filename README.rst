@@ -10,7 +10,7 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.6 - current
+0.5.7 - current
 ^^^^^^^^^^^^^^^
 Added support for a "linetrace" algorithm. This is a new algorithm that allows for the representation of lines on the sphere using a series of cells.
 
