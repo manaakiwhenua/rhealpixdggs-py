@@ -1,3 +1,11 @@
+0.5.8
+^^^^^
+Releaxes dependency constraints on NumPy and SciPy and other packages to allow for the latest compatible versions of these packages to be used.
+
+0.5.7
+^^^^^
+Re-release of 0.5.6 due to broken PyPI upload. This version is identical to 0.5.6.
+
 0.5.6
 ^^^^^
 Added support for a "linetrace" algorithm. This is a new algorithm that allows for the representation of lines on the sphere using a series of cells. Functions: `RHEALPixDGGS.cells_from_line` and `linetrace` in the wrapper API.

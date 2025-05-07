@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
  
 [project]
 name = "rHEALPixDGGS"
-version = "0.5.6"
+version = "0.5.8"
 description = "An implementation of the rHEALPix discrete global grid system"
 authors = [
     { name = "Alexander Raichev", email = "alex@raichev.net" }
@@ -13,11 +13,11 @@ readme = "README.rst"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.11"
 dependencies = [
-    "numpy>=1.25.2",
-    "scipy>=1.11.2",
-    "matplotlib>=3.7.2",
-    "pyproj>=3.6.1",
-    "shapely>=2.0.1"
+    "numpy>=2.0",
+    "scipy>=1.11",
+    "matplotlib>=3.7",
+    "pyproj>=3.6",
+    "shapely>=2.1"
 ]
  
 keywords = [
@@ -48,11 +48,11 @@ source = "https://github.com/manaakiwhenua/rhealpixdggs-py"
  
 [project.optional-dependencies]
 dev = [
-    "black>=23.7.0",
+    "black>=23",
     "pytest>=7.4.0",
-    "wheel>=0.41.2",
-    "twine>=4.0.2",
-    "sphinx>=7.2.4"
+    "wheel>=0.41",
+    "twine>=4.0",
+    "sphinx>=7.2"
 ]
 
 [tool.setuptools]

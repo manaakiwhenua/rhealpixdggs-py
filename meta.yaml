@@ -1,11 +1,11 @@
 package:
   name: rhealpixdggs
-  version: 0.5.6
+  version: 0.5.8
 
 source:
-  url: https://github.com/manaakiwhenua/rhealpixdggs-py/archive/refs/heads/conda-package.zip
-  sha256: e3e23a9a02d294fd5d85c7f24c1e29ed4713b9103dd925e196bdc209734e5a1a
-
+  url: https://pypi.io/packages/source/m/rhealpixdggs/rhealpixdggs-0.5.8.tar.gz
+  # sha256: openssl sha256 dist/rhealpixdggs-0.5.8.tar.gz
+  sha256: c2dc5c250b16d8681bb6ae24800296ea4c73286b1215123ba76311818cc70049
 build:
   noarch: python
   script: pip install .
@@ -41,6 +41,13 @@ about:
   license: GPL-3.0-or-later
   license_file: LICENSE
 
-### extra:
-  ### recipe-maintainers:
-    ### - name_of_maintainer
+extra:
+  recipe-maintainers:
+    - alpha-beta-soup
+  tags:
+    - rhealpix
+    - DGGS
+    - Discrete Global Grid System
+    - geospatial
+    - spatial
+    - reference system
