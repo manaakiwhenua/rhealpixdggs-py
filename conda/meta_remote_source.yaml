@@ -3,17 +3,12 @@ package:
   version: 0.5.6
 
 source:
-  ## encode environment variables for rattler-build
-  url: file://${{ env.get("PYTHON_DIST_ARCHIVE") }}
-  sha256: ${{ env.get("PYTHON_DIST_SHA26") }}
+  ### ## encode environment variables for rattler-build
+  ### url: file://${{ env.get("PYTHON_DIST_ARCHIVE") }}
+  ### sha256: ${{ env.get("PYTHON_DIST_SHA26") }}
   ## encode environment variables for conda-build
-  ### url: file://{{ PYTHON_DIST_ARCHIVE }}
-  ### sha256: {{ PYTHON_DIST_SHA26 }}
-
-### source:
-  ### url: https://github.com/manaakiwhenua/rhealpixdggs-py
-  ### git_rev: ???
-  ### ### sha256: ???
+  url: https://github.com/manaakiwhenua/rhealpixdggs-py/archive/refs/heads/conda-package.zip
+  sha256: 14e2ea0bee209147d3fb8d2ffaa6fedd2d2c2eba77e25b109862c1819b7ceb99
 
 build:
   noarch: python
