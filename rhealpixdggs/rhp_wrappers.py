@@ -59,6 +59,12 @@ def geo_to_rhp(
     string.
 
     Returns None if no cell matching the coordinates is found.
+
+    EXAMPLES::
+        >>> geo_to_rhp(-43.738058, -176.260506, 9, plane=False)
+        'S001450634'
+        >>> geo_to_rhp(-43.738379,-176.258807, 9, plane=False)
+        'S001450635'
     """
     # Get the grid cell corresponding to the coordinates
     cell = dggs.cell_from_point(resolution, (lng, lat), plane)
@@ -88,6 +94,14 @@ def rhp_to_geo(
     if geojson is NOT requested as the output format:
         - Will return a (latitude, longitude) coordinate pair in order to be consistent with
           h3 coordinate ordering.
+
+    EXAMPLES::
+    
+        >>> rhp_to_geo('S001450634', True, False)
+        (np.float64(-176.2606635452476), np.float64(-43.73654505358369))
+        >>> rhp_to_geo('S001450635', True, False)
+        (np.float64(-176.25592420875037), np.float64(-43.73654505358369))
+        >>> rhp_to_geo('NotACellId', True, False)
     """
     # Stop early if the cell index is invalid
     if not rhp_is_valid(rhpindex, dggs):
@@ -113,6 +127,14 @@ def rhp_to_parent(
     Returns parent of rhpindex at resolution res (immediate parent if res == None).
 
     Returns None if the cell index is invalid.
+
+    EXAMPLES::
+
+        >>> rhp_to_parent('S001450634', res=0)
+        'S'
+        >>> rhp_to_parent('S001450634')
+        'S00145063'
+        >>> rhp_to_parent('INVALID')
     """
     # Stop early if the cell index is invalid
     if not rhp_is_valid(rhpindex, dggs):
@@ -148,6 +170,14 @@ def rhp_to_center_child(
     Returns None if the cell index is invalid.
 
     Returns None if the DGGS has an even number of cells on a side.
+
+    EXAMPLES::
+
+        >>> rhp_to_center_child('S001450634')
+        'S0014506344'
+        >>> rhp_to_center_child('S001450634', res=13)
+        'S001450634444'
+        >>> rhp_to_center_child('INVALID')
     """
     # Stop early if the cell index is invalid
     if not rhp_is_valid(rhpindex, dggs):
@@ -201,6 +231,14 @@ def rhp_to_geo_boundary(
     If geojson is NOT requested as the output format:
         - Will return (latitude, longitude) coordinate pairs in order to be consistent with
           rHEALPix coordinate ordering.
+
+    EXAMPLES::
+
+        >>> rhp_to_geo_boundary('S001450634', False, False)
+        ((np.float64(-43.73395872598705), np.float64(-176.26086040756147)), (np.float64(-43.73395872598705), np.float64(-176.25612132062557)), (np.float64(-43.73913136381169), np.float64(-176.26046658591815)), (np.float64(-43.73913136381169), np.float64(-176.2652061719943)))
+        >>> rhp_to_geo_boundary('S001450634', True, False)
+        ((np.float64(-176.26086040756147), np.float64(-43.73395872598705)), (np.float64(-176.25612132062557), np.float64(-43.73395872598705)), (np.float64(-176.26046658591815), np.float64(-43.73913136381169)), (np.float64(-176.2652061719943), np.float64(-43.73913136381169)), (np.float64(-176.26086040756147), np.float64(-43.73395872598705)))
+        >>> rhp_to_geo_boundary('INVALID')
     """
     # Stop early if the cell index is invalid
     if not rhp_is_valid(rhpindex, dggs):
@@ -226,6 +264,12 @@ def rhp_to_geo_boundary(
 def rhp_get_resolution(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> int:
     """
     Returns the resolution of a given cell index (or None if invalid).
+
+    EXAMPLES::
+
+        >>> rhp_get_resolution('S001450634')
+        9
+        >>> rhp_get_resolution('INVALID')
     """
     if not rhp_is_valid(rhpindex, dggs):
         return None
@@ -236,6 +280,11 @@ def rhp_get_resolution(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> int:
 def rhp_get_base_cell(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> str:
     """
     Returns the resolution 0 cell id of a given cell index (or None if invalid).
+    
+    EXAMPLES::
+        >>> rhp_get_base_cell('S001450634')
+        'S'
+        >>> rhp_get_base_cell('INVALID')
     """
     if not rhp_is_valid(rhpindex, dggs):
         return None
@@ -246,6 +295,20 @@ def rhp_get_base_cell(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> str:
 def rhp_is_valid(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> bool:
     """
     Checks if the given cell address is valid within the DGGS
+
+    EXAMPLES::
+        >>> rhp_is_valid('S001450634')
+        True
+        >>> rhp_is_valid('N')
+        True
+        >>> rhp_is_valid('INVALID')
+        False
+        >>> rhp_is_valid(None)
+        False
+        >>> rhp_is_valid(123456)
+        Traceback (most recent call last):
+        ...
+        TypeError: object of type 'int' has no len()
     """
     # Empty strings are invalid
     if rhpindex is None or len(rhpindex) == 0:
@@ -275,6 +338,16 @@ def cell_area(
     Returns the area of a cell in the requested unit (or None if rhpindex is invalid).
 
     TODO: investigate use case where unit is 'rads^2'
+
+    EXAMPLES::
+
+        >>> cell_area('S001450634', unit='m^2', plane=False)
+        219428.08748562282
+        >>> cell_area('S001450635', unit='m^2', plane=False)
+        219428.08748562282
+        >>> cell_area('S00145063', unit='km^2', plane=False)
+        1.9748527873706059
+        >>> cell_area('INVALID', unit='km^2', plane=False)
     """
     if not rhp_is_valid(rhpindex, dggs):
         return None
@@ -304,6 +377,18 @@ def cell_ring(
 
     Returns the four neighbouring faces at resolution 0 if k > 0 and cell resolution is 0
     (by convention).
+
+    EXAMPLES::
+
+        >>> cell_ring('S001450634', verbose=False)
+        ['S001450630', 'S001450631', 'S001450632', 'S001450635', 'S001450638', 'S001450637', 'S001450636', 'S001450633']
+        >>> cell_ring('S001450634', k=2, verbose=False)
+        ['S001442828', 'S001450606', 'S001450607', 'S001450608', 'S001450616', 'S001450640', 'S001450643', 'S001450646', 'S001450670', 'S001450662', 'S001450661', 'S001450660', 'S001442882', 'S001442858', 'S001442855', 'S001442852']
+        >>> cell_ring('S001450634', k=0, verbose=False)
+        ['S001450634']
+        >>> cell_ring('S', k=1, verbose=False)
+        ['P', 'Q', 'R', 'O']
+        >>> cell_ring('S', k=-1, verbose=False)
     """
     if verbose:
         warn(str.format(CELL_RING_WARNING, "cell"))
@@ -386,6 +471,18 @@ def k_ring(
     Returns the k-ring of cell indices around rhpindex at distance k (or None if rhpindex is invalid).
 
     Also returns None if k < 0.
+
+    EXAMPLES::
+
+        >>> k_ring('S001450634', verbose=False)
+        ['S001450634', 'S001450630', 'S001450631', 'S001450632', 'S001450635', 'S001450638', 'S001450637', 'S001450636', 'S001450633']
+        >>> k_ring('S001450634', k=2, verbose=False)
+        ['S001450634', 'S001450630', 'S001450631', 'S001450632', 'S001450635', 'S001450638', 'S001450637', 'S001450636', 'S001450633', 'S001442828', 'S001450606', 'S001450607', 'S001450608', 'S001450616', 'S001450640', 'S001450643', 'S001450646', 'S001450670', 'S001450662', 'S001450661', 'S001450660', 'S001442882', 'S001442858', 'S001442855', 'S001442852']
+        >>> k_ring('S001450634', k=0, verbose=False)
+        ['S001450634']
+        >>> k_ring('S001450634', k=-1, verbose=False)
+        >>> k_ring('INVALID', verbose=False)
+
     """
     if verbose:
         warn(str.format(CELL_RING_WARNING, "k"))
@@ -433,6 +530,23 @@ def polyfill(
     multipolygon overlap.
 
     TODO: decide what to do with the antimeridian (if anything)
+
+    EXAMPLES::
+        >>> from shapely import Polygon
+        >>> coords = ((0., 0.), (0., 1.), (1., 1.), (1., 0.), (0., 0.))
+        >>> polygon = Polygon(coords)
+        >>> polyfill(polygon, res=1, plane=False)
+        set()
+        >>> polyfill(polygon, res=2, plane=False)
+        set()
+        >>> polyfill(polygon, res=3, plane=False)
+        set()
+        >>> polyfill(polygon, res=4, plane=False)
+        {'Q3330'}
+        >>> sorted(polyfill(polygon, res=5, plane=False))
+        ['Q33303', 'Q33304', 'Q33305', 'Q33306', 'Q33307', 'Q33308', 'Q33330', 'Q33331', 'Q33332']
+        >>> sorted(polyfill(polygon, res=6, plane=False))
+        ['Q333033', 'Q333034', 'Q333035', 'Q333036', 'Q333037', 'Q333038', 'Q333043', 'Q333044', 'Q333045', 'Q333046', 'Q333047', 'Q333048', 'Q333053', 'Q333054', 'Q333056', 'Q333057', 'Q333060', 'Q333061', 'Q333062', 'Q333063', 'Q333064', 'Q333065', 'Q333066', 'Q333067', 'Q333068', 'Q333070', 'Q333071', 'Q333072', 'Q333073', 'Q333074', 'Q333075', 'Q333076', 'Q333077', 'Q333078', 'Q333080', 'Q333081', 'Q333083', 'Q333084', 'Q333086', 'Q333087', 'Q333300', 'Q333301', 'Q333302', 'Q333303', 'Q333304', 'Q333305', 'Q333306', 'Q333307', 'Q333308', 'Q333310', 'Q333311', 'Q333312', 'Q333313', 'Q333314', 'Q333315', 'Q333316', 'Q333317', 'Q333318', 'Q333320', 'Q333321', 'Q333323', 'Q333324', 'Q333326', 'Q333327', 'Q333330', 'Q333331', 'Q333332', 'Q333333', 'Q333334', 'Q333335', 'Q333340', 'Q333341', 'Q333342', 'Q333343', 'Q333344', 'Q333345', 'Q333350', 'Q333351', 'Q333353', 'Q333354']
     """
     # Stop early if the geometry is malformed
     if _malformed_geometry(geometry):
@@ -504,6 +618,13 @@ def linetrace(
     self intersecting segments.
 
     TODO: decide what to do with the antimeridian (if anything)
+
+    EXAMPLES::
+
+        >>> from shapely import LineString
+        >>> line = LineString([[-176.260506, -43.738058], [-176.258807, -43.738379]])
+        >>> linetrace(line, res=9, plane=False)
+        ['S001450634', 'S001450635']
     """
     if verbose:
         warn(LINETRACE_WARNING)
@@ -722,6 +843,12 @@ def _malformed_lines(lines: Union[LineString, MultiLineString]) -> bool:
 
 
 def _remove_sequential_duplicates(cells: list[str]) -> list[str]:
+    '''
+    EXAMPLES::
+
+        >>> _remove_sequential_duplicates(['S','S','P','S'])
+        ['S', 'P', 'S']
+    '''
     if not cells:
         return []
 

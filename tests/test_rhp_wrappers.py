@@ -547,6 +547,12 @@ class RhpWrappersTestCase(unittest.TestCase):
                 (-134, 86),
             ]
         )
+        s_ls = sh.LineString(
+            [
+                (-176.260506, -43.738058),
+                (-176.258807, -43.738379),
+            ]
+        )
 
         # Equatorial faces - line string
         result = rhpw.linetrace(p_ls, 3, plane=False)
@@ -572,6 +578,18 @@ class RhpWrappersTestCase(unittest.TestCase):
                 "R884",
             ],
         )
+
+        # S face, short linestring, at threshold res for more than 1 cell
+        result = rhpw.linetrace(s_ls, 9, plane=False)
+        self.assertEqual(result, ['S001450634', 'S001450635'])
+
+        # S face, short linestring, higher res
+        result = rhpw.linetrace(s_ls, 12, plane=False)
+        self.assertEqual(result, ['S00145063484', 'S00145063485', 'S00145063563', 'S00145063564'])
+
+        # S face, short linestring - below res where the ends can be distinguished
+        result = rhpw.linetrace(s_ls, 8, plane=False)
+        self.assertEqual(result, ['S00145063'])
 
         # Lines crossing cube face boundaries (not involving cap cells)
         s = gs.WGS84_003.cell(("S", 7))
