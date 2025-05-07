@@ -624,7 +624,7 @@ def linetrace(
         >>> from shapely import LineString
         >>> line = LineString([[-43.738058, -176.260506], [-43.738379,-176.258807]])
         >>> linetrace(line, res=9, plane=False)
-        ['S001450634', 'S001450635]
+        ['S001450634', 'S001450635']
     """
     if verbose:
         warn(LINETRACE_WARNING)
