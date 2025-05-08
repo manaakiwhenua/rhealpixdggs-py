@@ -26,10 +26,12 @@ requirements:
     - shapely >=2.1
 
 tests:
+  ## test for successful import
   - python:
       imports:
         - rhealpixdggs
       pip_check: true
+  ## run doc and unit tests
   - script:
       - python -m unittest discover tests/
       - python -m doctest docs/source/introduction.rst
