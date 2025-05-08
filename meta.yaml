@@ -29,15 +29,23 @@ tests:
   - python:
       imports:
         - rhealpixdggs
-  ### - script:
-      ### - python -m unittest discover site-packages/rhealpixdggs/tests/
-      ### - python -m doctest site-packages/rhealpixdggs/docs/source/introduction.rst
-      ### - python -m doctest site-packages/rhealpixdggs/*.py
+      pip_check: true
+  - script:
+      - python -m unittest discover tests/
+      - python -m doctest docs/source/introduction.rst
+      - python -m doctest rhealpixdggs/*.py
+    files:
+      source:
+        - tests/
+        - docs/
+        - rhealpixdggs/
 
 about:
   ### homepage: "https://datastore.landcareresearch.co.nz/dataset/rhealpix-discrete-global-grid-system"
   repository: "https://github.com/manaakiwhenua/rhealpixdggs-py"
   summary: An implementation of the rHEALPix discrete global grid system
+  ## license is taken from python source anyway regardless of license
+  ## and license_file (?)
   license: GPL-3.0-or-later
   license_file: LICENSE
 
