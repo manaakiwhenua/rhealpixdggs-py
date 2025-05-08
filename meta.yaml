@@ -45,9 +45,9 @@ about:
   repository: "https://github.com/manaakiwhenua/rhealpixdggs-py"
   summary: An implementation of the rHEALPix discrete global grid system
   ## license is taken from python source anyway regardless of license
-  ## and license_file (?)
-  license: GPL-3.0-or-later
-  license_file: LICENSE
+  ## and license_file, leaving these details out here avoids a warning
+  ### license: GPL-3.0-or-later
+  ### license_file: LICENSE
 
 extra:
   recipe-maintainers:
