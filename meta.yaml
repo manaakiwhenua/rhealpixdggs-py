@@ -3,8 +3,7 @@ package:
   version: 0.5.8
 
 source:
-  url: https://pypi.io/packages/source/m/rhealpixdggs/rhealpixdggs-0.5.8.tar.gz
-  # sha256: openssl sha256 dist/rhealpixdggs-0.5.8.tar.gz
+  url: https://pypi.io/packages/source/r/rhealpixdggs/rhealpixdggs-0.5.8.tar.gz
   sha256: c2dc5c250b16d8681bb6ae24800296ea4c73286b1215123ba76311818cc70049
 build:
   noarch: python
