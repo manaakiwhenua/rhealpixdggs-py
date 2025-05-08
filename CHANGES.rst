@@ -1,7 +1,10 @@
+0.5.8
+^^^^^
+Releaxes dependency constraints on NumPy and SciPy and other packages to allow for the latest compatible versions of these packages to be used.
+
 0.5.7
 ^^^^^
-
-v0.5.6 release was broken, this is a re-release with no changes.
+Re-release of 0.5.6 due to broken PyPI upload. This version is identical to 0.5.6.
 
 0.5.6
 ^^^^^

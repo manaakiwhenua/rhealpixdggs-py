@@ -10,9 +10,9 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.7 - current
+0.5.8 - current
 ^^^^^^^^^^^^^^^
-Added support for a "linetrace" algorithm. This is a new algorithm that allows for the representation of lines on the sphere using a series of cells.
+Releaxes dependency constraints on NumPy and SciPy and other packages to allow for the latest compatible versions of these packages to be used.
 
 Refer to file CHANGES.rst for a more detailed history of changes.
 
@@ -102,12 +102,60 @@ License
 -------
 This code is licensed under the `GNU Lesser General Public License v3.0, <http://www.gnu.org/licenses/lgpl-3.0.html>`_. See the file ``LICENSE`` for a copy of the deed.
 
+# NB make a build/release makefile or script
+Releasing
+-------
+
+For PyPI:
+
+::
+    # Build the distribution (.tar.gz and .whl)
+    pip instlal build twine
+    python -m build
+
+    # Upload to PyPI (test)
+    twine upload --repository testpypi dist/rhealpixdggs-{version}.*
+
+    # Test install from testpypi
+    pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple rhealpixdggs
+
+    # Upload to PyPI
+    twine upload dist/*
+
+For Conda:
+
+::
+
+    # Activate a conda environment for build dependencies and package testing
+
+    # Update the existing meta.yaml to reflect the correct version string, PyPI
+    # source URL and checksum (this is printed in the rattler-build output
+    # if incorrect), and any dependency changes.
+     
+    # Alternatively, generate a fresh meta.yaml inferred from the PyPI package
+    # and edited for missing or incorrect metadata.
+    conda install grayskull
+    grayskull pypi rHEALPixDGGS
+
+    # Build local package.  This will run doc and unit tests configured in meta.yaml
+    conda install rattler-build 
+    rattler-build build --recipe meta.yaml --output-dir="output/"
+
+    # Manually test the locally built package.  
+    conda install --channel=./output/ python rhealpixdggs
+    python -m unittest discover path/to/rhealpixdggs-py/tests
+    python -m doctest path/to/rhealpixdggs-py/docs/source/introduction.rst
+    python -m doctest path/to/rhealpixdggs-py/rhealpixdggs/*.py
+
+    # Generate a pull request to propagate the update to conda-forge. 
+    # TBD
+
 Contact
 -------
 | *Maintainer*:
-| **Robert Gibb**
+| **Richard Law**
 | `Manaaki Whenua – Landcare Research <https://www.landcareresearch.co.nz/>`_
-| `Gibbr@landcareresearch.co.nz <mailto:Gibbr@landcareresearch.co.nz>`_
+| `lawr@landcareresearch.co.nz <mailto:lawr@landcareresearch.co.nz>`_
 |
 | *Release Manager*:
 | **Dr Nicholas J. Car**
@@ -118,3 +166,8 @@ Contact
 | **Alexander Raichev**
 | `<https://raichev.net/>`_
 | `alex@raichev.net <mailto:alex@raichev.net>`_
+|
+| *Former Maintainer*:
+| **Robert Gibb**
+| `Manaaki Whenua – Landcare Research <https://www.landcareresearch.co.nz/>`_
+| `gibbr@landcareresearch.co.nz <mailto:gibbr@landcareresearch.co.nz>`_
