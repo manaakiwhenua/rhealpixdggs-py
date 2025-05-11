@@ -26,12 +26,10 @@ requirements:
     - shapely >=2.1
 
 tests:
-  ## test for successful import
   - python:
       imports:
         - rhealpixdggs
       pip_check: true
-  ## run doc and unit tests
   - script:
       - python -m unittest discover tests/
       - python -m doctest docs/source/introduction.rst
@@ -43,13 +41,11 @@ tests:
         - rhealpixdggs/
 
 about:
-  ### homepage: "https://datastore.landcareresearch.co.nz/dataset/rhealpix-discrete-global-grid-system"
+  home: "https://github.com/manaakiwhenua/rhealpixdggs-py"
   repository: "https://github.com/manaakiwhenua/rhealpixdggs-py"
   summary: An implementation of the rHEALPix discrete global grid system
-  ## license is taken from python source anyway regardless of license
-  ## and license_file, leaving these details out here avoids a warning
-  ### license: GPL-3.0-or-later
-  ### license_file: LICENSE
+  license: GPL-3.0-or-later
+  license_file: LICENSE
 
 extra:
   recipe-maintainers:
