@@ -122,33 +122,8 @@ For PyPI:
     # Upload to PyPI
     twine upload dist/*
 
-For Conda:
+A conda package `rhealpixdggs` is maintained at [conda-forge](https://github.com/conda-forge/rhealpixdggs-feedstock).
 
-::
-
-    # Activate a conda environment for build dependencies and package testing
-
-    # Update the existing meta.yaml to reflect the correct version string, PyPI
-    # source URL and checksum (this is printed in the rattler-build output
-    # if incorrect), and any dependency changes.
-     
-    # Alternatively, generate a fresh meta.yaml inferred from the PyPI package
-    # and edited for missing or incorrect metadata.
-    conda install grayskull
-    grayskull pypi rHEALPixDGGS
-
-    # Build local package.  This will run doc and unit tests configured in meta.yaml
-    conda install rattler-build 
-    rattler-build build --recipe meta.yaml --output-dir="output/"
-
-    # Manually test the locally built package.  
-    conda install --channel=./output/ python rhealpixdggs
-    python -m unittest discover path/to/rhealpixdggs-py/tests
-    python -m doctest path/to/rhealpixdggs-py/docs/source/introduction.rst
-    python -m doctest path/to/rhealpixdggs-py/rhealpixdggs/*.py
-
-    # Generate a pull request to propagate the update to conda-forge. 
-    # TBD
 
 Contact
 -------
