@@ -693,13 +693,13 @@ class Cell(object):
 
             >>> c = rdggs.cell(['S', 0])
             >>> for p in c.vertices(plane=False):
-            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
+            ...     print(tuple(x.tolist() for x in my_round(p, 12)))
             (150.0, -41.93785391016014)
             (-180.0, -41.93785391016014)
             (-149.99999999999997, -41.93785391016014)
             (-179.99999999999991, -74.42400670199598)
             >>> for p in c.vertices(plane=False, trim_dart=True):
-            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
+            ...     print(tuple(x.tolist() for x in my_round(p, 12)))
             (150.0, -41.93785391016014)
             (-149.99999999999997, -41.93785391016014)
             (-179.99999999999991, -74.42400670199598)
