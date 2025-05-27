@@ -584,8 +584,27 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(result, ['S001450634', 'S001450635'])
 
         # S face, short linestring, higher res
-        result = rhpw.linetrace(s_ls, 12, plane=False)
+        result = rhpw.linetrace(s_ls, 11, plane=False)
         self.assertEqual(result, ['S00145063484', 'S00145063485', 'S00145063563', 'S00145063564'])
+
+        # S face, short linestring, higher res
+        result = rhpw.linetrace(s_ls, 12, plane=False)
+        self.assertEqual(result, [
+            'S001450634840',
+            'S001450634841',
+            'S001450634842',
+            'S001450634850',
+            'S001450634851',
+            'S001450634854',
+            'S001450634855',
+            'S001450635633',
+            'S001450635634',
+            'S001450635635',
+            'S001450635643',
+            'S001450635644',
+            'S001450635645',
+            'S001450635648'
+        ])
 
         # S face, short linestring - below res where the ends can be distinguished
         result = rhpw.linetrace(s_ls, 8, plane=False)
