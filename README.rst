@@ -10,8 +10,8 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.9
-^^^^^
+0.5.10
+^^^^^^
 Changes to suport conda packaging and non-Linux build environments
 
 Refer to file CHANGES.rst for a more detailed history of changes.

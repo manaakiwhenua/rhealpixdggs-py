@@ -1,3 +1,7 @@
+0.5.10
+^^^^^^
+Changes to suport conda packaging and non-Linux build environments
+
 0.5.9
 ^^^^^
 Changes to suport conda packaging and non-Linux build environments
