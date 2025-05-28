@@ -1,3 +1,7 @@
+0.5.9
+^^^^^
+Changes to suport conda packaging and non-Linux build environments
+
 0.5.8
 ^^^^^
 Releaxes dependency constraints on NumPy and SciPy and other packages to allow for the latest compatible versions of these packages to be used.

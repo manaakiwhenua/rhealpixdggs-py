@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
  
 [project]
 name = "rHEALPixDGGS"
-version = "0.5.8"
+version = "0.5.9"
 description = "An implementation of the rHEALPix discrete global grid system"
 authors = [
     { name = "Alexander Raichev", email = "alex@raichev.net" }
@@ -58,6 +58,6 @@ dev = [
 [tool.setuptools]
 packages = ["rhealpixdggs"]
 
-## include all contents of rhealpixdggs in install data
+## include tests in install data
 [tool.setuptools.package-data]
-'*' = ["**/*"]
+'*' = ["tests/**/*"]

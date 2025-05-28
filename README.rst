@@ -10,9 +10,9 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.8 - current
-^^^^^^^^^^^^^^^
-Releaxes dependency constraints on NumPy and SciPy and other packages to allow for the latest compatible versions of these packages to be used.
+0.5.9
+^^^^^
+Changes to suport conda packaging and non-Linux build environments
 
 Refer to file CHANGES.rst for a more detailed history of changes.
 
@@ -110,7 +110,7 @@ For PyPI:
 
 ::
     # Build the distribution (.tar.gz and .whl)
-    pip instlal build twine
+    pip install build twine
     python -m build
 
     # Upload to PyPI (test)
