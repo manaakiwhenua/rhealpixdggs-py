@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
- 
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [project]
 name = "rHEALPixDGGS"
-version = "0.5.9"
+version = "0.5.10"
 description = "An implementation of the rHEALPix discrete global grid system"
 authors = [
     { name = "Alexander Raichev", email = "alex@raichev.net" }
@@ -55,9 +55,6 @@ dev = [
     "sphinx>=7.2"
 ]
 
-[tool.setuptools]
-packages = ["rhealpixdggs"]
+[tool.poetry]
+include = ["tests/","docs/"]
 
-## include tests in install data
-[tool.setuptools.package-data]
-'*' = ["tests/**/*"]
