@@ -36,14 +36,14 @@ This package is available on PyPI, the Python Package Index from where it can be
 
 rHEALPixDGGS is also available for download from the github repository `<https://github.com/manaakiwhenua/rhealpixdggs-py>`_ from where the latest version can be cloned.
 
-You can install from source using setuptools in a virtual environment (MacOS and Linux):
+You can install from source using Poetry in a virtual environment (MacOS and Linux, assuming Poetry is already installed on your system):
 
 ::
 
     python3 -m venv rhealpixdggs
     source rhealpixdggs/bin/activate
-    python -m pip install --upgrade pip setuptools
-    python setup.py install
+    python install --upgrade pip
+    poetry install
 
 Or on Windows:
 
@@ -51,19 +51,16 @@ Or on Windows:
 
     python3 -m venv rhealpixdggs
     rhealpixdggs\Scripts\activate
-    python -m pip install --upgrade pip setuptools
-    python setup.py install
+    python install --upgrade pip
+    poetry install
 
 
 For development:
 
 ::
-    python setup.py develop
+    poetry shell
+    poetry install
 
-Or:
-
-::
-    pip install -e .
 
 Tests
 ------
@@ -110,19 +107,18 @@ For PyPI:
 
 ::
     # Build the distribution (.tar.gz and .whl)
-    pip install build twine
-    python -m build
+    poetry build
 
     # Upload to PyPI (test)
-    twine upload --repository testpypi dist/rhealpixdggs-{version}.*
+    poetry publish --repository testpypi
 
     # Test install from testpypi
     pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple rhealpixdggs
 
     # Upload to PyPI
-    twine upload dist/*
+    poetry publish
 
-A conda package `rhealpixdggs` is maintained at [conda-forge](https://github.com/conda-forge/rhealpixdggs-feedstock).
+A **conda package** `rhealpixdggs` is also maintained at [conda-forge](https://github.com/conda-forge/rhealpixdggs-feedstock).
 
 
 Contact
