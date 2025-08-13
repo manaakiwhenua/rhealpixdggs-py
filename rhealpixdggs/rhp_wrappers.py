@@ -177,9 +177,9 @@ def rhp_to_center_child(
         'S0014506344'
         >>> rhp_to_center_child('S001450634', res=13)
         'S0014506344444'
-        >>> rhp_to_center_child('S001450634', 9)
+        >>> rhp_to_center_child('S001450634', res=9)
         'S001450634'
-        >>> rhp_to_center_child('S001450634', 10)
+        >>> rhp_to_center_child('S001450634', res=10)
         'S0014506344'
         >>> rhp_to_center_child('INVALID')
     """
