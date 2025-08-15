@@ -98,9 +98,9 @@ def rhp_to_geo(
     EXAMPLES::
     
         >>> rhp_to_geo('S001450634', True, False)
-        (np.float64(-176.2606635452476), np.float64(-43.73654505358369))
+        (-176.2606635452476, -43.73654505358369)
         >>> rhp_to_geo('S001450635', True, False)
-        (np.float64(-176.25592420875037), np.float64(-43.73654505358369))
+        (-176.25592420875037, -43.73654505358369)
         >>> rhp_to_geo('NotACellId', True, False)
     """
     # Stop early if the cell index is invalid
@@ -176,7 +176,11 @@ def rhp_to_center_child(
         >>> rhp_to_center_child('S001450634')
         'S0014506344'
         >>> rhp_to_center_child('S001450634', res=13)
-        'S001450634444'
+        'S0014506344444'
+        >>> rhp_to_center_child('S001450634', res=9)
+        'S001450634'
+        >>> rhp_to_center_child('S001450634', res=10)
+        'S0014506344'
         >>> rhp_to_center_child('INVALID')
     """
     # Stop early if the cell index is invalid
@@ -190,7 +194,7 @@ def rhp_to_center_child(
         return None
 
     # Handle mismatch between cell resolution and requested child resolution
-    parent_res = len(rhpindex)
+    parent_res = len(rhpindex) - 1
     if res is not None and res < parent_res:
         if verbose:
             warn(CHILD_RESOLUTION_WARNING)
@@ -235,9 +239,9 @@ def rhp_to_geo_boundary(
     EXAMPLES::
 
         >>> rhp_to_geo_boundary('S001450634', False, False)
-        ((np.float64(-43.73395872598705), np.float64(-176.26086040756147)), (np.float64(-43.73395872598705), np.float64(-176.25612132062557)), (np.float64(-43.73913136381169), np.float64(-176.26046658591815)), (np.float64(-43.73913136381169), np.float64(-176.2652061719943)))
+        ((-43.73395872598705, -176.26086040756147), (-43.73395872598705, -176.25612132062557), (-43.73913136381169, -176.26046658591815), (-43.73913136381169, -176.2652061719943))
         >>> rhp_to_geo_boundary('S001450634', True, False)
-        ((np.float64(-176.26086040756147), np.float64(-43.73395872598705)), (np.float64(-176.25612132062557), np.float64(-43.73395872598705)), (np.float64(-176.26046658591815), np.float64(-43.73913136381169)), (np.float64(-176.2652061719943), np.float64(-43.73913136381169)), (np.float64(-176.26086040756147), np.float64(-43.73395872598705)))
+        ((-176.26086040756147, -43.73395872598705), (-176.25612132062557, -43.73395872598705), (-176.26046658591815, -43.73913136381169), (-176.2652061719943, -43.73913136381169), (-176.26086040756147, -43.73395872598705))
         >>> rhp_to_geo_boundary('INVALID')
     """
     # Stop early if the cell index is invalid
