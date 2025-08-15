@@ -1,3 +1,11 @@
+0.5.12
+^^^^^^
+Fixes bug (off-by-one error) in `RHEALPixDGGS.rhp_to_center_child` function in the wrapper API.
+
+0.5.11
+^^^^^^
+Additional doctests added wrapper API; and changes made for packaging this repository for Conda.
+
 0.5.10
 ^^^^^^
 Changes to suport conda packaging and non-Linux build environments

@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "rHEALPixDGGS"
-version = "0.5.11"
+version = "0.5.12"
 description = "An implementation of the rHEALPix discrete global grid system"
 authors = [
     { name = "Alexander Raichev", email = "alex@raichev.net" }

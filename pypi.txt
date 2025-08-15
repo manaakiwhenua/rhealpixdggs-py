@@ -1,7 +1,7 @@
-# 1. delete build/ , dist/, pyLODE.egg-info
+# 1. delete build/ , dist/ , *.egg-info/
 > rm -rf build dist rHEALPixDGGS.egg-info
 
-# 2. change version no in setup.py
+# 2. change version no in pyproject.toml
 
 # 3. Update README - releases section
 

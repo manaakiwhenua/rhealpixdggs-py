@@ -18,6 +18,6 @@ authors:
     given-names: "Richard"
     orcid: "https://orcid.org/0000-0002-7400-2530"
 title: "rHEALPixDGGS"
-version: 0.5.4
-date-released: 2023-12-18
+version: 0.5.12
+date-released: 2025-08-15
 url: "https://github.com/manaakiwhenua/rhealpixdggs-py"

@@ -10,9 +10,9 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.10
+0.5.12
 ^^^^^^
-Changes to suport conda packaging and non-Linux build environments
+Fixes bug (off-by-one error) in `RHEALPixDGGS.rhp_to_center_child` function in the wrapper API.
 
 Refer to file CHANGES.rst for a more detailed history of changes.
 
