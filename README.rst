@@ -97,7 +97,14 @@ The ``source`` and ``build`` directories contain all the Sphinx source and build
 
 License
 -------
-This code is licensed under the `GNU Lesser General Public License v3.0, <http://www.gnu.org/licenses/lgpl-3.0.html>`_. See the file ``LICENSE`` for a copy of the deed.
+This code is dual-licensed. You may choose to use it under either:
+
+- `GNU Lesser General Public License v3.0 <http://www.gnu.org/licenses/lgpl-3.0.html>`_ (see ``LICENSE-LGPL``)
+- `MIT License <https://opensource.org/licenses/MIT>`_ (see ``LICENSE-MIT``)
+
+See the file ``LICENSE`` for more information about the dual licensing arrangement.
+
+This dual licensing approach allows the software to be used in contexts where LGPL may not be permitted (such as certain corporate environments or standards bodies like the OGC) while still maintaining a copyleft option for those who prefer it.
 
 # NB make a build/release makefile or script
 Releasing
