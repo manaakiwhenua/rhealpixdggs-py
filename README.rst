@@ -10,13 +10,14 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.14
+0.5.15
 ^^^^^^
-Added ``compact_cells`` to ``conversion``: takes a single-resolution iterable of
-cell IDs and returns a fully compacted ``set``, recursing until no further merges
-are possible. Added ``recursive`` keyword argument to ``compress_order_cells``
-(default ``False``) for the same behaviour with sorted-list output. Updated
-``polyfill`` to use ``compact_cells`` when ``compress=True``.
+
+Fixed ``get_finest_containing_cell`` returning ``None`` for polygons inside cap
+cells (issue #13). Cap cell boundaries cannot be represented as simple polygons
+in geographic coordinates, so containment is now tested in the rHEALPix plane
+for those cells.
+
 
 Refer to file CHANGES.rst for a more detailed history of changes.
 
