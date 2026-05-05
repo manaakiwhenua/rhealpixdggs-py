@@ -1,3 +1,9 @@
+0.5.16
+^^^^^^
+Added ``RHEALPixDGGS.area_error_budget()``: returns the theoretical equal cell
+area and floating-point tolerance for equal-area testing at each resolution,
+derived analytically from machine epsilon (issue #19).
+
 0.5.15
 ^^^^^^
 
