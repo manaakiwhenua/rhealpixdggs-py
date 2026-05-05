@@ -2,6 +2,7 @@ from shapely.geometry import Polygon, Point
 from rhealpixdggs.dggs import RHEALPixDGGS, WGS84_003
 from rhealpixdggs.cell import Cell
 from itertools import compress
+from collections.abc import Iterable
 
 
 def get_finest_containing_cell(
@@ -111,9 +112,14 @@ class CellZoneFromPoly:
             self.cells_list.append(cell)
 
 
-def compress_order_cells(cells: list[str]) -> list[str]:
+def compress_order_cells(cells: list[str], recursive: bool = False) -> list[str]:
     """
-    Compresses and sorts a set of cells
+    Compress and sort a collection of cells.
+
+    Each complete group of 9 siblings is replaced by their parent cell.
+    By default only one level of compression is performed. Pass
+    ``recursive=True`` to repeat until no further compression is possible.
+    The result is always deduplicated and sorted alphanumerically.
     """
     import re
 
@@ -122,14 +128,62 @@ def compress_order_cells(cells: list[str]) -> list[str]:
         alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
         return sorted(lst, key=alphanum_key)
 
-    cells = set(cells)
-    upper_cells = {}
-    for cell in cells:
-        upper_cells.setdefault(cell[:-1], []).append(cell)
-    compressed_cells = []
-    for k, v in upper_cells.items():
-        if len(v) == 9:
-            compressed_cells.append(k)
-        else:
-            compressed_cells.extend(v)
-    return alphanum_sort(compressed_cells)
+    def _compress_once(cell_set: set[str]) -> set[str]:
+        upper_cells: dict[str, list[str]] = {}
+        for cell in cell_set:
+            upper_cells.setdefault(cell[:-1], []).append(cell)
+        result: set[str] = set()
+        for k, v in upper_cells.items():
+            if len(v) == 9:
+                result.add(k)
+            else:
+                result.update(v)
+        return result
+
+    cell_set = set(cells)
+    if recursive:
+        while True:
+            next_set = _compress_once(cell_set)
+            if next_set == cell_set:
+                break
+            cell_set = next_set
+    else:
+        cell_set = _compress_once(cell_set)
+    return alphanum_sort(list(cell_set))
+
+
+def compact_cells(cells: Iterable[str]) -> set[str]:
+    """
+    Compact a set of rHEALPix DGGS cells by repeatedly merging complete groups
+    of 9 siblings into their parent until no further merging is possible.
+
+    All input cells must be at the same resolution (equal string length).
+    Raises ValueError if the input contains cells at mixed resolutions.
+    Returns a set; if the caller needs ordering, sort the result separately.
+    """
+    cell_set = set(cells)
+    if not cell_set:
+        return cell_set
+
+    lengths = {len(c) for c in cell_set}
+    if len(lengths) > 1:
+        raise ValueError(
+            f"All input cells must be at the same resolution; "
+            f"got cells with string lengths {sorted(lengths)}"
+        )
+
+    while True:
+        upper: dict[str, list[str]] = {}
+        for cell in cell_set:
+            upper.setdefault(cell[:-1], []).append(cell)
+
+        next_set: set[str] = set()
+        for parent, children in upper.items():
+            if len(children) == 9:
+                next_set.add(parent)
+            else:
+                next_set.update(children)
+
+        if next_set == cell_set:
+            return cell_set
+        cell_set = next_set

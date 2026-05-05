@@ -591,5 +591,58 @@ class ConversionUtilsTestCase(unittest.TestCase):
         assert compress_order_cells(equal_length_in) == equal_length_expected
 
 
+class TestCompactCells(unittest.TestCase):
+    def test_full_siblings_compact_to_parent(self):
+        cells = [f"R{n}" for n in range(9)]
+        assert compact_cells(cells) == {"R"}
+
+    def test_partial_siblings_stay(self):
+        cells = [f"R{n}" for n in range(8)]  # missing R8
+        assert compact_cells(cells) == set(cells)
+
+    def test_duplicate_input_treated_as_set(self):
+        cells = [f"R{n}" for n in range(9)] * 2
+        assert compact_cells(cells) == {"R"}
+
+    def test_multi_level_compaction(self):
+        # R0 through R8 at res-1 → R at res-0; then nothing further
+        cells = [f"R{n}" for n in range(9)]
+        assert compact_cells(cells) == {"R"}
+
+    def test_recursive_compaction(self):
+        # R00-R08 and R10-R18 are two complete sibling groups → compact to R0 and R1,
+        # but R0+R1 alone don't fill R (only 2 of 9 children present)
+        cells = [f"R0{n}" for n in range(9)] + [f"R1{n}" for n in range(9)]
+        assert compact_cells(cells) == {"R0", "R1"}
+
+        # Full 9 children of R0 at res-2: compact to R0 at res-1
+        cells_r0 = [f"R0{n}" for n in range(9)]
+        assert compact_cells(cells_r0) == {"R0"}
+
+    def test_multi_level_recursive_compaction(self):
+        # 81 res-2 cells that cover all of R0..R8 → should compact all the way to R
+        cells = [f"R{i}{j}" for i in range(9) for j in range(9)]
+        assert compact_cells(cells) == {"R"}
+
+    def test_mixed_resolution_raises(self):
+        with self.assertRaises(ValueError):
+            compact_cells(["R0", "R10"])
+
+    def test_empty_input(self):
+        assert compact_cells([]) == set()
+
+    def test_returns_set(self):
+        result = compact_cells([f"R{n}" for n in range(9)])
+        assert isinstance(result, set)
+
+    def test_partial_compaction_mixed_output(self):
+        # R00..R08 compact to R0; R10..R17 (8 cells) stay
+        cells = [f"R0{n}" for n in range(9)] + [f"R1{n}" for n in range(8)]
+        result = compact_cells(cells)
+        assert "R0" in result
+        assert all(f"R1{n}" in result for n in range(8))
+        assert "R1" not in result
+
+
 if __name__ == "__main__":
     unittest.main()
