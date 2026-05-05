@@ -1,3 +1,18 @@
+0.6.0
+^^^^^
+**Breaking change:** ``Cell.ellipsoidal_shape`` is now a ``cached_property``
+instead of a method. Replace any calls to ``cell.ellipsoidal_shape()`` with
+``cell.ellipsoidal_shape``.
+
+Performance improvements (issue #7): ``RHEALPixDGGS.healpix()`` and
+``RHEALPixDGGS.rhealpix()`` now cache their ``Projection`` objects so the
+construction cost is paid only once per DGGS instance per region.
+``Cell.ellipsoidal_shape`` is computed once per ``Cell`` instance and cached,
+eliminating repeated work in ``vertices()``, ``boundary()``, ``neighbors()``,
+and other hot paths. ``Cell.boundary(plane=False)`` now short-circuits to
+``vertices()`` for quad and cap cells, whose edges are already well-represented
+by their four vertices on the ellipsoid.
+
 0.5.16
 ^^^^^^
 Added ``RHEALPixDGGS.area_error_budget()``: returns the theoretical equal cell

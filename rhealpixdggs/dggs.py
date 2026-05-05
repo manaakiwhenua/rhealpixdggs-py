@@ -234,6 +234,7 @@ class RHEALPixDGGS(object):
         )
 
         self.ellipsoid = ellipsoid
+        self._projection_cache: dict[str, object] = {}
 
         # Dictionary of the ordering (Morton order) of child cells of a cell
         # in terms of the row-column coordinates in the matrix of child cells.
@@ -391,8 +392,11 @@ class RHEALPixDGGS(object):
 
         Uses ``pj_healpix`` instead of the PROJ.4 version of HEALPix.
         """
-        f = pw.Projection(ellipsoid=self.ellipsoid, proj="healpix")
-        return f(u, v, inverse=inverse)
+        if "healpix" not in self._projection_cache:
+            self._projection_cache["healpix"] = pw.Projection(
+                ellipsoid=self.ellipsoid, proj="healpix"
+            )
+        return self._projection_cache["healpix"](u, v, inverse=inverse)
 
     def rhealpix(
         self, u: float, v: float, inverse: bool = False, region: str = "none"
@@ -411,14 +415,15 @@ class RHEALPixDGGS(object):
 
         Uses ``pj_rhealpix`` instead of the PROJ.4 version of rHEALPix.
         """
-        f = pw.Projection(
-            ellipsoid=self.ellipsoid,
-            proj="rhealpix",
-            north_square=self.north_square,
-            south_square=self.south_square,
-            region=region,
-        )
-        return f(u, v, inverse=inverse)
+        if region not in self._projection_cache:
+            self._projection_cache[region] = pw.Projection(
+                ellipsoid=self.ellipsoid,
+                proj="rhealpix",
+                north_square=self.north_square,
+                south_square=self.south_square,
+                region=region,
+            )
+        return self._projection_cache[region](u, v, inverse=inverse)
 
     def combine_triangles(
         self, u: float, v: float, inverse: bool = False, region: str = "none"
@@ -1098,7 +1103,7 @@ class RHEALPixDGGS(object):
         for phi in reversed(phis):
             c = self.cell_from_point(resolution, (lam, phi), plane=False)
             new_cells = [c]
-            if c.ellipsoidal_shape() in ["dart", "skew_quad"]:
+            if c.ellipsoidal_shape in ["dart", "skew_quad"]:
                 # Either the east or the west neighbor of c
                 # might also intersect the meridian.
                 # So include the neighbor too.
@@ -1139,7 +1144,7 @@ class RHEALPixDGGS(object):
         end = self.cell_from_point(resolution, (lam_max, phi), plane=False)
         PI = self.ellipsoid.pi()
         if start == end:
-            if start.ellipsoidal_shape() == "cap" or lam_max - lam_min < PI / 2:
+            if start.ellipsoidal_shape == "cap" or lam_max - lam_min < PI / 2:
                 return [start]
             else:
                 # Need to wrap all the way around globe.
