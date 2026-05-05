@@ -10,13 +10,11 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.15
+0.5.16
 ^^^^^^
-
-Fixed ``get_finest_containing_cell`` returning ``None`` for polygons inside cap
-cells (issue #13). Cap cell boundaries cannot be represented as simple polygons
-in geographic coordinates, so containment is now tested in the rHEALPix plane
-for those cells.
+Added ``RHEALPixDGGS.area_error_budget()``: returns the theoretical equal cell
+area and floating-point tolerance for equal-area testing at each resolution,
+derived analytically from machine epsilon (issue #19).
 
 
 Refer to file CHANGES.rst for a more detailed history of changes.
