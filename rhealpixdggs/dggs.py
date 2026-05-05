@@ -707,6 +707,65 @@ class RHEALPixDGGS(object):
         else:
             return 8 / (3 * pi) * w**2
 
+    def area_error_budget(self) -> dict[int, dict]:
+        """
+        Return an analytical error budget for cell area equality testing at
+        each resolution from 0 to ``max_resolution``.
+
+        rHEALPix is theoretically equal-area: all cells at a given resolution
+        have identical area by construction.  Floating-point arithmetic
+        introduces a small representational error when that area is computed;
+        this method exposes it so callers can apply a principled tolerance when
+        testing whether two computed cell areas should be considered equal.
+
+        The tolerance is derived analytically by tracing the rounding errors
+        through ``cell_area(r, plane=False) = 8/(3π) × (R_A × π/2 × N_side⁻ʳ)²``:
+
+        * ``N_side⁻ʳ``         — one division of an exact integer, ≤ ε rel. error
+        * ``R_A × (π/2)``      — two multiplications, ≤ 2ε
+        * ``× N_side⁻ʳ``       — one more multiplication, ≤ 3ε cumulative
+        * squaring (``w²``)    — doubles rel. error, ≤ 7ε
+        * ``8/(3π) × w²``      — two multiplications and one division, ≤ 10ε
+
+        The relative tolerance is therefore bounded by 10 × machine epsilon
+        regardless of resolution.
+
+        Returns a ``dict`` keyed by resolution.  Each value is a ``dict`` with:
+
+        ``cell_area_m2``
+            Theoretical equal area per cell in square metres.
+        ``abs_tolerance``
+            Absolute area tolerance (m²) for equal-area comparisons.
+        ``rel_tolerance``
+            Relative tolerance (dimensionless); constant across resolutions.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> budget = rdggs.area_error_budget()
+            >>> all(r in budget for r in range(rdggs.max_resolution + 1))
+            True
+            >>> budget[0]['cell_area_m2'] > budget[1]['cell_area_m2']
+            True
+            >>> budget[0]['rel_tolerance'] == budget[1]['rel_tolerance']
+            True
+
+        """
+        import sys
+
+        # Conservative upper bound: 10 rounding steps in the area formula.
+        # See docstring for the derivation.
+        rel_tol = 10 * sys.float_info.epsilon
+        budget = {}
+        for r in range(self.max_resolution + 1):
+            area = self.cell_area(r, plane=False)
+            budget[r] = {
+                "cell_area_m2": area,
+                "abs_tolerance": area * rel_tol,
+                "rel_tolerance": rel_tol,
+            }
+        return budget
+
     def interval(self, a, b):
         """
         Generator function for all the resolution
