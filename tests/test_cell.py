@@ -512,25 +512,25 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             for s in CELLS0[1:5]:
                 X = rdggs.cell([s])
-                self.assertEqual(X.ellipsoidal_shape(), "quad")
+                self.assertEqual(X.ellipsoidal_shape, "quad")
             for s in [CELLS0[0], CELLS0[5]]:
                 for t in [[], [4], [4, 4]]:
                     u = [s] + t
                     X = rdggs.cell(u)
-                    self.assertEqual(X.ellipsoidal_shape(), "cap")
+                    self.assertEqual(X.ellipsoidal_shape, "cap")
                 for t in [[4, 0, 8], [0], [4, 4, 4, 4, 6], [2, 4]]:
                     u = [s] + t
                     X = rdggs.cell(u)
-                    self.assertEqual(X.ellipsoidal_shape(), "dart")
+                    self.assertEqual(X.ellipsoidal_shape, "dart")
                 for t in [[4, 1, 8], [1], [4, 6, 5], [2, 3]]:
                     u = [s] + t
                     X = rdggs.cell(u)
-                    self.assertEqual(X.ellipsoidal_shape(), "skew_quad")
+                    self.assertEqual(X.ellipsoidal_shape, "skew_quad")
         rdggs = WGS84_122
         cell_n = rdggs.cell((CELLS0[0],))
         cell_s = rdggs.cell((CELLS0[5],))
-        self.assertEqual(cell_n.ellipsoidal_shape(), "cap")
-        self.assertEqual(cell_s.ellipsoidal_shape(), "cap")
+        self.assertEqual(cell_n.ellipsoidal_shape, "cap")
+        self.assertEqual(cell_s.ellipsoidal_shape, "cap")
 
     def test_centroid(self):
         # Warning: This test is slow.
@@ -562,7 +562,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         #     lam_bar_err = sqrt(sample_var[0]/N) # Approximately
         #     phi_bar_err = sqrt(sample_var[1]/N) # Approximately
         #     PI = cell.rdggs.ellipsoid.pi()
-        #     if cell.ellipsoidal_shape() == 'dart':
+        #     if cell.ellipsoidal_shape == 'dart':
         #         lam_bar = lam_nucleus
         #     return lam_bar, phi_bar, abs(lam_bar_err), abs(phi_bar_err)
         #
@@ -602,7 +602,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         #         lam_bar_approx, phi_bar_approx, lam_bar_err, phi_bar_err = \
         #         monte_carlo_centroid(X)
         #         # print "Testing centroid(plane=False) for %s cell %s..."\
-        #         #  % (X.ellipsoidal_shape(), X)
+        #         #  % (X.ellipsoidal_shape, X)
         #         # print 'lam:', lam_bar, lam_bar_approx, lam_bar_err
         #         # print 'phi:', phi_bar, phi_bar_approx, phi_bar_err
         #         self.assertTrue(euclidean(lam_bar, lam_bar_approx) <\

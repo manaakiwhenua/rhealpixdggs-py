@@ -16,7 +16,7 @@ def get_finest_containing_cell(
         # Cap cells span all longitudes at the pole, so their boundary cannot
         # be represented as a simple polygon in geographic coordinates.
         # Project both sides to the rHEALPix plane and test containment there.
-        if cell.ellipsoidal_shape() == "cap":
+        if cell.ellipsoidal_shape == "cap":
             plane_cell = Polygon(cell.vertices(plane=True))
             # MultiPolygon has no .exterior; check each part individually.
             parts = list(poly.geoms) if hasattr(poly, "geoms") else [poly]

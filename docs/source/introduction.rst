@@ -274,7 +274,7 @@ Compute the ellipsoidal shape and ellipsoidal nuclei of these cells ::
     ...    ]]
     >>> for i, row in enumerate(cells):
     ...     for j, cell in enumerate(row):
-    ...         print(cell, cell.ellipsoidal_shape(), assert_allclose(cell.nucleus(plane=False), expected_results[i][j], rtol=1e-15, atol=0) == None)
+    ...         print(cell, cell.ellipsoidal_shape, assert_allclose(cell.nucleus(plane=False), expected_results[i][j], rtol=1e-15, atol=0) == None)
     N2 dart True
     N1 skew_quad True
     N0 dart True

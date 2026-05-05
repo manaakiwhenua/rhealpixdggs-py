@@ -5,7 +5,7 @@ from scipy import integrate
 from itertools import product
 from random import uniform
 from colorsys import hsv_to_rgb
-from functools import total_ordering
+from functools import total_ordering, cached_property
 
 # Level 0 cell IDs, which are anomalous.
 CELLS0 = ["N", "O", "P", "Q", "R", "S"]
@@ -586,7 +586,7 @@ class Cell(object):
 
         """
         v = self.vertices(plane=True)  # Planar vertices.
-        shape = self.ellipsoidal_shape()
+        shape = self.ellipsoidal_shape
         if shape == "quad" or shape == "cap":
             # Northwest vertex is the upper left vertex.
             result = v[0]
@@ -723,7 +723,7 @@ class Cell(object):
             result = [
                 self.rdggs.rhealpix(*p, inverse=True, region=region) for p in result
             ]
-            if trim_dart and self.ellipsoidal_shape() == "dart":
+            if trim_dart and self.ellipsoidal_shape == "dart":
                 # Remove non-vertex point.
                 if self.region() == "north_polar":
                     result.pop(2)
@@ -764,6 +764,12 @@ class Cell(object):
         If `n` = 2, then the output is the same as vertices().
         If `interior` = True, then push the boundary points slighly into the
         interior of the cell, which is convenient for some graphics methods.
+
+        When `plane` = False, the cost scales with `n` because each point
+        requires an inverse projection call. For quad and cap cells the cell
+        edges are already well-represented by their vertices, so callers can
+        use ``cell.ellipsoidal_shape`` to avoid the overhead and fall back
+        to ``vertices(plane=False)`` for those shapes.
 
         EXAMPLES::
 
@@ -922,7 +928,7 @@ class Cell(object):
             False
 
         """
-        if self.ellipsoidal_shape() == "cap":
+        if self.ellipsoidal_shape == "cap":
             return True
         # Not a cap cell.
         vertices = self.vertices(plane=False)
@@ -948,7 +954,7 @@ class Cell(object):
         vertices = self.vertices(plane=False)
         lat_min = min([v[1] for v in vertices])
         lat_max = max([v[1] for v in vertices])
-        if self.ellipsoidal_shape() == "cap":
+        if self.ellipsoidal_shape == "cap":
             if self.region() == "north_polar":
                 return phi >= lat_min
             else:
@@ -1005,6 +1011,7 @@ class Cell(object):
         else:
             return "equatorial"
 
+    @cached_property
     def ellipsoidal_shape(self):
         """
         Return the shape of this cell ('quad', 'cap', 'dart', or
@@ -1014,9 +1021,9 @@ class Cell(object):
 
             >>> from rhealpixdggs.dggs import RHEALPixDGGS
             >>> rdggs = RHEALPixDGGS()
-            >>> print(Cell(rdggs, ['P', 2]).ellipsoidal_shape())
+            >>> print(Cell(rdggs, ['P', 2]).ellipsoidal_shape)
             quad
-            >>> print(Cell(rdggs, ['N', 2]).ellipsoidal_shape())
+            >>> print(Cell(rdggs, ['N', 2]).ellipsoidal_shape)
             dart
 
         """
@@ -1081,7 +1088,7 @@ class Cell(object):
         # So we have to do some work.
         nucleus = self.nucleus(plane=False)
         vertices = self.vertices(plane=False)
-        shape = self.ellipsoidal_shape()
+        shape = self.ellipsoidal_shape
         if shape == "cap":
             return nucleus
         if shape == "quad":
@@ -1370,7 +1377,7 @@ class Cell(object):
             return plane_neighbors
         # Ellipsoid case.
         result = dict()
-        shape = self.ellipsoidal_shape()
+        shape = self.ellipsoidal_shape
         if shape == "quad":
             result["north"] = plane_neighbors["up"]
             result["south"] = plane_neighbors["down"]
@@ -1468,7 +1475,7 @@ class Cell(object):
         if plane:
             return uniform(u_min, u_max), uniform(v_min, v_max)
         else:
-            if self.ellipsoidal_shape() == "cap":
+            if self.ellipsoidal_shape == "cap":
                 # Need to adjust extremes.
                 PI = self.ellipsoid.pi()
                 u_max = PI
