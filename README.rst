@@ -10,9 +10,13 @@ Release Notes
 -------------
 This package was originally authored in 2013 and has had only minor code updates since then.
 
-0.5.13
+0.5.14
 ^^^^^^
-Normalise floats and correct return types (rhp_wrappers).
+Added ``compact_cells`` to ``conversion``: takes a single-resolution iterable of
+cell IDs and returns a fully compacted ``set``, recursing until no further merges
+are possible. Added ``recursive`` keyword argument to ``compress_order_cells``
+(default ``False``) for the same behaviour with sorted-list output. Updated
+``polyfill`` to use ``compact_cells`` when ``compress=True``.
 
 Refer to file CHANGES.rst for a more detailed history of changes.
 
