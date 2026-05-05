@@ -1,3 +1,11 @@
+0.5.15
+^^^^^^
+
+Fixed ``get_finest_containing_cell`` returning ``None`` for polygons inside cap
+cells (issue #13). Cap cell boundaries cannot be represented as simple polygons
+in geographic coordinates, so containment is now tested in the rHEALPix plane
+for those cells.
+
 0.5.14
 ^^^^^^
 Added ``compact_cells`` to ``conversion``: takes a single-resolution iterable of

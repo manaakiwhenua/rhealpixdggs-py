@@ -12,20 +12,34 @@ def get_finest_containing_cell(
     Finds the finest DGGS Cell containing a given cartesian polygon
     """
 
+    def _cell_contains(cell: Cell, poly) -> bool:
+        # Cap cells span all longitudes at the pole, so their boundary cannot
+        # be represented as a simple polygon in geographic coordinates.
+        # Project both sides to the rHEALPix plane and test containment there.
+        if cell.ellipsoidal_shape() == "cap":
+            plane_cell = Polygon(cell.vertices(plane=True))
+            # MultiPolygon has no .exterior; check each part individually.
+            parts = list(poly.geoms) if hasattr(poly, "geoms") else [poly]
+            return all(
+                plane_cell.contains(
+                    Polygon([rdggs.rhealpix(x, y) for x, y in part.exterior.coords])
+                )
+                for part in parts
+            )
+        return Polygon(cell.vertices(plane=False)).contains(poly)
+
     def _get_finest_cell(polygon, suid, rdggs=rdggs):
         parent_cell = Cell(rdggs=rdggs, suid=suid)
         # get the children cells and polygons for these cells
         children_cells = [cell for cell in parent_cell.subcells()]
-        children_poly = [Polygon(cell.vertices(plane=False)) for cell in children_cells]
         # function and truth list for multipolygon / polygon (polygon) contained within multipolygon / polygon (cell)
-        truth = [poly.contains(polygon) for poly in children_poly]
+        truth = [_cell_contains(cell, polygon) for cell in children_cells]
         # if we get something back, check the next level lower
         returned_cells = list(compress(children_cells, truth))
         if returned_cells:
             finest = _get_finest_cell(polygon, returned_cells[0].suid, rdggs)
         else:
-            parent_poly = Polygon(parent_cell.vertices(plane=False))
-            if parent_poly.contains(polygon):
+            if _cell_contains(parent_cell, polygon):
                 finest = parent_cell
             else:
                 finest = None
