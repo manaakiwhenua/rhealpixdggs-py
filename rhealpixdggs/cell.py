@@ -802,6 +802,11 @@ class Cell(object):
             (157.49999999999997, 58.41366190347208)
 
         """
+        # Quad and cap cells have straight or rotationally-symmetric edges on
+        # the ellipsoid, so extra boundary points add no accuracy. Fall back to
+        # vertices() and avoid the per-point projection cost entirely.
+        if not plane and self.ellipsoidal_shape in ("quad", "cap"):
+            return self.vertices(plane=False)
         ul = self.ul_vertex(plane=True)
         w = self.width(plane=True)
         if n < 2:

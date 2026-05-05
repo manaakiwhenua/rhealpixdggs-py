@@ -9,7 +9,9 @@ Performance improvements (issue #7): ``RHEALPixDGGS.healpix()`` and
 construction cost is paid only once per DGGS instance per region.
 ``Cell.ellipsoidal_shape`` is computed once per ``Cell`` instance and cached,
 eliminating repeated work in ``vertices()``, ``boundary()``, ``neighbors()``,
-and other hot paths.
+and other hot paths. ``Cell.boundary(plane=False)`` now short-circuits to
+``vertices()`` for quad and cap cells, whose edges are already well-represented
+by their four vertices on the ellipsoid.
 
 0.5.16
 ^^^^^^
