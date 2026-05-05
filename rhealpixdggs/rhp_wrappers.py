@@ -5,7 +5,7 @@ from shapely.geometry import Point, Polygon, MultiPolygon, LineString, MultiLine
 
 from rhealpixdggs.dggs import RHEALPixDGGS
 from rhealpixdggs.cell import Cell
-from rhealpixdggs.conversion import compress_order_cells
+from rhealpixdggs.conversion import compact_cells
 
 # ======== Messages and constants ======== #
 
@@ -547,6 +547,25 @@ def polyfill(
         ['Q33303', 'Q33304', 'Q33305', 'Q33306', 'Q33307', 'Q33308', 'Q33330', 'Q33331', 'Q33332']
         >>> sorted(polyfill(polygon, res=6, plane=False))
         ['Q333033', 'Q333034', 'Q333035', 'Q333036', 'Q333037', 'Q333038', 'Q333043', 'Q333044', 'Q333045', 'Q333046', 'Q333047', 'Q333048', 'Q333053', 'Q333054', 'Q333056', 'Q333057', 'Q333060', 'Q333061', 'Q333062', 'Q333063', 'Q333064', 'Q333065', 'Q333066', 'Q333067', 'Q333068', 'Q333070', 'Q333071', 'Q333072', 'Q333073', 'Q333074', 'Q333075', 'Q333076', 'Q333077', 'Q333078', 'Q333080', 'Q333081', 'Q333083', 'Q333084', 'Q333086', 'Q333087', 'Q333300', 'Q333301', 'Q333302', 'Q333303', 'Q333304', 'Q333305', 'Q333306', 'Q333307', 'Q333308', 'Q333310', 'Q333311', 'Q333312', 'Q333313', 'Q333314', 'Q333315', 'Q333316', 'Q333317', 'Q333318', 'Q333320', 'Q333321', 'Q333323', 'Q333324', 'Q333326', 'Q333327', 'Q333330', 'Q333331', 'Q333332', 'Q333333', 'Q333334', 'Q333335', 'Q333340', 'Q333341', 'Q333342', 'Q333343', 'Q333344', 'Q333345', 'Q333350', 'Q333351', 'Q333353', 'Q333354']
+
+        Four of those res-6 groups have all 9 siblings present (Q33306x, Q33307x,
+        Q33330x, Q33331x), so compress=True collapses them one level to res-5 parents.
+        The remaining partial groups stay at res-6, giving a mixed-resolution result:
+
+        >>> sorted(c for c in polyfill(polygon, res=6, plane=False, compress=True) if len(c) < 7)
+        ['Q33306', 'Q33307', 'Q33330', 'Q33331']
+
+        At res=7 the same four cells are again fully covered (all 81 of each cell's
+        res-7 grandchildren fall inside the polygon), so compaction runs two levels:
+        res-7 siblings collapse to res-6 parents, those in turn collapse to res-5:
+
+        >>> result7 = polyfill(polygon, res=7, plane=False, compress=True)
+        >>> 'Q33306' in result7  # res-5 cell present despite res=7 request
+        True
+        >>> 'Q333060' not in result7  # intermediate res-6 cell absorbed
+        True
+        >>> 'Q3330600' not in result7  # original res-7 cell absorbed
+        True
     """
     # Stop early if the geometry is malformed
     if _malformed_geometry(geometry):
@@ -590,7 +609,7 @@ def polyfill(
 
     # Merge cells inside polygon into larger ones where possible
     if compress:
-        cells = set(compress_order_cells(cells))
+        cells = compact_cells(cells)
 
     return cells
 
