@@ -21,7 +21,101 @@ for those cells.
 
 Refer to file CHANGES.rst for a more detailed history of changes.
 
-Requirements 
+Error Budget
+------------
+rHEALPix is a theoretically equal-area projection: all cells at a given
+resolution have the same area by construction. In practice, floating-point
+arithmetic introduces a small rounding error when computing cell areas. The
+``RHEALPixDGGS.area_error_budget()`` method returns these values analytically
+for the default WGS84-based DGGS (``WGS84_003``, ``N_side=3``,
+``max_areal_resolution=1 m²``):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 8 22 22 20
+
+   * - Resolution
+     - Cell area (m²)
+     - Cell area (km²)
+     - Abs. tolerance (m²)
+   * - 0
+     - 8.501 × 10¹³
+     - 85,010,937
+     - 0.189
+   * - 1
+     - 9.446 × 10¹²
+     - 9,445,660
+     - 0.021
+   * - 2
+     - 1.050 × 10¹²
+     - 1,049,518
+     - 0.0023
+   * - 3
+     - 1.166 × 10¹¹
+     - 116,613
+     - 2.59 × 10⁻⁴
+   * - 4
+     - 1.296 × 10¹⁰
+     - 12,957
+     - 2.88 × 10⁻⁵
+   * - 5
+     - 1.440 × 10⁹
+     - 1,440
+     - 3.20 × 10⁻⁶
+   * - 6
+     - 1.600 × 10⁸
+     - 160
+     - 3.55 × 10⁻⁷
+   * - 7
+     - 1.777 × 10⁷
+     - 17.8
+     - 3.95 × 10⁻⁸
+   * - 8
+     - 1.975 × 10⁶
+     - 1.97
+     - 4.39 × 10⁻⁹
+   * - 9
+     - 2.194 × 10⁵
+     - 0.219
+     - 4.87 × 10⁻¹⁰
+   * - 10
+     - 2.438 × 10⁴
+     - 0.0244
+     - 5.41 × 10⁻¹¹
+   * - 11
+     - 2,709
+     - 0.00271
+     - 6.02 × 10⁻¹²
+   * - 12
+     - 301
+     - 3.01 × 10⁻⁴
+     - 6.68 × 10⁻¹³
+   * - 13
+     - 33.4
+     - 3.34 × 10⁻⁵
+     - 7.43 × 10⁻¹⁴
+   * - 14
+     - 3.72
+     - 3.72 × 10⁻⁶
+     - 8.25 × 10⁻¹⁵
+   * - 15
+     - 0.413
+     - 4.13 × 10⁻⁷
+     - 9.17 × 10⁻¹⁶
+
+The **absolute tolerance** answers the question: "how different can two
+computed cell areas be before we should conclude they are genuinely different,
+rather than just floating-point noise?" For example, at resolution 9 the
+tolerance is ~5 × 10⁻¹⁰ m² — if two cells' computed areas differ by less than
+half a nanometre squared, they should be treated as equal-area.
+
+The relative tolerance is constant at 2.22 × 10⁻¹⁵ (10 × machine epsilon)
+for all resolutions, reflecting the fixed number of floating-point operations
+in the area formula. The absolute tolerance shrinks proportionally with cell
+area as resolution increases. Resolution 15 is the finest level supported by
+the default configuration (cells of approximately 0.41 m²).
+
+Requirements
 -------------
 * ``requirements.txt`` - all the module requirements for operation
     - `NumPy >=1.25.2,<2 <https://www.numpy.org/>`_ Base N-dimensional array package
