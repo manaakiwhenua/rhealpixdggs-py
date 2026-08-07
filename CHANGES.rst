@@ -1,5 +1,21 @@
 0.6.1
 ^^^^^
+Added a ``Cell.diagonal_neighbor(direction)`` method (``direction`` one of
+``'up_left'``, ``'up_right'``, ``'down_left'``, ``'down_right'``), returning
+this cell's corner-touching-only planar neighbor, or ``None`` if this cell
+sits at one of the 8 genuine cube corners in that direction (exactly 3 cells
+meet there, not 4, so there's no distinct diagonal cell to return). Also
+added a set of DE-9IM-style topological predicates between two cells,
+possibly of different resolutions: ``equals``, ``contains_cell``, ``within``,
+``covers``, ``covered_by``, ``touches``, and ``disjoint`` (issue #55).
+``contains_cell`` is named to avoid confusion with the pre-existing
+``contains()``, which tests point-in-cell containment, not cell-in-cell.
+Both the new ``diagonal_neighbor`` primitive and ``touches`` (built on it,
+for the case where neither cell is an ancestor of the other) were validated
+against real vertex/boundary geometry across many DGGS configurations
+(``N_side`` 2 through 5, all 16 ``(north_square, south_square)``
+combinations) before relying on them here.
+
 **Breaking change:** ``Cell``'s constructor and ``Cell.overlaps()`` validated
 their arguments with bare ``assert`` statements, which ``python -O``/
 ``PYTHONOPTIMIZE`` compiles out entirely (silently disabling the checks),

@@ -1449,6 +1449,318 @@ class Cell(object):
             nuc_cell.append((rel_lon, nucleus[1], cell))
         return nuc_cell
 
+    # Diagonal (corner-touching only) directions, each a (row, column)
+    # direction pair, keyed to match neighbor()'s own plane direction names.
+    _DIAGONAL_DIRECTIONS = {
+        "up_left": ("up", "left"),
+        "up_right": ("up", "right"),
+        "down_left": ("down", "left"),
+        "down_right": ("down", "right"),
+    }
+
+    def diagonal_neighbor(self, direction):
+        """
+        Return this cell's diagonal (corner-touching only, not sharing an
+        edge) planar neighbor in the given `direction`, one of
+        'up_left', 'up_right', 'down_left', 'down_right'.
+
+        Return `None` if this cell sits at a genuine cube corner in that
+        direction (i.e. all of its ancestors, down to and including its
+        resolution 0 cell, are positioned exactly in that corner). Cube
+        corners are 3-valent -- exactly 3 cells meet there, not 4 -- so
+        there is no diagonal 4th cell distinct from the two already
+        reachable via `neighbor()`.
+
+        Unlike `neighbor()`, this has no `plane` parameter: cell adjacency
+        is a property of the grid's topology, independent of whether it's
+        expressed in planar or ellipsoidal coordinates, so this is always
+        computed in the (topologically primary) planar grid.
+
+        Note this is not simply `self.neighbor(d1, plane=True).neighbor(d2,
+        plane=True)` (nor the same composed in the other order): composing
+        two independently rotation-corrected edge steps does not reliably
+        commute near a face boundary, since crossing one face in the first
+        step can change what "the other direction" even means for the
+        second step. This computes both directions' digit-carrying in a
+        single pass, matching how `neighbor()` itself only ever applies one
+        rotation correction, and applies that same correction once, for
+        whichever single direction (if any) actually crosses a face.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> c = Cell(RHEALPixDGGS(), ['N', 4, 0])
+            >>> print(c.diagonal_neighbor('up_left'))
+            N08
+
+        """
+        row_dir, col_dir = Cell._DIAGONAL_DIRECTIONS[direction]
+        an = self.rdggs.atomic_neighbors
+        child_order = self.rdggs.child_order
+        N = self.N_side
+        self_suid = list(self.suid)
+        neighbor_suid = list(self_suid)
+        row_active = True
+        col_active = True
+        # Scan the numeric digits from finest to coarsest, carrying each
+        # dimension (row, column) independently into the parent for as
+        # long as it keeps landing on that dimension's border -- exactly
+        # neighbor()'s own carrying rule, just tracked for two dimensions
+        # at once instead of one.
+        for i in reversed(range(1, len(self_suid))):
+            row, col = child_order[self_suid[i]]
+            if row_active:
+                if (row == 0 and row_dir == "up") or (
+                    row == N - 1 and row_dir == "down"
+                ):
+                    row = N - 1 if row_dir == "up" else 0
+                else:
+                    row = row - 1 if row_dir == "up" else row + 1
+                    row_active = False
+            if col_active:
+                if (col == 0 and col_dir == "left") or (
+                    col == N - 1 and col_dir == "right"
+                ):
+                    col = N - 1 if col_dir == "left" else 0
+                else:
+                    col = col - 1 if col_dir == "left" else col + 1
+                    col_active = False
+            neighbor_suid[i] = child_order[(row, col)]
+            if not row_active and not col_active:
+                # Both dimensions resolved locally: everything coarser,
+                # including the resolution 0 cell, is unchanged.
+                return Cell(self.rdggs, neighbor_suid)
+
+        # Every numeric digit was on the border in at least one dimension,
+        # so the resolution 0 cell itself must change in whichever
+        # dimension(s) are still active.
+        if row_active and col_active:
+            return None
+        face = self_suid[0]
+        single_dir = row_dir if row_active else col_dir
+        neighbor_suid[0] = an[face][single_dir]
+        neighbor = Cell(self.rdggs, neighbor_suid)
+
+        # Apply the same rotation correction neighbor() applies for a
+        # single step in single_dir, since crossing between a polar
+        # (N or S) and non-polar resolution 0 cell needs it regardless of
+        # whether that crossing happens alone or as half of a diagonal step.
+        self0 = self_suid[0]
+        neighbor0 = neighbor_suid[0]
+        if (
+            (self0 == CELLS0[5] and neighbor0 == an[self0]["left"])
+            or (self0 == an[CELLS0[5]]["right"] and neighbor0 == CELLS0[5])
+            or (self0 == CELLS0[0] and neighbor0 == an[self0]["right"])
+            or (self0 == an[CELLS0[0]]["left"] and neighbor0 == CELLS0[0])
+        ):
+            neighbor = neighbor.rotate(1)
+        elif (
+            (self0 == CELLS0[5] and neighbor0 == an[self0]["down"])
+            or (self0 == an[CELLS0[5]]["down"] and neighbor0 == CELLS0[5])
+            or (self0 == CELLS0[0] and neighbor0 == an[self0]["up"])
+            or (self0 == an[CELLS0[0]]["up"] and neighbor0 == CELLS0[0])
+        ):
+            neighbor = neighbor.rotate(2)
+        elif (
+            (self0 == CELLS0[5] and neighbor0 == an[self0]["right"])
+            or (self0 == an[CELLS0[5]]["left"] and neighbor0 == CELLS0[5])
+            or (self0 == CELLS0[0] and neighbor0 == an[self0]["left"])
+            or (self0 == an[CELLS0[0]]["right"] and neighbor0 == CELLS0[0])
+        ):
+            neighbor = neighbor.rotate(3)
+        return neighbor
+
+    def _check_comparable(self, other, verb):
+        """
+        Raise `ValueError` if `self` and `other` aren't cells of the same
+        `RHEALPixDGGS`, or if either is the empty cell. Shared precondition
+        check for the topological predicates below, whose result would
+        otherwise be meaningless (comparing SUIDs from two differently
+        configured grids) or undefined (an empty cell has no spatial
+        extent to compare).
+        """
+        if self.rdggs != other.rdggs:
+            raise ValueError(
+                "Cannot test %s between cells of different RHEALPixDGGS "
+                "instances." % verb
+            )
+        if not self.suid or not other.suid:
+            raise ValueError("Cannot test %s for an empty cell." % verb)
+
+    def equals(self, other):
+        """
+        DE-9IM `equals` predicate: return True if this cell and `other`
+        are the same cell, and False otherwise. Equivalent to `self ==
+        other`.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N', 0]).equals(Cell(rdggs, ['N', 0]))
+            True
+            >>> Cell(rdggs, ['N', 0]).equals(Cell(rdggs, ['N', 1]))
+            False
+
+        """
+        return self == other
+
+    def contains_cell(self, other):
+        """
+        DE-9IM-style `contains` predicate for a pair of cells: return True
+        if `other` is this cell or a descendant of it, and False
+        otherwise.
+
+        Named `contains_cell` rather than `contains` to avoid confusion
+        with the pre-existing `contains()` method, which tests whether
+        this cell contains a *point*, not another cell.
+
+        Note this coincides with `covers()`: because cells form a strict
+        hierarchical partition, a descendant cell's boundary that touches
+        its ancestor's boundary is still entirely contained in the
+        ancestor's closed region, so there's no DE-9IM-style distinction
+        here between "contains" (usually excludes boundary-touching) and
+        "covers" (usually includes it) the way there can be for general
+        geometries.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N']).contains_cell(Cell(rdggs, ['N', 0]))
+            True
+            >>> Cell(rdggs, ['N', 0]).contains_cell(Cell(rdggs, ['N']))
+            False
+
+        """
+        self._check_comparable(other, "containment")
+        return self.overlaps(other) and len(self.suid) <= len(other.suid)
+
+    def within(self, other):
+        """
+        DE-9IM `within` predicate: return True if this cell is `other` or
+        a descendant of it, and False otherwise. The converse of
+        `contains_cell()`; see that method's docstring for why this also
+        coincides with `covered_by()` for cells.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N', 0]).within(Cell(rdggs, ['N']))
+            True
+
+        """
+        return other.contains_cell(self)
+
+    def covers(self, other):
+        """
+        DE-9IM `covers` predicate. See `contains_cell()`'s docstring for
+        why this is the same relation as `contains_cell()` for cells.
+        """
+        return self.contains_cell(other)
+
+    def covered_by(self, other):
+        """
+        DE-9IM `coveredBy` predicate. See `within()`'s docstring for why
+        this is the same relation as `within()` for cells.
+        """
+        return other.contains_cell(self)
+
+    def touches(self, other):
+        """
+        DE-9IM `touches` predicate: return True if this cell and `other`
+        share at least one boundary point but neither contains the other
+        (equivalently, no ancestor/descendant relationship and no shared
+        interior), and False otherwise. `self` and `other` may be of
+        different resolutions.
+
+        Two cells of the *same* resolution touch exactly when one is an
+        edge or diagonal (corner-only) neighbor of the other -- see
+        `neighbor()` and `diagonal_neighbor()`.
+
+        For cells of *different* resolutions (informally, "cousins" --
+        neither an ancestor of the other, but nested in siblings that are
+        themselves edge/diagonal neighbors, possibly several levels up),
+        this finds their two ancestors at the shallower of the two
+        resolutions and checks those for edge/diagonal adjacency. If
+        they're edge-adjacent, the deeper cell touches the shallower one
+        exactly when every one of the deeper cell's digits below that
+        ancestor lies in the row or column bordering the shared edge (so
+        the deeper cell never strays from that edge); if they're
+        diagonally adjacent, the same must hold for the single digit
+        value that is that shared corner, since a corner is a single
+        point rather than a whole edge. Since the shallower cell exposes
+        its entire edge or corner at that resolution, nothing else needs
+        checking on its side.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N', 0]).touches(Cell(rdggs, ['N', 1]))
+            True
+            >>> Cell(rdggs, ['O']).touches(Cell(rdggs, ['P', 3]))
+            True
+            >>> Cell(rdggs, ['N', 0]).touches(Cell(rdggs, ['N', 8]))
+            False
+
+        """
+        self._check_comparable(other, "touches")
+        if self.overlaps(other):
+            # One is an ancestor of (or the same cell as) the other: their
+            # closed regions share interior points, so this isn't touches.
+            return False
+        r = min(self.resolution, other.resolution)
+        shallow, deep = (self, other) if self.resolution == r else (other, self)
+        deep_ancestor = Cell(self.rdggs, deep.suid[: r + 1])
+        # deep_ancestor != shallow is guaranteed here: if they were equal,
+        # self.overlaps(other) above would already have been True.
+        tail = deep.suid[r + 1 :]
+        child_order = self.rdggs.child_order
+        N = self.N_side
+        row_edge = {"up": 0, "down": N - 1}
+        col_edge = {"left": 0, "right": N - 1}
+        for direction in ("up", "down", "left", "right"):
+            if deep_ancestor.neighbor(direction, plane=True) == shallow:
+                if direction in row_edge:
+                    return all(child_order[d][0] == row_edge[direction] for d in tail)
+                else:
+                    return all(child_order[d][1] == col_edge[direction] for d in tail)
+        for direction in ("up_left", "up_right", "down_left", "down_right"):
+            if deep_ancestor.diagonal_neighbor(direction) == shallow:
+                target_row = 0 if direction.startswith("up") else N - 1
+                target_col = 0 if direction.endswith("left") else N - 1
+                return all(child_order[d] == (target_row, target_col) for d in tail)
+        return False
+
+    def disjoint(self, other):
+        """
+        DE-9IM `disjoint` predicate: return True if this cell and `other`
+        share no point at all (no shared interior and no shared
+        boundary), and False otherwise.
+
+        Note DE-9IM's `intersects` is simply the negation of this, and
+        `crosses`/`overlaps` (in the DE-9IM sense, not to be confused
+        with the pre-existing, differently-named `Cell.overlaps()`
+        method above) can never hold between two cells of a hierarchical
+        grid: two cells always either nest (one contains the other),
+        touch along their boundary only, or are fully disjoint -- partial
+        interior overlap without full containment is impossible.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N', 0]).disjoint(Cell(rdggs, ['S', 0]))
+            True
+            >>> Cell(rdggs, ['N', 0]).disjoint(Cell(rdggs, ['N', 1]))
+            False
+
+        """
+        self._check_comparable(other, "disjoint")
+        return not (self.overlaps(other) or self.touches(other))
+
     def random_point(self, plane=True):
         """
         Return a random point in this cell.
