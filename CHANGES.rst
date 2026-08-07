@@ -1,5 +1,15 @@
 0.6.1
 ^^^^^
+Dropped the ``matplotlib`` dependency (issue #64). It was only ever used
+for a point-in-polygon check inside ``in_healpix_image``/
+``in_rhealpix_image`` -- a vestige of plotting code that was moved out of
+this package back in 0.5.3 -- and is now replaced with an equivalent
+``shapely`` check (``shapely`` was already a required dependency, used
+elsewhere in ``conversion.py``). No behavior change, verified against
+the full test suite including every doctest that pins exact boundary
+cases; measured slightly faster overall, not slower, despite dropping a
+dependency.
+
 **Breaking change (harmless):** removed the ``RhealPolygon`` stub class
 (``__init__`` only, no other methods, no references or tests anywhere).
 Follow-up from a whole-repository code review; see ``CODE_REVIEW.md``.

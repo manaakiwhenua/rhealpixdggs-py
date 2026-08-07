@@ -160,6 +160,18 @@ class MyTestCase(unittest.TestCase):
                 self.assertAlmostEqual(get[i], expect[i])
             # ------------------------------------------------------------------------------
 
+    def test_in_healpix_image_poly_is_cached(self):
+        # Regression test: in_healpix_image() used to rebuild its polygon
+        # (originally a matplotlib Path, now a shapely Polygon) on every
+        # call even though it takes no parameters (the polygon is always
+        # identical). See issue #64.
+        pjh._healpix_image_poly = None
+        self.assertTrue(pjh.in_healpix_image(0, 0))
+        cached = pjh._healpix_image_poly
+        self.assertIsNotNone(cached)
+        self.assertTrue(pjh.in_healpix_image(0.1, 0.1))
+        self.assertIs(pjh._healpix_image_poly, cached)
+
 
 if __name__ == "__main__":
     unittest.main()
