@@ -1,5 +1,14 @@
 0.6.1
 ^^^^^
+Fixed ``compact_cells``/``compress_order_cells`` (``conversion``) hardcoding
+9 as the size of "a complete group of siblings" -- correct only for the
+default ``N_side=3``. Under an ``N_side=2`` DGGS (e.g. ``WGS84_002``, 4
+children per cell), a genuinely complete sibling group silently never
+compressed at all. Both functions now take an ``N_side`` keyword argument
+(default 3, so existing callers are unaffected) and use ``N_side ** 2``.
+``polyfill()``'s ``compress=True`` path now passes its ``dggs``
+parameter's actual ``N_side`` through (issue #51).
+
 Fixed ``Cell.boundary(plane=False)`` silently returning only 4 points for
 quad/cap cells regardless of ``n``, instead of the documented ``4*n - 4``
 (a regression from 0.6.0's short-circuit to ``vertices()``). The
