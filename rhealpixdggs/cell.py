@@ -1124,38 +1124,10 @@ class Cell(object):
         phi_bar = (1 / area) * integrate.dblquad(
             phi, y1, y2, lambda x: x1, lambda x: x2
         )[0]
-        # lam_bar formula changes.
-        # Option 1 (clean, possibly slow):
-        # Compute lam_bar by numerical integration.
+        # lam_bar formula changes; compute by numerical integration.
         lam_bar = (1 / area) * integrate.dblquad(
             lam, y1, y2, lambda x: x1, lambda x: x2
         )[0]
-        # Option 2 (messy, possibly fast):
-        # Evaluate the integral symbolically and then plug in values.
-        # w = x2 - x1 # Cell width.
-        # R_A = self.rdggs.ellipsoid.R_A
-        # hx0, hy0 = self.rdggs.healpix(*nucleus)
-        # # x and y extremes of the HEALPix projection of this cell's interior:
-        # hx1 = hx0 - w/2
-        # hx2 = hx0 + w/2
-        # # Without loss of generality, force HEALPix y coordinates into
-        # # the northern hemisphere:
-        # hy1 = abs(hy0) - w/2
-        # hy2 = abs(hy0) + w/2
-        # # Compute xc.
-        # cap_number = floor(2*hx0/(pi*R_A) + 2)
-        # if cap_number >= 4:
-        #     # Rounding error.
-        #     cap_number = 3
-        # xc = -3*pi/4 + (pi/2)*cap_number
-        # integral = lambda x, y: (pi/8)*x*(2*R_A*xc - x)*\
-        #            log(1 - 2*y/(pi*R_A)) + xc*x*y
-        # lam_bar = (1/area)*\
-        #           (integral(hx2, hy2) - integral(hx1, hy2) -\
-        #            integral(hx2, hy1) + integral(hx1, hy1))
-        # if not self.rdggs.ellipsoid.radians:
-        #     # Convert to degrees.
-        #     lam_bar = rad2deg(lam_bar)
         return lam_bar, phi_bar
 
     def rotate_entry(self, x, quarter_turns):
