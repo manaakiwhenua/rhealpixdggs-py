@@ -1,5 +1,18 @@
 0.6.1
 ^^^^^
+**Breaking change:** ``healpix_sphere_inverse``, ``healpix_ellipsoid_inverse``,
+``rhealpix_sphere_inverse``, and ``rhealpix_ellipsoid_inverse``
+(``pj_healpix``/``pj_rhealpix``) now raise ``ValueError`` for out-of-bounds
+input coordinates, instead of printing an error message and returning a
+sentinel: ``float("inf")`` for ``healpix_sphere_inverse``, or bare ``None``
+for the other three. The ``None`` case was already effectively a crash for
+any caller going through the public ``healpix()``/``rhealpix()`` projection
+factories -- their closures do ``array(...)`` then unpack the result, which
+raises a confusing, unrelated-looking ``TypeError: iteration over a 0-d
+array`` a few frames away from the actual problem. If you were catching
+these failures by checking for ``None``/``inf``, catch ``ValueError``
+instead (issue #52).
+
 Fixed ``compact_cells``/``compress_order_cells`` (``conversion``) hardcoding
 9 as the size of "a complete group of siblings" -- correct only for the
 default ``N_side=3``. Under an ``N_side=2`` DGGS (e.g. ``WGS84_002``, 4
