@@ -810,7 +810,7 @@ class Cell(object):
         ul = self.ul_vertex(plane=True)
         w = self.width(plane=True)
         if n < 2:
-            n == 2
+            n = 2
         if interior:
             eps = w / 10000  # A smidgen.
         else:

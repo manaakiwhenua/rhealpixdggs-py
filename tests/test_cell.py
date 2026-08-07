@@ -363,6 +363,20 @@ class SCENZGridCELLTestCase(unittest.TestCase):
                 xp, yp = rdggs.rhealpix(x + i * w, y - j * w, inverse=True)
                 self.assertTrue(rel_err([xx, yy], [xp, yp]) < error)
 
+    def test_boundary(self):
+        # Regression test for the `n < 2` guard (was `n == 2`, a
+        # comparison instead of an assignment, so it never actually
+        # clamped n). Before the fix, boundary(n=1, plane=True) crashed
+        # with ZeroDivisionError and boundary(n=0, plane=True) silently
+        # returned an empty list instead of being clamped to n=2. See
+        # issue #48.
+        rdggs = RHEALPixDGGS()
+        a = Cell(rdggs, [N, 2])
+        self.assertEqual(a.ellipsoidal_shape, "dart")
+        expect = a.boundary(n=2, plane=True)
+        for n in (0, 1):
+            self.assertEqual(a.boundary(n=n, plane=True), expect)
+
     def test_nucleus(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             # Nuclei of children should be in correct position
