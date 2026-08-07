@@ -153,19 +153,21 @@ class Cell(object):
         self.resolution = None  # Level of self in grid hierarchy.
         if suid is not None:
             # A little error checking.
-            assert isinstance(suid, list) or isinstance(suid, tuple), (
-                "Cell suid must be a list or tuple. Got %s." % suid
-            )
-            assert (len(suid) > 0) and (
-                len(suid) <= rdggs.max_resolution + 1
-            ), "Need 0 < len(suid) <= %s. Got %s." % (rdggs.max_resolution + 1, suid)
-            assert suid[0] in CELLS0, "suid[0] must lie in %s. Got %s." % (
-                CELLS0,
-                suid[0],
-            )
+            if not isinstance(suid, (list, tuple)):
+                raise TypeError("Cell suid must be a list or tuple. Got %s." % suid)
+            if not (0 < len(suid) <= rdggs.max_resolution + 1):
+                raise ValueError(
+                    "Need 0 < len(suid) <= %s. Got %s."
+                    % (rdggs.max_resolution + 1, suid)
+                )
+            if suid[0] not in CELLS0:
+                raise ValueError(
+                    "suid[0] must lie in %s. Got %s." % (CELLS0, suid[0])
+                )
             digits = set(range(self.N_side**2))
             for x in suid[1:]:
-                assert x in digits, "Digits of suid must lie in %s" % digits
+                if x not in digits:
+                    raise ValueError("Digits of suid must lie in %s. Got %s." % (digits, x))
 
             self.suid = [suid[0]] + [int(n) for n in suid[1:]]
             self.suid = tuple(self.suid)
@@ -987,7 +989,8 @@ class Cell(object):
         :param cell_two: the second DGGS cell
         :return: True if overlaps
         """
-        assert self.suid is not tuple()  # cell cannot be empty
+        if not self.suid:
+            raise ValueError("Cannot test overlap for an empty cell.")
         for i, j in zip(self.suid, other_cell.suid):
             if i != j:
                 return False
