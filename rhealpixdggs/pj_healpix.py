@@ -223,8 +223,7 @@ def in_healpix_image(x: float, y: float) -> bool:
         ]
         # This polygon never varies (the function takes no parameters), so
         # build it once and reuse it -- constructing it is not free, and
-        # this used to happen on every single call, i.e. once per point
-        # projected.
+        # this function may be called once per point projected.
         _healpix_image_poly = Polygon(vertices)
     # contains_xy (vectorized, coordinate-based) avoids constructing a Point
     # object per call, unlike the equivalent poly.contains(Point(x, y)).

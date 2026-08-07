@@ -457,8 +457,8 @@ def in_rhealpix_image(
     """
     # This polygon only depends on (north_square, south_square), which are
     # fixed per DGGS instance, so build it once per distinct pair and reuse
-    # it -- constructing it is not free, and this used to happen on every
-    # single call, i.e. once per point projected.
+    # it -- constructing it is not free, and this function may be called
+    # once per point projected.
     key = (north_square, south_square)
     poly = _rhealpix_image_polys.get(key)
     if poly is None:

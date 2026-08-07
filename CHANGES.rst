@@ -1,5 +1,24 @@
 0.6.1
 ^^^^^
+Fixed ``Cell.neighbors(plane=False)`` for dart and skew_quad cells, which
+computed east/west (and, for darts, southeast/southwest/etc.) by
+temporarily reassigning ``self.rdggs.ellipsoid.lon_0`` -- a singleton
+shared by every ``Cell`` built from the same ``rdggs`` -- to recentre the
+prime meridian on this cell's nucleus, then restoring it afterwards. This
+was not thread-safe (concurrent use of the same ``rdggs`` could observe or
+clobber the temporarily-shifted value) and not exception-safe (an
+exception between the mutation and the restore left the shared ellipsoid
+permanently corrupted). It also turned out not to be correct in every
+case: confirmed by testing across many DGGS configurations, when the
+ellipsoid's own ``lon_0`` happens to be near +-180 degrees, the old
+approach could assign "east" and "west" (and their compound directions)
+backwards for the same physical cell, purely as a function of where the
+prime meridian was drawn -- which should never affect compass-direction
+labelling. Replaced with a comparison of each neighbor's longitude
+relative to this cell's own nucleus, wrapped to avoid the antimeridian
+issue directly (``rhealpixdggs.utils.wrap_longitude``), without touching
+any shared state at all (issue #53).
+
 **Breaking change:** ``healpix_sphere_inverse``, ``healpix_ellipsoid_inverse``,
 ``rhealpix_sphere_inverse``, and ``rhealpix_ellipsoid_inverse``
 (``pj_healpix``/``pj_rhealpix``) now raise ``ValueError`` for out-of-bounds

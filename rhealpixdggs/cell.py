@@ -7,6 +7,8 @@ from random import uniform
 from colorsys import hsv_to_rgb
 from functools import total_ordering, cached_property
 
+from rhealpixdggs.utils import wrap_longitude
+
 # Level 0 cell IDs, which are anomalous.
 CELLS0 = ["N", "O", "P", "Q", "R", "S"]
 
@@ -1387,15 +1389,10 @@ class Cell(object):
                 result["north_2"] = nuc_cell[2][2]
                 result["north_3"] = nuc_cell[3][2]
         elif shape == "skew_quad":
-            # To avoid east-west longitude wrapping, move prime meridian
-            # so that nucleus of this cell is at longitude 0.
-            old_lon_0 = self.rdggs.ellipsoid.lon_0
-            self.rdggs.ellipsoid.lon_0 = -self.nucleus(plane=False)[0]
-            # Get lon-lat coordinates of neighbor centroids.
-            nuc_cell = []
-            for cell in list(plane_neighbors.values()):
-                nucleus = cell.nucleus(plane=False)
-                nuc_cell.append((nucleus[0], nucleus[1], cell))
+            # Get lon-lat coordinates of neighbor centroids, paired with
+            # longitude relative to this cell's nucleus (see the helper's
+            # docstring for why "relative" instead of raw longitude).
+            nuc_cell = self._neighbor_nuclei_by_relative_longitude(plane_neighbors)
             # Max latitude cell is north neighbor:
             north = max(nuc_cell, key=lambda x: x[1])
             result["north"] = north[2]
@@ -1404,25 +1401,14 @@ class Cell(object):
             south = min(nuc_cell, key=lambda x: x[1])
             result["south"] = south[2]
             nuc_cell.remove(south)
-            # Max longitude cell is east neighbor
-            # (because i moved the prime meridian):
+            # Max relative longitude cell is east neighbor:
             result["east"] = max(nuc_cell, key=lambda x: x[0])[2]
-            # Min longitude cell is west neighbor
-            # (because i moved the prime meridian and removed cap cells):
+            # Min relative longitude cell is west neighbor:
             result["west"] = min(nuc_cell, key=lambda x: x[0])[2]
-            # Return prime meridian to its original position.
-            self.rdggs.ellipsoid.lon_0 = old_lon_0
         else:
             # Dart cell.
-            # To avoid east-west longitude wrapping, move prime meridian
-            # so that nucleus of this cell is at longitude 0.
-            old_lon_0 = self.rdggs.ellipsoid.lon_0
-            self.rdggs.ellipsoid.lon_0 = -self.nucleus(plane=False)[0]
-            nuc_cell = []
-            for cell in list(plane_neighbors.values()):
-                nucleus = cell.nucleus(plane=False)
-                nuc_cell.append((nucleus[0], nucleus[1], cell))
-            # Sort cells by longitude. Works because moved prime meridian.
+            nuc_cell = self._neighbor_nuclei_by_relative_longitude(plane_neighbors)
+            # Sort cells by longitude relative to this cell's nucleus.
             nuc_cell.sort()
             if self.region() == "north_polar":
                 result["west"] = nuc_cell[0][2]
@@ -1434,9 +1420,31 @@ class Cell(object):
                 result["north_west"] = nuc_cell[1][2]
                 result["north_east"] = nuc_cell[2][2]
                 result["east"] = nuc_cell[3][2]
-            # Return prime meridian to its original position.
-            self.rdggs.ellipsoid.lon_0 = old_lon_0
         return result
+
+    def _neighbor_nuclei_by_relative_longitude(self, plane_neighbors):
+        """
+        Return a list of `(relative_longitude, latitude, cell)` triples,
+        one per cell in `plane_neighbors`, where `relative_longitude` is
+        each neighbor's nucleus longitude minus this cell's own nucleus
+        longitude, wrapped into `(-pi, pi]` (or `(-180, 180]` in degrees
+        mode). Used by `neighbors()` for the dart and skew_quad cases to
+        compare/sort neighbors by longitude without an east-west
+        antimeridian wrap-around artefact -- e.g. a neighbor at -179
+        degrees is 2 degrees *east* of one at 179 degrees, not far to the
+        west, and comparing raw longitudes would get that backwards.
+        Computed relative to this cell's own nucleus rather than any
+        global reference, so the result is independent of the ellipsoid's
+        `lon_0` and touches no shared state.
+        """
+        self_lon = self.nucleus(plane=False)[0]
+        radians = self.rdggs.ellipsoid.radians
+        nuc_cell = []
+        for cell in plane_neighbors.values():
+            nucleus = cell.nucleus(plane=False)
+            rel_lon = wrap_longitude(nucleus[0] - self_lon, radians=radians)
+            nuc_cell.append((rel_lon, nucleus[1], cell))
+        return nuc_cell
 
     def random_point(self, plane=True):
         """
