@@ -26,6 +26,9 @@ from typing import Callable
 # Import my modules.
 from rhealpixdggs.utils import my_round, auth_lat, auth_rad
 
+# Cache for in_healpix_image(); see the comment inside that function.
+_healpix_image_path = None
+
 
 def healpix_sphere(lam: float, phi: float) -> tuple[float, float]:
     """
@@ -193,34 +196,40 @@ def in_healpix_image(x: float, y: float) -> bool:
         False
 
     """
-    # matplotlib is a third-party module.
-    from matplotlib.path import Path
+    global _healpix_image_path
+    if _healpix_image_path is None:
+        # matplotlib is a third-party module.
+        from matplotlib.path import Path
 
-    # Fuzz to slightly expand HEALPix image boundary so that
-    # points on the boundary count as lying in the image.
-    eps = 1e-10
-    vertices = [
-        (-pi - eps, pi / 4 + eps),
-        (-3 * pi / 4, pi / 2 + eps),
-        (-pi / 2, pi / 4 + eps),
-        (-pi / 4, pi / 2 + eps),
-        (0, pi / 4 + eps),
-        (pi / 4, pi / 2 + eps),
-        (pi / 2, pi / 4 + eps),
-        (3 * pi / 4, pi / 2 + eps),
-        (pi + eps, pi / 4 + eps),
-        (pi + eps, -pi / 4 - eps),
-        (3 * pi / 4, -pi / 2 - eps),
-        (pi / 2, -pi / 4 - eps),
-        (pi / 4, -pi / 2 - eps),
-        (0, -pi / 4 - eps),
-        (-pi / 4, -pi / 2 - eps),
-        (-pi / 2, -pi / 4 - eps),
-        (-3 * pi / 4, -pi / 2 - eps),
-        (-pi - eps, -pi / 4 - eps),
-    ]
-    poly = Path(vertices)
-    return bool(poly.contains_point([x, y]))
+        # Fuzz to slightly expand HEALPix image boundary so that
+        # points on the boundary count as lying in the image.
+        eps = 1e-10
+        vertices = [
+            (-pi - eps, pi / 4 + eps),
+            (-3 * pi / 4, pi / 2 + eps),
+            (-pi / 2, pi / 4 + eps),
+            (-pi / 4, pi / 2 + eps),
+            (0, pi / 4 + eps),
+            (pi / 4, pi / 2 + eps),
+            (pi / 2, pi / 4 + eps),
+            (3 * pi / 4, pi / 2 + eps),
+            (pi + eps, pi / 4 + eps),
+            (pi + eps, -pi / 4 - eps),
+            (3 * pi / 4, -pi / 2 - eps),
+            (pi / 2, -pi / 4 - eps),
+            (pi / 4, -pi / 2 - eps),
+            (0, -pi / 4 - eps),
+            (-pi / 4, -pi / 2 - eps),
+            (-pi / 2, -pi / 4 - eps),
+            (-3 * pi / 4, -pi / 2 - eps),
+            (-pi - eps, -pi / 4 - eps),
+        ]
+        # This Path never varies (the function takes no parameters), so
+        # build it once and reuse it -- constructing a matplotlib Path is
+        # not free, and this used to happen on every single call, i.e. once
+        # per point projected.
+        _healpix_image_path = Path(vertices)
+    return bool(_healpix_image_path.contains_point([x, y]))
 
 
 def healpix_vertices() -> list[tuple[float, float, float]]:

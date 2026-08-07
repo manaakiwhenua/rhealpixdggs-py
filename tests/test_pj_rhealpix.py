@@ -316,6 +316,25 @@ class MyTestCase(unittest.TestCase):
             for i in range(len(expect)):
                 self.assertAlmostEqual(get[i], expect[i])
 
+    def test_in_rhealpix_image_path_is_cached(self):
+        # Regression test: in_rhealpix_image() used to rebuild its
+        # matplotlib Path on every call even though it only depends on
+        # (north_square, south_square), which are fixed per DGGS instance.
+        # See issue #62.
+        pjr._rhealpix_image_paths.clear()
+        self.assertTrue(pjr.in_rhealpix_image(0, 0, north_square=1, south_square=2))
+        key = (1, 2)
+        self.assertIn(key, pjr._rhealpix_image_paths)
+        cached = pjr._rhealpix_image_paths[key]
+        self.assertTrue(
+            pjr.in_rhealpix_image(0.1, 0.1, north_square=1, south_square=2)
+        )
+        self.assertIs(pjr._rhealpix_image_paths[key], cached)
+        # A different (north_square, south_square) pair gets its own entry.
+        self.assertTrue(pjr.in_rhealpix_image(0, 0, north_square=0, south_square=0))
+        self.assertIn((0, 0), pjr._rhealpix_image_paths)
+        self.assertIsNot(pjr._rhealpix_image_paths[(0, 0)], cached)
+
 
 if __name__ == "__main__":
     unittest.main()
