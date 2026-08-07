@@ -1,5 +1,33 @@
 0.6.1
 ^^^^^
+**Breaking change:** ``rhp_wrappers.cell_ring()``/``k_ring()`` are rebuilt on
+a breadth-first search over ``Cell.neighbor()``/``diagonal_neighbor()``
+steps, growing the ring outward one shell at a time, rather than jumping
+directly to a computed "start corner" and walking its 4 sides. The previous
+approach was badly wrong for any ring touching more than 2 resolution 0
+cube faces (documented as a known limitation, issue #60): e.g. a distance-1
+ring around a cell sitting at a genuine cube corner used to return several
+cells that aren't even neighbors of the centre cell, plus a duplicate. The
+new approach handles any number of faces uniformly and correctly, including
+genuine 3-valent cube corners, where a ring has fewer than the usual 8*k
+cells for an interior ring rather than an incorrect or duplicate one.
+Consequences of the rewrite:
+
+- Both functions no longer take a ``verbose`` parameter. It existed to print
+  a warning about the now-fixed >2-face limitation; there's nothing left to
+  warn about.
+- Requesting a ring beyond the grid's actual graph diameter at that
+  resolution (the largest number of edge/corner hops between any two cells)
+  now correctly returns an empty list, rather than an arbitrary guess at an
+  "opposite" cell -- there is no cell at that exact distance once the whole
+  grid has already been covered by closer rings.
+- The specific cell order within a ring has changed (same cells, differently
+  sequenced): rings now always list cells in a fixed clockwise order
+  starting from "up", whatever that direction happens to be for the centre
+  cell, rather than the previous "walk the perimeter starting from the
+  upper-left corner" convention (which didn't generalize to corner cases
+  anyway).
+
 Added a ``Cell.diagonal_neighbor(direction)`` method (``direction`` one of
 ``'up_left'``, ``'up_right'``, ``'down_left'``, ``'down_right'``), returning
 this cell's corner-touching-only planar neighbor, or ``None`` if this cell
