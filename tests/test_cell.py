@@ -184,6 +184,22 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             self.assertFalse(b <= a)
             self.assertFalse(c <= a)
 
+    def test_le_N_side_ge_4(self):
+        # Regression test for issue #71: __le__ used to lexicographically
+        # compare a string rendering of the suid (comma-joined), which
+        # breaks for N_side >= 4 once some digits become multi-character
+        # (e.g. 10-15 for N_side=4): "9" > "1" as strings, so same-
+        # resolution siblings (N, 9) and (N, 10) came out mis-ordered
+        # despite 9 < 10 numerically. Compare the suid tuple itself
+        # instead.
+        rdggs = RHEALPixDGGS(N_side=4)
+        c9 = Cell(rdggs, (N, 9))
+        c10 = Cell(rdggs, (N, 10))
+        self.assertTrue(c9 <= c10)
+        self.assertFalse(c10 <= c9)
+        self.assertTrue(c9 < c10)
+        self.assertFalse(c10 < c9)
+
     def test_gt(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             a = Cell(rdggs, (N, 7, 6, 8, 1))
@@ -340,6 +356,25 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             D = Cell(rdggs, (S, 1, 2, 0, 5))
             self.assertTrue(D.subcell(C))
             self.assertFalse(C.subcell(D))
+
+    def test_subcell_N_side_ge_4(self):
+        # Regression test for issue #71: subcell() used to compare a
+        # string rendering of the suid (comma-joined) with startswith(),
+        # which breaks for N_side >= 4 once some digits become
+        # multi-character (e.g. 10-15 for N_side=4): "N,15" starts with
+        # "N,1" as a string, incorrectly making (N, 15) look like a
+        # subcell of (N, 1) even though they're same-resolution siblings,
+        # not ancestor and descendant.
+        rdggs = RHEALPixDGGS(N_side=4)
+        a = Cell(rdggs, (N, 15))
+        b = Cell(rdggs, (N, 1))
+        self.assertFalse(a.subcell(b))
+        self.assertFalse(b.subcell(a))
+        # A genuine ancestor/descendant pair should still work.
+        parent = Cell(rdggs, (N, 1))
+        child = Cell(rdggs, (N, 1, 15))
+        self.assertTrue(child.subcell(parent))
+        self.assertFalse(parent.subcell(child))
 
     def test_subcells(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:

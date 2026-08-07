@@ -209,12 +209,18 @@ class Cell(object):
         Return True if (`self.suid < other.suid` and
         `self.suid` is not a prefix of `other.suid`) or
         `self` is a subcell of `other`.
-        Here < is the lexicographic order.
+        Here < is the lexicographic order on the suid tuple itself (face
+        letter, then digits compared as the integers they are -- not on
+        any string rendering of it, which for `N_side >= 4` would compare
+        multi-character digits like 10-15 character-by-character rather
+        than numerically).
         Returns False otherwise.
         """
-        s = ",".join([str(x) for x in self.suid])
-        t = ",".join([str(x) for x in other.suid])
-        if (s <= t and not t.startswith(s)) or s.startswith(t):
+        s = self.suid
+        t = other.suid
+        t_starts_with_s = t[: len(s)] == s
+        s_starts_with_t = s[: len(t)] == t
+        if (s <= t and not t_starts_with_s) or s_starts_with_t:
             return True
         else:
             return False
@@ -453,9 +459,14 @@ class Cell(object):
             False
 
         """
-        s = ",".join([str(x) for x in self.suid])
-        t = ",".join([str(x) for x in other.suid])
-        return s.startswith(t)
+        # Compare the suid tuples directly (not a string rendering of
+        # them): for N_side >= 4, some digits are multi-character (e.g.
+        # 10-15), and comparing stringified, comma-joined suids with
+        # startswith() can misfire, e.g. treating ('N', 15) as a subcell
+        # of ('N', 1), since "N,15" starts with "N,1" as a string even
+        # though these are same-resolution siblings, not ancestor and
+        # descendant.
+        return self.suid[: len(other.suid)] == other.suid
 
     def subcells(self, resolution=None):
         """
