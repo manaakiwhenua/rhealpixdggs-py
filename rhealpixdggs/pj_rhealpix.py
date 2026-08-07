@@ -19,6 +19,8 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 
 # Import third-party modules.
 from numpy import pi, sign, array, identity, dot, deg2rad, rad2deg
+import shapely
+from shapely.geometry import Polygon
 from typing import Callable
 
 # Import my modules.
@@ -48,7 +50,7 @@ ROTATE = {
 }
 
 # Cache for in_rhealpix_image(); see the comment inside that function.
-_rhealpix_image_paths = {}
+_rhealpix_image_polys = {}
 
 
 def combine_triangles(
@@ -449,16 +451,13 @@ def in_rhealpix_image(
         False
 
     """
-    # This Path only depends on (north_square, south_square), which are
+    # This polygon only depends on (north_square, south_square), which are
     # fixed per DGGS instance, so build it once per distinct pair and reuse
-    # it -- constructing a matplotlib Path is not free, and this used to
-    # happen on every single call, i.e. once per point projected.
+    # it -- constructing it is not free, and this used to happen on every
+    # single call, i.e. once per point projected.
     key = (north_square, south_square)
-    poly = _rhealpix_image_paths.get(key)
+    poly = _rhealpix_image_polys.get(key)
     if poly is None:
-        # matplotlib is a third-party module.
-        from matplotlib.path import Path
-
         # Fuzz to slightly expand rHEALPix image so that
         # points on the boundary count as lying in the image.
         eps = 1e-15
@@ -476,9 +475,15 @@ def in_rhealpix_image(
             (-pi + south_square * pi / 2 - eps, -pi / 4 - eps),
             (-pi - eps, -pi / 4 - eps),
         ]
-        poly = Path(vertices)
-        _rhealpix_image_paths[key] = poly
-    return bool(poly.contains_point([x, y]))
+        poly = Polygon(vertices)
+        _rhealpix_image_polys[key] = poly
+    # contains_xy (vectorized, coordinate-based) avoids constructing a Point
+    # object per call, unlike the equivalent poly.contains(Point(x, y)).
+    # It's a strict interior test (excludes the boundary), but the eps fuzz
+    # above already pushes genuine boundary points into the interior of
+    # this (slightly larger) polygon, so they still test True -- verified
+    # against every boundary case in this function's own doctest above.
+    return bool(shapely.contains_xy(poly, x, y))
 
 
 def rhealpix_vertices(

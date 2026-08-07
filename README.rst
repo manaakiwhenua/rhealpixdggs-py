@@ -126,7 +126,6 @@ Requirements
 * ``requirements.txt`` - all the module requirements for operation
     - `NumPy >=1.25.2,<2 <https://www.numpy.org/>`_ Base N-dimensional array package
     - `SciPy >=1.11.2 <https://www.scipy.org/>`_ Fundamental library for scientific computing
-    - `Matplotlib >=3.7.2 <https://matplotlib.org/>`_ Comprehensive 2D Plotting
     - `Pyproj >=3.6.1 <https://code.google.com/p/pyproj/>`_ Python interface to the PROJ.4 cartographic library
     - `Shapely >=2.0.1 <https://shapely.readthedocs.io/>`_ Manipulation and analysis of planar GEOS geometries
 * ``requirements.dev.txt`` - packages needed for developing this package
