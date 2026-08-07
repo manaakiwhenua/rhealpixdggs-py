@@ -95,11 +95,10 @@ class Projection(object):
         """
         Return the underlying f(u, v, radians=False, inverse=False)
         callable for this projection, building it on first use and
-        caching it thereafter. Previously this was rebuilt from scratch
-        (including re-importing its module and, for homemade projections,
-        recomputing the authalic radius) on every single call to
-        __call__() -- a real cost for callers like Cell.boundary(), which
-        may invoke __call__() dozens of times per cell.
+        caching it thereafter. Building it (re-importing its module and,
+        for homemade projections, recomputing the authalic radius) is not
+        free, and __call__() may invoke it dozens of times per cell for
+        callers like Cell.boundary().
         """
         if self._f is None:
             a = self.ellipsoid.a

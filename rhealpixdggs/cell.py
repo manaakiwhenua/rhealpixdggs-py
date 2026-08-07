@@ -1433,20 +1433,9 @@ class Cell(object):
         antimeridian wrap-around artefact -- e.g. a neighbor at -179
         degrees is 2 degrees *east* of one at 179 degrees, not far to the
         west, and comparing raw longitudes would get that backwards.
-
-        A prior implementation achieved the same effect by temporarily
-        reassigning `self.rdggs.ellipsoid.lon_0` (a singleton shared by
-        every `Cell` built from this `rdggs`) so that this cell's own
-        nucleus fell at longitude 0, computing neighbor nuclei in that
-        shifted frame, then restoring `lon_0`. That's not thread-safe
-        (concurrent use of the same `rdggs` could observe or clobber the
-        temporarily-shifted value), not exception-safe (an exception
-        between the mutation and the restore leaves the shared ellipsoid
-        permanently corrupted), and -- confirmed by testing against this
-        replacement across many DGGS configurations -- not even correct
-        in every case: when the ellipsoid's own `lon_0` happens to be near
-        +-180 degrees, the old approach could pick the wrong neighbor for
-        "east"/"west"/etc. This version never touches shared state at all.
+        Computed relative to this cell's own nucleus rather than any
+        global reference, so the result is independent of the ellipsoid's
+        `lon_0` and touches no shared state.
         """
         self_lon = self.nucleus(plane=False)[0]
         radians = self.rdggs.ellipsoid.radians
