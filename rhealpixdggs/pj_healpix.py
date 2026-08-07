@@ -81,10 +81,11 @@ def healpix_sphere_inverse(x: float, y: float) -> tuple[float, float]:
         True
 
     """
-    # Throw error if input coordinates are out of bounds.
     if not in_healpix_image(x, y):
-        print("Error (hsi): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
-        return float("inf"), float("inf")
+        raise ValueError(
+            "(%.20f,%.20f) is not a point in the image of the HEALPix "
+            "projection of the unit sphere" % (x, y)
+        )
     y0 = pi / 4
     # Equatorial region.
     if abs(y) <= y0:
@@ -150,11 +151,8 @@ def healpix_ellipsoid_inverse(x: float, y: float, e: float = 0) -> tuple[float, 
         (0, 0.448798950512828)
 
     """
-    # Throw error if input coordinates are out of bounds.
-    if not in_healpix_image(x, y):
-        print("Error (hei): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
-        return
-
+    # healpix_sphere_inverse() raises ValueError for out-of-bounds (x, y);
+    # no need to duplicate that check here.
     lam, beta = healpix_sphere_inverse(x, y)
     phi = auth_lat(beta, e, radians=True, inverse=True)
     return lam, phi

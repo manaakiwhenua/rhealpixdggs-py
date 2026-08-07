@@ -335,6 +335,20 @@ class MyTestCase(unittest.TestCase):
         self.assertIn((0, 0), pjr._rhealpix_image_polys)
         self.assertIsNot(pjr._rhealpix_image_polys[(0, 0)], cached)
 
+    def test_out_of_bounds_raises_value_error(self):
+        # Regression test for issue #52: out-of-bounds coordinates used to
+        # print an error message and return None instead of raising, which
+        # crashed several frames away with a confusing numpy TypeError the
+        # moment rhealpix()'s closure tried to array()-and-unpack it.
+        with self.assertRaises(ValueError):
+            pjr.rhealpix_sphere_inverse(0, 100)
+        with self.assertRaises(ValueError):
+            pjr.rhealpix_ellipsoid_inverse(0, 100)
+        # Same via the public factory function.
+        f = pjr.rhealpix(a=1, e=0.5, north_square=1, south_square=2)
+        with self.assertRaises(ValueError):
+            f(0, 100, radians=True, inverse=True)
+
 
 if __name__ == "__main__":
     unittest.main()

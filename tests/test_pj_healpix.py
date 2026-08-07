@@ -172,6 +172,23 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(pjh.in_healpix_image(0.1, 0.1))
         self.assertIs(pjh._healpix_image_poly, cached)
 
+    def test_out_of_bounds_raises_value_error(self):
+        # Regression test for issue #52: out-of-bounds coordinates used to
+        # print an error message and return a sentinel (float("inf"), or
+        # bare None for healpix_ellipsoid_inverse) instead of raising --
+        # the sentinel case silently propagated inf into any downstream
+        # arithmetic, and the None case crashed several frames away with a
+        # confusing numpy TypeError the moment healpix()'s closure tried
+        # to array()-and-unpack it.
+        with self.assertRaises(ValueError):
+            pjh.healpix_sphere_inverse(0, 100)
+        with self.assertRaises(ValueError):
+            pjh.healpix_ellipsoid_inverse(0, 100)
+        # Same via the public factory function.
+        f = pjh.healpix(a=1, e=0.5)
+        with self.assertRaises(ValueError):
+            f(0, 100, radians=True, inverse=True)
+
 
 if __name__ == "__main__":
     unittest.main()
