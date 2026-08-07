@@ -76,6 +76,11 @@ class Projection(object):
         # {'north_square':1, 'south_square': 2}:
         self.kwargs = kwargs
         self.ellipsoid = ellipsoid
+        # Lazily built and cached by _get_f(). `a`/`e` (the only ellipsoid
+        # attributes this depends on) never change after construction, so
+        # the underlying projection callable only ever needs to be built
+        # once, no matter how many times __call__() is invoked.
+        self._f = None
 
     def __str__(self):
         result = ["map projection:"]
@@ -86,26 +91,40 @@ class Projection(object):
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 
+    def _get_f(self):
+        """
+        Return the underlying f(u, v, radians=False, inverse=False)
+        callable for this projection, building it on first use and
+        caching it thereafter. Previously this was rebuilt from scratch
+        (including re-importing its module and, for homemade projections,
+        recomputing the authalic radius) on every single call to
+        __call__() -- a real cost for callers like Cell.boundary(), which
+        may invoke __call__() dozens of times per cell.
+        """
+        if self._f is None:
+            a = self.ellipsoid.a
+            e = self.ellipsoid.e
+            if self.proj in HOMEMADE_PROJECTIONS:
+                try:
+                    # Import projection module for proj.
+                    module = importlib.import_module("rhealpixdggs.pj_" + self.proj)
+                    self._f = getattr(module, self.proj)(a=a, e=e, **self.kwargs)
+                except (AttributeError, ModuleNotFoundError):
+                    print("Oops! Projection %s is not implemented." % self.proj)
+                    return None
+            else:
+                # Use a projection from the PROJ library.
+                self._f = pyproj.Proj(proj=self.proj, a=a, e=e, **self.kwargs)
+        return self._f
+
     def __call__(self, u, v, inverse=False):
         ellipsoid = self.ellipsoid
-        proj = self.proj
-        kwargs = self.kwargs
         lon_0 = ellipsoid.lon_0
         lat_0 = ellipsoid.lat_0
         radians = ellipsoid.radians
-        a = ellipsoid.a
-        e = ellipsoid.e
-        if proj in HOMEMADE_PROJECTIONS:
-            try:
-                # Import projection module for proj.
-                module = importlib.import_module("rhealpixdggs.pj_" + proj)
-                f = getattr(module, proj)(a=a, e=e, **kwargs)
-            except (AttributeError, ModuleNotFoundError):
-                print("Oops! Projection %s is not implemented." % proj)
-                return
-        else:
-            # Use a projection from the PROJ library.
-            f = pyproj.Proj(proj=proj, a=a, e=e, **kwargs)
+        f = self._get_f()
+        if f is None:
+            return
         if not inverse:
             # Translate longitudes and latitudes so that
             # (lon_0, lat_0) maps to (0, 0) in the plane.

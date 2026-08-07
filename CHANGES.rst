@@ -1,5 +1,15 @@
 0.6.1
 ^^^^^
+Performance (issue #7, #62): ``Projection.__call__`` and
+``in_healpix_image``/``in_rhealpix_image`` were rebuilding objects that
+never change (the underlying projection callable, and a fixed
+matplotlib ``Path``) on every single point projected, rather than once.
+Both are now cached. No behavior change -- same inputs still produce
+identical outputs, verified against the full test suite -- only less
+redundant setup work per point. Measured on a real-world repro
+(``Cell.boundary(10, plane=False)`` on a dart-shaped cell, 2000
+iterations): roughly 2.4x faster (3.62s -> 1.48s).
+
 **Breaking change (harmless):** removed the ``RhealPolygon`` stub class
 (``__init__`` only, no other methods, no references or tests anywhere).
 Follow-up from a whole-repository code review; see ``CODE_REVIEW.md``.

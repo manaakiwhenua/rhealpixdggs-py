@@ -47,6 +47,9 @@ ROTATE = {
     -3: ROTATE1,
 }
 
+# Cache for in_rhealpix_image(); see the comment inside that function.
+_rhealpix_image_paths = {}
+
 
 def combine_triangles(
     x: float,
@@ -446,27 +449,35 @@ def in_rhealpix_image(
         False
 
     """
-    # matplotlib is a third-party module.
-    from matplotlib.path import Path
+    # This Path only depends on (north_square, south_square), which are
+    # fixed per DGGS instance, so build it once per distinct pair and reuse
+    # it -- constructing a matplotlib Path is not free, and this used to
+    # happen on every single call, i.e. once per point projected.
+    key = (north_square, south_square)
+    poly = _rhealpix_image_paths.get(key)
+    if poly is None:
+        # matplotlib is a third-party module.
+        from matplotlib.path import Path
 
-    # Fuzz to slightly expand rHEALPix image so that
-    # points on the boundary count as lying in the image.
-    eps = 1e-15
-    vertices = [
-        (-pi - eps, pi / 4 + eps),
-        (-pi + north_square * pi / 2 - eps, pi / 4 + eps),
-        (-pi + north_square * pi / 2 - eps, 3 * pi / 4 + eps),
-        (-pi + (north_square + 1) * pi / 2 + eps, 3 * pi / 4 + eps),
-        (-pi + (north_square + 1) * pi / 2 + eps, pi / 4 + eps),
-        (pi + eps, pi / 4 + eps),
-        (pi + eps, -pi / 4 - eps),
-        (-pi + (south_square + 1) * pi / 2 + eps, -pi / 4 - eps),
-        (-pi + (south_square + 1) * pi / 2 + eps, -3 * pi / 4 - eps),
-        (-pi + south_square * pi / 2 - eps, -3 * pi / 4 - eps),
-        (-pi + south_square * pi / 2 - eps, -pi / 4 - eps),
-        (-pi - eps, -pi / 4 - eps),
-    ]
-    poly = Path(vertices)
+        # Fuzz to slightly expand rHEALPix image so that
+        # points on the boundary count as lying in the image.
+        eps = 1e-15
+        vertices = [
+            (-pi - eps, pi / 4 + eps),
+            (-pi + north_square * pi / 2 - eps, pi / 4 + eps),
+            (-pi + north_square * pi / 2 - eps, 3 * pi / 4 + eps),
+            (-pi + (north_square + 1) * pi / 2 + eps, 3 * pi / 4 + eps),
+            (-pi + (north_square + 1) * pi / 2 + eps, pi / 4 + eps),
+            (pi + eps, pi / 4 + eps),
+            (pi + eps, -pi / 4 - eps),
+            (-pi + (south_square + 1) * pi / 2 + eps, -pi / 4 - eps),
+            (-pi + (south_square + 1) * pi / 2 + eps, -3 * pi / 4 - eps),
+            (-pi + south_square * pi / 2 - eps, -3 * pi / 4 - eps),
+            (-pi + south_square * pi / 2 - eps, -pi / 4 - eps),
+            (-pi - eps, -pi / 4 - eps),
+        ]
+        poly = Path(vertices)
+        _rhealpix_image_paths[key] = poly
     return bool(poly.contains_point([x, y]))
 
 
