@@ -1,5 +1,13 @@
 0.6.1
 ^^^^^
+Fixed ``Cell.boundary(plane=False)`` silently returning only 4 points for
+quad/cap cells regardless of ``n``, instead of the documented ``4*n - 4``
+(a regression from 0.6.0's short-circuit to ``vertices()``). The
+short-circuit now only applies at ``n=2``, where it's provably equivalent;
+``n>2`` on quad/cap cells falls through to the same per-point-projected
+algorithm used for other shapes, so it is correct again but not faster
+than before 0.6.0 for that case (issue #49).
+
 Performance (issue #7, #62): ``Projection.__call__`` and
 ``in_healpix_image``/``in_rhealpix_image`` were rebuilding objects that
 never change (the underlying projection callable, and a fixed
