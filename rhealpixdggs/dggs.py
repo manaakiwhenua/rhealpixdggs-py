@@ -1549,14 +1549,3 @@ UNIT_003 = RHEALPixDGGS(ellipsoid=UNIT_SPHERE, north_square=0, south_square=0, N
 UNIT_003_RADIANS = RHEALPixDGGS(
     ellipsoid=UNIT_SPHERE_RADIANS, north_square=0, south_square=0, N_side=3
 )
-
-
-class RhealPolygon(object):
-    """ """
-
-    def __init__(self, rdggs=WGS84_003, suid_list=None):
-        self.rdggs = rdggs
-        self.ellipsoid = rdggs.ellipsoid
-        self.N_side = rdggs.N_side
-        self.suid = ()  # Spatially unique identifier of self.
-        self.suid_list = suid_list

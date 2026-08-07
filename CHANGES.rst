@@ -1,3 +1,9 @@
+0.6.1
+^^^^^
+**Breaking change (harmless):** removed the ``RhealPolygon`` stub class
+(``__init__`` only, no other methods, no references or tests anywhere).
+Follow-up from a whole-repository code review; see ``CODE_REVIEW.md``.
+
 0.6.0
 ^^^^^
 **Breaking change:** ``Cell.ellipsoidal_shape`` is now a ``cached_property``
