@@ -620,3 +620,17 @@ class SCENZGridCELLTestCase(unittest.TestCase):
                 self.assertTrue(
                     c.contains(p, plane=plane)
                 )  # ------------------------------------------------------------------------------
+
+    def test_boundary_n_clamp(self):
+        # Regression test for issue #48: boundary(n<2) should clamp to n=2
+        # instead of crashing with ZeroDivisionError (n==2 comparison bug).
+        for plane in [True, False]:
+            c = Cell(WGS84_123, [S, 2])  # dart cell - hits the n<2 guard
+            # n=1 used to crash with ZeroDivisionError
+            result_1 = c.boundary(n=1, plane=plane)
+            self.assertIsInstance(result_1, list)
+            # n=0 used to return silently empty instead of clamped result
+            result_0 = c.boundary(n=0, plane=plane)
+            self.assertIsInstance(result_0, list)
+            # Both should match n=2 behavior after clamping
+            self.assertEqual(result_1, c.boundary(n=2, plane=plane))
