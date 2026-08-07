@@ -119,6 +119,29 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
                 count += 1
             self.assertEqual(count, correct_count)
 
+    def test_interval_N_side_ge_4(self):
+        # Regression test for issue #71: interval() walks cells via
+        # cell.successor() and terminates on `cell <= b`, and __le__ used
+        # to compare a string rendering of the suid, which breaks for
+        # N_side >= 4 (some digits, e.g. 10-15, are multi-character).
+        # Confirm interval() still produces the correct, fully-ordered
+        # sequence of cells in that case.
+        rdggs = RHEALPixDGGS(N_side=4)
+        A = rdggs.cell((N, 9))
+        B = rdggs.cell((N, 12))
+        start_index = A.index(order="level")
+        end_index = B.index(order="level")
+        correct_count = end_index - start_index + 1
+        count = 0
+        old_index = start_index - 1
+        for X in rdggs.interval(A, B):
+            new_index = X.index(order="level")
+            self.assertEqual(new_index, old_index + 1)
+            old_index = new_index
+            count += 1
+        self.assertEqual(count, correct_count)
+        self.assertEqual(old_index, end_index)
+
     def test_cell_from_point(self):
         # The nucleus of a cell should yield the cell.
         for plane in [True, False]:

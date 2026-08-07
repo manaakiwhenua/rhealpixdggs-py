@@ -1,5 +1,18 @@
 0.6.1
 ^^^^^
+Fixed ``Cell.subcell()`` and ``Cell.__le__`` (and so ``<``/``<=``/``>``/``>=``,
+and anything built on them, such as ``RHEALPixDGGS.interval()``) comparing a
+comma-joined **string** rendering of a cell's suid rather than the suid
+tuple itself. This happened to work for the default ``N_side=3``, where
+every digit is a single character, but for ``N_side >= 4`` some digits are
+multi-character (e.g. 10-15 for ``N_side=4``), and the string comparison
+could misfire: e.g. ``('N', 15).subcell(('N', 1))`` incorrectly returned
+``True`` (``"N,15"`` starts with ``"N,1"`` as a string, even though digit 15
+isn't a descendant of digit 1), and same-resolution siblings like
+``('N', 9)``/``('N', 10)`` could compare in the wrong order (``"9" > "1"``
+as strings, despite 9 < 10 numerically). Both now compare the suid tuple
+directly (issue #71).
+
 **Breaking change:** ``Cell``'s constructor and ``Cell.overlaps()`` validated
 their arguments with bare ``assert`` statements, which ``python -O``/
 ``PYTHONOPTIMIZE`` compiles out entirely (silently disabling the checks),
