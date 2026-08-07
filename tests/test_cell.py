@@ -656,6 +656,32 @@ class SCENZGridCELLTestCase(unittest.TestCase):
                 result = future.result()
                 self.assertEqual(result, expected[i % len(cells)])
 
+    def test_diagonal_neighbor(self):
+        rdggs = WGS84_003
+        # Interior case: no face crossing.
+        c = rdggs.cell((N, 4, 0))
+        self.assertEqual(c.diagonal_neighbor("up_left"), rdggs.cell((N, 0, 8)))
+
+        # Genuine cube corner: exactly 3 faces meet there (self plus its
+        # up- and left-neighbors), so there's no distinct 4th diagonal
+        # cell. Confirmed against real vertex geometry: N, Q, and R all
+        # share this exact corner point, with no other cell reaching it.
+        self.assertIsNone(rdggs.cell((N,)).diagonal_neighbor("up_left"))
+
+        # Face-crossing case needing a rotation correction. This is the
+        # case that plain composition of neighbor() calls gets wrong in
+        # about a third of tested cases (self.neighbor('up').neighbor(
+        # 'left') disagrees with self.neighbor('left').neighbor('up')
+        # here): confirmed against real vertex geometry that ('N', 1, 0),
+        # its up-neighbor, its left-neighbor, and this diagonal candidate
+        # all meet at a single shared point.
+        c = rdggs.cell((N, 1, 0))
+        self.assertEqual(c.diagonal_neighbor("up_left"), rdggs.cell((Q, 2, 0)))
+
+        # Invalid direction.
+        with self.assertRaises(KeyError):
+            c.diagonal_neighbor("north")
+
     def test_overlaps(self):
         rdggs = WGS84_003
         a = rdggs.cell((P, 0))
@@ -671,6 +697,94 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         empty = rdggs.cell()
         with self.assertRaises(ValueError):
             empty.overlaps(a)
+
+    def test_equals(self):
+        rdggs = WGS84_003
+        a = rdggs.cell((P, 0))
+        self.assertTrue(a.equals(rdggs.cell((P, 0))))
+        self.assertFalse(a.equals(rdggs.cell((P, 1))))
+        # Different RHEALPixDGGS instances: never equal, even with the
+        # same suid, since __eq__ (which equals() delegates to) also
+        # compares rdggs.
+        other_rdggs = RHEALPixDGGS(N_side=4)  # A genuinely different RHEALPixDGGS.
+        self.assertFalse(a.equals(Cell(other_rdggs, (P, 0))))
+
+    def test_contains_cell_and_within(self):
+        rdggs = WGS84_003
+        parent = rdggs.cell((P, 0))
+        child = rdggs.cell((P, 0, 3))
+        sibling = rdggs.cell((P, 1))
+
+        self.assertTrue(parent.contains_cell(child))
+        self.assertTrue(parent.contains_cell(parent))  # A cell contains itself.
+        self.assertFalse(child.contains_cell(parent))
+        self.assertFalse(parent.contains_cell(sibling))
+
+        self.assertTrue(child.within(parent))
+        self.assertTrue(parent.within(parent))
+        self.assertFalse(parent.within(child))
+        self.assertFalse(sibling.within(parent))
+
+        # covers()/covered_by() are the same relations for cells; see
+        # contains_cell()'s docstring for why.
+        self.assertTrue(parent.covers(child))
+        self.assertTrue(child.covered_by(parent))
+
+        empty = rdggs.cell()
+        with self.assertRaises(ValueError):
+            empty.contains_cell(parent)
+        other_rdggs = RHEALPixDGGS(N_side=4)  # A genuinely different RHEALPixDGGS.
+        with self.assertRaises(ValueError):
+            parent.contains_cell(Cell(other_rdggs, (P, 0)))
+
+    def test_touches(self):
+        rdggs = WGS84_003
+
+        # Same-resolution edge-adjacent siblings.
+        self.assertTrue(rdggs.cell((P, 0)).touches(rdggs.cell((P, 1))))
+        # Same-resolution corner-adjacent (diagonal-only) siblings.
+        self.assertTrue(rdggs.cell((P, 0)).touches(rdggs.cell((P, 4))))
+        # Same-resolution siblings that are neither: too far apart.
+        self.assertFalse(rdggs.cell((P, 0)).touches(rdggs.cell((P, 8))))
+        # Ancestor/descendant: touching is impossible (interiors overlap).
+        self.assertFalse(rdggs.cell((P,)).touches(rdggs.cell((P, 0))))
+        # The same cell: not touches (that's equals).
+        self.assertFalse(rdggs.cell((P, 0)).touches(rdggs.cell((P, 0))))
+
+        # Cross-resolution "cousins": O (a whole resolution 0 face) sits
+        # immediately left of P, so O's entire shared edge touches any
+        # P-descendant that never strays from P's own left-hand column.
+        self.assertTrue(rdggs.cell((O,)).touches(rdggs.cell((P, 3))))
+        self.assertTrue(rdggs.cell((O,)).touches(rdggs.cell((P, 6))))
+        # P0 isn't in that left-hand column, so no touch.
+        self.assertFalse(rdggs.cell((O,)).touches(rdggs.cell((P, 1))))
+        # Symmetric regardless of argument order.
+        self.assertTrue(rdggs.cell((P, 3)).touches(rdggs.cell((O,))))
+
+        # Cross-resolution cousin that starts on the shared edge (O2 is
+        # in O's right-hand column, bordering P) but then strays from it
+        # one level deeper (O2's own child 0 is back in its left column):
+        # no longer touches.
+        self.assertTrue(rdggs.cell((O, 2)).touches(rdggs.cell((P,))))
+        self.assertFalse(rdggs.cell((O, 2, 0)).touches(rdggs.cell((P,))))
+
+        empty = rdggs.cell()
+        with self.assertRaises(ValueError):
+            empty.touches(rdggs.cell((P, 0)))
+        other_rdggs = RHEALPixDGGS(N_side=4)  # A genuinely different RHEALPixDGGS.
+        with self.assertRaises(ValueError):
+            rdggs.cell((P, 0)).touches(Cell(other_rdggs, (P, 1)))
+
+    def test_disjoint(self):
+        rdggs = WGS84_003
+        # Opposite poles: nowhere near each other.
+        self.assertTrue(rdggs.cell((N, 0)).disjoint(rdggs.cell((S, 0))))
+        # Edge-adjacent siblings: touching, so not disjoint.
+        self.assertFalse(rdggs.cell((P, 0)).disjoint(rdggs.cell((P, 1))))
+        # Ancestor/descendant: sharing interior, so not disjoint.
+        self.assertFalse(rdggs.cell((P,)).disjoint(rdggs.cell((P, 0))))
+        # Same-face siblings far enough apart to neither touch nor nest.
+        self.assertTrue(rdggs.cell((P, 0)).disjoint(rdggs.cell((P, 8))))
 
     def test_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
