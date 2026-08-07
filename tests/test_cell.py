@@ -10,6 +10,7 @@ from rhealpixdggs.cell import Cell, CELLS0
 
 from rhealpixdggs.dggs import RHEALPixDGGS, WGS84_003, WGS84_003_RADIANS
 from rhealpixdggs.ellipsoids import (
+    Ellipsoid,
     WGS84_ASPHERE_RADIANS,
     WGS84_ELLIPSOID,
     WGS84_ELLIPSOID_RADIANS,
@@ -526,6 +527,76 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             expect["east"] = Cell(rdggs, (N, 6))
             for k in list(get.keys()):
                 self.assertEqual(get[k], expect[k])
+
+    def test_neighbors_does_not_mutate_ellipsoid(self):
+        # Regression test for issue #53: neighbors() used to temporarily
+        # reassign self.rdggs.ellipsoid.lon_0 (a singleton shared by every
+        # Cell built from this rdggs) and restore it afterwards. Confirm
+        # it's never touched at all, for both the dart and skew_quad
+        # branches where the mutation used to happen.
+        ellipsoid = Ellipsoid(
+            a=WGS84_ELLIPSOID.a, f=WGS84_ELLIPSOID.f, lon_0=-131.25
+        )
+        rdggs = RHEALPixDGGS(ellipsoid=ellipsoid, N_side=3)
+        before = ellipsoid.lon_0
+        for suid in [(N, 6), (N, 3)]:  # dart, skew_quad
+            c = Cell(rdggs, suid)
+            self.assertIn(c.ellipsoidal_shape, ("dart", "skew_quad"))
+            c.neighbors(plane=False)
+            self.assertEqual(ellipsoid.lon_0, before)
+
+    def test_neighbors_independent_of_lon_0(self):
+        # Regression test for issue #53. neighbors() labels ("east",
+        # "west", "north", "south", "south_east", etc.) are documented as
+        # compass directions, which are physically meaningful and must
+        # not depend on where the ellipsoid's prime meridian (lon_0) is
+        # drawn. The previous try/finally-free mutation-based
+        # implementation got this wrong specifically when lon_0 was near
+        # +-180 degrees (confirmed by testing before this fix): the same
+        # physical cell's "east" and "west" neighbors could come out
+        # swapped depending on lon_0 alone, with the SUID grid and all
+        # other inputs unchanged.
+        dart_suid = (N, 6)
+        skew_quad_suid = (N, 3)
+        for suid in [dart_suid, skew_quad_suid]:
+            results = []
+            for lon_0 in (0, 47.9, -131.25, 179.5, -179.5, 180, -180):
+                ellipsoid = Ellipsoid(
+                    a=WGS84_ELLIPSOID.a, f=WGS84_ELLIPSOID.f, lon_0=lon_0
+                )
+                rdggs = RHEALPixDGGS(ellipsoid=ellipsoid, N_side=3)
+                c = Cell(rdggs, suid)
+                result = {k: v.suid for k, v in c.neighbors(plane=False).items()}
+                results.append(result)
+            for result in results[1:]:
+                self.assertEqual(result, results[0])
+
+    def test_neighbors_thread_safety(self):
+        # neighbors() no longer mutates any shared state, so concurrent
+        # calls against cells sharing the same rdggs/ellipsoid should be
+        # safe and should all agree with the single-threaded result.
+        # (Python's GIL means this isn't a guaranteed way to catch a
+        # reintroduced race, but it's a real exercise of concurrent
+        # access, and combined with test_neighbors_does_not_mutate_
+        # ellipsoid -- which shows there's no shared state to race on in
+        # the first place -- it's a reasonable belt-and-braces check.)
+        import concurrent.futures
+
+        rdggs = WGS84_003
+        suids = [(N, 6), (N, 3), (O, 0), (S, 4), (Q, 2, 5)]
+        cells = [Cell(rdggs, suid) for suid in suids]
+        expected = [c.neighbors(plane=False) for c in cells]
+
+        def compute(i):
+            return cells[i].neighbors(plane=False)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+            futures = [
+                pool.submit(compute, i % len(cells)) for i in range(200)
+            ]
+            for i, future in enumerate(futures):
+                result = future.result()
+                self.assertEqual(result, expected[i % len(cells)])
 
     def test_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
