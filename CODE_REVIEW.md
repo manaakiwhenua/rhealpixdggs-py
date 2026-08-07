@@ -46,7 +46,7 @@ This is a reasonably-maintained, well-tested-for-its-size library (77 runnable u
 | PROC-3 | Classifiers list only Python 3.11; no CI evidence 3.12/3.13 work | S4 | Process | Confirmed | S |
 | DEAD-1 | `RhealPolygon` stub class, zero references/tests | S4/S0 | Dead-code | Confirmed | S |
 | DEAD-2 | Commented-out "Option 2" block in `centroid()` | S0 | Dead-code | Confirmed | S |
-| DEAD-3 | ~150 lines of commented-out `CellFamily` tests (references nonexistent `WGS84_123`) | S0 | Dead-code | Confirmed | S |
+| DEAD-3 | ~150 lines of commented-out tests for a `CellFamily` class that doesn't exist anywhere in current source | S0 | Dead-code | Confirmed | S |
 | DEAD-4 | Tracked build cruft: `.coverage`, `.bak`, `docs/.doctrees/*`, orphaned `.txt` fixtures | S0 | Dead-code/Hygiene | Confirmed | S |
 
 Severity tiers: **S0** fix now, mechanical, zero risk · **S1** correctness bug, live · **S2** latent/conditional bug · **S3** known limitation, author-acknowledged · **S4** hygiene/coverage/process gap · **S5** strength, no action.
@@ -312,7 +312,7 @@ if verbose:
 
 - **DEAD-1** — `RhealPolygon` (`rhealpixdggs/dggs.py`, ~line 1554) is a bare stub — `__init__` only, no other methods, zero references or tests anywhere in the codebase. Safe to remove, but note it's a public, importable class, so treat its removal as a (harmless) breaking change worth a changelog line, consistent with the project's existing practice of flagging breaking changes explicitly.
 - **DEAD-2** — A ~90-line commented-out "Option 2" alternative implementation left inside `Cell.centroid()` (`cell.py:1073-1159`).
-- **DEAD-3** — ~150 lines of commented-out `CellFamily` tests in `tests/test_dggs.py` (lines ~451-630) — for a class that doesn't exist anywhere in current source, and which references a `WGS84_123` variable that doesn't exist either (this block predates even the current preset-naming convention).
+- **DEAD-3** — ~150 lines of commented-out `CellFamily` tests in `tests/test_dggs.py` (lines ~451-630) — for a class that doesn't exist anywhere in current source (no definition, no import, confirmed by a repo-wide search). The `WGS84_123` DGGS instance the block uses is still defined locally in the same file (line 44), so that part is fine — it's specifically `CellFamily` that's gone.
 - **DEAD-4** — Tracked build artifacts that shouldn't be in version control: `rhealpixdggs/.coverage` (an 8KB coverage.py database, tracked despite matching the `.gitignore` pattern), `tests/test_PJ_healpix.c.py.bak` (a stray Python-2-era backup file, tracked), `docs/.doctrees/*` (11 tracked Sphinx binary pickle caches, including doctrees for pages that no longer exist under the project's original "scenzgrid" name, e.g. `scenzgrid_grids.doctree`). Additionally, `tests/test_PJ_healpix.c.txt`/`c_degrees.txt` (71KB/58KB) appear to be orphaned manual-run output with no code reading them (see TEST-5 for the likely explanation).
 
 ---
