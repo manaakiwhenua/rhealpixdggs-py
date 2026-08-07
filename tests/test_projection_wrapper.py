@@ -23,6 +23,21 @@ class MyTestCase(unittest.TestCase):
             f = Projection(ellipsoid=WGS84_ELLIPSOID, proj=proj)
             self.assertIsNone(f(0, 0))
 
+    def test_underlying_callable_is_built_once_and_cached(self):
+        # Regression test: __call__() used to rebuild its underlying f
+        # (re-importing its module and, for homemade projections,
+        # recomputing the authalic radius) on every single call, even
+        # though it only depends on the ellipsoid's a/e, which never
+        # change after construction. See issue #62.
+        p = Projection(ellipsoid=WGS84_ELLIPSOID, proj="rhealpix")
+        self.assertIsNone(p._f)
+        p(0, 0)
+        cached = p._f
+        self.assertIsNotNone(cached)
+        p(0, 0.1)
+        p(0.2, -0.1, inverse=True)
+        self.assertIs(p._f, cached)
+
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":

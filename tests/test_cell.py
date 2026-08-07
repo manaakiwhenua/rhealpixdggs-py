@@ -377,6 +377,20 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         for n in (0, 1):
             self.assertEqual(a.boundary(n=n, plane=True), expect)
 
+    def test_boundary_quad_cap_n_contract(self):
+        # Regression test for the boundary(plane=False) short-circuit that
+        # silently returned only 4 points for quad/cap cells regardless of
+        # n, instead of the documented 4*n - 4. See issue #49.
+        rdggs = RHEALPixDGGS()
+        quad = Cell(rdggs, [P, 2])
+        cap = Cell(rdggs, [N])
+        for c in (quad, cap):
+            for n in (2, 3, 5):
+                b = c.boundary(n=n, plane=False)
+                self.assertEqual(len(b), max(4 * n - 4, 4))
+            # n=2 (the short-circuited case) must still agree with vertices().
+            self.assertEqual(c.boundary(n=2, plane=False), c.vertices(plane=False))
+
     def test_nucleus(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             # Nuclei of children should be in correct position
