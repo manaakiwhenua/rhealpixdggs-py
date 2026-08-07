@@ -1,5 +1,16 @@
 0.6.1
 ^^^^^
+**Breaking change:** ``Cell``'s constructor and ``Cell.overlaps()`` validated
+their arguments with bare ``assert`` statements, which ``python -O``/
+``PYTHONOPTIMIZE`` compiles out entirely (silently disabling the checks),
+and which raised ``AssertionError`` for what is really invalid input.
+Replaced with explicit ``TypeError``/``ValueError`` matching the kind of
+problem: ``TypeError`` if ``suid`` isn't a list or tuple, ``ValueError``
+for a bad length, an invalid first character, an out-of-range digit, or
+calling ``overlaps()`` on an empty cell. If you were catching
+``AssertionError`` from these, catch ``TypeError``/``ValueError`` instead
+(issue #54).
+
 Fixed ``Cell.neighbors(plane=False)`` for dart and skew_quad cells, which
 computed east/west (and, for darts, southeast/southwest/etc.) by
 temporarily reassigning ``self.rdggs.ellipsoid.lon_0`` -- a singleton

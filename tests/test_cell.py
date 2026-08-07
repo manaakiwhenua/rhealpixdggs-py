@@ -90,7 +90,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
 
             # Should not create invalid cells.
             suid = (P, rdggs.N_side**2)
-            self.assertRaises(AssertionError, Cell, rdggs, suid)
+            self.assertRaises(ValueError, Cell, rdggs, suid)
 
             # Should create cell P1.
             expect = (P, 1)
@@ -106,6 +106,29 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             i = 2 * num(0) + 1 * num(1) + num(1) - 1
             get = Cell(rdggs, post_order_index=i).suid
             self.assertEqual(get, expect)
+
+    def test_Cell_init_invalid_suid_raises(self):
+        # Regression test for issue #54: these were all bare `assert`s,
+        # which python -O silently compiles out, and which raised
+        # AssertionError regardless of what actually went wrong. Each
+        # should now raise a specific, conventional exception.
+        rdggs = WGS84_123
+        # Wrong type entirely.
+        with self.assertRaises(TypeError):
+            Cell(rdggs, suid="N0")
+        with self.assertRaises(TypeError):
+            Cell(rdggs, suid={"N", 0})
+        # Right type (tuple/list), wrong length.
+        with self.assertRaises(ValueError):
+            Cell(rdggs, suid=())
+        with self.assertRaises(ValueError):
+            Cell(rdggs, suid=(N,) * (rdggs.max_resolution + 2))
+        # suid[0] not a valid level-0 cell name.
+        with self.assertRaises(ValueError):
+            Cell(rdggs, suid=("X", 0))
+        # A later digit out of range for this DGGS's N_side.
+        with self.assertRaises(ValueError):
+            Cell(rdggs, suid=(P, rdggs.N_side**2))
 
     def test_suid_rowcol(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
@@ -597,6 +620,22 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             for i, future in enumerate(futures):
                 result = future.result()
                 self.assertEqual(result, expected[i % len(cells)])
+
+    def test_overlaps(self):
+        rdggs = WGS84_003
+        a = rdggs.cell((P, 0))
+        descendant = rdggs.cell((P, 0, 3))
+        sibling = rdggs.cell((P, 1))
+        self.assertTrue(a.overlaps(a))
+        self.assertTrue(a.overlaps(descendant))
+        self.assertTrue(descendant.overlaps(a))
+        self.assertFalse(a.overlaps(sibling))
+        # Regression test for issue #54: this was a bare `assert`, which
+        # python -O silently compiles out, and which raised
+        # AssertionError rather than a conventional exception.
+        empty = rdggs.cell()
+        with self.assertRaises(ValueError):
+            empty.overlaps(a)
 
     def test_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
