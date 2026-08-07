@@ -33,7 +33,7 @@ This is a reasonably-maintained, well-tested-for-its-size library (77 runnable u
 | INC-2 | Cap-cell handling incomplete in `cells_from_line`; antimeridian TODOs in `polyfill`/`linetrace` | S3 | Known-incomplete | High (author-confirmed) | L |
 | TEST-1 | `auth_lat()`'s large-flattening branch (f>1/150) has zero coverage, unreachable by any predefined `Ellipsoid` | S4 | Test-coverage | High | S |
 | TEST-2 | `projection_wrapper.py` has zero unittest coverage | S4 | Test-coverage | High | M |
-| TEST-3 | `Cell.area/color/overlaps/region_overlaps` untested; `area_error_budget()` doctest-only | S4 | Test-coverage | High | M |
+| TEST-3 | `Cell.area/color/overlaps/region_overlaps` untested; `area_error_budget()` doctest-only; `test_centroid` itself is a disabled stub | S4 | Test-coverage | High | M |
 | TEST-4 | `boundary()`'s 0.6.0 short-circuit has no dedicated regression test | S4 | Test-coverage | High | S |
 | DOC-1 | Sphinx toctree omits `cell.py`, `conversion.py`, `rhp_wrappers.py` | S4 | Documentation | Confirmed | S |
 | DOC-2 | README references nonexistent `requirements*.txt`; states `numpy<2` vs. `pyproject.toml`'s `numpy>=2.0` | S4 | Documentation | Confirmed | S |
@@ -287,7 +287,7 @@ if verbose:
 
 - **TEST-1** — `auth_lat()`'s large-flattening direct-formula branch (`f > 1/150`, `rhealpixdggs/utils.py`, ~lines 116-343) has zero test coverage anywhere, and **no predefined `Ellipsoid` in the codebase can reach it**: WGS84 (f≈0.00335) and its radians variant fall well under the 1/150≈0.00667 threshold and exercise the power-series branch instead; the sphere presets (`UNIT_SPHERE`, etc.) short-circuit via `e==0` before either branch. Since `Ellipsoid` is public, user-constructible API (e.g. someone modeling a fast-rotating or non-Earth body), this is a real, if narrow, gap. The power-series branch itself is well-validated — its docstring cites specific source-paper equations and `test_utils.py` round-trips both directions in both radians and degrees against arbitrary-precision reference values — so this finding is scoped specifically to the untested branch, not the whole function.
 - **TEST-2** — `rhealpixdggs/projection_wrapper.py` has no dedicated unittest file; its only coverage is 5 doctest examples.
-- **TEST-3** — `Cell.area()`, `color()`, `overlaps()`, `region_overlaps()` have neither a unittest nor a doctest. `RHEALPixDGGS.area_error_budget()` (a prominently-documented 0.5.16 feature, featured in `README.rst`'s "Error Budget" table) has a doctest but no dedicated unittest.
+- **TEST-3** — `Cell.area()`, `color()`, `overlaps()`, `region_overlaps()` have neither a unittest nor a doctest. `RHEALPixDGGS.area_error_budget()` (a prominently-documented 0.5.16 feature, featured in `README.rst`'s "Error Budget" table) has a doctest but no dedicated unittest. Found while fixing DEAD-3: `tests/test_cell.py::test_centroid` (lines 549-626) is itself a disabled stub — the method body is `pass` followed by ~75 lines of commented-out, Python-2-era Monte Carlo comparison code (`print` statement syntax, an unimported `uniform`) that hasn't run in years. `Cell.centroid()` — which uses `scipy.integrate.dblquad` for two of its four cell-shape branches — currently has **no active unittest coverage at all**, only the one doctest example in its docstring.
 - **TEST-4** — `boundary()`'s 0.6.0 short-circuit (BUG-2) has no dedicated regression test; add one alongside the fix.
 
 ## Documentation findings (DOC-1 – DOC-3)
