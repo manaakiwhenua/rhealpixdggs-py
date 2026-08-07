@@ -100,7 +100,7 @@ class Projection(object):
                 # Import projection module for proj.
                 module = importlib.import_module("rhealpixdggs.pj_" + proj)
                 f = getattr(module, proj)(a=a, e=e, **kwargs)
-            except NameError:
+            except (AttributeError, ModuleNotFoundError):
                 print("Oops! Projection %s is not implemented." % proj)
                 return
         else:
