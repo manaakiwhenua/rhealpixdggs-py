@@ -126,11 +126,18 @@ class CellZoneFromPoly:
             self.cells_list.append(cell)
 
 
-def compress_order_cells(cells: list[str], recursive: bool = False) -> list[str]:
+def compress_order_cells(
+    cells: list[str], recursive: bool = False, N_side: int = 3
+) -> list[str]:
     """
     Compress and sort a collection of cells.
 
-    Each complete group of 9 siblings is replaced by their parent cell.
+    Each complete group of ``N_side ** 2`` siblings is replaced by their
+    parent cell. ``N_side`` defaults to 3 (the default for `RHEALPixDGGS`
+    and most presets, e.g. ``WGS84_003``); pass the ``N_side`` of the DGGS
+    the cells actually belong to if it's not 3 (e.g. 2 for ``WGS84_002``),
+    otherwise a complete sibling group will never be recognised as complete
+    and nothing will compress.
     By default only one level of compression is performed. Pass
     ``recursive=True`` to repeat until no further compression is possible.
     The result is always deduplicated and sorted alphanumerically.
@@ -148,7 +155,7 @@ def compress_order_cells(cells: list[str], recursive: bool = False) -> list[str]
             upper_cells.setdefault(cell[:-1], []).append(cell)
         result: set[str] = set()
         for k, v in upper_cells.items():
-            if len(v) == 9:
+            if len(v) == N_side**2:
                 result.add(k)
             else:
                 result.update(v)
@@ -166,10 +173,15 @@ def compress_order_cells(cells: list[str], recursive: bool = False) -> list[str]
     return alphanum_sort(list(cell_set))
 
 
-def compact_cells(cells: Iterable[str]) -> set[str]:
+def compact_cells(cells: Iterable[str], N_side: int = 3) -> set[str]:
     """
-    Compact a set of rHEALPix DGGS cells by repeatedly merging complete groups
-    of 9 siblings into their parent until no further merging is possible.
+    Compact a set of rHEALPix DGGS cells by repeatedly merging complete
+    groups of ``N_side ** 2`` siblings into their parent until no further
+    merging is possible. ``N_side`` defaults to 3 (the default for
+    `RHEALPixDGGS` and most presets, e.g. ``WGS84_003``); pass the
+    ``N_side`` of the DGGS the cells actually belong to if it's not 3
+    (e.g. 2 for ``WGS84_002``), otherwise a complete sibling group will
+    never be recognised as complete and nothing will compact.
 
     All input cells must be at the same resolution (equal string length).
     Raises ValueError if the input contains cells at mixed resolutions.
@@ -193,7 +205,7 @@ def compact_cells(cells: Iterable[str]) -> set[str]:
 
         next_set: set[str] = set()
         for parent, children in upper.items():
-            if len(children) == 9:
+            if len(children) == N_side**2:
                 next_set.add(parent)
             else:
                 next_set.update(children)

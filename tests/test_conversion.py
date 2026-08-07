@@ -663,6 +663,37 @@ class TestCompactCells(unittest.TestCase):
         assert all(f"R1{n}" in result for n in range(8))
         assert "R1" not in result
 
+    def test_N_side_2_full_siblings_compact_to_parent(self):
+        # An N_side=2 DGGS (e.g. WGS84_002) has 4 children per cell, not 9.
+        # Regression test for issue #51: compact_cells hardcoded 9 as "a
+        # complete sibling group", so a genuinely complete N_side=2 group
+        # never compacted at all unless N_side is passed through.
+        cells = [f"R{n}" for n in range(4)]
+        assert compact_cells(cells, N_side=2) == {"R"}
+
+    def test_default_N_side_does_not_compact_N_side_2_siblings(self):
+        # The same complete N_side=2 sibling group, without specifying
+        # N_side, is silently left uncompacted under the N_side=3 default
+        # (4 != 9) -- this is the bug itself, kept as a test so a future
+        # change to the default doesn't accidentally paper over it.
+        cells = [f"R{n}" for n in range(4)]
+        assert compact_cells(cells) == set(cells)
+
+    def test_N_side_2_partial_siblings_stay(self):
+        cells = [f"R{n}" for n in range(3)]  # missing R3
+        assert compact_cells(cells, N_side=2) == set(cells)
+
+
+class TestCompressOrderCellsNSide(unittest.TestCase):
+    def test_N_side_2_full_siblings_compress_to_parent(self):
+        # Same bug, same fix, for compress_order_cells. See issue #51.
+        cells = [f"R{n}" for n in range(4)]
+        assert compress_order_cells(cells, N_side=2) == ["R"]
+
+    def test_default_N_side_does_not_compress_N_side_2_siblings(self):
+        cells = [f"R{n}" for n in range(4)]
+        assert compress_order_cells(cells) == sorted(cells)
+
 
 if __name__ == "__main__":
     unittest.main()

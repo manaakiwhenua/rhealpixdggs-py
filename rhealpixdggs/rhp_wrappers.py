@@ -609,7 +609,7 @@ def polyfill(
 
     # Merge cells inside polygon into larger ones where possible
     if compress:
-        cells = compact_cells(cells)
+        cells = compact_cells(cells, N_side=dggs.N_side)
 
     return cells
 

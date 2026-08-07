@@ -467,6 +467,23 @@ class RhpWrappersTestCase(unittest.TestCase):
         # Compressed from polygon - plane
         self.assertEqual(rhpw.polyfill(plane_poly, 10, compress=True), {"N216055611"})
 
+        # Regression test for issue #51: compress_cells hardcoded 9 as "a
+        # complete sibling group" (correct only for N_side=3), so under an
+        # N_side=2 DGGS (WGS84_002, 4 children per cell) a complete group
+        # of siblings silently never compressed at all. polyfill() must
+        # pass the DGGS's actual N_side through to compact_cells().
+        n_side_2_idx = ("N", 2, 1, 3)
+        n_side_2_cell = rhpw.Cell(rdggs=gs.WGS84_002, suid=n_side_2_idx)
+        n_side_2_poly = sh.Polygon(n_side_2_cell.vertices())
+        self.assertEqual(
+            rhpw.polyfill(n_side_2_poly, 4, dggs=gs.WGS84_002),
+            {"N2130", "N2131", "N2132", "N2133"},
+        )
+        self.assertEqual(
+            rhpw.polyfill(n_side_2_poly, 4, dggs=gs.WGS84_002, compress=True),
+            {"N213"},
+        )
+
         # Test data - sphere
         eq_poly_n = sh.Polygon(
             shell=[(-10, -10), (50, -10), (50, 40), (-10, 40), (-10, -10)],
