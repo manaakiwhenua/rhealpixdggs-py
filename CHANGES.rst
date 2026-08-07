@@ -1,5 +1,13 @@
 0.6.1
 ^^^^^
+Fixed ``Cell.boundary(plane=False)`` silently returning only 4 points for
+quad/cap cells regardless of ``n``, instead of the documented ``4*n - 4``
+(a regression from 0.6.0's short-circuit to ``vertices()``). The
+short-circuit now only applies at ``n=2``, where it's provably equivalent;
+``n>2`` on quad/cap cells falls through to the same per-point-projected
+algorithm used for other shapes, so it is correct again but not faster
+than before 0.6.0 for that case (issue #49).
+
 **Breaking change (harmless):** removed the ``RhealPolygon`` stub class
 (``__init__`` only, no other methods, no references or tests anywhere).
 Follow-up from a whole-repository code review; see ``CODE_REVIEW.md``.

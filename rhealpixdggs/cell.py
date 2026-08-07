@@ -766,10 +766,17 @@ class Cell(object):
         interior of the cell, which is convenient for some graphics methods.
 
         When `plane` = False, the cost scales with `n` because each point
-        requires an inverse projection call. For quad and cap cells the cell
-        edges are already well-represented by their vertices, so callers can
-        use ``cell.ellipsoidal_shape`` to avoid the overhead and fall back
-        to ``vertices(plane=False)`` for those shapes.
+        requires an inverse projection call. For quad and cap cells, `n` = 2
+        is short-circuited straight to ``vertices(plane=False)`` (skipping the
+        projection calls entirely), since that's what the general algorithm
+        below would compute anyway. For `n` > 2 on quad/cap cells the general,
+        per-point-projected algorithm still runs -- unlike dart/skew_quad
+        cells, quad/cap edges are known to be lines of constant longitude or
+        latitude on the ellipsoid, so in principle the extra points could be
+        computed directly without projecting each one, but doing that
+        correctly for cap cells requires careful antimeridian-wrapping
+        arithmetic (a cap cell's boundary is a single constant-latitude ring
+        split into 4 arcs by longitude) that hasn't been implemented yet.
 
         EXAMPLES::
 
@@ -802,15 +809,17 @@ class Cell(object):
             (157.49999999999997, 58.41366190347208)
 
         """
+        if n < 2:
+            n = 2
         # Quad and cap cells have straight or rotationally-symmetric edges on
-        # the ellipsoid, so extra boundary points add no accuracy. Fall back to
-        # vertices() and avoid the per-point projection cost entirely.
-        if not plane and self.ellipsoidal_shape in ("quad", "cap"):
+        # the ellipsoid, so at n=2 extra boundary points would add no accuracy.
+        # Fall back to vertices() and avoid the per-point projection cost
+        # entirely. For n>2 this cell falls through to the general algorithm
+        # below, same as any other shape (see the n>2 note in the docstring).
+        if not plane and n == 2 and self.ellipsoidal_shape in ("quad", "cap"):
             return self.vertices(plane=False)
         ul = self.ul_vertex(plane=True)
         w = self.width(plane=True)
-        if n < 2:
-            n = 2
         if interior:
             eps = w / 10000  # A smidgen.
         else:
