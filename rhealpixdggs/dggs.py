@@ -152,7 +152,7 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
 # *****************************************************************************
 # Import third-party modules.
 from numpy import array, base_repr, ceil, log, pi
-from shapely import LineString, Polygon
+from shapely import LineString
 
 # Import standard modules.
 from itertools import product

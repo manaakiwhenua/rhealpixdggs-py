@@ -14,7 +14,7 @@ Keep adding tests!
 # *****************************************************************************
 
 # Import standard modules.
-from math import asin, pi, sin, sqrt
+from math import asin, pi, sin
 import unittest
 
 # Import third-party modules.
