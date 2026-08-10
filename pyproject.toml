@@ -49,6 +49,7 @@ source = "https://github.com/manaakiwhenua/rhealpixdggs-py"
 black = "^23"
 pytest = "^7.4.0"
 sphinx = "^7.2"
+furo = ">=2024.8"
 
 [tool.poetry]
 include = ["tests/","docs/"]
