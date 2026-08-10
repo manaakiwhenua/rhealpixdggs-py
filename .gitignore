@@ -71,6 +71,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+# Cached downloads for docs/make_figures.py
+docs/.cache/
+
 # Sphinx documentation
 docs/_build/
 docs/.doctrees/

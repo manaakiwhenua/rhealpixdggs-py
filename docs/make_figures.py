@@ -14,12 +14,16 @@ contributors) in the optional "figures" dependency group:
 
     poetry install --with figures
 
-All geometry is drawn from the library itself (Cell.ul_vertex,
-Cell.boundary, Cell.nucleus).
+All grid geometry is drawn from the library itself (Cell.ul_vertex,
+Cell.boundary, Cell.nucleus). Coastlines are Natural Earth 1:110m data
+(public domain), downloaded on first run (pinned to a specific upstream
+commit for reproducibility) and cached under docs/.cache/.
 """
+import json
 import os
 import pathlib
 import sys
+import urllib.request
 
 # Make the SVG output deterministic, so regenerating unchanged figures
 # produces no git diff: pin the embedded creation date and the salt
@@ -52,6 +56,49 @@ FACE_COLORS = {
     "R": "#7c8fe0",  # blue-violet
     "S": "#d97cc0",  # magenta
 }
+
+COAST_COLOR = "#9a9a9a"
+
+# Natural Earth 1:110m coastline (public domain), pinned to a specific
+# upstream commit so regeneration stays reproducible.
+COASTLINE_URL = (
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/"
+    "ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_110m_coastline.geojson"
+)
+COASTLINE_CACHE = pathlib.Path(__file__).parent / ".cache" / "ne_110m_coastline.geojson"
+
+
+def coastline_segments():
+    """
+    Return the Natural Earth 1:110m coastlines as a list of segments,
+    each a list of (longitude, latitude) pairs, split wherever a segment
+    crosses the antimeridian.
+    """
+    if not COASTLINE_CACHE.exists():
+        COASTLINE_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        with urllib.request.urlopen(COASTLINE_URL, timeout=60) as response:
+            COASTLINE_CACHE.write_bytes(response.read())
+    collection = json.loads(COASTLINE_CACHE.read_text())
+    segments = []
+    for feature in collection["features"]:
+        geometry = feature["geometry"]
+        lines = (
+            [geometry["coordinates"]]
+            if geometry["type"] == "LineString"
+            else geometry["coordinates"]
+        )
+        for line in lines:
+            current = [line[0]]
+            for prev, cur in zip(line, line[1:]):
+                if abs(cur[0] - prev[0]) > 180:
+                    segments.append(current)
+                    current = []
+                current.append(cur)
+            segments.append(current)
+    return [s for s in segments if len(s) > 1]
+
+
+COASTLINES = coastline_segments()
 
 
 # ---------------------------------------------------------------- figure 1
@@ -100,6 +147,33 @@ for face in CELLS0:
                 alpha=0.6,
             )
         )
+# Coastlines, projected through the DGGS's own rHEALPix projection.
+# The polar-triangle rearrangement makes planar positions jump where a
+# segment crosses between regions, so split on planar jumps far larger
+# than any real 1:110m coastline step (~0.02 R at most).
+for seg in COASTLINES:
+    xy = [rdggs.rhealpix(lon, lat) for lon, lat in seg]
+    run = [xy[0]]
+    for prev, cur in zip(xy, xy[1:]):
+        if abs(cur[0] - prev[0]) > 0.15 * R or abs(cur[1] - prev[1]) > 0.15 * R:
+            if len(run) > 1:
+                ax.plot(
+                    [p[0] / R for p in run],
+                    [p[1] / R for p in run],
+                    color=COAST_COLOR,
+                    linewidth=0.5,
+                    zorder=1,
+                )
+            run = []
+        run.append(cur)
+    if len(run) > 1:
+        ax.plot(
+            [p[0] / R for p in run],
+            [p[1] / R for p in run],
+            color=COAST_COLOR,
+            linewidth=0.5,
+            zorder=1,
+        )
 # Label P's children with their digits, teaching the SUID scheme.
 for child in rdggs.cell(["P"]).subcells():
     cx, cy = child.ul_vertex()
@@ -143,6 +217,12 @@ def split_at_antimeridian(points):
     return segs
 
 
+def draw_coastlines_lonlat(ax, linewidth=0.5):
+    for seg in COASTLINES:
+        ax.plot(*zip(*seg), color=COAST_COLOR, linewidth=linewidth, zorder=1)
+
+
+draw_coastlines_lonlat(ax)
 for face in CELLS0:
     color = FACE_COLORS[face]
     for cell in rdggs.cell([face]).subcells():
@@ -197,6 +277,13 @@ def draw_globe(ax, lon0, lat0, title):
     # Globe outline.
     t = np.linspace(0, 2 * np.pi, 400)
     ax.plot(np.cos(t), np.sin(t), color="#555555", linewidth=1.2)
+    # Coastlines on the front hemisphere.
+    for seg in COASTLINES:
+        lons = [p[0] for p in seg]
+        lats = [p[1] for p in seg]
+        x, y, vis = ortho(lons, lats, lon0, lat0)
+        x, y = np.where(vis, x, np.nan), np.where(vis, y, np.nan)
+        ax.plot(x, y, color=COAST_COLOR, linewidth=0.5, zorder=1)
     # Light graticule for orientation.
     for glat in range(-60, 90, 30):
         lons = np.linspace(-180, 180, 361)
@@ -257,3 +344,76 @@ draw_globe(axes[2], 100, -35, "Oblique southern view")
 fig.tight_layout()
 fig.savefig(OUT / "globe_views.svg", bbox_inches="tight")
 print("globe views written")
+
+
+# ---------------------------------------------------------------- figure 4
+# The H3-style wrappers in action over New Zealand: polyfill (cells whose
+# centroids fall inside a polygon) and linetrace (cells touched by a
+# linestring).
+from shapely.geometry import LineString, Polygon
+
+from rhealpixdggs import rhp_wrappers
+
+
+def cell_from_address(address):
+    return rdggs.cell([address[0]] + [int(d) for d in address[1:]])
+
+
+def draw_cells_lonlat(ax, addresses, fill_alpha=0.35):
+    for address in sorted(addresses):
+        cell = cell_from_address(address)
+        pts = cell.boundary(n=10, plane=False)
+        pts = pts + [pts[0]]
+        color = FACE_COLORS[address[0]]
+        if all(abs(cur[0] - prev[0]) <= 180 for prev, cur in zip(pts, pts[1:])):
+            ax.fill(
+                [p[0] for p in pts],
+                [p[1] for p in pts],
+                color=color,
+                alpha=fill_alpha,
+                linewidth=0,
+            )
+        for seg in split_at_antimeridian(pts):
+            if len(seg) > 1:
+                ax.plot(*zip(*seg), color=color, linewidth=0.8)
+
+
+NZ_POLYGON = [
+    (166.0, -46.8),
+    (169.5, -47.5),
+    (174.5, -42.0),
+    (178.8, -37.8),
+    (177.0, -35.5),
+    (173.5, -34.0),
+    (171.5, -36.5),
+    (166.5, -43.5),
+]
+LINE = [(166.8, -46.4), (172.0, -41.0), (178.0, -38.2)]
+RESOLUTION = 4
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 5.2), sharey=True)
+for ax in axes:
+    draw_coastlines_lonlat(ax, linewidth=0.7)
+    ax.set_xlim(163, 181)
+    ax.set_ylim(-49, -32)
+    ax.set_aspect("equal")
+    ax.grid(True, linewidth=0.3, alpha=0.5)
+    ax.set_xlabel("longitude (degrees)")
+axes[0].set_ylabel("latitude (degrees)")
+
+filled = rhp_wrappers.polyfill(
+    Polygon(NZ_POLYGON), RESOLUTION, plane=False, dggs=rdggs
+)
+draw_cells_lonlat(axes[0], filled)
+axes[0].plot(*zip(*(NZ_POLYGON + [NZ_POLYGON[0]])), color="#222222", linewidth=1.6)
+axes[0].set_title(f"polyfill(polygon, res={RESOLUTION}, plane=False)")
+
+traced = rhp_wrappers.linetrace(LineString(LINE), RESOLUTION, plane=False, dggs=rdggs)
+draw_cells_lonlat(axes[1], traced)
+axes[1].plot(*zip(*LINE), color="#222222", linewidth=1.6)
+axes[1].set_title(f"linetrace(line, res={RESOLUTION}, plane=False)")
+
+fig.tight_layout()
+fig.savefig(OUT / "wrappers_nz.svg", bbox_inches="tight")
+plt.close(fig)
+print("wrapper examples written")
