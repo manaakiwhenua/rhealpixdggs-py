@@ -17,7 +17,8 @@ contributors) in the optional "figures" dependency group:
 All grid geometry is drawn from the library itself (Cell.ul_vertex,
 Cell.boundary, Cell.nucleus). Coastlines are Natural Earth 1:110m data
 (public domain), downloaded on first run (pinned to a specific upstream
-commit for reproducibility) and cached under docs/.cache/.
+commit for reproducibility) and cached under .cache/ at the repository
+root (outside docs/, which is shipped in the sdist).
 """
 import json
 import os
@@ -65,7 +66,9 @@ COASTLINE_URL = (
     "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/"
     "ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_110m_coastline.geojson"
 )
-COASTLINE_CACHE = pathlib.Path(__file__).parent / ".cache" / "ne_110m_coastline.geojson"
+COASTLINE_CACHE = (
+    pathlib.Path(__file__).parents[1] / ".cache" / "ne_110m_coastline.geojson"
+)
 
 
 def coastline_segments():
