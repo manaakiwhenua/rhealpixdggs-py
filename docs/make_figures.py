@@ -5,11 +5,14 @@ Run manually from the repository root whenever the figures need to change:
 
     python docs/make_figures.py
 
-Requires matplotlib, which is deliberately NOT a dependency of this
+Requires matplotlib, which is deliberately NOT a dependency of the
 package or of the docs build -- the generated SVGs are committed, and
-regenerating them on every build would only add churn (different
-matplotlib versions emit slightly different SVGs) for figures that only
-change when the grid geometry or the figure design does.
+regenerating them on every build would only add churn for figures that
+only change when the grid geometry or the figure design does. It is
+declared (and version-locked, keeping the SVG output consistent across
+contributors) in the optional "figures" dependency group:
+
+    poetry install --with figures
 
 All geometry is drawn from the library itself (Cell.ul_vertex,
 Cell.boundary, Cell.nucleus).

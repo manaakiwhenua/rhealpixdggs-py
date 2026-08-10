@@ -51,5 +51,13 @@ pytest = "^7.4.0"
 sphinx = "^7.2"
 furo = ">=2024.8"
 
+# Only needed to regenerate the committed docs figures (docs/make_figures.py
+# / `make -C docs figures`); install with `poetry install --with figures`.
+[tool.poetry.group.figures]
+optional = true
+
+[tool.poetry.group.figures.dependencies]
+matplotlib = ">=3.8"
+
 [tool.poetry]
 include = ["tests/","docs/"]

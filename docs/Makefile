@@ -21,8 +21,9 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
 # Regenerate the static figures in source/images/ from the library's own
 # geometry. Deliberately NOT part of the html build: it needs matplotlib
-# (not a docs dependency), and the figures only change when the grid
-# geometry or the figure design does.
+# (declared in the optional "figures" dependency group: install with
+# `poetry install --with figures`), and the figures only change when the
+# grid geometry or the figure design does.
 figures:
 	python make_figures.py
 
