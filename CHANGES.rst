@@ -1,5 +1,31 @@
 0.6.1
 ^^^^^
+Test-coverage additions (issue #56), no library behavior changes:
+``utils.auth_lat()``'s large-flattening branch (``f > 1/150``, unreachable
+by any predefined ellipsoid) is now validated against the numerically
+integrated defining integral of authalic latitude, alongside the power
+series branch; ``projection_wrapper`` gained functional tests
+(forward/inverse round trips for homemade and PROJ-backed projections,
+``lon_0``/``lat_0`` recentring, projection keyword pass-through);
+``Cell.area()``, ``Cell.color()``, ``Cell.region_overlaps()``, and
+``RHEALPixDGGS.area_error_budget()`` gained their first tests (including
+checking that every resolution's cells sum to the authalic sphere's
+surface area); and ``Cell.centroid()`` gained its first active test (the
+previous one was a disabled stub), validating the dart/skew_quad
+integration against an independent fixed-seed Monte Carlo estimate --
+which flagged that quad cells' centroid latitudes are computed
+incorrectly, now tracked separately as issue #75. Also renamed
+``tests/test_PJ_healpix.c.py`` (whose embedded extra ``.c`` suffix made
+``unittest`` discovery silently skip its 4 pyproj/PROJ cross-checks) to
+``tests/test_pj_healpix_c_reference.py``, and repaired it: it had rotted
+unrunnable (removed ``scipy`` re-exports of numpy functions, a missing
+``itertools.product`` import, scalar inputs to
+``scipy.spatial.distance.euclidean``), and its ellipsoidal inverse
+round-trip tolerances are now geographic (pole/antimeridian aware) and
+two-tier -- a precision check at WGS84 eccentricity, a documented
+smoke-test bound at the file's deliberately extreme ``e = 0.8``, where
+PROJ's own low-order inverse authalic series is only good to ~2 degrees.
+
 **Breaking change:** ``rhp_wrappers.cell_ring()``/``k_ring()`` are rebuilt on
 a breadth-first search over ``Cell.neighbor()``/``diagonal_neighbor()``
 steps, growing the ring outward one shell at a time, rather than jumping

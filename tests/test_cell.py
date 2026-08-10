@@ -4,6 +4,7 @@ from scipy.spatial.distance import euclidean, norm
 # Import standard modules
 import unittest
 from itertools import product
+from math import pi
 
 # Import my modules.
 from rhealpixdggs.cell import Cell, CELLS0
@@ -786,6 +787,55 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         # Same-face siblings far enough apart to neither touch nor nest.
         self.assertTrue(rdggs.cell((P, 0)).disjoint(rdggs.cell((P, 8))))
 
+    def test_area(self):
+        rdggs = WGS84_003
+        for resolution in (0, 1, 3):
+            c = rdggs.cell((P,) + (0,) * resolution)
+            # Planar cells are squares of side width().
+            self.assertEqual(c.area(plane=True), c.width() ** 2)
+            # Must agree with the DGGS-level formula it delegates to.
+            self.assertEqual(
+                c.area(plane=False), rdggs.cell_area(resolution, plane=False)
+            )
+            # Independent check: the grid is an equal-area partition of the
+            # ellipsoid, so the 6 * N_side**(2r) ellipsoidal cells at any
+            # resolution must sum to the surface area of the ellipsoid's
+            # authalic sphere, 4*pi*R_A**2.
+            total = 6 * rdggs.N_side ** (2 * resolution) * c.area(plane=False)
+            sphere = 4 * pi * rdggs.ellipsoid.R_A**2
+            self.assertAlmostEqual(total / sphere, 1, places=12)
+
+    def test_color(self):
+        rdggs = WGS84_003
+        cells = list(rdggs.grid(1))
+        colors = [c.color() for c in cells]
+        # Deterministic, in-range RGB.
+        for c, rgb in zip(cells, colors):
+            self.assertEqual(len(rgb), 3)
+            for component in rgb:
+                self.assertGreaterEqual(component, 0)
+                self.assertLessEqual(component, 1)
+            self.assertEqual(c.color(), rgb)
+        # Documented as "a unique RGB color tuple for this cell": distinct
+        # cells at the same resolution get distinct colors.
+        self.assertEqual(len(set(colors)), len(cells))
+        # The saturation parameter is honored.
+        self.assertNotEqual(cells[7].color(saturation=0.2), cells[7].color(0.9))
+
+    def test_region_overlaps(self):
+        rdggs = WGS84_003
+        a = rdggs.cell((P, 0))
+        descendant = rdggs.cell((P, 0, 3))
+        sibling = rdggs.cell((P, 1))
+        far = rdggs.cell((S, 8))
+        self.assertTrue(a.region_overlaps([far, descendant]))
+        self.assertTrue(a.region_overlaps([a]))
+        self.assertFalse(a.region_overlaps([sibling, far]))
+        self.assertFalse(a.region_overlaps([]))
+        empty = rdggs.cell()
+        with self.assertRaises(ValueError):
+            empty.region_overlaps([a])
+
     def test_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
             c = rdggs.cell((P, 0))
@@ -819,83 +869,82 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         self.assertEqual(cell_n.ellipsoidal_shape, "cap")
         self.assertEqual(cell_s.ellipsoidal_shape, "cap")
 
+    @staticmethod
+    def monte_carlo_mean_lon_lat(cell, n=4000, seed=20260811):
+        """
+        Estimate the mean longitude-latitude of ellipsoidal cell `cell` --
+        i.e. its centroid, by the definition centroid() implements -- by
+        sampling `n` points uniformly at random from the planar cell and
+        projecting them onto the ellipsoid. The projection is equal-area,
+        so planar-uniform samples are uniform on the ellipsoidal cell, and
+        their sample mean estimates the centroid with standard error
+        (sample standard deviation)/sqrt(n), independently of the
+        integration centroid() itself performs. The seed is fixed so the
+        estimate (and hence the test outcome) is deterministic.
+
+        Longitudes are handled relative to the cell's nucleus meridian and
+        wrapped, so a cell straddling the +-180 degree antimeridian
+        doesn't produce a meaningless raw average. Returns
+        (mean_lon, mean_lat, standard_error_lon, standard_error_lat).
+        """
+        from random import Random
+        from statistics import fmean, stdev
+
+        from rhealpixdggs.utils import wrap_longitude
+
+        rng = Random(seed)
+        rdggs = cell.rdggs
+        nucleus_lon = cell.nucleus(plane=False)[0]
+        ul = cell.ul_vertex()
+        w = cell.width()
+        lons, lats = [], []
+        for _ in range(n):
+            x = rng.uniform(ul[0], ul[0] + w)
+            y = rng.uniform(ul[1] - w, ul[1])
+            lon, lat = rdggs.rhealpix(x, y, inverse=True)
+            lons.append(wrap_longitude(lon - nucleus_lon, radians=False))
+            lats.append(lat)
+        mean_lon = wrap_longitude(fmean(lons) + nucleus_lon, radians=False)
+        return (
+            mean_lon,
+            fmean(lats),
+            stdev(lons) / n**0.5,
+            stdev(lats) / n**0.5,
+        )
+
     def test_centroid(self):
-        # Warning: This test is slow.
-        # Uncomment below if you want to test it and wait.
-        pass
-        # print
-        # print 'Testing centroid() method now. Takes about 2 minutes.'
-        #
-        # # For non-cap ellipsoidal cells, test centroid() against a Monte Carlo
-        # # approximation of the centroid.
-        # def monte_carlo_centroid(cell):
-        #     nv = cell.nucleus_and_vertices()
-        #     rdggs = cell.rdggs
-        #     lam_nucleus = rdggs.rhealpix(*nv[0], inverse=True)[0]
-        #     vertices = nv[1:]
-        #     x1, x2 = vertices[0][0], vertices[3][0]
-        #     y1, y2 = vertices[1][1], vertices[0][1]
-        #     N = 10000
-        #     sample_points = []
-        #     for i in range(N):
-        #         x, y = uniform(x1, x2), uniform(y1, y2)
-        #         lam, phi = rdggs.rhealpix(x, y, inverse=True)
-        #         sample_points.append(array((lam, phi)))
-        #     lam_bar, phi_bar = sum(sample_points)/N
-        #     sample_var = sum([array((
-        #                              (p[0] - lam_bar)**2,
-        #                              (p[1] - phi_bar)**2))
-        #                       for p in sample_points])/(N - 1)
-        #     lam_bar_err = sqrt(sample_var[0]/N) # Approximately
-        #     phi_bar_err = sqrt(sample_var[1]/N) # Approximately
-        #     PI = cell.rdggs.ellipsoid.pi()
-        #     if cell.ellipsoidal_shape == 'dart':
-        #         lam_bar = lam_nucleus
-        #     return lam_bar, phi_bar, abs(lam_bar_err), abs(phi_bar_err)
-        #
-        # for rdggs in [WGS84_003, WGS84_003_RADIANS]:
-        #     # The centroid of a planar cell is its nucleus.
-        #     for suid in [(Q, 7), (S, 2, 2)]:
-        #         X = rdggs.cell(suid)
-        #         centroid = X.centroid()
-        #         nucleus = X.nucleus_and_vertices()[0]
-        #         self.assertEqual(centroid, nucleus)
-        #
-        #     # The centroid of a ellipsoidal cap cell is also its nucleus.
-        #     for suid in [(N, 4, 4, 4), [S]]:
-        #         X = rdggs.cell(suid)
-        #         centroid = X.centroid(plane=False)
-        #         nucleus = X.nucleus_and_vertices(plane=False)[0]
-        #         self.assertEqual(centroid, nucleus)
-        #
-        #     for suid in [
-        #       (Q, 7), # quad
-        #       (O, 5, 8), # quad
-        #       (N, 6), # dart
-        #       (N, 6, 2), # dart
-        #       #(N, 6, 2, 4), # dart
-        #       (N, 7), # skew quad
-        #       (N, 7, 3), # skew quad
-        #       #(N, 7, 3, 5), # skew quad
-        #       (S, 2), # dart
-        #       (S, 2, 4), # dart
-        #       #(S, 2, 4, 4), # dart
-        #       (S, 1), # skew quad
-        #       (S, 1, 1), # skew quad
-        #       #(S, 1, 1, 1), # skew quad
-        #       ]:
-        #         X = rdggs.cell(suid)
-        #         lam_bar, phi_bar = X.centroid(plane=False)
-        #         lam_bar_approx, phi_bar_approx, lam_bar_err, phi_bar_err = \
-        #         monte_carlo_centroid(X)
-        #         # print "Testing centroid(plane=False) for %s cell %s..."\
-        #         #  % (X.ellipsoidal_shape, X)
-        #         # print 'lam:', lam_bar, lam_bar_approx, lam_bar_err
-        #         # print 'phi:', phi_bar, phi_bar_approx, phi_bar_err
-        #         self.assertTrue(euclidean(lam_bar, lam_bar_approx) <\
-        #                                                   10*lam_bar_err)
-        #         self.assertTrue(euclidean(phi_bar, phi_bar_approx) <\
-        #                                                   10*phi_bar_err)
+        rdggs = WGS84_003
+        # The centroid of a planar cell is its nucleus, whatever the
+        # cell's ellipsoidal shape.
+        for suid in [(Q, 7), (S, 2, 2), (N,), (N, 6), (N, 7)]:
+            X = rdggs.cell(suid)
+            self.assertEqual(X.centroid(plane=True), X.nucleus(plane=True))
+
+        # The centroid of an ellipsoidal cap cell is its nucleus (the
+        # pole), by symmetry.
+        for suid in [(N, 4), (S,)]:
+            X = rdggs.cell(suid)
+            self.assertEqual(X.centroid(plane=False), X.nucleus(plane=False))
+
+        # For the ellipsoidal shapes whose centroid is computed by
+        # numerical integration -- dart and skew_quad -- check both
+        # coordinates against an independent fixed-seed Monte Carlo
+        # estimate, within 6 standard errors (a bound the estimate has
+        # essentially no chance of missing unless the integration itself
+        # is wrong). The dart cell at longitude -180 also exercises the
+        # antimeridian-straddling case. Quad cells are absent here
+        # deliberately: their latitude takes a separate, non-integrated
+        # code path that fails this same Monte Carlo check (issue #75).
+        from rhealpixdggs.utils import wrap_longitude
+
+        for suid in [(N, 6), (S, 2, 4), (N, 7), (N, 7, 3)]:
+            X = rdggs.cell(suid)
+            self.assertIn(X.ellipsoidal_shape, ("dart", "skew_quad"))
+            lon, lat = X.centroid(plane=False)
+            mc_lon, mc_lat, se_lon, se_lat = self.monte_carlo_mean_lon_lat(X)
+            lon_gap = abs(wrap_longitude(lon - mc_lon, radians=False))
+            self.assertLess(lon_gap, 6 * se_lon, msg=str(suid))
+            self.assertLess(abs(lat - mc_lat), 6 * se_lat, msg=str(suid))
 
     def test_random_point(self):
         # Output should lie in the cell at least.

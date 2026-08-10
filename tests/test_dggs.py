@@ -81,6 +81,32 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             c = a.successor()
             self.assertEqual(str(b), str(c))
 
+    def test_area_error_budget(self):
+        import sys
+
+        rdggs = WGS84_003
+        budget = rdggs.area_error_budget()
+        # One entry per resolution, none missing, none extra.
+        self.assertEqual(
+            sorted(budget.keys()), list(range(rdggs.max_resolution + 1))
+        )
+        rel_tol = 10 * sys.float_info.epsilon
+        previous_area = None
+        for r in range(rdggs.max_resolution + 1):
+            entry = budget[r]
+            # The budgeted area is exactly the ellipsoidal cell area at
+            # that resolution.
+            self.assertEqual(entry["cell_area_m2"], rdggs.cell_area(r, plane=False))
+            # Documented invariants: the relative tolerance is 10 machine
+            # epsilons at every resolution, and the absolute tolerance is
+            # the area scaled by it.
+            self.assertEqual(entry["rel_tolerance"], rel_tol)
+            self.assertEqual(entry["abs_tolerance"], entry["cell_area_m2"] * rel_tol)
+            # Areas strictly decrease with resolution.
+            if previous_area is not None:
+                self.assertLess(entry["cell_area_m2"], previous_area)
+            previous_area = entry["cell_area_m2"]
+
     def test_interval(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             # Should produce the correct number of cells
