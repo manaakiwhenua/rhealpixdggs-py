@@ -9,12 +9,18 @@ rHEALPixDGGS is a Python package that implements the rHEALPix discrete
 global grid system (DGGS): a hierarchical partition of an ellipsoid of
 revolution into equal-area cells, built on the rHEALPix map projection.
 
-.. image:: images/globe_views.svg
+.. figure:: images/globe_views.svg
    :alt: The resolution 1 cells of the (0, 0)-rHEALPix DGGS drawn on a
          globe from three viewpoints: an equatorial view facing the P
          face, a north polar view showing the circular cap cell
          surrounded by dart cells, and an oblique southern view.
    :width: 100%
+
+   The resolution 1 cells of the (0, 0)-rHEALPix DGGS on the WGS84
+   ellipsoid, colored by their resolution 0 cell and labeled with their
+   cell addresses. Left to right: an equatorial view facing the P face;
+   a north polar view, with the circular cap cell N4 surrounded by the
+   four dart cells; an oblique southern view.
 
 Key API entry points
 --------------------

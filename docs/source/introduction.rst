@@ -2,7 +2,7 @@ Introduction
 ============
 rHEALPixDGGS is a Python 3 package that implements the rHEALPix discrete global grid system (DGGS).
 
-.. image:: images/planar_grid.svg
+.. figure:: images/planar_grid.svg
    :alt: The (0, 0)-rHEALPix planar grid: six resolution 0 cells labeled
          N, O, P, Q, R, S unfolded from a cube, each subdivided into a
          3-by-3 resolution 1 sub-grid, with cell P's children labeled
@@ -10,13 +10,20 @@ rHEALPixDGGS is a Python 3 package that implements the rHEALPix discrete global 
    :width: 85%
    :align: center
 
-The same resolution 1 cells mapped back onto the WGS84 ellipsoid, in longitude-latitude coordinates: quad cells in the equatorial band; dart, skew-quad, and cap cells in the polar regions.
+   The (0, 0)-rHEALPix planar grid: the six resolution 0 cells unfolded
+   from a cube, each subdivided into its resolution 1 sub-grid. Cell P's
+   children are labeled with their SUID digits, so e.g. the cell in its
+   lower-right corner is P8.
 
-.. image:: images/ellipsoidal_cells.svg
+.. figure:: images/ellipsoidal_cells.svg
    :alt: The resolution 1 ellipsoidal cells of the (0, 0)-rHEALPix DGGS on
          WGS84, drawn in longitude-latitude coordinates and colored by
          their resolution 0 cell.
    :width: 100%
+
+   The same resolution 1 cells mapped back onto the WGS84 ellipsoid, in
+   longitude-latitude coordinates: quad cells in the equatorial band;
+   dart, skew-quad, and cap cells in the polar regions.
 
 This documentation assumes you are familiar with the rHEALPix DGGS as described in [Gibb2016]_ (with full mathematical detail in the preprint [GRS2013]_) and with basic Python usage as described in `The Python Tutorial <https://docs.python.org/3/tutorial/>`_.
 
