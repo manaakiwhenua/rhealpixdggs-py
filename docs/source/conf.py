@@ -55,7 +55,7 @@ import datetime
 project = "rHEALPixDGGS"
 # First publication year through the year of the build; the end year is
 # computed so it can't go stale.
-copyright = f"2013–{datetime.date.today().year}, Alexander Raichev and contributors"
+copyright = f"2013–{datetime.date.today().year}, Robert Gibb, Alexander Raichev and contributors"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
