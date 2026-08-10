@@ -7,7 +7,11 @@ name = "rHEALPixDGGS"
 version = "0.6.0"
 description = "An implementation of the rHEALPix discrete global grid system"
 authors = [
-    { name = "Alexander Raichev", email = "alex@raichev.net" }
+    { name = "Alexander Raichev", email = "alex@raichev.net" },
+    { name = "Robert Gibb", email = "gibbr@landcareresearch.co.nz" }
+]
+maintainers = [
+    { name = "Richard Law", email = "lawr@landcareresearch.co.nz" }
 ]
 readme = "README.rst"
 license = "GPL-3.0-or-later"
