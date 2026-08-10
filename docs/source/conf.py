@@ -47,6 +47,9 @@ intersphinx_mapping = {
     "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
     "pyproj": ("https://pyproj4.github.io/pyproj/stable/", None),
 }
+# Give up on unreachable inventories quickly (falling back to plain text)
+# rather than hanging the whole build on a slow or offline network.
+intersphinx_timeout = 10
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
