@@ -932,9 +932,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         # estimate, within 6 standard errors (a bound the estimate has
         # essentially no chance of missing unless the integration itself
         # is wrong). The dart cell at longitude -180 also exercises the
-        # antimeridian-straddling case. Quad cells are absent here
-        # deliberately: their latitude takes a separate, non-integrated
-        # code path that fails this same Monte Carlo check (issue #75).
+        # antimeridian-straddling case.
         from rhealpixdggs.utils import wrap_longitude
 
         for suid in [(N, 6), (S, 2, 4), (N, 7), (N, 7, 3)]:
@@ -945,6 +943,64 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             lon_gap = abs(wrap_longitude(lon - mc_lon, radians=False))
             self.assertLess(lon_gap, 6 * se_lon, msg=str(suid))
             self.assertLess(abs(lat - mc_lat), 6 * se_lat, msg=str(suid))
+
+    def test_centroid_quad(self):
+        # Regression test for issue #75: the centroid latitude of an
+        # ellipsoidal quad cell is the area-weighted mean latitude over
+        # the cell, NOT the midpoint of its two edge latitudes -- latitude
+        # is a nonlinear function of planar y, so the two differ, by up to
+        # ~0.63 degrees for resolution 1 quads (the midpoint is what
+        # centroid() used to return, following an erratum in the founding
+        # paper's summary table that contradicts the paper's own integral
+        # definition of the centroid).
+        from scipy import integrate
+
+        from rhealpixdggs.utils import wrap_longitude
+
+        rdggs = WGS84_003
+        for suid in [(Q, 7), (O, 0), (P, 3, 1), (Q, 4)]:
+            X = rdggs.cell(suid)
+            self.assertEqual(X.ellipsoidal_shape, "quad")
+            lon, lat = X.centroid(plane=False)
+
+            # The centroid longitude is the nucleus longitude (meridians
+            # are equally spaced in planar x, so mean == midpoint there).
+            self.assertEqual(lon, X.nucleus(plane=False)[0])
+
+            # Deterministic ground truth for the latitude: adaptive
+            # quadrature of the mean-latitude integral, evaluated along
+            # the cell's left edge x (latitude is independent of x on a
+            # quad, and adaptive quadrature at a different abscissa is an
+            # implementation-independent path from centroid()'s own
+            # fixed-order rule at the nucleus meridian).
+            pv = X.vertices(plane=True)
+            x1 = min(v[0] for v in pv)
+            y1 = min(v[1] for v in pv)
+            y2 = max(v[1] for v in pv)
+
+            def phi(y):
+                return rdggs.rhealpix(x1, y, inverse=True)[1]
+
+            expected_lat = (
+                integrate.quad(phi, y1, y2, epsabs=1e-5, epsrel=1e-10)[0]
+            ) / (y2 - y1)
+            self.assertAlmostEqual(lat, expected_lat, places=9, msg=str(suid))
+
+            # And explicitly: NOT the edge-latitude midpoint, except for
+            # cells symmetric about the equator, where the two coincide.
+            midpoint = (phi(y1) + phi(y2)) / 2
+            if abs(midpoint) > 1e-12:
+                self.assertNotAlmostEqual(lat, midpoint, places=3, msg=str(suid))
+
+        # Fully independent statistical check for the deepest-affected
+        # case: a fixed-seed Monte Carlo mean with enough samples that its
+        # 6-standard-error bound (~0.35 degrees) is tighter than the
+        # ~0.63 degree error this test guards against.
+        X = rdggs.cell((Q, 7))
+        lon, lat = X.centroid(plane=False)
+        mc_lon, mc_lat, se_lon, se_lat = self.monte_carlo_mean_lon_lat(X, n=20000)
+        self.assertLess(abs(wrap_longitude(lon - mc_lon, radians=False)), 6 * se_lon)
+        self.assertLess(abs(lat - mc_lat), 6 * se_lat)
 
     def test_random_point(self):
         # Output should lie in the cell at least.

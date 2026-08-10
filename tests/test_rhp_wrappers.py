@@ -67,13 +67,19 @@ class RhpWrappersTestCase(unittest.TestCase):
         centroid = rhpw.rhp_to_geo("N0", plane=False)
         self.assertEqual(centroid, (90.0, 53.00810765458496))
 
-        # Equatorial cell without geojson
+        # Equatorial cell without geojson. Q is symmetric about the
+        # equator, so its centroid latitude is 0 -- up to the floating-
+        # point noise floor of the quadrature that computes quad-cell
+        # centroid latitudes (Cell.centroid()), hence the tolerance-based
+        # comparison.
         centroid = rhpw.rhp_to_geo("Q", geo_json=False, plane=False)
-        self.assertEqual(centroid, (0, 45))
+        self.assertAlmostEqual(centroid[0], 0, places=12)
+        self.assertEqual(centroid[1], 45)
 
         # Equatorial cell with geojson
         centroid = rhpw.rhp_to_geo("Q", plane=False)
-        self.assertEqual(centroid, (45, 0))
+        self.assertEqual(centroid[0], 45)
+        self.assertAlmostEqual(centroid[1], 0, places=12)
 
     def test_rhp_to_parent(self):
         child_id = "N12345"
