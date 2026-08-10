@@ -19,7 +19,7 @@ The package is available on PyPI, the Package Index from where it can be install
 
 pip install rhealpixdggs
 
-rHEALPixDGGS is also available for download from Landcare Research's github repository `<https://github.com/manaakiwhenua/rhealpixdggs-py>`_ from wher the latest version can be cloned.
+rHEALPixDGGS is also available for download from the Bioeconomy Science Institute's GitHub repository `<https://github.com/manaakiwhenua/rhealpixdggs-py>`_ from where the latest version can be cloned.
 
 Usage
 ------

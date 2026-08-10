@@ -140,7 +140,7 @@ This package is available on PyPI, the Python Package Index from where it can be
 
     pip install rhealpixdggs
 
-rHEALPixDGGS is also available for download from the github repository `<https://github.com/manaakiwhenua/rhealpixdggs-py>`_ from where the latest version can be cloned.
+rHEALPixDGGS is also available for download from the GitHub repository `<https://github.com/manaakiwhenua/rhealpixdggs-py>`_ from where the latest version can be cloned.
 
 You can install from source using Poetry in a virtual environment (MacOS and Linux, assuming Poetry is already installed on your system):
 
@@ -238,7 +238,7 @@ Contact
 -------
 | *Maintainer*:
 | **Richard Law**
-| `Manaaki Whenua – Landcare Research <https://www.landcareresearch.co.nz/>`_
+| `Bioeconomy Science Institute <https://www.bioeconomyscience.co.nz/>`_
 | `lawr@landcareresearch.co.nz <mailto:lawr@landcareresearch.co.nz>`_
 |
 | *Release Manager*:
