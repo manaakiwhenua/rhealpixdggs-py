@@ -123,12 +123,14 @@ the default configuration (cells of approximately 0.41 m²).
 
 Requirements
 -------------
-* ``requirements.txt`` - all the module requirements for operation
-    - `NumPy >=1.25.2,<2 <https://www.numpy.org/>`_ Base N-dimensional array package
-    - `SciPy >=1.11.2 <https://www.scipy.org/>`_ Fundamental library for scientific computing
-    - `Pyproj >=3.6.1 <https://code.google.com/p/pyproj/>`_ Python interface to the PROJ.4 cartographic library
-    - `Shapely >=2.0.1 <https://shapely.readthedocs.io/>`_ Manipulation and analysis of planar GEOS geometries
-* ``requirements.dev.txt`` - packages needed for developing this package
+Dependencies are declared in ``pyproject.toml`` (this project is managed
+with `Poetry <https://python-poetry.org/>`_; development dependencies are
+declared there too, under ``tool.poetry.group.dev.dependencies``):
+
+* `NumPy >=2.0 <https://www.numpy.org/>`_ Base N-dimensional array package
+* `SciPy >=1.11 <https://www.scipy.org/>`_ Fundamental library for scientific computing
+* `Pyproj >=3.6 <https://pyproj4.github.io/pyproj/>`_ Python interface to the PROJ cartographic library
+* `Shapely >=2.1 <https://shapely.readthedocs.io/>`_ Manipulation and analysis of planar GEOS geometries
 
 Installation
 --------------
@@ -146,7 +148,7 @@ You can install from source using Poetry in a virtual environment (MacOS and Lin
 
     python3 -m venv rhealpixdggs
     source rhealpixdggs/bin/activate
-    python install --upgrade pip
+    python -m pip install --upgrade pip
     poetry install
 
 Or on Windows:
@@ -155,7 +157,7 @@ Or on Windows:
 
     python3 -m venv rhealpixdggs
     rhealpixdggs\Scripts\activate
-    python install --upgrade pip
+    python -m pip install --upgrade pip
     poetry install
 
 
@@ -168,7 +170,7 @@ For development:
 
 Tests
 ------
-The files in the ``tests`` directory test the rHEALPixDGGS modules. These files are plain ``unittest`` files (the Python testing framework contained within the standard distribution). Tests for examples in documents need the ``doctest`` module installed (see ``requirements.dev.txt``).
+The files in the ``tests`` directory test the rHEALPixDGGS modules. These files are plain ``unittest`` files (the Python testing framework contained within the standard distribution), and the examples embedded in docstrings are tested with ``doctest`` (also part of the standard distribution).
 
 Two UNIX shell scripts are included in this repository to run all unit and doc tests:
 
@@ -177,7 +179,7 @@ Two UNIX shell scripts are included in this repository to run all unit and doc t
 
 Running the command ``python tests/test_<foo>.py`` performs a sequence of automated tests of ``<foo>.py``.
 
-For example, ``tests/test_distortion.py`` automatically tests ``distortion.py``.
+For example, ``tests/test_cell.py`` automatically tests ``cell.py``.
 
 If you update a module, then update its test file to test the changes you made!
 
