@@ -2,6 +2,10 @@
 rHEALPixDGGS
 ************
 
+.. image:: https://github.com/manaakiwhenua/rhealpixdggs-py/actions/workflows/tests.yml/badge.svg
+   :target: https://github.com/manaakiwhenua/rhealpixdggs-py/actions/workflows/tests.yml
+   :alt: Tests
+
 Introduction
 ============
 rHEALPixDGGS is a Python package that implements the rHEALPix Discrete Global Grid System (DGGS).
@@ -212,26 +216,15 @@ See the file ``LICENSE`` for more information about the dual licensing arrangeme
 
 This dual licensing approach allows the software to be used in contexts where LGPL may not be permitted (such as certain corporate environments or standards bodies like the OGC) while still maintaining a copyleft option for those who prefer it.
 
-# NB make a build/release makefile or script
 Releasing
--------
+---------
 
-For PyPI:
+See ``RELEASING.md`` for the release process. Note that working with this
+repository's packaging (``poetry install``, ``poetry build``, ...) requires
+`Poetry <https://python-poetry.org/>`_ version 2.0 or later.
 
-::
-    # Build the distribution (.tar.gz and .whl)
-    poetry build
-
-    # Upload to PyPI (test)
-    poetry publish --repository testpypi
-
-    # Test install from testpypi
-    pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple rhealpixdggs
-
-    # Upload to PyPI
-    poetry publish
-
-A **conda package** `rhealpixdggs` is also maintained at [conda-forge](https://github.com/conda-forge/rhealpixdggs-feedstock).
+A **conda package** ``rhealpixdggs`` is also maintained at
+`conda-forge <https://github.com/conda-forge/rhealpixdggs-feedstock>`_.
 
 
 Contact

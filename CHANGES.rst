@@ -1,5 +1,28 @@
 0.6.1
 ^^^^^
+Packaging and release-process fixes (issue #58): the ``pyproject.toml``
+license field now declares the actual dual license,
+``LGPL-3.0-or-later OR MIT`` -- it previously declared
+``GPL-3.0-or-later``, which misrepresented the project as *more*
+restrictively licensed than it is (the kind of error automated license
+scanners act on); built wheels now carry the correct PEP 639
+``License-Expression`` plus all three license files. Robert Gibb joins
+the declared authors and the current maintainer is declared in the
+``maintainers`` field. Added GitHub Actions CI running the unit tests
+and doctests on Python 3.11 through 3.14 plus a docs build, with
+matching Python version classifiers and a README badge; fixed
+``run_doctests.sh`` to exit nonzero when any file's doctests fail rather
+than only the last one's (a latent flaw that would have let CI pass on
+failing doctests). Replaced the outdated ``pypi.txt`` (it described a
+``setup.py``/``twine`` release flow the project no longer has) with
+``RELEASING.md``, and noted that working with this repository's
+packaging requires Poetry >= 2.0. Fixed the sdist sweeping transient
+files under ``docs/`` past gitignore (Poetry's include patterns take
+priority); the figure generator's download cache now lives at the
+repository root. Enforcement of ``black`` formatting is deliberately
+deferred (issue #82).
+
+
 Documentation fixes (issue #57): the Sphinx manual now includes pages for
 the ``cell``, ``conversion``, and ``rhp_wrappers`` modules, which were
 missing from its toctree (so the entire H3-style wrapper API, among other
