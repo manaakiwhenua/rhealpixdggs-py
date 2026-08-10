@@ -78,6 +78,13 @@ docs/.cache/
 docs/_build/
 docs/.doctrees/
 
+# LaTeX build intermediates (from the Sphinx latexpdf target)
+docs/*.aux
+docs/*.idx
+docs/*.log
+docs/*.toc
+docs/*.out
+
 # Editor/tool backup files
 *.bak
 

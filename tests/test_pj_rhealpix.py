@@ -14,7 +14,7 @@ Keep adding tests!
 
 # Import third-party modules.
 from scipy.spatial.distance import euclidean, norm
-from numpy import atleast_1d, array, pi, rad2deg, deg2rad, arcsin
+from numpy import atleast_1d, array, pi, rad2deg, arcsin
 
 # Import standard modules.
 import unittest
