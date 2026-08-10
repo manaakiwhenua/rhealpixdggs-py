@@ -1,6 +1,7 @@
 # from rhealpixdggs.dggs import WGS84_003
 
 from numpy import array, base_repr, pi  # pi is just for the doctests
+from numpy import vectorize as numpy_vectorize
 from scipy import integrate
 from itertools import product
 from random import uniform
@@ -1117,14 +1118,9 @@ class Cell(object):
         # This cell is ellipsoidal.
         # So we have to do some work.
         nucleus = self.nucleus(plane=False)
-        vertices = self.vertices(plane=False)
         shape = self.ellipsoidal_shape
         if shape == "cap":
             return nucleus
-        if shape == "quad":
-            lam_bar = nucleus[0]
-            phi_bar = sum([v[1] for v in vertices]) / 4
-            return lam_bar, phi_bar
         planar_vertices = self.vertices(plane=True)
         x1 = min([v[0] for v in planar_vertices])
         x2 = max([v[0] for v in planar_vertices])
@@ -1138,6 +1134,32 @@ class Cell(object):
         def phi(x, y):
             return self.rdggs.rhealpix(x, y, inverse=True)[1]
 
+        if shape == "quad":
+            # A quad cell is symmetric about its nucleus meridian, and its
+            # meridians are equally spaced in planar x, so the mean
+            # longitude is the nucleus longitude. Latitude is independent
+            # of planar x on a quad cell, so the area-weighted mean
+            # latitude reduces to a single integral over y. Note it is
+            # NOT the midpoint of the two edge latitudes: latitude is a
+            # nonlinear function of planar y, so the mean sits closer to
+            # the equator than the midpoint (by up to ~0.6 degrees for
+            # resolution 1 cells).
+            lam_bar = nucleus[0]
+            # Integrate along the nucleus meridian's planar x, which is
+            # safely interior to the cell (any x in the cell would do,
+            # since latitude doesn't depend on it). Fixed-order
+            # Gauss-Legendre quadrature is effectively exact here -- the
+            # integrand is smooth, and n=20 agrees with adaptive
+            # quadrature to machine precision -- while avoiding adaptive
+            # quadrature's error estimation, whose requested tolerances
+            # collide with the projection stack's floating-point noise
+            # floor and trigger spurious IntegrationWarnings.
+            x_mid = self.nucleus(plane=True)[0]
+            phi_of_y = numpy_vectorize(lambda y: phi(x_mid, y))
+            phi_bar = (1 / (y2 - y1)) * integrate.fixed_quad(
+                phi_of_y, y1, y2, n=20
+            )[0]
+            return lam_bar, phi_bar
         if shape == "dart":
             lam_bar = nucleus[0]
             phi_bar = (1 / area) * integrate.dblquad(

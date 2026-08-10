@@ -1,5 +1,27 @@
 0.6.1
 ^^^^^
+Fixed ``Cell.centroid(plane=False)`` for quad cells, whose centroid
+latitude was computed as the midpoint of the cell's two edge latitudes
+rather than the area-weighted mean latitude the centroid is defined as
+(the average value of latitude over the cell). Latitude is a nonlinear
+function of planar y, so the two differ -- by up to ~0.63 degrees for
+resolution 1 quad cells, shrinking quadratically with cell size, and
+vanishing for cells symmetric about the equator. The defect traces back
+to the founding paper's section 7 summary table, whose quad-cell entry
+contradicts the paper's own integral definition of the centroid directly
+above it; dart and skew_quad cells always used the integral and were
+unaffected, as were all centroid longitudes and everything planar. Quad
+centroid latitudes are now computed by (effectively exact) fixed-order
+Gauss-Legendre quadrature of the mean-latitude integral, validated
+against adaptive quadrature at a different meridian and an independent
+equal-area Monte Carlo estimate. Affects anything consuming ellipsoidal
+quad centroids, notably ``rhp_wrappers.rhp_to_geo(..., plane=False)``
+and ``rhp_wrappers.polyfill(..., plane=False)`` membership decisions for
+quad cells whose true and previously-reported centroids straddle the
+polygon boundary. One observable side effect: an exactly-symmetric
+cell's centroid latitude may now come out as floating-point dust (e.g.
+6e-16) rather than exactly 0 (issue #75).
+
 Test-coverage additions (issue #56), no library behavior changes:
 ``utils.auth_lat()``'s large-flattening branch (``f > 1/150``, unreachable
 by any predefined ellipsoid) is now validated against the numerically
