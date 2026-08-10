@@ -1,5 +1,19 @@
 0.6.1
 ^^^^^
+Documentation fixes (issue #57): the Sphinx manual now includes pages for
+the ``cell``, ``conversion``, and ``rhp_wrappers`` modules, which were
+missing from its toctree (so the entire H3-style wrapper API, among other
+things, never appeared in the built manual); ``docs/source/conf.py`` now
+reads the release number from ``pyproject.toml`` instead of pinning a
+stale copy (it said 0.5.4); the tracked copies of stock Sphinx theme
+assets under ``docs/source/_static`` -- which overrode the theme's own,
+newer versions at build time -- are removed; and the README's
+requirements section now matches ``pyproject.toml`` (it referenced
+``requirements.txt`` files that no longer exist and a ``numpy<2`` bound
+that contradicted the actual ``numpy>=2.0`` requirement), alongside
+fixes to its broken ``python install`` command and an example naming a
+test file that doesn't exist.
+
 Fixed ``Cell.centroid(plane=False)`` for quad cells, whose centroid
 latitude was computed as the midpoint of the cell's two edge latitudes
 rather than the area-weighted mean latitude the centroid is defined as

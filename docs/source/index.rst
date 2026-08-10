@@ -1,8 +1,8 @@
-.. scenzgrid-dggs documentation master file.
+.. rHEALPixDGGS documentation master file.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome the rHEALPixDGGS documentation!
+Table of contents
 ===========================================
 
 .. toctree::
@@ -15,6 +15,9 @@ Welcome the rHEALPixDGGS documentation!
    ellipsoids
    projection_wrapper
    dggs
+   cell
+   conversion
+   rhp_wrappers
 
 Indices and tables
 ==================
