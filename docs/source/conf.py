@@ -38,6 +38,10 @@ extensions = [
 
 todo_include_todos = True
 
+# Number figures and prefix their captions with "Fig. N" (the LaTeX/PDF
+# builder numbers figures regardless; this makes the HTML match).
+numfig = True
+
 # Cross-link type/class mentions of these projects' objects into their own
 # documentation.
 intersphinx_mapping = {
@@ -155,11 +159,12 @@ html_theme = "furo"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# There are none: the theme's own assets are copied into the build
-# automatically, and anything placed here with a matching name would
-# override (and eventually grow stale against) the theme's version. Add
-# "_static" back only for genuinely custom assets.
-html_static_path = []
+# Keep only genuinely custom assets here (the theme's own assets are
+# copied into the build automatically, and anything placed here with a
+# matching name would override, and eventually grow stale against, the
+# theme's version).
+html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.

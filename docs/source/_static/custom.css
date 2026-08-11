@@ -1,0 +1,11 @@
+/* Make figure captions read as captions rather than body text:
+   smaller, muted, with the "Fig. N" prefix (from numfig) emphasised.
+   Color variables are furo's, so both light and dark themes adapt. */
+figcaption {
+    font-size: 0.875em;
+    color: var(--color-foreground-secondary);
+}
+
+figcaption .caption-number {
+    font-weight: 600;
+}
