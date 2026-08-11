@@ -420,3 +420,109 @@ fig.tight_layout()
 fig.savefig(OUT / "wrappers_nz.svg", bbox_inches="tight")
 plt.close(fig)
 print("wrapper examples written")
+
+
+# ---------------------------------------------------------------- figure 5
+# linetrace across the north polar cap: the case where cells are not
+# rectangles in longitude-latitude space, seen from above the pole.
+from rhealpixdggs import rhp_wrappers
+
+CAP_LINE = [
+    (-134.998756, 86.549596),
+    (-179.141527, 88.504030),
+    (-44.874903, 86.549596),
+    (-89.669615, 86.549596),
+    (-134, 86),
+]
+CAP_RES = 3
+traced = rhp_wrappers.linetrace(LineString(CAP_LINE), CAP_RES, plane=False)
+traced_set = set(traced)
+
+fig, ax = plt.subplots(figsize=(6.5, 6.5))
+VIEW = (0.0, 90.0)  # straight down onto the north pole
+
+# Arctic coastlines for context (northern Greenland, Svalbard, Franz
+# Josef Land reach into this view).
+for seg in COASTLINES:
+    lons = [p[0] for p in seg]
+    lats = [p[1] for p in seg]
+    x, y, vis = ortho(lons, lats, *VIEW)
+    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+            color=COAST_COLOR, linewidth=0.7, zorder=1)
+
+# Graticule: parallels and meridians in the window.
+for glat in (82, 84, 86, 88):
+    lons = np.linspace(-180, 180, 721)
+    x, y, vis = ortho(lons, np.full_like(lons, glat), *VIEW)
+    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+            color="#cccccc", linewidth=0.4)
+for glon in range(-180, 180, 30):
+    lats = np.linspace(78, 90, 121)
+    x, y, vis = ortho(np.full_like(lats, glon), lats, *VIEW)
+    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+            color="#cccccc", linewidth=0.4)
+
+# The resolution 4 sub-grid, as a faint outline.
+for cell3 in rdggs.cell(["N", 4, 4]).subcells():
+    for cell4 in cell3.subcells():
+        pts = cell4.boundary(n=20, plane=False)
+        pts = pts + [pts[0]]
+        x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *VIEW)
+        ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+                color=FACE_COLORS["N"], linewidth=0.35, alpha=0.45, zorder=2)
+
+# The resolution 3 cells around the pole (the children of N44), traced
+# ones filled.
+for cell in rdggs.cell(["N", 4, 4]).subcells():
+    pts = cell.boundary(n=60, plane=False)
+    pts = pts + [pts[0]]
+    lons = [p[0] for p in pts]
+    lats = [p[1] for p in pts]
+    x, y, vis = ortho(lons, lats, *VIEW)
+    name = str(cell)
+    if name in traced_set:
+        ax.fill(x, y, color=FACE_COLORS["N"], alpha=0.3, linewidth=0)
+    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+            color=FACE_COLORS["N"], linewidth=1.2, zorder=3)
+    nx, ny, _ = ortho(*cell.nucleus(plane=False), *VIEW)
+    ax.text(
+        nx,
+        ny,
+        name,
+        ha="center",
+        va="center",
+        fontsize=9,
+        color="#333333",
+        bbox=dict(facecolor="white", alpha=0.6, linewidth=0, pad=1),
+        zorder=5,
+    )
+
+# The linestring, densified per leg in longitude-latitude space (its
+# segments are straight in that space, so on the globe each leg curves
+# around the pole).
+for a, b in zip(CAP_LINE, CAP_LINE[1:]):
+    ts = np.linspace(0, 1, 400)
+    lons = a[0] + ts * (b[0] - a[0])
+    lats = a[1] + ts * (b[1] - a[1])
+    x, y, vis = ortho(lons, lats, *VIEW)
+    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+            color="#222222", linewidth=1.8)
+sx, sy, _ = ortho(*CAP_LINE[0], *VIEW)
+ex, ey, _ = ortho(*CAP_LINE[-1], *VIEW)
+ax.plot([sx], [sy], marker="o", color="#222222", markersize=5, zorder=4)
+ax.plot([ex], [ey], marker="s", color="#222222", markersize=5, zorder=4)
+
+lim = float(np.cos(np.radians(80.0)))
+ax.set_xlim(-lim, lim)
+ax.set_ylim(-lim, lim)
+ax.set_aspect("equal")
+ax.axis("off")
+ax.set_title(
+    "linetrace across the north polar cap (resolution %d, view from above the pole)\n"
+    "traced: %s" % (CAP_RES, " → ".join(traced)),
+    fontsize=10,
+)
+fig.tight_layout()
+fig.savefig(OUT / "wrappers_cap_trace.svg", bbox_inches="tight")
+plt.close(fig)
+print("cap trace figure written")

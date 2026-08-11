@@ -723,13 +723,17 @@ class RhpWrappersTestCase(unittest.TestCase):
         result = rhpw.linetrace(s_ls, 8, plane=False)
         self.assertEqual(result, ['S00145063'])
 
-        # Lines crossing cube face boundaries (not involving cap cells)
+        # Lines crossing cube face boundaries (not involving cap cells).
+        # The segment runs through the middle of Q6 for a substantial
+        # stretch (confirmed by point location along the segment; also,
+        # jumping S8 -> P8 directly would skip a cell the line plainly
+        # crosses).
         s = gs.WGS84_003.cell(("S", 7))
         e = gs.WGS84_003.cell(("P", 5))
         result = rhpw.linetrace(
             sh.LineString([s.centroid(False), e.centroid(False)]), 1, plane=False
         )
-        self.assertEqual(result, ["S7", "S8", "P8", "P5"])
+        self.assertEqual(result, ["S7", "S8", "Q6", "P8", "P5"])
 
         # Resolution mismatch (coarse resolution, short line segments)
         result = rhpw.linetrace(p_ls, 2, plane=False)
@@ -744,8 +748,15 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(rhpw.linetrace(sh.LineString(), 0))
         self.assertIsNone(rhpw.linetrace(sh.LineString([(1, 1), (1, 1)]), 0))
 
-    @unittest.expectedFailure
-    def test_linetrace_known_failure(self):
+    def test_linetrace_polar_cap(self):
+        # A linestring wandering around the north pole, crossing the
+        # resolution 3 cap cell N444. A shapely linestring's segments are
+        # straight in longitude-latitude coordinates, so at these
+        # latitudes each leg sweeps *around* the pole through the cells
+        # at the intermediate longitudes (it does not hop across the
+        # cap the way a geodesic would). Every leg's expected cell
+        # sequence below was independently confirmed by dense point
+        # location along the leg with cell_from_point.
         n_ls = sh.LineString(
             [
                 (-134.998756, 86.549596),
@@ -755,13 +766,10 @@ class RhpWrappersTestCase(unittest.TestCase):
                 (-134, 86),
             ]
         )
-
-        # Cap faces - line string
-        # TODO: this is still wrong - should be "N444", "N445" and not "N444", "N447", "N448", "N445"
         result = rhpw.linetrace(n_ls, 3, plane=False)
         self.assertEqual(
             result,
-            ["N447", "N444", "N445", "N448", "N447"],
+            ["N447", "N444", "N447", "N448", "N445", "N448", "N447"],
         )
 
 

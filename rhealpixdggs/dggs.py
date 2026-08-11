@@ -152,7 +152,7 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
 # *****************************************************************************
 # Import third-party modules.
 from numpy import array, base_repr, ceil, log, pi
-from shapely import LineString
+from math import asin, copysign, floor
 
 # Import standard modules.
 from itertools import product
@@ -168,7 +168,7 @@ from rhealpixdggs.ellipsoids import (
     UNIT_SPHERE,
     UNIT_SPHERE_RADIANS,
 )
-from rhealpixdggs.utils import my_round
+from rhealpixdggs.utils import auth_lat, my_round
 from numpy.testing import assert_allclose
 
 
@@ -1163,19 +1163,44 @@ class RHEALPixDGGS(object):
         lstart: tuple[float, float],
         lend: tuple[float, float],
         plane: bool = True,
+        wrap_antimeridian: bool = False,
     ) -> list[Cell]:
         """
-        Return a list of the resolution `resolution` cells along an arbitrary line
-        given by two points on the sphere or plane.
+        Return the ordered list of resolution `resolution` cells that the
+        line segment from `lstart` to `lend` passes through.
 
-        NOTE:
+        The segment is straight in the given coordinate space: planar
+        coordinates if `plane` = True, longitude-latitude coordinates
+        otherwise (so it is a plate carree straight line, not a geodesic;
+        to trace a geodesic, densify it into short segments first). In
+        particular, a longitude-latitude segment spanning more than half
+        a turn of longitude does not, by default, wrap around the
+        antimeridian: a segment from longitude 179 to longitude -179 runs
+        the long way around, through longitude 0 -- the literal planar
+        reading of the coordinates. Splitting inputs at the antimeridian
+        (as GeoJSON's RFC 7946 prescribes for data producers) avoids the
+        ambiguity entirely; alternatively, set `wrap_antimeridian` = True
+        to trace such a segment the short way, across the antimeridian,
+        which traces exactly the same cells as splitting it there. The
+        flag is meaningless (and ignored) for `plane` = True.
 
-        Cannot handle cells along a line that crosses the antimeridian.
+        The sequence is exact, computed by a sweep over the segment's
+        planar image: every parameter value where the projected segment
+        crosses a cell edge is found (the projection of a longitude-
+        latitude segment is piecewise smooth, with its pieces' boundaries
+        -- region and polar-triangle changes and the longitude wrap --
+        known in closed form, and each planar coordinate at most singly
+        non-monotone per piece, so every crossing is bracketed and solved
+        to machine precision), and each inter-crossing interval's midpoint
+        is located with `cell_from_point`, which is exact for every cell
+        shape, including polar cap cells. Cells the segment meets in a
+        single point only (passing exactly through a cell corner) are not
+        included.
 
-        TODO:
-
-        Cap cells are not handled correctly. Lines intersecting one of those may not
-        return the correct sequence of cells.
+        If either endpoint lies outside the grid (`cell_from_point`
+        returns None there), return []. If some middle stretch of a
+        *planar* segment leaves the grid's cross-shaped image, the cells
+        on both sides of the gap are still returned, in order.
 
         EXAMPLES::
 
@@ -1185,62 +1210,179 @@ class RHEALPixDGGS(object):
             ['N448', 'N447']
 
         """
-        # Turn vertex pair into dggs cells
+        if wrap_antimeridian and not plane:
+            # Take the short way in longitude: shift the end longitude by
+            # a full turn so the segment crosses the antimeridian. The
+            # projection wraps longitudes, so the out-of-range value
+            # locates to the same cells throughout.
+            full = 2 * pi if self.ellipsoid.radians else 360.0
+            dlon = lend[0] - lstart[0]
+            if abs(dlon) > full / 2:
+                lend = (lend[0] - copysign(full, dlon), lend[1])
+
         start = self.cell_from_point(resolution, lstart, plane)
         end = self.cell_from_point(resolution, lend, plane)
+        if start is None or end is None:
+            return []
+        if start == end:
+            return [start]
 
-        # Collect cells along path
-        line_cells = []
-        if start is not None and end is not None:
-            # Special case: resolution is coarse and path is short
-            if start == end:
-                line_cells = [start]
+        R = self.ellipsoid.R_A
+        w = self.cell_width(resolution)
 
-            # Line spans multiple cells
-            else:
-                # Wrap points in a shapely linestring
-                line = LineString([lstart, lend])
+        def point_at(t):
+            return (
+                lstart[0] + t * (lend[0] - lstart[0]),
+                lstart[1] + t * (lend[1] - lstart[1]),
+            )
 
-                # Work your way along the line one cell at a time
-                current = start
-                while current != end:
-                    line_cells.append(current)
+        if plane:
+            q = point_at
+        else:
+            proj = self.rhealpix
 
-                    # Grab dictionary of nearest neighbours
-                    nns = current.neighbors(plane=plane)
+            def q(t):
+                return proj(*point_at(t))
 
-                    # Find neighbour across edge crossed by line if it exists
-                    following = None
-                    for key in nns:
-                        nn = nns[key]
-                        verts = nn.vertices(plane=plane)
+        # Piece boundaries: parameter values where the planar image of
+        # the segment may kink or jump. For a planar segment there are
+        # none; for a longitude-latitude segment they are the crossings
+        # of the equatorial/polar region boundaries, the polar-triangle
+        # edges and face columns (longitude multiples of a quarter turn,
+        # relative to the ellipsoid's lon_0), and the longitude/latitude
+        # wraps -- all exact, since longitude and latitude are linear in
+        # the parameter.
+        breakpoints = {0.0, 1.0}
 
-                        # Repeat first point to close the square
-                        verts.append(verts[0])
+        def add_linear_crossings(f0, f1, targets):
+            for target in targets:
+                if f1 != f0:
+                    t = (target - f0) / (f1 - f0)
+                    if 0.0 < t < 1.0:
+                        breakpoints.add(t)
 
-                        # Turn vertices into point pairs describing cell edges
-                        edges = zip(verts, verts[1:])
+        if not plane:
+            ell = self.ellipsoid
+            half = pi if ell.radians else 180.0
+            quarter = half / 2
+            # Geodetic latitude of the region boundary (the authalic
+            # latitude arcsin(2/3)).
+            phi_reg = auth_lat(asin(2.0 / 3), ell.e, inverse=True, radians=True)
+            if not ell.radians:
+                phi_reg = phi_reg * 180 / pi
+            add_linear_crossings(
+                lstart[1],
+                lend[1],
+                [
+                    ell.lat_0 + phi_reg,
+                    ell.lat_0 - phi_reg,
+                    ell.lat_0 + quarter,
+                    ell.lat_0 - quarter,
+                ],
+            )
+            lo = min(lstart[0], lend[0]) - ell.lon_0
+            hi = max(lstart[0], lend[0]) - ell.lon_0
+            k0, k1 = int(floor(lo / quarter)), int(ceil(hi / quarter))
+            add_linear_crossings(
+                lstart[0],
+                lend[0],
+                [ell.lon_0 + k * quarter for k in range(k0, k1 + 1)],
+            )
 
-                        # Iterate over the edges to find the crossing one
-                        while (edge := next(edges, None)) is not None and not following:
-                            # Make sure both points in the edge are on the same side of the antimeridian
-                            edge = self.antimeridian_check_and_flip(edge, plane=plane)
+        # All planar cell edges of this resolution lie on one global
+        # lattice: face origins are exact multiples of the face width,
+        # which is an exact multiple of the cell width.
+        x_anchor = -pi * R
+        y_anchor = -3 * pi * R / 4
 
-                            # Wrap edge in a shapely linestring and check intersection
-                            edge_line = LineString(edge)
-                            if line.intersects(edge_line) and nn not in line_cells:
-                                following = nn
+        def lattice_lines_between(a, b, anchor):
+            lo, hi = (a, b) if a <= b else (b, a)
+            i0 = int(floor((lo - anchor) / w)) + 1
+            i1 = int(floor((hi - anchor) / w))
+            return [anchor + i * w for i in range(i0, i1 + 1)]
 
-                    # Fail safe for strange cases (to make sure the iteration ends)
-                    if not following:
-                        current = end
-                    else:
-                        current = following
+        def root(f, ta, tb, fa):
+            # Bisection to machine precision on a bracketed sign change.
+            for _ in range(120):
+                tm = 0.5 * (ta + tb)
+                if tm == ta or tm == tb:
+                    return tm
+                fm = float(f(tm))
+                if fm == 0:
+                    return tm
+                if (fa < 0) != (fm < 0):
+                    tb = tm
+                else:
+                    ta, fa = tm, fm
+            return 0.5 * (ta + tb)
 
-                # Cap the sequence
-                line_cells.append(end)
+        def monotone_runs(axis, ta, tb):
+            # Split [ta, tb] into runs on which q(t)[axis] is monotone:
+            # scan for direction flips, then pin each extremum by ternary
+            # search. Within one smooth piece each planar coordinate has
+            # the form c + l(t)*sigma(t) with l linear and sigma monotone,
+            # so it has at most one interior extremum, which a 64-point
+            # scan brackets comfortably.
+            N = 64
+            ts = [ta + (tb - ta) * i / N for i in range(N + 1)]
+            vs = [float(q(t)[axis]) for t in ts]
+            cuts = [ta]
+            direction = 0
+            for i in range(1, N + 1):
+                d = (vs[i] > vs[i - 1]) - (vs[i] < vs[i - 1])
+                if d == 0:
+                    continue
+                if direction == 0:
+                    direction = d
+                elif d != direction:
+                    lo, hi = ts[max(i - 2, 0)], ts[i]
+                    for _ in range(200):
+                        if hi - lo < 1e-14:
+                            break
+                        m1 = lo + (hi - lo) / 3
+                        m2 = hi - (hi - lo) / 3
+                        if direction * float(q(m1)[axis] - q(m2)[axis]) < 0:
+                            lo = m1
+                        else:
+                            hi = m2
+                    cuts.append(0.5 * (lo + hi))
+                    direction = d
+            cuts.append(tb)
+            return list(zip(cuts, cuts[1:]))
 
+        crossings = set()
+        for pa, pb in zip(sorted(breakpoints), sorted(breakpoints)[1:]):
+            if pb - pa < 1e-14:
+                continue
+            # Evaluate strictly inside the piece, clear of its kinks.
+            eps = (pb - pa) * 1e-12
+            ta, tb = pa + eps, pb - eps
+            for axis in (0, 1):
+                anchor = x_anchor if axis == 0 else y_anchor
+                for ra, rb in monotone_runs(axis, ta, tb):
+                    va = float(q(ra)[axis])
+                    vb = float(q(rb)[axis])
+                    for line in lattice_lines_between(va, vb, anchor):
+
+                        def f(t, line=line, axis=axis):
+                            return q(t)[axis] - line
+
+                        crossings.add(root(f, ra, rb, va - line))
+            if pb < 1.0:
+                # The piece boundary itself may be a cell change (a face
+                # jump, or a kink lying exactly on a cell edge).
+                crossings.add(pb)
+
+        ts = [0.0] + sorted(crossings) + [1.0]
+        line_cells = [start]
+        for a, b in zip(ts, ts[1:]):
+            cell = self.cell_from_point(resolution, point_at(0.5 * (a + b)), plane)
+            if cell is not None and cell != line_cells[-1]:
+                line_cells.append(cell)
+        if line_cells[-1] != end:
+            line_cells.append(end)
         return line_cells
+
 
     def cells_from_region(
         self,
@@ -1473,66 +1615,7 @@ class RHEALPixDGGS(object):
         # cover.sort(key=lambda x: (x[2], -x[1]), reverse=True)
         # return [t[0] for t in cover]
 
-    def antimeridian_check_and_flip(
-        self, vertices: list[tuple[float, float]], plane: bool = True
-    ) -> list[tuple[float, float]]:
-        """
-        Check for cell vertices on the antimeridian and make sure their sign is
-        the same as that of the other vertices.
 
-        Used by cells_from_line before checking if a given line intersects a cell
-        edge.
-
-        Returns the set of modified coordinates if sign flipping has occurred, or
-        the original set of coordinates if everything's on the same side of the
-        antimeridian already.
-        """
-        # No need to do anything in the planar case
-        if plane:
-            return vertices
-
-        # The potentially offending (absoulute) value
-        if self.ellipsoid.radians:
-            half_range = pi
-        else:
-            half_range = 180
-
-        # Extract longitudes
-        lngs = [vert[0] for vert in vertices]
-
-        # No need to do anything if no point lies on the antimeridian
-        if not half_range in lngs and not -half_range in lngs:
-            return vertices
-
-        # Check which side of the antimeridian the point of interest is on
-        if half_range in lngs:
-            check_lng = half_range
-        else:
-            check_lng = -half_range
-
-        # Check sign of point at antimeridian against the others
-        fine = True
-        count = 0
-        while fine and count < len(lngs):
-            if lngs[count] != check_lng and lngs[count] * check_lng < 0:
-                fine = False
-
-            count = count + 1
-
-        # No need to do anything else if all points are on the same side of the antimeridian
-        if fine:
-            return vertices
-
-        # Flip sign of longitudes at antimeridian
-        lngs = [lng if lng != check_lng else -lng for lng in lngs]
-
-        # Extract latitudes as separate list
-        lats = [vert[1] for vert in vertices]
-
-        # Zip up the results in a new list of tuples
-        vertices = [(lng, lat) for lng, lat in zip(lngs, lats)]
-
-        return vertices
 
 
 # Some common rHEALPix DGGSs.

@@ -1,5 +1,51 @@
 0.7.0
 ^^^^^
+**Breaking change:** rewrote ``RHEALPixDGGS.cells_from_line`` (the engine
+behind ``rhp_wrappers.linetrace``) to be exact for every cell shape,
+replacing an edge-walking algorithm that modelled each cell as a
+straight-edged quadrilateral -- wrong for polar cells (cap cells are
+circles in longitude-latitude coordinates; dart and skew-quad edges are
+curves), forbidden from ever revisiting a cell (correct polar paths do),
+and equipped with a fail-safe that silently jumped to the end cell,
+skipping arbitrarily many cells. Confirmed failures included skipping a
+cell a segment crossed straight through the middle of, and polar traces
+missing 20 cells at once. The new implementation sweeps the segment's
+planar image for cell-edge crossings: the crossing parameters are exact
+(piece boundaries -- region and polar-triangle changes and the longitude
+wrap -- are known in closed form, and every crossing is bracketed and
+solved to machine precision), and each inter-crossing interval midpoint
+is located with the shape-exact ``cell_from_point``. Validated against
+an independent dense point-location oracle on hundreds of random
+segments (equatorial, polar, region-crossing, planar): zero
+disagreements, and the sweep catches sliver crossings as short as 1/500
+of a cell that sampling misses. Consequences:
+
+- The cap-cell limitation is gone: ``tests``' known-failure case now has
+  its correct expected sequence (confirmed leg-by-leg by dense point
+  location) and passes as a regular test. ``LINETRACE_WARNING`` and the
+  warning emission are removed from ``rhp_wrappers.linetrace``
+  (``verbose`` still controls the malformed-geometry warnings).
+- Some previously returned sequences change: cells the old algorithm
+  skipped are now included (e.g. a cell a segment crossed through the
+  middle of), and cells it invented are gone. Cells met in a single
+  point only (a segment passing exactly through a cell corner) are not
+  included.
+- Longitude-latitude segments are documented as straight in coordinate
+  space (plate carree, matching the shapely input type and GeoJSON RFC
+  7946's planar reading): segments spanning more than half a turn of
+  longitude run the long way around by default rather than wrapping.
+  Splitting inputs at the antimeridian, as RFC 7946 prescribes, avoids
+  the ambiguity; the new ``wrap_antimeridian`` keyword (on
+  ``cells_from_line`` and ``linetrace``, default False) traces such
+  segments the short way instead, equivalent to splitting. This
+  replaces the previous blanket "cannot handle the antimeridian"
+  caveat, and ``polyfill``'s antimeridian TODO is likewise resolved by
+  documenting the split-first requirement.
+- **Breaking change (harmless):** removed
+  ``RHEALPixDGGS.antimeridian_check_and_flip``, which existed solely to
+  patch cell edges for the old algorithm's shapely intersection tests.
+
+
 Adopted the organisation's repository-standards check
 (``manaakiwhenua-standards``) as a GitHub Actions workflow, with its
 status badge in the README (issue #84). The check requires a non-empty
