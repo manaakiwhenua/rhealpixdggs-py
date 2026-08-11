@@ -1383,6 +1383,84 @@ class RHEALPixDGGS(object):
             line_cells.append(end)
         return line_cells
 
+    def cell_boundaries(
+        self, cells, n: int = 2, plane: bool = True
+    ) -> dict[Cell, list]:
+        """
+        Return a dictionary mapping each cell in `cells` to its boundary
+        points -- each value agreeing with that cell's own
+        ``boundary(n=n, plane=plane)`` in point count, order, and
+        coordinates (up to floating point) -- while computing the
+        projection of every shared boundary point only once.
+
+        Adjacent cells share their common edge's points (and cells
+        meeting at a corner share that corner point), so computing each
+        cell's boundary independently projects every interior edge of a
+        map of cells twice. This method projects each distinct planar
+        boundary point once and reuses it, roughly halving the projection
+        work for contiguous sets of cells; as a corollary, two adjacent
+        cells' copies of their shared points are identical floats rather
+        than two independently computed (and potentially last-digit
+        different) values, which helps downstream consumers that dissolve
+        or snap cell geometries.
+
+        Points are shared only between cells of the same region
+        ('equatorial', 'north_polar', 'south_polar'): the inverse
+        projection takes a per-cell region hint that legitimately
+        disambiguates points lying exactly on a region boundary, so
+        edges along those parallels are computed per region, exactly as
+        ``boundary()`` computes them.
+
+        `cells` may mix resolutions; sharing happens per resolution.
+        For `plane` = True there is no projection work to share and this
+        is simply a convenience over calling ``boundary()`` per cell.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> cells = list(rdggs.cell(('P', 0)).subcells())
+            >>> boundaries = rdggs.cell_boundaries(cells, n=3, plane=False)
+            >>> all(len(b) == 4 * 3 - 4 for b in boundaries.values())
+            True
+
+        """
+        if plane:
+            return {cell: cell.boundary(n=n, plane=True) for cell in cells}
+        if n < 2:
+            n = 2
+        R = self.ellipsoid.R_A
+        x_anchor = -pi * R
+        y_anchor = -3 * pi * R / 4
+        cache = {}
+        result = {}
+        for cell in cells:
+            # The same planar points, in the same order, as
+            # cell.boundary(n=n, plane=False) computes: the planar
+            # boundary, reordered to start at the northwest vertex.
+            planar = cell.boundary(n=n, plane=True)
+            v = cell.vertices(plane=True)
+            nw = cell.nw_vertex(plane=True)
+            i = (n - 1) * v.index(nw)
+            planar = planar[i:] + planar[:i]
+            region = cell.region()
+            # All of this cell's boundary points lie on the fine lattice
+            # of pitch w/(n - 1) anchored at the planar image's corner,
+            # shared with every same-resolution neighbor's points, so an
+            # integer lattice key identifies coincident points robustly.
+            pitch = cell.width(plane=True) / (n - 1)
+            points = []
+            for p in planar:
+                key = (
+                    cell.resolution,
+                    region,
+                    round((p[0] - x_anchor) / pitch),
+                    round((p[1] - y_anchor) / pitch),
+                )
+                if key not in cache:
+                    cache[key] = self.rhealpix(*p, inverse=True, region=region)
+                points.append(cache[key])
+            result[cell] = points
+        return result
 
     def cells_from_region(
         self,

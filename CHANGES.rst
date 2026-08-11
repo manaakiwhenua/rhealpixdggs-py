@@ -1,5 +1,18 @@
 0.7.0
 ^^^^^
+Added ``RHEALPixDGGS.cell_boundaries(cells, n=2, plane=True)``: boundary
+points for a whole set of cells at once, projecting every shared boundary
+point once instead of once per adjacent cell (issue #87, proposed in
+issue #7). For contiguous blocks of cells this roughly halves the
+projection work of rendering cell outlines, and it makes adjacent cells'
+copies of their shared points identical floats rather than two
+independently computed values. Each cell's entry agrees with its own
+``boundary(n, plane)`` in count, order, and coordinates. ``Cell`` is now
+hashable (consistent with its equality: cells with equal addresses from
+the same DGGS hash alike), so cells can be dictionary keys and set
+members.
+
+
 **Breaking change:** rewrote ``RHEALPixDGGS.cells_from_line`` (the engine
 behind ``rhp_wrappers.linetrace``) to be exact for every cell shape,
 replacing an edge-walking algorithm that modelled each cell as a
