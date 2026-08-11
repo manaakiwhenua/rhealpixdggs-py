@@ -310,6 +310,74 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         )
         self.assertIn("N241", [str(c) for c in cells])
 
+    def test_cell_boundaries(self):
+        from numpy import allclose
+
+        rdggs = WGS84_003
+
+        # Agreement with each cell's own boundary() -- same count, order,
+        # and coordinates -- across cell shapes, across a region
+        # boundary, and across mixed resolutions.
+        cell_sets = [
+            list(rdggs.cell((P, 0)).subcells()),  # quads
+            list(rdggs.cell((N, 4)).subcells()),  # cap + darts + skew quads
+            [rdggs.cell((Q, i)) for i in (0, 1, 2)]
+            + [rdggs.cell((N, i)) for i in (6, 7, 8)],  # region-crossing
+            [rdggs.cell((P, 0))] + list(rdggs.cell((P, 0)).subcells()),
+        ]
+        for cells in cell_sets:
+            for n in (2, 3, 7):
+                boundaries = rdggs.cell_boundaries(cells, n=n, plane=False)
+                for c in cells:
+                    expected = c.boundary(n=n, plane=False)
+                    self.assertEqual(len(boundaries[c]), len(expected))
+                    for got, want in zip(boundaries[c], expected):
+                        self.assertTrue(
+                            allclose(got, want, rtol=0, atol=1e-9),
+                            msg=f"{c} n={n}: {got} != {want}",
+                        )
+
+        # The new guarantee: adjacent same-region cells' copies of their
+        # shared edge points are identical values, not merely close.
+        cells = list(rdggs.cell((P, 0)).subcells())
+        n = 5
+        boundaries = rdggs.cell_boundaries(cells, n=n, plane=False)
+        a = set(map(tuple, boundaries[rdggs.cell((P, 0, 1))]))
+        b = set(map(tuple, boundaries[rdggs.cell((P, 0, 2))]))
+        self.assertGreaterEqual(len(a & b), n)
+
+        # And the point of it all: strictly fewer projection calls than
+        # computing each cell's boundary independently (interior edges
+        # projected once, not twice).
+        class CountingProjection:
+            def __init__(self, inner):
+                self.inner = inner
+                self.count = 0
+
+            def __call__(self, *args, **kwargs):
+                self.count += 1
+                return self.inner(*args, **kwargs)
+
+        block = [rdggs.cell((P, i, j)) for i in range(9) for j in range(9)]
+        counter = CountingProjection(rdggs.rhealpix)
+        rdggs.rhealpix = counter
+        try:
+            for c in block:
+                c.boundary(n=4, plane=False)
+            per_cell_calls = counter.count
+            counter.count = 0
+            rdggs.cell_boundaries(block, n=4, plane=False)
+            batched_calls = counter.count
+        finally:
+            del rdggs.__dict__["rhealpix"]
+        self.assertLess(batched_calls, 0.6 * per_cell_calls)
+
+        # Planar mode is a plain convenience passthrough.
+        cells = list(rdggs.cell((P, 0)).subcells())
+        boundaries = rdggs.cell_boundaries(cells, n=3, plane=True)
+        for c in cells:
+            self.assertEqual(boundaries[c], c.boundary(n=3, plane=True))
+
     def test_cell_from_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
             # For any planar cell X with nucleus c and width w,

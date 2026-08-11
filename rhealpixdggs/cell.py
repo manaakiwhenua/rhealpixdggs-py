@@ -202,6 +202,12 @@ class Cell(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        # Consistent with __eq__ (equal cells have equal suids), and
+        # makes cells usable as dictionary keys and set members. A
+        # cell's suid never changes after construction.
+        return hash(self.suid)
+
     def __le__(self, other):
         """
         The (strictly) less-than relation on cells.
