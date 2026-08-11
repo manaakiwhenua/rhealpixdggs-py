@@ -1,5 +1,16 @@
-0.6.1
+0.7.0
 ^^^^^
+Adopted the organisation's repository-standards check
+(``manaakiwhenua-standards``) as a GitHub Actions workflow, with its
+status badge in the README (issue #84). The check requires a non-empty
+``README.md``, so the README is converted from reStructuredText to
+Markdown (``README.rst`` -> ``README.md``, with ``pyproject.toml``'s
+``readme`` field updated; PyPI renders Markdown long descriptions
+natively -- verified in the built wheel's metadata). The README's
+"Release Notes" section, which duplicated part of ``CHANGES.rst`` inline
+and claimed the package "has had only minor code updates" since 2013, is
+replaced by a pointer to ``CHANGES.rst``.
+
 Packaging and release-process fixes (issue #58): the ``pyproject.toml``
 license field now declares the actual dual license,
 ``LGPL-3.0-or-later OR MIT`` -- it previously declared

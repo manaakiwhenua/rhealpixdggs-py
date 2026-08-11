@@ -12,6 +12,9 @@ Poetry versions cannot read (they fail with a cryptic `'name'` error).
 - [ ] Update `CHANGES.rst` with the release notes, including explicit
       **Breaking change:** callouts where applicable.
 - [ ] Update `CITATION.CFF`: `version` and `date-released`.
+- [ ] Check the copyright year range in `LICENSE` and `LICENSE-MIT` covers
+      the current year (the docs' copyright line computes its end year at
+      build time, but the license files are updated by hand).
 - [ ] Run the tests and doctests:
 
   ```sh

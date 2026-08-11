@@ -13,7 +13,7 @@ authors = [
 maintainers = [
     { name = "Richard Law", email = "lawr@landcareresearch.co.nz" }
 ]
-readme = "README.rst"
+readme = "README.md"
 # Dual-licensed: the user may choose either license. See LICENSE,
 # LICENSE-LGPL, and LICENSE-MIT.
 license = "LGPL-3.0-or-later OR MIT"
