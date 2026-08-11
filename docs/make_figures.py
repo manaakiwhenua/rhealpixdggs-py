@@ -1,5 +1,8 @@
 """
-Regenerate the static figures in docs/source/images/.
+Regenerate the static figures in docs/source/images/ (each written as
+SVG for the HTML docs and PDF for the LaTeX/PDF docs; the figure
+directives reference them with a wildcard so each Sphinx builder picks
+the format it can use).
 
 Run manually from the repository root whenever the figures need to change:
 
@@ -200,6 +203,7 @@ ax.set_title(
 )
 fig.tight_layout()
 fig.savefig(OUT / "planar_grid.svg", bbox_inches="tight")
+fig.savefig(OUT / "planar_grid.pdf", bbox_inches="tight")
 plt.close(fig)
 
 # ---------------------------------------------------------------- figure 2
@@ -257,6 +261,7 @@ ax.set_title("Resolution 1 ellipsoidal cells of the (0, 0)-rHEALPix DGGS (WGS84)
 ax.grid(True, linewidth=0.3, alpha=0.5)
 fig.tight_layout()
 fig.savefig(OUT / "ellipsoidal_cells.svg", bbox_inches="tight")
+fig.savefig(OUT / "ellipsoidal_cells.pdf", bbox_inches="tight")
 plt.close(fig)
 print("figures written")
 
@@ -346,6 +351,7 @@ draw_globe(axes[1], 0, 90, "North polar view (cap cell N4)")
 draw_globe(axes[2], 100, -35, "Oblique southern view")
 fig.tight_layout()
 fig.savefig(OUT / "globe_views.svg", bbox_inches="tight")
+fig.savefig(OUT / "globe_views.pdf", bbox_inches="tight")
 print("globe views written")
 
 
@@ -418,6 +424,7 @@ axes[1].set_title(f"linetrace(line, res={RESOLUTION}, plane=False)")
 
 fig.tight_layout()
 fig.savefig(OUT / "wrappers_nz.svg", bbox_inches="tight")
+fig.savefig(OUT / "wrappers_nz.pdf", bbox_inches="tight")
 plt.close(fig)
 print("wrapper examples written")
 
@@ -524,5 +531,6 @@ ax.set_title(
 )
 fig.tight_layout()
 fig.savefig(OUT / "wrappers_cap_trace.svg", bbox_inches="tight")
+fig.savefig(OUT / "wrappers_cap_trace.pdf", bbox_inches="tight")
 plt.close(fig)
 print("cap trace figure written")

@@ -1,7 +1,7 @@
 The rhp_wrappers Module
 ===========================
 
-.. figure:: images/wrappers_nz.svg
+.. figure:: images/wrappers_nz.*
    :alt: Two maps of New Zealand. Left: a polygon roughly enclosing the
          country, with the resolution 4 cells whose centroids fall inside
          it drawn filled. Right: a three-point line from the southwest of
@@ -15,7 +15,7 @@ The rhp_wrappers Module
    partway down the South Island is the boundary between the equatorial
    R cells (quads) and the south polar S cells (skew quads).
 
-.. figure:: images/wrappers_cap_trace.svg
+.. figure:: images/wrappers_cap_trace.*
    :alt: View from above the north pole showing the nine resolution 3
          cells around it, with a linestring curving around the pole and
          the cells it passes through -- including the circular cap cell

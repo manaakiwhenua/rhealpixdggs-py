@@ -2,7 +2,7 @@ Introduction
 ============
 rHEALPixDGGS is a Python 3 package that implements the rHEALPix discrete global grid system (DGGS).
 
-.. figure:: images/planar_grid.svg
+.. figure:: images/planar_grid.*
    :alt: The (0, 0)-rHEALPix planar grid: six resolution 0 cells labeled
          N, O, P, Q, R, S unfolded from a cube, each subdivided into a
          3-by-3 resolution 1 sub-grid, with cell P's children labeled
@@ -15,7 +15,7 @@ rHEALPixDGGS is a Python 3 package that implements the rHEALPix discrete global 
    children are labeled with their SUID digits, so e.g. the cell in its
    lower-right corner is P8.
 
-.. figure:: images/ellipsoidal_cells.svg
+.. figure:: images/ellipsoidal_cells.*
    :alt: The resolution 1 ellipsoidal cells of the (0, 0)-rHEALPix DGGS on
          WGS84, drawn in longitude-latitude coordinates and colored by
          their resolution 0 cell.
