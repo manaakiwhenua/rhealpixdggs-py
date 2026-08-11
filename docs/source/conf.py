@@ -212,6 +212,16 @@ latex_elements = {
     # Remove blank pages (that are produced for duplex printing).
     "classoptions": "openany,oneside",
     "babel": "\\usepackage[english]{babel}",
+    # pdflatex has no built-in mappings for a few Unicode characters used
+    # in docstrings (notably area_error_budget()'s formulas); declare
+    # them so the PDF manual builds without a Unicode-capable engine.
+    "preamble": r"""
+\DeclareUnicodeCharacter{02B3}{\ensuremath{{}^{r}}}
+\DeclareUnicodeCharacter{03B5}{\ensuremath{\varepsilon}}
+\DeclareUnicodeCharacter{03C0}{\ensuremath{\pi}}
+\DeclareUnicodeCharacter{207B}{\ensuremath{{}^{-}}}
+\DeclareUnicodeCharacter{2264}{\ensuremath{\leq}}
+""",
     # The paper size ('letterpaper' or 'a4paper').
     "papersize": "a4paper",
     # The font size ('10pt', '11pt' or '12pt').

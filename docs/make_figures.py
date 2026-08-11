@@ -1,5 +1,8 @@
 """
-Regenerate the static figures in docs/source/images/.
+Regenerate the static figures in docs/source/images/ (each written as
+SVG for the HTML docs and PDF for the LaTeX/PDF docs; the figure
+directives reference them with a wildcard so each Sphinx builder picks
+the format it can use).
 
 Run manually from the repository root whenever the figures need to change:
 
@@ -37,6 +40,8 @@ matplotlib.use("Agg")
 matplotlib.rcParams["svg.hashsalt"] = "rhealpixdggs"
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import to_rgba
+from matplotlib.patches import Polygon as PolygonPatch
 from matplotlib.patches import Rectangle
 
 # Draw from this repository's rhealpixdggs, not any installed copy.
@@ -200,6 +205,7 @@ ax.set_title(
 )
 fig.tight_layout()
 fig.savefig(OUT / "planar_grid.svg", bbox_inches="tight")
+fig.savefig(OUT / "planar_grid.pdf", bbox_inches="tight")
 plt.close(fig)
 
 # ---------------------------------------------------------------- figure 2
@@ -209,15 +215,40 @@ plt.close(fig)
 fig, ax = plt.subplots(figsize=(9, 4.8))
 
 
-def split_at_antimeridian(points):
-    """Split a closed boundary point list into segments wherever the
-    longitude jumps across the antimeridian."""
+def split_chart_discontinuities(points):
+    """Split a closed boundary point list into segments wherever it
+    jumps across the antimeridian or -- possible for grids recentred
+    off the equator, whose cells can overflow past a pole -- wherever
+    the latitude wraps from one pole to the other."""
     segs = [[points[0]]]
     for prev, cur in zip(points, points[1:]):
-        if abs(cur[0] - prev[0]) > 180:
+        if abs(cur[0] - prev[0]) > 180 or abs(cur[1] - prev[1]) > 90:
             segs.append([])
         segs[-1].append(cur)
     return segs
+
+
+def fill_lonlat_polygon(ax, points, **kwargs):
+    """Fill a closed lon-lat polygon on a plate carree axis, keeping the
+    fill intact for polygons that straddle the antimeridian: unwrap the
+    longitudes into one continuous ring, then draw it at every 360-degree
+    offset that intersects the axis window and let clipping do the rest."""
+    lons = [points[0][0]]
+    for prev, cur in zip(points, points[1:]):
+        d = cur[0] - prev[0]
+        if d > 180:
+            d -= 360
+        elif d < -180:
+            d += 360
+        lons.append(lons[-1] + d)
+    lats = [p[1] for p in points]
+    offsets = {0.0}
+    if max(lons) > 180:
+        offsets.add(-360.0)
+    if min(lons) < -180:
+        offsets.add(360.0)
+    for off in offsets:
+        ax.fill([lon + off for lon in lons], lats, **kwargs)
 
 
 def draw_coastlines_lonlat(ax, linewidth=0.5):
@@ -231,7 +262,7 @@ for face in CELLS0:
     for cell in rdggs.cell([face]).subcells():
         pts = cell.boundary(n=40, plane=False)
         pts = pts + [pts[0]]
-        for seg in split_at_antimeridian(pts):
+        for seg in split_chart_discontinuities(pts):
             if len(seg) > 1:
                 ax.plot(*zip(*seg), color=color, linewidth=0.9)
     # Face label at the resolution 0 nucleus.
@@ -257,6 +288,7 @@ ax.set_title("Resolution 1 ellipsoidal cells of the (0, 0)-rHEALPix DGGS (WGS84)
 ax.grid(True, linewidth=0.3, alpha=0.5)
 fig.tight_layout()
 fig.savefig(OUT / "ellipsoidal_cells.svg", bbox_inches="tight")
+fig.savefig(OUT / "ellipsoidal_cells.pdf", bbox_inches="tight")
 plt.close(fig)
 print("figures written")
 
@@ -346,6 +378,7 @@ draw_globe(axes[1], 0, 90, "North polar view (cap cell N4)")
 draw_globe(axes[2], 100, -35, "Oblique southern view")
 fig.tight_layout()
 fig.savefig(OUT / "globe_views.svg", bbox_inches="tight")
+fig.savefig(OUT / "globe_views.pdf", bbox_inches="tight")
 print("globe views written")
 
 
@@ -376,7 +409,7 @@ def draw_cells_lonlat(ax, addresses, fill_alpha=0.35):
                 alpha=fill_alpha,
                 linewidth=0,
             )
-        for seg in split_at_antimeridian(pts):
+        for seg in split_chart_discontinuities(pts):
             if len(seg) > 1:
                 ax.plot(*zip(*seg), color=color, linewidth=0.8)
 
@@ -418,6 +451,7 @@ axes[1].set_title(f"linetrace(line, res={RESOLUTION}, plane=False)")
 
 fig.tight_layout()
 fig.savefig(OUT / "wrappers_nz.svg", bbox_inches="tight")
+fig.savefig(OUT / "wrappers_nz.pdf", bbox_inches="tight")
 plt.close(fig)
 print("wrapper examples written")
 
@@ -524,5 +558,673 @@ ax.set_title(
 )
 fig.tight_layout()
 fig.savefig(OUT / "wrappers_cap_trace.svg", bbox_inches="tight")
+fig.savefig(OUT / "wrappers_cap_trace.pdf", bbox_inches="tight")
 plt.close(fig)
 print("cap trace figure written")
+
+
+# ---------------------------------------------------------------- figure 6
+# Cell hierarchy: the SUID is the address. Zoom N -> N4 -> N44 -> N444 in
+# the planar grid; each level's cell is the previous one's child, and each
+# level appends one digit.
+fig, ax = plt.subplots(figsize=(6.5, 6.5))
+level_cells = [["N"], ["N", 4], ["N", 4, 4], ["N", 4, 4, 4]]
+level_colors = ["#999999", "#7c8fe0", "#79bf6f", "#e5735c"]
+n_face = rdggs.cell(["N"])
+x0, y0 = n_face.ul_vertex()
+w0 = n_face.width()
+
+
+def to_fig(x, y):
+    # Normalized coordinates within the N face: (0,0) bottom-left,
+    # (1,1) top-right.
+    return (x - x0) / w0, (y - (y0 - w0)) / w0
+
+
+for suid, color, lw in zip(level_cells, level_colors, (1.2, 1.6, 2.0, 2.4)):
+    cell = rdggs.cell(suid)
+    x, y = cell.ul_vertex()
+    w = cell.width()
+    left, top = to_fig(x, y)
+    ax.add_patch(
+        Rectangle(
+            (left, top - w / w0),
+            w / w0,
+            w / w0,
+            facecolor=color if len(suid) == 4 else "none",
+            alpha=0.5 if len(suid) == 4 else 1.0,
+            edgecolor=color,
+            linewidth=lw,
+        )
+    )
+    # Sibling grid inside this cell, faintly.
+    for child in cell.subcells():
+        cx, cy = child.ul_vertex()
+        cw = child.width()
+        cleft, ctop = to_fig(cx, cy)
+        ax.add_patch(
+            Rectangle(
+                (cleft, ctop - cw / w0),
+                cw / w0,
+                cw / w0,
+                facecolor="none",
+                edgecolor=color,
+                linewidth=0.3,
+                alpha=0.5,
+            )
+        )
+    ax.annotate(
+        str(cell),
+        xy=(left, top),
+        xytext=(left - 0.05, top + 0.04),
+        fontsize=13,
+        fontweight="bold",
+        color=color,
+        ha="right",
+        va="bottom",
+        arrowprops=dict(arrowstyle="-", color=color, linewidth=0.8),
+    )
+ax.set_xlim(-0.2, 1.02)
+ax.set_ylim(-0.02, 1.15)
+ax.set_aspect("equal")
+ax.axis("off")
+ax.set_title(
+    "The cell address is the location: each resolution appends one digit,\n"
+    "and an address prefix is an ancestor (N contains N4 contains N44 ...)"
+)
+fig.tight_layout()
+fig.savefig(OUT / "hierarchy.svg", bbox_inches="tight")
+fig.savefig(OUT / "hierarchy.pdf", bbox_inches="tight")
+plt.close(fig)
+print("hierarchy figure written")
+
+# ---------------------------------------------------------------- figure 7
+# The four ellipsoidal cell shapes, each on an orthographic globe view
+# centered on the cell.
+SHAPE_EXAMPLES = [
+    ("quad", ["Q", 4]),
+    ("skew_quad", ["N", 7]),
+    ("dart", ["N", 6]),
+    ("cap", ["N", 4]),
+]
+fig, axes = plt.subplots(1, 4, figsize=(11.5, 3.1))
+for ax, (shape, suid) in zip(axes, SHAPE_EXAMPLES):
+    cell = rdggs.cell(suid)
+    assert cell.ellipsoidal_shape == shape, (suid, cell.ellipsoidal_shape)
+    lon_c, lat_c = cell.centroid(plane=False)
+    view = (lon_c, min(lat_c, 55.0))  # keep some horizon context for the cap
+    t = np.linspace(0, 2 * np.pi, 400)
+    ax.plot(np.cos(t), np.sin(t), color="#555555", linewidth=1.0)
+    for seg in COASTLINES:
+        x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], *view)
+        ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+                color=COAST_COLOR, linewidth=0.4, zorder=1)
+    # Neighboring resolution 1 cells for context.
+    for face in CELLS0:
+        for other in rdggs.cell([face]).subcells():
+            pts = other.boundary(n=40, plane=False)
+            pts = pts + [pts[0]]
+            x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
+            ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+                    color="#bbbbbb", linewidth=0.4, zorder=2)
+    pts = cell.boundary(n=60, plane=False)
+    pts = pts + [pts[0]]
+    x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
+    if vis.all():
+        ax.fill(x, y, color=FACE_COLORS[suid[0]], alpha=0.35, linewidth=0)
+    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+            color=FACE_COLORS[suid[0]], linewidth=1.6, zorder=3)
+    ax.set_xlim(-1.03, 1.03)
+    ax.set_ylim(-1.03, 1.03)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.set_title(f"{shape}\n({cell})", fontsize=10)
+fig.tight_layout()
+fig.savefig(OUT / "cell_shapes.svg", bbox_inches="tight")
+fig.savefig(OUT / "cell_shapes.pdf", bbox_inches="tight")
+plt.close(fig)
+print("cell shapes figure written")
+
+
+# ---------------------------------------------------------------- figure 8
+# DE-9IM predicates between cells, in the planar grid: edge touch, corner
+# touch, containment, disjoint.
+def draw_planar_cells(ax, parent, highlight, labels=True):
+    px, py = parent.ul_vertex()
+    pw = parent.width()
+    for child in parent.subcells():
+        x, y = child.ul_vertex()
+        w = child.width()
+        name = str(child)
+        color, alpha = highlight.get(name, ("#ffffff", 0.0))
+        left = (x - px) / pw
+        bottom = (y - w - (py - pw)) / pw
+        ax.add_patch(
+            Rectangle(
+                (left, bottom),
+                w / pw,
+                w / pw,
+                facecolor=color,
+                alpha=alpha if alpha else 1.0,
+                edgecolor="#888888",
+                linewidth=0.6,
+            )
+        )
+        if labels:
+            ax.text(
+                left + 0.5 * w / pw,
+                bottom + 0.5 * w / pw,
+                name,
+                ha="center",
+                va="center",
+                fontsize=8,
+                color="#333333",
+            )
+    ax.set_xlim(-0.02, 1.02)
+    ax.set_ylim(-0.02, 1.02)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+
+P4 = rdggs.cell(["P", 4])
+A_COLOR, B_COLOR = "#7c8fe0", "#e5735c"
+cases = [
+    ("touches (edge)", {"P41": (A_COLOR, 0.55), "P44": (B_COLOR, 0.55)}),
+    ("touches (corner only)", {"P40": (A_COLOR, 0.55), "P44": (B_COLOR, 0.55)}),
+    ("within / contains", {"P44": (B_COLOR, 0.55)}),
+    ("disjoint", {"P40": (A_COLOR, 0.55), "P48": (B_COLOR, 0.55)}),
+]
+fig, axes = plt.subplots(1, 4, figsize=(11.5, 3.0))
+for ax, (title, highlight) in zip(axes, cases):
+    draw_planar_cells(ax, P4, highlight)
+    if title == "within / contains":
+        # The containing cell is P4 itself: outline the whole frame.
+        ax.add_patch(
+            Rectangle(
+                (0, 0), 1, 1, facecolor=A_COLOR, alpha=0.18,
+                edgecolor=A_COLOR, linewidth=2.0,
+            )
+        )
+        ax.text(0.02, 1.04, "P4", fontsize=11, fontweight="bold",
+                color=A_COLOR, ha="left", va="bottom")
+    ax.set_title(title, fontsize=11)
+fig.tight_layout()
+fig.savefig(OUT / "predicates.svg", bbox_inches="tight")
+fig.savefig(OUT / "predicates.pdf", bbox_inches="tight")
+plt.close(fig)
+print("predicates figure written")
+
+# --------------------------------------------------------------- figure 8b
+# The same predicates on the north polar cap, where the players are caps,
+# darts and skew quads rather than planar squares.
+
+
+def draw_ortho_cells(ax, view, context, highlight, mark=None, label_at=None):
+    """Draw cell boundaries in an orthographic view centered on
+    ``view = (lon0, lat0)``; ``highlight`` maps cell names to fill
+    colors, ``context`` lists extra cells drawn as thin outlines, and
+    ``label_at`` optionally overrides a cell's label position (cap
+    cells at the same pole share a centroid, so their labels collide)."""
+    for name in list(highlight) + context:
+        cell = rdggs.cell([name[0]] + [int(d) for d in name[1:]])
+        pts = cell.boundary(n=40, plane=False)
+        pts = pts + [pts[0]]
+        x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
+        color = highlight.get(name)
+        if color is not None and vis.all():
+            ax.fill(x, y, color=color, alpha=0.45, linewidth=0, zorder=2)
+        ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+                color=color or "#999999",
+                linewidth=1.6 if color else 0.6,
+                zorder=3 if color else 1)
+        lon_c, lat_c = (label_at or {}).get(name) or cell.centroid(plane=False)
+        nx, ny, nvis = ortho(lon_c, lat_c, *view)
+        if nvis:
+            ax.text(nx, ny, name, ha="center", va="center",
+                    fontsize=9 if color else 7,
+                    fontweight="bold" if color else "normal",
+                    color="#333333", zorder=5)
+    if mark is not None:
+        mx, my, mvis = ortho(mark[0], mark[1], *view)
+        if mvis:
+            ax.plot([mx], [my], marker="o", color="#222222", markersize=6,
+                    zorder=6)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+
+POLE_VIEW = (0.0, 90.0)
+N_CONTEXT = [f"N{i}" for i in range(9)]
+CORNER = rdggs.cell(["N", 0]).ul_vertex(plane=False)
+# Southernmost boundary latitudes of the two nested caps, used to slot
+# the outer cap's label into the ring between their boundaries.
+_lat_n4 = min(p[1] for p in rdggs.cell(["N", 4]).boundary(n=40, plane=False))
+_lat_n44 = min(p[1] for p in rdggs.cell(["N", 4, 4]).boundary(n=40, plane=False))
+polar_cases = [
+    # (title, highlight, context, view, radius, mark, label_at)
+    ("cap touches skew quad (edge)",
+     {"N4": B_COLOR, "N1": A_COLOR}, N_CONTEXT, POLE_VIEW, 0.80, None, None),
+    ("cap touches dart (corner only)",
+     {"N4": B_COLOR, "N0": A_COLOR}, N_CONTEXT, POLE_VIEW, 0.80,
+     rdggs.cell(["N", 4]).ul_vertex(plane=False), None),
+    ("cap within cap",
+     {"N44": B_COLOR, "N4": A_COLOR}, N_CONTEXT, POLE_VIEW, 0.80, None,
+     {"N4": (0.0, 0.5 * (_lat_n4 + _lat_n44))}),
+    ("cube corner: all pairs touch (edges)",
+     {"N0": A_COLOR, "Q2": B_COLOR, "R0": "#79b791"},
+     ["N1", "N3", "Q1", "Q5", "R1", "R3"], CORNER, 0.55, CORNER, None),
+]
+fig, axes = plt.subplots(1, 4, figsize=(12.5, 3.4))
+for ax, (title, highlight, context, view, radius, mark, label_at) in zip(
+    axes, polar_cases
+):
+    context = [name for name in context if name not in highlight]
+    draw_ortho_cells(ax, view, context, highlight, mark=mark, label_at=label_at)
+    ax.set_xlim(-radius, radius)
+    ax.set_ylim(-radius, radius)
+    ax.set_title(title, fontsize=10)
+fig.tight_layout()
+fig.savefig(OUT / "predicates_polar.svg", bbox_inches="tight")
+fig.savefig(OUT / "predicates_polar.pdf", bbox_inches="tight")
+plt.close(fig)
+print("polar predicates figure written")
+
+# ---------------------------------------------------------------- figure 9
+# A cube corner is 3-valent: exactly three cells meet there, so one
+# diagonal neighbor does not exist.
+fig, ax = plt.subplots(figsize=(6.0, 6.0))
+n0 = rdggs.cell(["N", 0])
+corner_lon, corner_lat = n0.ul_vertex(plane=False)
+view = (corner_lon, corner_lat)
+t = np.linspace(0, 2 * np.pi, 400)
+ax.plot(np.cos(t), np.sin(t), color="#555555", linewidth=1.0)
+for seg in COASTLINES:
+    x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], *view)
+    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+            color=COAST_COLOR, linewidth=0.5, zorder=1)
+meeting = {"N0": "the cell", "Q2": "neighbor('up')", "R0": "neighbor('left')"}
+context = ["N1", "N3", "N4", "Q1", "Q5", "R1", "R3"]
+for name in list(meeting) + context:
+    cell = rdggs.cell([name[0], int(name[1])])
+    pts = cell.boundary(n=40, plane=False)
+    pts = pts + [pts[0]]
+    x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
+    color = FACE_COLORS[name[0]]
+    bold = name in meeting
+    if bold and vis.all():
+        ax.fill(x, y, color=color, alpha=0.30, linewidth=0)
+    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+            color=color, linewidth=1.8 if bold else 0.6, zorder=3 if bold else 2)
+    lon_c, lat_c = cell.centroid(plane=False)
+    nx, ny, nvis = ortho(lon_c, lat_c, *view)
+    if nvis:
+        label = name + ("\n" + meeting[name] if bold and meeting[name] != "the cell" else "")
+        ax.text(nx, ny, label, ha="center", va="center",
+                fontsize=10 if bold else 8,
+                fontweight="bold" if bold else "normal",
+                color="#333333", zorder=5)
+cx, cy, _ = ortho(corner_lon, corner_lat, *view)
+ax.plot([cx], [cy], marker="o", color="#222222", markersize=7, zorder=6)
+ax.annotate(
+    "cube corner: 3 cells meet here\nN0.diagonal_neighbor('up_left') is None",
+    xy=(cx, cy), xytext=(cx - 0.55, cy + 0.62), fontsize=10,
+    ha="center", color="#222222",
+    arrowprops=dict(arrowstyle="->", color="#222222"),
+)
+lim = 0.9
+ax.set_xlim(-lim, lim)
+ax.set_ylim(-lim, lim)
+ax.set_aspect("equal")
+ax.axis("off")
+ax.set_title("Three cells, not four, meet at a corner of the cube", fontsize=11)
+fig.tight_layout()
+fig.savefig(OUT / "cube_corner.svg", bbox_inches="tight")
+fig.savefig(OUT / "cube_corner.pdf", bbox_inches="tight")
+plt.close(fig)
+print("cube corner figure written")
+
+# --------------------------------------------------------------- figure 9b
+# The same corner drawn on the cube itself: the three visible faces N, Q
+# and R subdivided into their nine resolution 1 cells.
+
+
+def iso(x, y, z):
+    """Project cube coordinates in [0, 1]^3 onto the drawing plane."""
+    return (x - y) * 0.866, z * 0.82 - (x + y) * 0.35
+
+
+# Map each visible face's planar coordinates (p to the right, q downward,
+# both in [0, 1]) onto the cube, oriented so shared edges line up the way
+# the faces fold: the top (q=0) edges of Q and R meet N, N's top (q=0)
+# edge lies along Q, N's left (p=0) edge lies along R, and Q's right
+# (p=1) edge is R's left (p=0) edge. The corner vertex (1, 1, 1) is then
+# shared by exactly the children N0, Q2 and R0.
+CUBE_FACE_POINT = {
+    "N": lambda p, q: (1 - p, 1 - q, 1.0),
+    "Q": lambda p, q: (p, 1.0, 1 - q),
+    "R": lambda p, q: (1.0, 1 - p, 1 - q),
+}
+CORNER_CELLS = ("N0", "Q2", "R0")
+
+fig, ax = plt.subplots(figsize=(6.2, 6.8))
+for face, to_cube in CUBE_FACE_POINT.items():
+    color = FACE_COLORS[face]
+    for row in range(3):
+        for col in range(3):
+            name = f"{face}{3 * row + col}"
+            corners = [
+                (col / 3, row / 3),
+                ((col + 1) / 3, row / 3),
+                ((col + 1) / 3, (row + 1) / 3),
+                (col / 3, (row + 1) / 3),
+            ]
+            key = name in CORNER_CELLS
+            ax.add_patch(
+                PolygonPatch(
+                    [iso(*to_cube(p, q)) for p, q in corners],
+                    closed=True,
+                    facecolor=to_rgba(color, 0.45 if key else 0.10),
+                    edgecolor="#777777",
+                    linewidth=0.6,
+                    zorder=2,
+                )
+            )
+            lx, ly = iso(*to_cube((col + 0.5) / 3, (row + 0.5) / 3))
+            ax.text(lx, ly, name, ha="center", va="center",
+                    fontsize=8 if key else 7,
+                    fontweight="bold" if key else "normal",
+                    color="#333333", zorder=4)
+
+# Outer silhouette and the three edges that meet at the corner vertex.
+silhouette = [(0, 1, 1), (0, 0, 1), (1, 0, 1), (1, 0, 0), (1, 1, 0), (0, 1, 0)]
+ax.plot(*zip(*[iso(*v) for v in silhouette + [silhouette[0]]]),
+        color="#444444", linewidth=1.4, zorder=5)
+for far in [(0, 1, 1), (1, 0, 1), (1, 1, 0)]:
+    ax.plot(*zip(iso(1, 1, 1), iso(*far)), color="#444444", linewidth=1.0,
+            zorder=5)
+
+vx, vy = iso(1, 1, 1)
+ax.plot([vx], [vy], marker="o", color="#222222", markersize=7, zorder=6)
+ax.annotate(
+    "cube corner: 3 cells meet here\nN0.diagonal_neighbor('up_left') is None",
+    xy=(vx, vy), xytext=(0, -1.0), fontsize=10, ha="center", va="top",
+    color="#222222",
+    arrowprops=dict(arrowstyle="->", color="#222222", shrinkB=6),
+)
+ax.set_xlim(-1.0, 1.0)
+ax.set_ylim(-1.45, 1.3)
+ax.set_aspect("equal")
+ax.axis("off")
+ax.set_title("The same corner on the cube: faces N, Q and R", fontsize=11)
+fig.tight_layout()
+fig.savefig(OUT / "cube_corner_cube.svg", bbox_inches="tight")
+fig.savefig(OUT / "cube_corner_cube.pdf", bbox_inches="tight")
+plt.close(fig)
+print("cube corner (cube view) figure written")
+
+# --------------------------------------------------------------- figure 10
+# The north_square/south_square parameters: where the polar squares sit.
+from rhealpixdggs.dggs import RHEALPixDGGS
+from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
+
+fig, axes = plt.subplots(2, 1, figsize=(8, 6.4))
+for ax, (ns, ss) in zip(axes, [(0, 0), (1, 2)]):
+    rd = RHEALPixDGGS(ellipsoid=WGS84_ELLIPSOID, north_square=ns, south_square=ss, N_side=3)
+    Rl = rd.ellipsoid.R_A
+    for face in CELLS0:
+        c0 = rd.cell([face])
+        x, y = c0.ul_vertex()
+        w = c0.width()
+        ax.add_patch(
+            Rectangle((x / Rl, (y - w) / Rl), w / Rl, w / Rl,
+                      facecolor=FACE_COLORS[face], alpha=0.35,
+                      edgecolor="black", linewidth=1.2))
+        ax.text((x + 0.5 * w) / Rl, (y - 0.5 * w) / Rl, face,
+                ha="center", va="center", fontsize=16, fontweight="bold",
+                color="#333333", alpha=0.85)
+    for seg in COASTLINES:
+        xy = [rd.rhealpix(lon, lat) for lon, lat in seg]
+        run = [xy[0]]
+        for prev, cur in zip(xy, xy[1:]):
+            if abs(cur[0] - prev[0]) > 0.15 * Rl or abs(cur[1] - prev[1]) > 0.15 * Rl:
+                if len(run) > 1:
+                    ax.plot([p[0] / Rl for p in run], [p[1] / Rl for p in run],
+                            color=COAST_COLOR, linewidth=0.4, zorder=1)
+                run = []
+            run.append(cur)
+        if len(run) > 1:
+            ax.plot([p[0] / Rl for p in run], [p[1] / Rl for p in run],
+                    color=COAST_COLOR, linewidth=0.4, zorder=1)
+    ax.set_xlim(-3.4, 3.4)
+    ax.set_ylim(-2.6, 2.6)
+    ax.set_aspect("equal")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title(f"north_square={ns}, south_square={ss}", fontsize=11)
+fig.tight_layout()
+fig.savefig(OUT / "polar_squares.svg", bbox_inches="tight")
+fig.savefig(OUT / "polar_squares.pdf", bbox_inches="tight")
+plt.close(fig)
+print("polar squares figure written")
+
+
+# --------------------------------------------------------------- figure 11
+# Recentring the DGGS on the Auckland meridian. Recentring in longitude
+# only: it rotates the whole grid about the polar axis, an isometry of
+# the ellipsoid, so the recentred grid is congruent to the standard one.
+# (Recentring in latitude via lat_0 is a planar translation, not an
+# ellipsoid isometry, and produces geographically incoherent polar
+# cells, so it makes a poor showcase.)
+from rhealpixdggs.ellipsoids import Ellipsoid, WGS84_A, WGS84_F
+
+AKL = (174.0, -37.0)
+E_AKL = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=AKL[0])
+rd_akl = RHEALPixDGGS(E_AKL, N_side=3, north_square=0, south_square=0)
+fig, ax = plt.subplots(figsize=(9, 4.8))
+draw_coastlines_lonlat(ax, linewidth=0.5)
+for face in CELLS0:
+    color = FACE_COLORS[face]
+    for cell in rd_akl.cell([face]).subcells():
+        pts = cell.boundary(n=40, plane=False)
+        pts = pts + [pts[0]]
+        for seg in split_chart_discontinuities(pts):
+            if len(seg) > 1:
+                ax.plot(*zip(*seg), color=color, linewidth=0.8, zorder=2)
+akl_cell = rd_akl.cell_from_point(1, AKL, plane=False)
+pts = akl_cell.boundary(n=40, plane=False)
+pts = pts + [pts[0]]
+for seg in split_chart_discontinuities(pts):
+    if len(seg) > 1:
+        ax.fill(*zip(*seg), color=FACE_COLORS[str(akl_cell)[0]], alpha=0.4, zorder=3)
+ax.plot([AKL[0]], [AKL[1]], marker="*", color="#222222", markersize=12, zorder=4)
+ax.annotate(
+    f"Auckland maps to planar x = 0,\n"
+    f"on the P|Q face edge: cell {akl_cell}",
+    xy=AKL, xytext=(AKL[0] - 120, AKL[1] - 30),
+    fontsize=9, color="#222222",
+    arrowprops=dict(arrowstyle="->", color="#222222"))
+ax.set_xlim(-180, 180)
+ax.set_ylim(-90, 90)
+ax.set_xticks(range(-180, 181, 60))
+ax.set_yticks(range(-90, 91, 30))
+ax.set_xlabel("longitude (degrees)")
+ax.set_ylabel("latitude (degrees)")
+ax.set_title("Resolution 1 cells of a DGGS recentred on the Auckland meridian (lon_0=174)")
+ax.grid(True, linewidth=0.3, alpha=0.5)
+fig.tight_layout()
+fig.savefig(OUT / "recentred.svg", bbox_inches="tight")
+fig.savefig(OUT / "recentred.pdf", bbox_inches="tight")
+plt.close(fig)
+print("recentred figure written")
+
+# --------------------------------------------------------------- figure 12
+# cell_ring: rings by distance, and the 7-cell ring at a cube corner.
+RING_COLORS = ["#e5735c", "#e8c34f", "#79bf6f", "#5cc3c9"]
+
+
+def draw_ring_panel(ax, center_name, max_k, window_faces):
+    center = rdggs.cell([c if c in CELLS0 else int(c) for c in center_name])
+    rings = {0: [center_name]}
+    for k in range(1, max_k + 1):
+        rings[k] = rhp_wrappers.cell_ring(center_name, k)
+    membership = {}
+    for k, names in rings.items():
+        for nm in names:
+            membership[nm] = k
+    for face in window_faces:
+        for cell in rdggs.cell([face]).subcells():
+            for sub in cell.subcells():
+                x, y = sub.ul_vertex()
+                w = sub.width()
+                name = str(sub)
+                k = membership.get(name)
+                color = RING_COLORS[k] if k is not None else "#ffffff"
+                ax.add_patch(
+                    Rectangle((x, y - w), w, w,
+                              facecolor=color,
+                              alpha=0.55 if k is not None else 1.0,
+                              edgecolor="#aaaaaa", linewidth=0.3))
+    # face outlines
+    for face in window_faces:
+        c0 = rdggs.cell([face])
+        x, y = c0.ul_vertex()
+        w = c0.width()
+        ax.add_patch(Rectangle((x, y - w), w, w, facecolor="none",
+                               edgecolor="#444444", linewidth=1.2))
+        ax.text(x + 0.06 * w, y - 0.06 * w, face, ha="left", va="top",
+                fontsize=12, fontweight="bold", color="#444444")
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+
+fig, axes = plt.subplots(1, 2, figsize=(11.5, 5.4))
+# Interior rings around Q44 (resolution 2), all within Q: planar view.
+draw_ring_panel(axes[0], "Q44", 3, ["Q"])
+q = rdggs.cell(["Q"])
+qx, qy = q.ul_vertex()
+qw = q.width()
+axes[0].set_xlim(qx - 0.05 * qw, qx + 1.05 * qw)
+axes[0].set_ylim(qy - 1.05 * qw, qy + 0.05 * qw)
+axes[0].set_title("cell_ring('Q44', k=1..3): interior rings have 8k cells", fontsize=11)
+
+# Rings around N00, whose corner digit chain puts it at a cube corner:
+# drawn on the globe, because on the cube the ring wraps contiguously
+# around the corner across the N, Q, and R faces.
+ax = axes[1]
+n00 = rdggs.cell(["N", 0, 0])
+corner_lon, corner_lat = rdggs.cell(["N"]).ul_vertex(plane=False)
+view = (corner_lon, corner_lat)
+membership = {"N00": 0}
+for k in (1, 2, 3):
+    for nm in rhp_wrappers.cell_ring("N00", k):
+        membership[nm] = k
+for seg in COASTLINES:
+    x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], *view)
+    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+            color=COAST_COLOR, linewidth=0.5, zorder=1)
+for face in ("N", "Q", "R"):
+    for cell1 in rdggs.cell([face]).subcells():
+        for cell in cell1.subcells():
+            pts = cell.boundary(n=25, plane=False)
+            pts = pts + [pts[0]]
+            x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
+            k = membership.get(str(cell))
+            if k is not None and vis.all():
+                ax.fill(x, y, color=RING_COLORS[k], alpha=0.55, linewidth=0)
+            ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
+                    color="#aaaaaa", linewidth=0.3, zorder=2)
+cx, cy, _ = ortho(corner_lon, corner_lat, *view)
+ax.plot([cx], [cy], marker="o", color="#222222", markersize=5, zorder=6)
+lim = 0.42
+ax.set_xlim(-lim, lim)
+ax.set_ylim(-lim, lim)
+ax.set_aspect("equal")
+ax.axis("off")
+ax.set_title("around a cube corner ('N00'): the k=1 ring has 7 cells", fontsize=11)
+fig.tight_layout()
+fig.savefig(OUT / "rings.svg", bbox_inches="tight")
+fig.savefig(OUT / "rings.pdf", bbox_inches="tight")
+plt.close(fig)
+print("rings figure written")
+
+
+# --------------------------------------------------------------- figure 13
+# The wrap_antimeridian flag: the same segment traced both ways.
+SEG = ((179.0, 10.0), (-179.0, 10.0))
+fig, axes = plt.subplots(2, 1, figsize=(9, 6.6))
+for ax, wrap in zip(axes, (False, True)):
+    draw_coastlines_lonlat(ax, linewidth=0.5)
+    traced = rdggs.cells_from_line(1, SEG[0], SEG[1], plane=False,
+                                   wrap_antimeridian=wrap)
+    for cell in traced:
+        pts = cell.boundary(n=20, plane=False)
+        pts = pts + [pts[0]]
+        color = FACE_COLORS[str(cell)[0]]
+        fill_lonlat_polygon(ax, pts, color=color, alpha=0.4, linewidth=0)
+        for seg in split_chart_discontinuities(pts):
+            if len(seg) > 1:
+                ax.plot(*zip(*seg), color=color, linewidth=0.9)
+    if wrap:
+        ax.plot([SEG[0][0], 180], [SEG[0][1], SEG[0][1]], color="#222222", linewidth=2)
+        ax.plot([-180, SEG[1][0]], [SEG[1][1], SEG[1][1]], color="#222222", linewidth=2)
+    else:
+        ax.plot([SEG[0][0], SEG[1][0]], [SEG[0][1], SEG[1][1]],
+                color="#222222", linewidth=2)
+    ax.plot([SEG[0][0]], [SEG[0][1]], marker="o", color="#222222", markersize=6)
+    ax.plot([SEG[1][0]], [SEG[1][1]], marker="s", color="#222222", markersize=6)
+    ax.set_xlim(-180, 180)
+    ax.set_ylim(-65, 65)
+    ax.set_xticks(range(-180, 181, 60))
+    ax.set_yticks(range(-60, 61, 30))
+    ax.grid(True, linewidth=0.3, alpha=0.5)
+    ax.set_title(
+        "wrap_antimeridian=%s: (179, 10) to (-179, 10) traced %s" % (
+            wrap, "the short way, across the antimeridian" if wrap
+            else "the long way, through longitude 0 (the literal planar reading)"),
+        fontsize=10,
+    )
+axes[1].set_xlabel("longitude (degrees)")
+fig.tight_layout()
+fig.savefig(OUT / "wrap_antimeridian.svg", bbox_inches="tight")
+fig.savefig(OUT / "wrap_antimeridian.pdf", bbox_inches="tight")
+plt.close(fig)
+print("wrap flag figure written")
+
+# --------------------------------------------------------------- figure 14
+# compact_cells: polyfill output before and after compaction.
+from rhealpixdggs.conversion import compact_cells
+
+FILL_RES = 5
+filled = rhp_wrappers.polyfill(Polygon(NZ_POLYGON), FILL_RES, plane=False, dggs=rdggs)
+compacted = compact_cells(filled, N_side=rdggs.N_side)
+fig, axes = plt.subplots(1, 2, figsize=(11, 5.2), sharey=True)
+for ax, cells, title in (
+    (axes[0], filled, "polyfill(polygon, res=%d): %d cells" % (FILL_RES, len(filled))),
+    (axes[1], compacted, "compact_cells(...): %d cells, mixed resolutions" % len(compacted)),
+):
+    draw_coastlines_lonlat(ax, linewidth=0.7)
+    for address in sorted(cells):
+        cell = cell_from_address(address)
+        pts = cell.boundary(n=10, plane=False)
+        pts = pts + [pts[0]]
+        # Shade by resolution: coarser cells darker.
+        depth = len(address) - 1
+        alpha = 0.55 - 0.08 * (depth - 3)
+        color = FACE_COLORS[address[0]]
+        ax.fill([p[0] for p in pts], [p[1] for p in pts],
+                color=color, alpha=max(alpha, 0.2), linewidth=0)
+        ax.plot([p[0] for p in pts], [p[1] for p in pts],
+                color=color, linewidth=0.5)
+    ax.plot(*zip(*(NZ_POLYGON + [NZ_POLYGON[0]])), color="#222222", linewidth=1.4)
+    ax.set_xlim(163, 181)
+    ax.set_ylim(-49, -32)
+    ax.set_aspect("equal")
+    ax.grid(True, linewidth=0.3, alpha=0.5)
+    ax.set_xlabel("longitude (degrees)")
+    ax.set_title(title, fontsize=11)
+axes[0].set_ylabel("latitude (degrees)")
+fig.tight_layout()
+fig.savefig(OUT / "compaction.svg", bbox_inches="tight")
+fig.savefig(OUT / "compaction.pdf", bbox_inches="tight")
+plt.close(fig)
+print("compaction figure written")

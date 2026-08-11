@@ -1000,12 +1000,18 @@ class Cell(object):
 
     def overlaps(self, other_cell):
         """
-        Determines whether two DGGS cells overlap.
-        Where cells are of different resolution, they will have different suid lengths. The zip function truncates the longer
-        to be the same length as the shorter, producing two lists for comparison. If these lists are equal, the cells overlap.
-        :param cell_one: the first DGGS cell
-        :param cell_two: the second DGGS cell
-        :return: True if overlaps
+        Return True if one of this cell and `other_cell` contains the
+        other (they are the same cell, or one is an ancestor of the
+        other), and False otherwise: the test is whether one cell's suid
+        is a prefix of the other's.
+
+        Note the name predates the DE-9IM predicates below and uses
+        "overlap" loosely: in the DE-9IM sense two grid cells can never
+        partially overlap (they either nest, touch, or are disjoint), and
+        what this method computes is containment-in-either-direction. It
+        is kept under this name for backward compatibility; for the
+        precisely-named relations, see `contains_cell()`, `within()`,
+        `touches()`, and `disjoint()`.
         """
         if not self.suid:
             raise ValueError("Cannot test overlap for an empty cell.")
@@ -1016,10 +1022,10 @@ class Cell(object):
 
     def region_overlaps(self, region: list):
         """
-        Determine whether a cell overlaps with any cell in a list of cells
-        :param cell: a DGGS cell
-        :param region: a list of DGGS cells
-        :return: True if any overlapping cells
+        Return True if `overlaps()` holds between this cell and any cell
+        in the list `region`, and False otherwise (including for an empty
+        list). See `overlaps()` for what is (and is not) meant by
+        "overlap" here.
         """
         for component_cell in region:
             if self.overlaps(component_cell):
