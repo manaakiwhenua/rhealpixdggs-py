@@ -100,7 +100,16 @@ class Projection(object):
                 # Import projection module for proj.
                 module = importlib.import_module("rhealpixdggs.pj_" + proj)
                 f = getattr(module, proj)(a=a, e=e, **kwargs)
-            except NameError:
+            except (AttributeError, ModuleNotFoundError):
+                # importlib.import_module() raises ModuleNotFoundError when no
+                # rhealpixdggs.pj_<proj> module exists; getattr() raises
+                # AttributeError when the module exists but doesn't define a
+                # same-named callable. Neither is NameError -- that was a
+                # leftover from a pre-importlib implementation (e.g. one that
+                # used eval(proj), which would raise NameError) -- so this
+                # branch was previously dead and isea/csea/qsc (declared in
+                # HOMEMADE_PROJECTIONS but never implemented) crashed with an
+                # uncaught ModuleNotFoundError instead of degrading gracefully.
                 print("Oops! Projection %s is not implemented." % proj)
                 return
         else:
