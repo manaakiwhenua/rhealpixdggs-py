@@ -25,6 +25,20 @@ rHEALPixDGGS is a Python 3 package that implements the rHEALPix discrete global 
    longitude-latitude coordinates: quad cells in the equatorial band;
    dart, skew-quad, and cap cells in the polar regions.
 
+.. figure:: images/hierarchy.*
+   :alt: Four nested squares illustrating the cell hierarchy: cell N
+         subdivided into nine children, its center child N4 subdivided
+         in turn, then N44, then N444.
+   :width: 75%
+   :align: center
+
+   The cell hierarchy: each cell subdivides into an N_side-by-N_side
+   grid of children (here N_side = 3), and a cell's address (its SUID)
+   is its parent's address plus one digit -- N contains N4 contains N44
+   contains N444. An address prefix is always an ancestor, which is
+   what makes the predicates ``contains_cell``, ``within`` and the
+   ``compact_cells`` function pure string operations.
+
 This documentation assumes you are familiar with the rHEALPix DGGS as described in [Gibb2016]_ (with full mathematical detail in the preprint [GRS2013]_) and with basic Python usage as described in `The Python Tutorial <https://docs.python.org/3/tutorial/>`_.
 
 Requirements
