@@ -26,7 +26,6 @@ CHILD_RESOLUTION_WARNING = "WARNING: You requested a child resolution that is lo
 CELL_CENTRE_WARNING = "WARNING: You requested a centre cell for a DGGS that has an even number of cells on a side. Returning None."
 POLYFILL_GEOMETRY_WARNING = "WARNING: Empty or missing geometry, unsupported geometry type (not Polygon or MultiPolygon), or geometry with no area. Returning None."
 LINETRACE_GEOMETRY_WARNING = "WARNING: Empty or missing line geometry, unsupported line type (not LineString or MultiLineString), or line with no length. Returning None."
-LINETRACE_WARNING = "WARNING: Implementation of linetrace is incomplete. Lines crossing one of the cap cells may not be converted to the correct sequence of cells."
 
 
 # ======== Main API ======== #
@@ -458,7 +457,11 @@ def polyfill(
     boundary is outside the exterior boundary of its polygon, or if two polygons in a
     multipolygon overlap.
 
-    TODO: decide what to do with the antimeridian (if anything)
+    Polygon edges are straight in the input coordinate space (shapely
+    geometries are planar) and do not wrap around the antimeridian; a
+    region straddling it must be split into a MultiPolygon along the
+    antimeridian by the caller first, as is standard for planar GIS
+    geometry.
 
     EXAMPLES::
         >>> from shapely import Polygon
@@ -549,6 +552,7 @@ def linetrace(
     plane: bool = True,
     verbose: bool = False,
     dggs: RHEALPixDGGS = WGS84_003,
+    wrap_antimeridian: bool = False,
 ) -> list[str] | None:
     """
     Returns the list of cell indices touched by a shapely linestring or multilinestring
@@ -565,7 +569,21 @@ def linetrace(
     Returns None if the geometry is invalid in other ways, e.g. if a linestring contains
     self intersecting segments.
 
-    TODO: decide what to do with the antimeridian (if anything)
+    A linestring's segments are straight in the input coordinate space
+    (shapely geometries are planar): planar rHEALPix coordinates if
+    `plane` = True, longitude-latitude coordinates otherwise -- so
+    longitude-latitude segments are plate carree lines, not geodesics,
+    and by default do not wrap around the antimeridian (a segment from
+    longitude 179 to -179 runs the long way around, through longitude 0
+    -- the literal planar reading). Splitting inputs at the antimeridian,
+    as GeoJSON's RFC 7946 prescribes for data producers, avoids the
+    ambiguity entirely; alternatively pass `wrap_antimeridian` = True to
+    trace segments spanning more than half a turn of longitude the short
+    way, across the antimeridian, which traces the same cells as
+    splitting them there. To trace a geodesic, densify it into short
+    segments first (e.g. with pyproj.Geod). See
+    RHEALPixDGGS.cells_from_line, which traces each segment exactly, for
+    the details.
 
     EXAMPLES::
 
@@ -574,9 +592,6 @@ def linetrace(
         >>> linetrace(line, res=9, plane=False)
         ['S001450634', 'S001450635']
     """
-    if verbose:
-        warn(LINETRACE_WARNING)
-
     # Stop early if the line geometry is malformed
     if _malformed_lines(geometry):
         if verbose:
@@ -606,7 +621,9 @@ def linetrace(
             i, j = vertex_pair
 
             # Convert line segment to cell ids
-            line_cells = dggs.cells_from_line(res, i, j, plane)
+            line_cells = dggs.cells_from_line(
+                res, i, j, plane, wrap_antimeridian=wrap_antimeridian
+            )
 
             # Convert cells to string ids and add to collection
             if line_cells:

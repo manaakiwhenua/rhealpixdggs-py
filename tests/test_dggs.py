@@ -227,6 +227,89 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         c2 = rdggs.cell_from_point(1, p2, plane=False)
         self.assertEqual(c1, c2)
 
+    def test_cells_from_line(self):
+        rdggs = WGS84_003
+
+        # Both endpoints in the same cell.
+        cells = rdggs.cells_from_line(1, (10, 10), (11, 11), plane=False)
+        self.assertEqual([str(c) for c in cells], ["Q3"])
+
+        # An endpoint outside the (planar) grid: no trace.
+        R = rdggs.ellipsoid.R_A
+        outside = (0.9 * pi * R, 0.6 * pi * R)
+        inside = (0.1 * R, 0.1 * R)
+        self.assertEqual(rdggs.cells_from_line(1, inside, outside, plane=True), [])
+
+        # A planar segment crossing a void of the cross-shaped image:
+        # cells on both sides of the gap, in order, and nothing invented
+        # in between. From the N square rightward across the void into
+        # the R face's top row.
+        n_square_point = (-0.6 * pi * R, 1.5 * R)  # in N (the polar square)
+        r_face_point = (0.75 * pi * R, 0.7 * R)  # in R (equatorial band)
+        cells = rdggs.cells_from_line(0, n_square_point, r_face_point, plane=True)
+        self.assertEqual([str(c) for c in cells], ["N", "R"])
+
+        # Antimeridian: longitude-latitude segments are straight in
+        # coordinate space and by default don't wrap, so a segment from
+        # longitude 179 to -179 runs the long way around through
+        # longitude 0.
+        cells = rdggs.cells_from_line(0, (179, 10), (-179, 10), plane=False)
+        self.assertEqual([str(c) for c in cells], ["R", "Q", "P", "O"])
+        # With wrap_antimeridian=True it takes the short way, across the
+        # antimeridian -- and traces exactly the same cells as splitting
+        # the segment at the antimeridian (RFC 7946 style) and
+        # concatenating the halves' traces.
+        wrapped = rdggs.cells_from_line(
+            0, (179, 10), (-179, 10), plane=False, wrap_antimeridian=True
+        )
+        self.assertEqual([str(c) for c in wrapped], ["R", "O"])
+        halves = rdggs.cells_from_line(
+            0, (179, 10), (180, 10), plane=False
+        ) + rdggs.cells_from_line(0, (-180, 10), (-179, 10), plane=False)
+        deduped = [c for i, c in enumerate(halves) if i == 0 or c != halves[i - 1]]
+        self.assertEqual(wrapped, deduped)
+
+        # Consecutive traced cells always touch (edge- or
+        # corner-adjacent), across face and region boundaries; endpoints
+        # match cell_from_point. Fixed deterministic segments spanning
+        # equatorial, polar, and region-crossing geometry.
+        segments = [
+            (2, (-11.399091685979357, 64.59420811683768),
+                (-57.31373531501049, 87.0761010527302)),
+            (3, (-11.399091685979357, 64.59420811683768),
+                (-57.31373531501049, 87.0761010527302)),
+            (3, (165.50972831262268, 26.027432190353828),
+                (-12.994806100831056, 60.11220272134576)),
+            (2, (-170, -80), (170, -60)),
+            (2, (-45, 88), (135, 88)),
+        ]
+        for res, a, b in segments:
+            cells = rdggs.cells_from_line(res, a, b, plane=False)
+            self.assertEqual(cells[0], rdggs.cell_from_point(res, a, plane=False))
+            self.assertEqual(cells[-1], rdggs.cell_from_point(res, b, plane=False))
+            for c0, c1 in zip(cells, cells[1:]):
+                self.assertTrue(c0.touches(c1), msg=f"{c0} !~ {c1} on {a}->{b}")
+                self.assertNotEqual(c0, c1)
+
+        # Exactness regressions: these segments pass through a cell over
+        # only a tiny fraction of a cell width (about 1/50 and 1/500 of a
+        # cell, confirmed by ultra-dense point location), which
+        # sampling-based tracing misses.
+        cells = rdggs.cells_from_line(
+            3,
+            (-11.399091685979357, 64.59420811683768),
+            (-57.31373531501049, 87.0761010527302),
+            plane=False,
+        )
+        self.assertIn("N455", [str(c) for c in cells])
+        cells = rdggs.cells_from_line(
+            3,
+            (165.50972831262268, 26.027432190353828),
+            (-12.994806100831056, 60.11220272134576),
+            plane=False,
+        )
+        self.assertIn("N241", [str(c) for c in cells])
+
     def test_cell_from_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
             # For any planar cell X with nucleus c and width w,

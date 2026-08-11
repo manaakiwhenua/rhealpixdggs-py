@@ -15,6 +15,24 @@ The rhp_wrappers Module
    partway down the South Island is the boundary between the equatorial
    R cells (quads) and the south polar S cells (skew quads).
 
+.. figure:: images/wrappers_cap_trace.svg
+   :alt: View from above the north pole showing the nine resolution 3
+         cells around it, with a linestring curving around the pole and
+         the cells it passes through -- including the circular cap cell
+         N444 -- drawn filled.
+   :width: 80%
+   :align: center
+
+   ``linetrace`` across the north polar cap, viewed from above the pole
+   (Arctic coastlines in grey: northern Greenland at lower left,
+   Svalbard below, Franz Josef Land at lower right; the resolution 4
+   sub-grid is drawn as a faint outline). A linestring's
+   segments are straight in longitude-latitude coordinates, so at these
+   latitudes each leg curves *around* the pole rather than hopping
+   across it, passing through the circular cap cell N444 and the dart
+   and skew-quad cells surrounding it -- the cell shapes for which no
+   longitude-latitude rectangle is a valid approximation.
+
 .. currentmodule:: rhealpixdggs.rhp_wrappers
 
 .. autosummary::

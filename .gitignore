@@ -155,4 +155,8 @@ dmypy.json
 cython_debug/
 
 # conda package build files
-/output/
+/output
+
+# Editor settings
+.vscode/
+
