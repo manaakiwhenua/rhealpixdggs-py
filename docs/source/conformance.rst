@@ -285,15 +285,26 @@ Planned work by release
 -----------------------
 
 - **v0.9.0** — complete the zone-query interface (equals, intersects,
-  crosses, distance, relativePosition; DE-9IM semantics for
-  ``overlaps``), adopt the centroid as the published representative
-  position, and add GeoJSON and delimited-text export of zones and
-  query results.
-- **v1.0** — finish this page's remaining rows: the formal reference
-  system declaration, CRS definitions (WKT2/PROJJSON) with epoch
-  statement, the zonal identifier grammar, the published error-budget
-  and maximum-resolution derivation, the quantization and
-  interoperation mapping documentation, and GML export with its
-  application schema.
+  crosses, distance, relativePosition:
+  `#96 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/96>`_;
+  DE-9IM semantics for ``overlaps``:
+  `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_),
+  adopt the centroid as the published representative position
+  (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_),
+  and add GeoJSON and delimited-text export of zones and query results
+  (`#99 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/99>`_).
+- **v1.0** — finish this page's remaining rows: CRS definitions
+  (WKT2/PROJJSON) with epoch statement
+  (`#100 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/100>`_),
+  the zonal identifier grammar
+  (`#101 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/101>`_),
+  the published error-budget and maximum-resolution derivation
+  (`#102 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/102>`_),
+  GML export with its application schema
+  (`#103 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/103>`_),
+  and the formal reference-system declaration with the quantization
+  and interoperation mapping documentation
+  (`#104 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/104>`_).
 
-Progress is tracked in the project's GitHub milestones and issues.
+Progress is tracked in the project's `GitHub milestones
+<https://github.com/manaakiwhenua/rhealpixdggs-py/milestones>`_.
