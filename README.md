@@ -7,6 +7,15 @@
 
 rHEALPixDGGS is a Python package that implements the rHEALPix Discrete Global Grid System (DGGS).
 
+### Standards conformance
+
+rHEALPixDGGS implements code to both define an rHEALPix DGGS Reference
+System and to perform topological queries on its identifiers. Our roadmap
+is for v1.0 to be fully compliant with [OGC Topic 21 v2.0 / ISO
+19170-1:2020](https://docs.ogc.org/as/20-040r3/20-040r3.html). The
+requirement-by-requirement status is maintained in
+[docs/source/conformance.rst](docs/source/conformance.rst).
+
 ### Release Notes
 
 This package was originally authored by Alexander Raichev in 2013 and is

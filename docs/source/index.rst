@@ -71,6 +71,7 @@ Table of contents
    cell
    conversion
    rhp_wrappers
+   conformance
 
 Indices and tables
 ==================
