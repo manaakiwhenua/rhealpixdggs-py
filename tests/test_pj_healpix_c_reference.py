@@ -18,13 +18,13 @@ Keep adding tests!
 # *****************************************************************************
 
 # Import third-party modules.
-from numpy import array, atleast_1d, sin, arcsin, pi, sqrt, rad2deg, deg2rad
-from numpy.linalg import norm
-from pyproj import Proj
-
 # Import standard modules.
 import unittest
 from itertools import product
+
+from numpy import arcsin, array, atleast_1d, deg2rad, pi, rad2deg, sin, sqrt
+from numpy.linalg import norm
+from pyproj import Proj
 
 # Import my modules.
 from rhealpixdggs.utils import auth_lat, auth_rad
@@ -50,7 +50,7 @@ def geo_gap_deg(p, q):
     (180, phi) as the same point, and any two longitudes at a pole as
     the same point.
     """
-    from numpy import cos, sin, deg2rad, clip, arccos
+    from numpy import arccos, clip, cos, deg2rad, sin
 
     lam1, phi1 = deg2rad(array(p, dtype=float))
     lam2, phi2 = deg2rad(array(q, dtype=float))

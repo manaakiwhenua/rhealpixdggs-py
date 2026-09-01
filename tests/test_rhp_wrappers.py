@@ -14,13 +14,14 @@ Keep adding tests!
 # Import standard modules
 import unittest
 
-# Import my modules and classes
-import rhealpixdggs.rhp_wrappers as rhpw
-import rhealpixdggs.dggs as gs
-
 # Import helper modules
 import numpy as np
 import shapely as sh
+
+import rhealpixdggs.dggs as gs
+
+# Import my modules and classes
+import rhealpixdggs.rhp_wrappers as rhpw
 
 
 class RhpWrappersTestCase(unittest.TestCase):
@@ -511,7 +512,7 @@ class RhpWrappersTestCase(unittest.TestCase):
         for center in ["N4", "N0", "Q4", "Q0"]:
             seen = set()
             total = 0
-            for k in range(0, 8):
+            for k in range(8):
                 ring = rhpw.cell_ring(center, k)
                 self.assertEqual(len(ring), len(set(ring)), f"{center} k={k}")
                 self.assertTrue(seen.isdisjoint(ring), f"{center} k={k}")

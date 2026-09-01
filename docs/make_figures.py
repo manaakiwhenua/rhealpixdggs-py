@@ -56,7 +56,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
 import svg_shrink
 
-from rhealpixdggs.dggs import WGS84_003, CELLS0
+from rhealpixdggs.dggs import CELLS0, WGS84_003
 
 OUT = pathlib.Path(__file__).parent / "source" / "images"
 
@@ -1174,7 +1174,7 @@ print("polar squares figure written")
 # (Recentring in latitude via lat_0 is a planar translation, not an
 # ellipsoid isometry, and produces geographically incoherent polar
 # cells, so it makes a poor showcase.)
-from rhealpixdggs.ellipsoids import Ellipsoid, WGS84_A, WGS84_F
+from rhealpixdggs.ellipsoids import WGS84_A, WGS84_F, Ellipsoid
 
 AKL = (174.0, -37.0)
 E_AKL = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=AKL[0])

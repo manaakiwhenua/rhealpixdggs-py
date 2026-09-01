@@ -18,15 +18,16 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 # *****************************************************************************
 
 # Import third-party modules.
-import pyproj
-
 # Import standard modules.
 import importlib
 
-# Import my modules.
-from rhealpixdggs.utils import my_round, wrap_longitude, wrap_latitude
+import pyproj
+
 from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 
+# Import my modules.
+# my_round is doctest-only: the doctests use it from the module globals.
+from rhealpixdggs.utils import my_round, wrap_latitude, wrap_longitude  # noqa: F401
 
 # Homemade map projections, as opposed to those in the PROJ.4 library.
 # Remove 'healpix' and 'rhealpix' to use the PROJ.4 versions instead,
@@ -35,7 +36,7 @@ HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
 # HOMEMADE_PROJECTIONS = {"isea", "csea", "qsc"}
 
 
-class Projection(object):
+class Projection:
     """
     Represents a map projection of a given ellipsoid.
 

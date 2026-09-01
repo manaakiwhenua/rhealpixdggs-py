@@ -18,19 +18,22 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 # *****************************************************************************
 
 # Import third-party modules.
-from numpy import pi, sign, array, identity, dot, deg2rad, rad2deg
+from collections.abc import Callable
+
 import shapely
+from numpy import array, deg2rad, dot, identity, pi, rad2deg, sign
 from shapely.geometry import Polygon
-from typing import Callable
 
 # Import my modules.
 from rhealpixdggs.pj_healpix import (
-    healpix_sphere,
-    healpix_sphere_inverse,
     healpix_ellipsoid,
     healpix_ellipsoid_inverse,
+    healpix_sphere,
+    healpix_sphere_inverse,
 )
-from rhealpixdggs.utils import my_round, auth_rad
+
+# my_round is doctest-only: the doctests use it from the module globals.
+from rhealpixdggs.utils import auth_rad, my_round  # noqa: F401
 
 # Matrix for anticlockwise rotation by pi/2:
 ROTATE1 = array([[0, -1], [1, 0]])

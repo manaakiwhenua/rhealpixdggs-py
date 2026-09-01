@@ -158,7 +158,7 @@ def pyproject_version() -> str:
 
 
 def citation_version() -> str:
-    match = re.search(r"^version:\s*(\S+)\s*$", CITATION.read_text(), re.M)
+    match = re.search(r"^version:\s*(\S+)\s*$", CITATION.read_text(), re.MULTILINE)
     if not match:
         raise Failure(f"no 'version:' line in {CITATION.name}")
     return match.group(1).strip("\"'")
@@ -373,7 +373,7 @@ def rst_to_markdown(text: str) -> str:
         spans.append(match.group(1))
         return f"\x00{len(spans) - 1}\x00"
 
-    text = re.sub(r"``(.+?)``", stash, text, flags=re.S)
+    text = re.sub(r"``(.+?)``", stash, text, flags=re.DOTALL)
     text = re.sub(r"(?<=\s)--(?=\s)", "—", text)
     return re.sub(r"\x00(\d+)\x00", lambda m: f"`{spans[int(m.group(1))]}`", text)
 

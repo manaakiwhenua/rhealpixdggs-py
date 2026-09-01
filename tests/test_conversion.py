@@ -8,11 +8,11 @@ Keep adding tests!
 
 # Import standard modules.
 import unittest
+
 from shapely import wkt
 
 # Import my modules.
 from rhealpixdggs.conversion import *
-
 
 test_geom = """
         MULTIPOLYGON (((148.6675 -35.5725, 148.6675 -35.575, 148.67 -35.575, 148.67 -35.5775, 148.6725 -35.5775,

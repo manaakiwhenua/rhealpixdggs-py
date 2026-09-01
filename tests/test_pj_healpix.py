@@ -14,11 +14,11 @@ Keep adding tests!
 # *****************************************************************************
 
 # Import third-party modules.
-from scipy.spatial.distance import euclidean, norm
-from numpy import atleast_1d, array, rad2deg, pi, sqrt, sin, arcsin
-
 # Import standard modules.
 import unittest
+
+from numpy import arcsin, array, atleast_1d, pi, rad2deg, sin, sqrt
+from scipy.spatial.distance import euclidean, norm
 
 # Import my modules.
 import rhealpixdggs.pj_healpix as pjh

@@ -15,22 +15,21 @@ Keep adding tests!
 # *****************************************************************************
 
 # Import third-party modules.
-from numpy import array, pi
-
 # Import standard modules
 import unittest
 from random import randint  # , uniform
 
+from numpy import array, pi
+
 # Import my modules.
 # import rhealpixdggs.dggs as dggs
 from rhealpixdggs.cell import CELLS0
-from rhealpixdggs.dggs import RHEALPixDGGS, WGS84_003, WGS84_003_RADIANS
+from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
 from rhealpixdggs.ellipsoids import (
-    Ellipsoid,
     WGS84_ELLIPSOID,
     WGS84_ELLIPSOID_RADIANS,
+    Ellipsoid,
 )
-
 
 # Level 0 cell names
 N = CELLS0[0]

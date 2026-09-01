@@ -7,13 +7,14 @@ Keep adding tests!
 # Import standard modules.
 import unittest
 
-# Import my modules.
-from rhealpixdggs.projection_wrapper import Projection
 from rhealpixdggs.ellipsoids import (
-    Ellipsoid,
     WGS84_ELLIPSOID,
     WGS84_ELLIPSOID_RADIANS,
+    Ellipsoid,
 )
+
+# Import my modules.
+from rhealpixdggs.projection_wrapper import Projection
 
 
 class MyTestCase(unittest.TestCase):

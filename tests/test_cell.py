@@ -1,20 +1,19 @@
 # Import third-party modules.
-from scipy.spatial.distance import euclidean, norm
-
 # Import standard modules
 import unittest
 from itertools import product
 from math import pi
 
-# Import my modules.
-from rhealpixdggs.cell import Cell, CELLS0
+from scipy.spatial.distance import euclidean, norm
 
-from rhealpixdggs.dggs import RHEALPixDGGS, WGS84_003, WGS84_003_RADIANS
+# Import my modules.
+from rhealpixdggs.cell import CELLS0, Cell
+from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
 from rhealpixdggs.ellipsoids import (
-    Ellipsoid,
     WGS84_ASPHERE_RADIANS,
     WGS84_ELLIPSOID,
     WGS84_ELLIPSOID_RADIANS,
+    Ellipsoid,
 )
 
 # Level 0 cell names

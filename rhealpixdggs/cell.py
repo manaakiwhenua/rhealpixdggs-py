@@ -1,12 +1,14 @@
 # from rhealpixdggs.dggs import WGS84_003
 
-from numpy import array, base_repr, pi  # pi is just for the doctests
-from numpy import vectorize as numpy_vectorize
-from scipy import integrate
+from colorsys import hsv_to_rgb
+from functools import cached_property, total_ordering
 from itertools import product
 from random import uniform
-from colorsys import hsv_to_rgb
-from functools import total_ordering, cached_property
+
+# pi is doctest-only: the doctests use it from the module globals.
+from numpy import array, base_repr, pi  # noqa: F401
+from numpy import vectorize as numpy_vectorize
+from scipy import integrate
 
 from rhealpixdggs.utils import wrap_longitude
 
@@ -15,7 +17,7 @@ CELLS0 = ["N", "O", "P", "Q", "R", "S"]
 
 
 @total_ordering
-class Cell(object):
+class Cell:
     """
     Represents a cell of the planar or ellipsoidal rHEALPix grid hierarchies.
     Cell identifiers are of the form (p_0, p_1,...,p_l), where p_0 is one of
@@ -831,8 +833,7 @@ class Cell(object):
             (157.49999999999997, 58.41366190347208)
 
         """
-        if n < 2:
-            n = 2
+        n = max(n, 2)
         # Quad and cap cells have straight or rotationally-symmetric edges on
         # the ellipsoid, so at n=2 extra boundary points would add no accuracy.
         # Fall back to vertices() and avoid the per-point projection cost
@@ -978,7 +979,7 @@ class Cell(object):
             return lon_max <= lam or lam <= lon_min
         else:
             # Typical case.
-            return lon_min <= lam and lam <= lon_max
+            return lon_min <= lam <= lon_max
 
     def intersects_parallel(self, phi):
         """
