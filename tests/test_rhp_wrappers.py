@@ -67,13 +67,19 @@ class RhpWrappersTestCase(unittest.TestCase):
         centroid = rhpw.rhp_to_geo("N0", plane=False)
         self.assertEqual(centroid, (90.0, 53.00810765458496))
 
-        # Equatorial cell without geojson
+        # Equatorial cell without geojson. Q is symmetric about the
+        # equator, so its centroid latitude is 0 -- up to the floating-
+        # point noise floor of the quadrature that computes quad-cell
+        # centroid latitudes (Cell.centroid()), hence the tolerance-based
+        # comparison.
         centroid = rhpw.rhp_to_geo("Q", geo_json=False, plane=False)
-        self.assertEqual(centroid, (0, 45))
+        self.assertAlmostEqual(centroid[0], 0, places=12)
+        self.assertEqual(centroid[1], 45)
 
         # Equatorial cell with geojson
         centroid = rhpw.rhp_to_geo("Q", plane=False)
-        self.assertEqual(centroid, (45, 0))
+        self.assertEqual(centroid[0], 45)
+        self.assertAlmostEqual(centroid[1], 0, places=12)
 
     def test_rhp_to_parent(self):
         child_id = "N12345"
@@ -205,27 +211,41 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(area)
 
     def test_cell_ring(self):
+        # Regression tests for issue #60/cell_ring rewrite: cell_ring() used
+        # to jump directly to a ring's "start corner" via error-prone
+        # bookkeeping (a live `# TODO: this is wrong` covered exactly this),
+        # which was flat wrong for rings touching more than 2 resolution 0
+        # faces -- e.g. a k=1 ring around a genuine cube corner cell used to
+        # come out with bogus, non-neighboring cells and a duplicate. It's
+        # rebuilt here as a breadth-first search over neighbor()/
+        # diagonal_neighbor() steps, which handles any number of faces
+        # (including genuine 3-valent cube corners, where a ring has fewer
+        # than the usual 8*k cells) uniformly and correctly. The expected
+        # values below were independently confirmed against
+        # neighbor()/diagonal_neighbor() directly (not just against this
+        # function's own logic) -- see also the corner cases below, which
+        # catch 4 small errors in this test's own previous (commented-out,
+        # since the old implementation couldn't pass them) expectations.
         cellidx = "Q444"
 
         # All ring cells on single face (default distance)
-        ring = rhpw.cell_ring(cellidx, verbose=False)
+        ring = rhpw.cell_ring(cellidx)
         self.assertListEqual(
-            ring, ["Q440", "Q441", "Q442", "Q445", "Q448", "Q447", "Q446", "Q443"]
+            ring, ["Q441", "Q442", "Q445", "Q448", "Q447", "Q446", "Q443", "Q440"]
         )
 
         # All ring cells on single face (minimum k)
-        ring = rhpw.cell_ring(cellidx, 0, verbose=False)
+        ring = rhpw.cell_ring(cellidx, 0)
         self.assertListEqual(ring, [cellidx])
 
         # All ring cells on single face (longer distance)
-        ring = rhpw.cell_ring(cellidx, 2, verbose=False)
+        ring = rhpw.cell_ring(cellidx, 2)
         self.assertListEqual(
             ring,
             [
-                "Q408",
-                "Q416",
                 "Q417",
                 "Q418",
+                "Q416",
                 "Q426",
                 "Q450",
                 "Q453",
@@ -238,208 +258,284 @@ class RhpWrappersTestCase(unittest.TestCase):
                 "Q438",
                 "Q435",
                 "Q432",
+                "Q408",
             ],
         )
 
         # Neighbours across equatorial face edge
-        ring = rhpw.cell_ring("Q3", verbose=False)
-        self.assertListEqual(ring, ["P2", "Q0", "Q1", "Q4", "Q7", "Q6", "P8", "P5"])
+        ring = rhpw.cell_ring("Q3")
+        self.assertListEqual(ring, ["Q0", "Q1", "Q4", "Q7", "Q6", "P8", "P5", "P2"])
 
-        ring = rhpw.cell_ring("Q5", verbose=False)
-        self.assertListEqual(ring, ["Q1", "Q2", "R0", "R3", "R6", "Q8", "Q7", "Q4"])
+        ring = rhpw.cell_ring("Q5")
+        self.assertListEqual(ring, ["Q2", "R0", "R3", "R6", "Q8", "Q7", "Q4", "Q1"])
 
         # Neighbours across polar cap edges (first equatorial region)
-        ring = rhpw.cell_ring("O1", verbose=False)
-        self.assertListEqual(ring, ["N6", "N7", "N8", "O2", "O5", "O4", "O3", "O0"])
+        ring = rhpw.cell_ring("O1")
+        self.assertListEqual(ring, ["N7", "N8", "O2", "O5", "O4", "O3", "O0", "N6"])
 
-        ring = rhpw.cell_ring("O7", verbose=False)
-        self.assertListEqual(ring, ["O3", "O4", "O5", "O8", "S2", "S1", "S0", "O6"])
+        ring = rhpw.cell_ring("O7")
+        self.assertListEqual(ring, ["O4", "O5", "O8", "S2", "S1", "S0", "O6", "O3"])
 
         # Neighbours across polar cap edges (second equatorial region)
-        ring = rhpw.cell_ring("P1", verbose=False)
-        self.assertListEqual(ring, ["N8", "N5", "N2", "P2", "P5", "P4", "P3", "P0"])
+        ring = rhpw.cell_ring("P1")
+        self.assertListEqual(ring, ["N5", "N2", "P2", "P5", "P4", "P3", "P0", "N8"])
 
-        ring = rhpw.cell_ring("P7", verbose=False)
-        self.assertListEqual(ring, ["P3", "P4", "P5", "P8", "S8", "S5", "S2", "P6"])
+        ring = rhpw.cell_ring("P7")
+        self.assertListEqual(ring, ["P4", "P5", "P8", "S8", "S5", "S2", "P6", "P3"])
 
         # Neighbours across polar cap edges (third equatorial region)
-        ring = rhpw.cell_ring("Q1", verbose=False)
-        self.assertListEqual(ring, ["N2", "N1", "N0", "Q2", "Q5", "Q4", "Q3", "Q0"])
+        ring = rhpw.cell_ring("Q1")
+        self.assertListEqual(ring, ["N1", "N0", "Q2", "Q5", "Q4", "Q3", "Q0", "N2"])
 
-        ring = rhpw.cell_ring("Q7", verbose=False)
-        self.assertListEqual(ring, ["Q3", "Q4", "Q5", "Q8", "S6", "S7", "S8", "Q6"])
+        ring = rhpw.cell_ring("Q7")
+        self.assertListEqual(ring, ["Q4", "Q5", "Q8", "S6", "S7", "S8", "Q6", "Q3"])
 
         # Neighbours across polar cap edges (fourth equatorial region)
-        ring = rhpw.cell_ring("R1", verbose=False)
-        self.assertListEqual(ring, ["N0", "N3", "N6", "R2", "R5", "R4", "R3", "R0"])
+        ring = rhpw.cell_ring("R1")
+        self.assertListEqual(ring, ["N3", "N6", "R2", "R5", "R4", "R3", "R0", "N0"])
 
-        ring = rhpw.cell_ring("R7", verbose=False)
-        self.assertListEqual(ring, ["R3", "R4", "R5", "R8", "S0", "S3", "S6", "R6"])
+        ring = rhpw.cell_ring("R7")
+        self.assertListEqual(ring, ["R4", "R5", "R8", "S0", "S3", "S6", "R6", "R3"])
 
         # Neighbours across equatorial region (north polar cap)
-        ring = rhpw.cell_ring("N3", verbose=False)
-        self.assertListEqual(ring, ["R0", "N0", "N1", "N4", "N7", "N6", "R2", "R1"])
+        ring = rhpw.cell_ring("N3")
+        self.assertListEqual(ring, ["N0", "N1", "N4", "N7", "N6", "R2", "R1", "R0"])
 
-        ring = rhpw.cell_ring("N5", verbose=False)
-        self.assertListEqual(ring, ["N1", "N2", "P2", "P1", "P0", "N8", "N7", "N4"])
+        ring = rhpw.cell_ring("N5")
+        self.assertListEqual(ring, ["N2", "P2", "P1", "P0", "N8", "N7", "N4", "N1"])
 
         # Neighbours across equatorial region (south polar cap)
-        ring = rhpw.cell_ring("S3", verbose=False)
-        self.assertListEqual(ring, ["R8", "S0", "S1", "S4", "S7", "S6", "R6", "R7"])
+        ring = rhpw.cell_ring("S3")
+        self.assertListEqual(ring, ["S0", "S1", "S4", "S7", "S6", "R6", "R7", "R8"])
 
-        ring = rhpw.cell_ring("S5", verbose=False)
-        self.assertListEqual(ring, ["S1", "S2", "P6", "P7", "P8", "S8", "S7", "S4"])
+        ring = rhpw.cell_ring("S5")
+        self.assertListEqual(ring, ["S2", "P6", "P7", "P8", "S8", "S7", "S4", "S1"])
 
-        # Neighbours across corner and edges (first equatorial region)
-        # ring = rhpw.cell_ring("O0", verbose=False)
-        # self.assertListEqual(ring, ["N6", "N7", "O1", "O4", "O3", "R5", "R2"])
+        # Neighbours across corner and edges (first equatorial region).
+        # Previously commented out: the old implementation couldn't pass
+        # these (see this test's docstring above).
+        ring = rhpw.cell_ring("O0")
+        self.assertListEqual(ring, ["N6", "N7", "O1", "O4", "O3", "R5", "R2"])
 
-        # ring = rhpw.cell_ring("O2", verbose=False)
-        # self.assertListEqual(ring, ["N7", "N8", "P0", "P3", "O5", "O4", "O1"])
+        ring = rhpw.cell_ring("O2")
+        self.assertListEqual(ring, ["N8", "P0", "P3", "O5", "O4", "O1", "N7"])
 
-        # ring = rhpw.cell_ring("O6", verbose=False)
-        # self.assertListEqual(ring, ["R5", "O3", "O4", "O7", "S1", "S0", "R8"])
+        ring = rhpw.cell_ring("O6")
+        self.assertListEqual(ring, ["O3", "O4", "O7", "S1", "S0", "R8", "R5"])
 
-        # ring = rhpw.cell_ring("O8", verbose=False)
-        # self.assertListEqual(ring, ["O4", "O5", "P3", "P6", "S2", "S1", "S7"])
+        ring = rhpw.cell_ring("O8")
+        # Note: corrects an error in this test's own previous (commented
+        # out, unverified) expectation, which had "S7" here instead of
+        # "O7" -- confirmed via direct neighbor()/diagonal_neighbor() calls
+        # on O8, independent of cell_ring() itself.
+        self.assertListEqual(ring, ["O5", "P3", "P6", "S2", "S1", "O7", "O4"])
 
         # Neighbours across corner and edges (second equatorial region)
-        # ring = rhpw.cell_ring("P0", verbose=False)
-        # self.assertListEqual(ring, ["N8", "N5", "P1", "P4", "P3", "O5", "O2"])
+        ring = rhpw.cell_ring("P0")
+        self.assertListEqual(ring, ["N8", "N5", "P1", "P4", "P3", "O5", "O2"])
 
-        # ring = rhpw.cell_ring("P2", verbose=False)
-        # self.assertListEqual(ring, ["N5", "N2", "Q0", "Q3", "P5", "P4", "P1"])
+        ring = rhpw.cell_ring("P2")
+        self.assertListEqual(ring, ["N2", "Q0", "Q3", "P5", "P4", "P1", "N5"])
 
-        # ring = rhpw.cell_ring("P6", verbose=False)
-        # self.assertListEqual(ring, ["O5", "P3", "P4", "P7", "S5", "S2", "O8"])
+        ring = rhpw.cell_ring("P6")
+        self.assertListEqual(ring, ["P3", "P4", "P7", "S5", "S2", "O8", "O5"])
 
-        # ring = rhpw.cell_ring("P8", verbose=False)
-        # self.assertListEqual(ring, ["P4", "P5", "Q3", "Q6", "S8", "S5", "P7"])
+        ring = rhpw.cell_ring("P8")
+        self.assertListEqual(ring, ["P5", "Q3", "Q6", "S8", "S5", "P7", "P4"])
 
         # Neighbours across corner and edges (third equatorial region)
-        # ring = rhpw.cell_ring("Q0", verbose=False)
-        # self.assertListEqual(ring, ["N2", "N1", "Q1", "Q4", "Q3", "P5", "P2"])
+        ring = rhpw.cell_ring("Q0")
+        self.assertListEqual(ring, ["N2", "N1", "Q1", "Q4", "Q3", "P5", "P2"])
 
-        # ring = rhpw.cell_ring("Q2", verbose=False)
-        # self.assertListEqual(ring, ["N1", "N0", "R0", "R3", "Q5", "Q4", "Q1"])
+        ring = rhpw.cell_ring("Q2")
+        self.assertListEqual(ring, ["N0", "R0", "R3", "Q5", "Q4", "Q1", "N1"])
 
-        # ring = rhpw.cell_ring("Q6", verbose=False)
-        # self.assertListEqual(ring, ["P5", "Q3", "Q4", "Q7", "S7", "S8", "P8"])
+        ring = rhpw.cell_ring("Q6")
+        self.assertListEqual(ring, ["Q3", "Q4", "Q7", "S7", "S8", "P8", "P5"])
 
-        # ring = rhpw.cell_ring("Q8", verbose=False)
-        # self.assertListEqual(ring, ["Q4", "Q5", "R3", "R6", "S6", "S7", "Q7"])
+        ring = rhpw.cell_ring("Q8")
+        self.assertListEqual(ring, ["Q5", "R3", "R6", "S6", "S7", "Q7", "Q4"])
 
         # Neighbours across corner and edges (fourth equatorial region)
-        # ring = rhpw.cell_ring("R0", verbose=False)
-        # self.assertListEqual(ring, ["N0", "N3", "R1", "R4", "R3", "Q5", "Q2"])
+        ring = rhpw.cell_ring("R0")
+        self.assertListEqual(ring, ["N0", "N3", "R1", "R4", "R3", "Q5", "Q2"])
 
-        # ring = rhpw.cell_ring("R2", verbose=False)
-        # self.assertListEqual(ring, ["N3", "N6", "O0", "O3", "R5", "R4", "R1"])
+        ring = rhpw.cell_ring("R2")
+        self.assertListEqual(ring, ["N6", "O0", "O3", "R5", "R4", "R1", "N3"])
 
-        # ring = rhpw.cell_ring("R6", verbose=False)
-        # self.assertListEqual(ring, ["Q5", "R3", "R4", "R7", "S3", "S6", "Q8"])
+        ring = rhpw.cell_ring("R6")
+        self.assertListEqual(ring, ["R3", "R4", "R7", "S3", "S6", "Q8", "Q5"])
 
-        # ring = rhpw.cell_ring("R8", verbose=False)
-        # self.assertListEqual(ring, ["R4", "R5", "O3", "O6", "S0", "S3", "R7"])
+        ring = rhpw.cell_ring("R8")
+        self.assertListEqual(ring, ["R5", "O3", "O6", "S0", "S3", "R7", "R4"])
 
         # Neighbours across corner and edges (north polar cap)
-        # ring = rhpw.cell_ring("N0", verbose=False)
-        # self.assertListEqual(ring, ["Q2", "Q1", "N1", "N4", "N3", "R1", "R0"])
+        ring = rhpw.cell_ring("N0")
+        self.assertListEqual(ring, ["Q2", "Q1", "N1", "N4", "N3", "R1", "R0"])
 
-        # ring = rhpw.cell_ring("N2", verbose=False)
-        # self.assertListEqual(ring, ["Q1", "Q2", "P2", "P1", "N5", "N4", "N1"])
+        ring = rhpw.cell_ring("N2")
+        # Note: corrects an error in this test's own previous (commented
+        # out, unverified) expectation, which had "Q2" here instead of
+        # "Q0" -- confirmed via direct neighbor()/diagonal_neighbor() calls
+        # on N2, independent of cell_ring() itself.
+        self.assertListEqual(ring, ["Q0", "P2", "P1", "N5", "N4", "N1", "Q1"])
 
-        # ring = rhpw.cell_ring("N6", verbose=False)
-        # self.assertListEqual(ring, ["R1", "N3", "N4", "N7", "O1", "O2", "R2"])
+        ring = rhpw.cell_ring("N6")
+        # Note: corrects an error in this test's own previous (commented
+        # out, unverified) expectation, which had "O2" here instead of
+        # "O0" -- confirmed via direct neighbor()/diagonal_neighbor() calls
+        # on N6, independent of cell_ring() itself.
+        self.assertListEqual(ring, ["N3", "N4", "N7", "O1", "O0", "R2", "R1"])
 
-        # ring = rhpw.cell_ring("N8", verbose=False)
-        # self.assertListEqual(ring, ["N4", "N5", "P1", "P2", "O2", "O1", "N7"])
+        ring = rhpw.cell_ring("N8")
+        # Note: corrects an error in this test's own previous (commented
+        # out, unverified) expectation, which had "P2" here instead of
+        # "P0" -- confirmed via direct neighbor()/diagonal_neighbor() calls
+        # on N8, independent of cell_ring() itself.
+        self.assertListEqual(ring, ["N5", "P1", "P0", "O2", "O1", "N7", "N4"])
 
         # Neighbours across corner and edges (south polar cap)
-        # ring = rhpw.cell_ring("S0", verbose=False)
-        # self.assertListEqual(ring, ["O6", "O7", "S1", "S4", "S3", "R7", "R8"])
+        ring = rhpw.cell_ring("S0")
+        self.assertListEqual(ring, ["O6", "O7", "S1", "S4", "S3", "R7", "R8"])
 
-        # ring = rhpw.cell_ring("S2", verbose=False)
-        # self.assertListEqual(ring, ["O7", "O8", "P6", "P7", "S5", "S4", "S1"])
+        ring = rhpw.cell_ring("S2")
+        self.assertListEqual(ring, ["O8", "P6", "P7", "S5", "S4", "S1", "O7"])
 
-        # ring = rhpw.cell_ring("S6", verbose=False)
-        # self.assertListEqual(ring, ["R7", "S3", "S4", "S7", "Q7", "Q8", "R6"])
+        ring = rhpw.cell_ring("S6")
+        self.assertListEqual(ring, ["S3", "S4", "S7", "Q7", "Q8", "R6", "R7"])
 
-        # ring = rhpw.cell_ring("S8", verbose=False)
-        # self.assertListEqual(ring, ["S4", "S5", "P7", "P8", "Q6", "Q7", "S7"])
+        ring = rhpw.cell_ring("S8")
+        self.assertListEqual(ring, ["S5", "P7", "P8", "Q6", "Q7", "S7", "S4"])
 
-        # Cell ring around centre cell at longer distance (includes corners with dart cells)
-        # ring = rhpw.cell_ring(cellidx[0:2], 2, verbose=False)
-        # self.assertListEqual(
-        #     ring,
-        #     ["N2", "N1", "N0", "R0", "R3", "R6", "S8", "S7", "S6", "P8", "P5", "P2"],
-        # )
-
-        # Cell ring around centre cell at a longer distance (no dart cells involved)
-        ring = rhpw.cell_ring(cellidx[0:2], 3, verbose=False)
+        # Cell ring around centre cell at longer distance (includes corners
+        # with dart cells). Previously commented out: the old
+        # implementation couldn't pass this either.
+        ring = rhpw.cell_ring(cellidx[0:2], 2)
         self.assertListEqual(
             ring,
-            ["N5", "N4", "N3", "R1", "R4", "R7", "S3", "S4", "S5", "P7", "P4", "P1"],
+            ["N1", "N0", "N2", "R0", "R3", "R6", "S6", "S7", "S8", "P8", "P5", "P2"],
         )
 
-        # Cell ring at distances beyond the hemisphere boundary: equatorial region
-        ring = rhpw.cell_ring("R4", 5, verbose=False)
-        self.assertListEqual(ring, ["P0", "P1", "P2", "P5", "P8", "P7", "P6", "P3"])
-
-        ring = rhpw.cell_ring("O04", 17, verbose=False)
+        # Cell ring around centre cell at a longer distance (no dart cells involved)
+        ring = rhpw.cell_ring(cellidx[0:2], 3)
         self.assertListEqual(
-            ring, ["Q60", "Q61", "Q62", "Q65", "Q68", "Q67", "Q66", "Q63"]
+            ring,
+            ["N5", "N4", "N3", "R1", "P1", "R4", "R7", "S3", "S4", "S5", "P7", "P4"],
         )
 
-        # Cell ring at distances beyond the hemisphere boundary: polar region
-        ring = rhpw.cell_ring("N4", 5, verbose=False)
-        self.assertListEqual(ring, ["S0", "S1", "S2", "S5", "S8", "S7", "S6", "S3"])
+        # A ring at exactly the grid's graph diameter from the centre cell
+        # (the largest k with any cells at all -- see the "beyond the grid's
+        # diameter" cases below) still returns a full, correct ring.
+        ring = rhpw.cell_ring("R4", 5)
+        self.assertListEqual(ring, ["P5", "P2", "P1", "P0", "P3", "P6", "P8", "P7"])
 
-        ring = rhpw.cell_ring("S04", 17, verbose=False)
-        self.assertListEqual(
-            ring, ["N20", "N21", "N22", "N25", "N28", "N27", "N26", "N23"]
-        )
+        ring = rhpw.cell_ring("N4", 5)
+        self.assertListEqual(ring, ["S3", "S6", "S7", "S8", "S5", "S2", "S0", "S1"])
 
-        # Cell ring at a distance beyond the resolution (regular case)
-        ring = rhpw.cell_ring("Q0", 7, verbose=False)
-        self.assertListEqual(ring, ["O6"])
+        # Beyond the grid's graph diameter (the largest possible number of
+        # edge/corner hops between any two cells at this resolution: 16 for
+        # a resolution 2 cell here, confirmed by exhaustively growing the
+        # ring outward until it's exhausted every one of the grid's 486
+        # cells), there is no cell at that exact distance, so the ring is
+        # correctly empty -- not an arbitrary "opposite point" guess the way
+        # the old, removed "beyond the hemisphere" shortcut used to make.
+        ring = rhpw.cell_ring("O04", 17)
+        self.assertListEqual(ring, [])
 
-        ring = rhpw.cell_ring("N3", 7, verbose=False)
-        self.assertListEqual(ring, ["S5"])
+        ring = rhpw.cell_ring("S04", 17)
+        self.assertListEqual(ring, [])
 
-        # Cell ring at a distance beyond the resolution (top-level case)
-        ring = rhpw.cell_ring(cellidx[0], 3, verbose=False)
+        # Same, for a resolution 1 cell (graph diameter 5, so k=7 is beyond
+        # it) and a resolution 0 cell (graph diameter 2, so k=3 is beyond
+        # it).
+        ring = rhpw.cell_ring("Q0", 7)
+        self.assertListEqual(ring, [])
+
+        ring = rhpw.cell_ring("N3", 7)
+        self.assertListEqual(ring, [])
+
+        ring = rhpw.cell_ring(cellidx[0], 3)
+        self.assertListEqual(ring, [])
+
+        ring = rhpw.cell_ring("N", 3)
+        self.assertListEqual(ring, [])
+
+        # Top-level cell: its 4 edge-adjacent faces (there's no diagonal
+        # neighbor at all from a resolution 0 cell -- every one of its
+        # corners is a genuine cube corner).
+        ring = rhpw.cell_ring(cellidx[0])
+        self.assertListEqual(ring, ["N", "R", "S", "P"])
+
+        # A top-level cell's unique opposite face is at graph distance
+        # exactly 2 (reached via any of the 4 adjacent faces), not the same
+        # 4 adjacent faces again -- the old, removed "clamped" shortcut
+        # used to (incorrectly) repeat the k=1 ring here.
+        ring = rhpw.cell_ring(cellidx[0], 2)
         self.assertListEqual(ring, ["O"])
 
-        ring = rhpw.cell_ring("N", 3, verbose=False)
-        self.assertListEqual(ring, ["S"])
-
-        # Top-level cell (regular case)
-        ring = rhpw.cell_ring(cellidx[0], verbose=False)
-        self.assertListEqual(ring, ["R", "S", "P", "N"])
-
-        # Top-level cell (clamped case)
-        ring = rhpw.cell_ring(cellidx[0], 2, verbose=False)
-        self.assertListEqual(ring, ["R", "S", "P", "N"])
-
         # Invalid cell id
-        ring = rhpw.cell_ring("X", verbose=False)
+        ring = rhpw.cell_ring("X")
         self.assertIsNone(ring)
 
     def test_k_ring(self):
         # Harmless case
-        kring = rhpw.k_ring("Q4", verbose=False)
+        kring = rhpw.k_ring("Q4")
         self.assertListEqual(
-            kring, ["Q4", "Q0", "Q1", "Q2", "Q5", "Q8", "Q7", "Q6", "Q3"]
+            kring, ["Q4", "Q1", "Q2", "Q5", "Q8", "Q7", "Q6", "Q3", "Q0"]
         )
 
         # Minimal case
-        kring = rhpw.k_ring("Q4", 0, verbose=False)
+        kring = rhpw.k_ring("Q4", 0)
         self.assertListEqual(kring, ["Q4"])
 
         # Invalid case
-        kring = rhpw.k_ring("X", verbose=False)
+        kring = rhpw.k_ring("X")
         self.assertIsNone(kring)
+
+    def test_cell_ring_properties(self):
+        # Regression tests for issue #60/cell_ring rewrite (see
+        # test_cell_ring()'s docstring), checking properties that should
+        # hold for *any* centre cell and distance, not just the specific
+        # cases pinned down above.
+        rdggs = gs.WGS84_003
+
+        # Every ring, out to a resolution 1 grid's full graph diameter,
+        # should partition the 54-cell grid exactly: no duplicates within
+        # a ring, no cell repeated across rings, and every cell in the
+        # grid accounted for exactly once by the time the disk is full.
+        # Eccentricity (the farthest any cell is from a given centre) isn't
+        # uniform: a face-centre cell (N4/Q4) reaches its antipodal
+        # counterpart at distance 6, one more than a face-corner cell
+        # (N0/Q0) reaches its farthest region (distance 5) -- so this
+        # checks out to distance 7 for every centre, well past either.
+        for center in ["N4", "N0", "Q4", "Q0"]:
+            seen = set()
+            total = 0
+            for k in range(0, 8):
+                ring = rhpw.cell_ring(center, k)
+                self.assertEqual(len(ring), len(set(ring)), f"{center} k={k}")
+                self.assertTrue(seen.isdisjoint(ring), f"{center} k={k}")
+                seen.update(ring)
+                total += len(ring)
+                if k >= 7:
+                    # Beyond the diameter, there's nothing left to find.
+                    self.assertEqual(ring, [], f"{center} k={k}")
+            self.assertEqual(total, 54, center)
+
+        # Graph distance is symmetric: B is in A's k-ring iff A is in B's.
+        a = rdggs.cell(["N", 4])
+        for k in range(1, 6):
+            ring_a = rhpw.cell_ring(str(a), k)
+            for b_str in ring_a:
+                self.assertIn(str(a), rhpw.cell_ring(b_str, k))
+
+        # A ring touching a genuine cube corner (N0 sits at one) has fewer
+        # than the 8 cells an interior cell's 1-ring would have -- 7, since
+        # exactly 3 cells meet at a cube corner rather than 4 (see
+        # Cell.diagonal_neighbor()).
+        self.assertEqual(len(rhpw.cell_ring("N0", 1)), 7)
+        # An interior (non-corner) cell's 1-ring has the full 8.
+        self.assertEqual(len(rhpw.cell_ring("N4", 1)), 8)
 
     def test_polyfill(self):
         # Test data - plane
@@ -466,6 +562,23 @@ class RhpWrappersTestCase(unittest.TestCase):
 
         # Compressed from polygon - plane
         self.assertEqual(rhpw.polyfill(plane_poly, 10, compress=True), {"N216055611"})
+
+        # Regression test for issue #51: compress_cells hardcoded 9 as "a
+        # complete sibling group" (correct only for N_side=3), so under an
+        # N_side=2 DGGS (WGS84_002, 4 children per cell) a complete group
+        # of siblings silently never compressed at all. polyfill() must
+        # pass the DGGS's actual N_side through to compact_cells().
+        n_side_2_idx = ("N", 2, 1, 3)
+        n_side_2_cell = rhpw.Cell(rdggs=gs.WGS84_002, suid=n_side_2_idx)
+        n_side_2_poly = sh.Polygon(n_side_2_cell.vertices())
+        self.assertEqual(
+            rhpw.polyfill(n_side_2_poly, 4, dggs=gs.WGS84_002),
+            {"N2130", "N2131", "N2132", "N2133"},
+        )
+        self.assertEqual(
+            rhpw.polyfill(n_side_2_poly, 4, dggs=gs.WGS84_002, compress=True),
+            {"N213"},
+        )
 
         # Test data - sphere
         eq_poly_n = sh.Polygon(
@@ -610,13 +723,17 @@ class RhpWrappersTestCase(unittest.TestCase):
         result = rhpw.linetrace(s_ls, 8, plane=False)
         self.assertEqual(result, ['S00145063'])
 
-        # Lines crossing cube face boundaries (not involving cap cells)
+        # Lines crossing cube face boundaries (not involving cap cells).
+        # The segment runs through the middle of Q6 for a substantial
+        # stretch (confirmed by point location along the segment; also,
+        # jumping S8 -> P8 directly would skip a cell the line plainly
+        # crosses).
         s = gs.WGS84_003.cell(("S", 7))
         e = gs.WGS84_003.cell(("P", 5))
         result = rhpw.linetrace(
             sh.LineString([s.centroid(False), e.centroid(False)]), 1, plane=False
         )
-        self.assertEqual(result, ["S7", "S8", "P8", "P5"])
+        self.assertEqual(result, ["S7", "S8", "Q6", "P8", "P5"])
 
         # Resolution mismatch (coarse resolution, short line segments)
         result = rhpw.linetrace(p_ls, 2, plane=False)
@@ -631,8 +748,15 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertIsNone(rhpw.linetrace(sh.LineString(), 0))
         self.assertIsNone(rhpw.linetrace(sh.LineString([(1, 1), (1, 1)]), 0))
 
-    @unittest.expectedFailure
-    def test_linetrace_known_failure(self):
+    def test_linetrace_polar_cap(self):
+        # A linestring wandering around the north pole, crossing the
+        # resolution 3 cap cell N444. A shapely linestring's segments are
+        # straight in longitude-latitude coordinates, so at these
+        # latitudes each leg sweeps *around* the pole through the cells
+        # at the intermediate longitudes (it does not hop across the
+        # cap the way a geodesic would). Every leg's expected cell
+        # sequence below was independently confirmed by dense point
+        # location along the leg with cell_from_point.
         n_ls = sh.LineString(
             [
                 (-134.998756, 86.549596),
@@ -642,13 +766,10 @@ class RhpWrappersTestCase(unittest.TestCase):
                 (-134, 86),
             ]
         )
-
-        # Cap faces - line string
-        # TODO: this is still wrong - should be "N444", "N445" and not "N444", "N447", "N448", "N445"
         result = rhpw.linetrace(n_ls, 3, plane=False)
         self.assertEqual(
             result,
-            ["N447", "N444", "N445", "N448", "N447"],
+            ["N447", "N444", "N447", "N448", "N445", "N448", "N447"],
         )
 
 

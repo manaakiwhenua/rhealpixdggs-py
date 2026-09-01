@@ -19,6 +19,8 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 
 # Import third-party modules.
 from numpy import pi, sign, array, identity, dot, deg2rad, rad2deg
+import shapely
+from shapely.geometry import Polygon
 from typing import Callable
 
 # Import my modules.
@@ -46,6 +48,9 @@ ROTATE = {
     -2: ROTATE2,
     -3: ROTATE1,
 }
+
+# Cache for in_rhealpix_image(); see the comment inside that function.
+_rhealpix_image_polys = {}
 
 
 def combine_triangles(
@@ -320,12 +325,14 @@ def rhealpix_sphere_inverse(
         (0, 0.785398163397448)
 
     """
-    # Throw error if input coordinates are out of bounds.
     if not in_rhealpix_image(
         x, y, south_square=south_square, north_square=north_square
     ):
-        print("Error (rsi): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
-        return
+        raise ValueError(
+            "(%.20f,%.20f) is not a point in the image of the "
+            "(%d, %d)-rHEALPix projection of the unit sphere"
+            % (x, y, north_square, south_square)
+        )
     if region != "equatorial":
         x, y = combine_triangles(
             x, y, north_square=north_square, south_square=south_square, inverse=True
@@ -396,12 +403,14 @@ def rhealpix_ellipsoid_inverse(
         (0, 0.785398163397448)
 
     """
-    # Throw error if input coordinates are out of bounds.
     if not in_rhealpix_image(
         x, y, south_square=south_square, north_square=north_square
     ):
-        print("Error (rei): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
-        return
+        raise ValueError(
+            "(%.20f,%.20f) is not a point in the image of the "
+            "(%d, %d)-rHEALPix projection of the unit sphere"
+            % (x, y, north_square, south_square)
+        )
 
     if region != "equatorial":
         x, y = combine_triangles(
@@ -446,28 +455,39 @@ def in_rhealpix_image(
         False
 
     """
-    # matplotlib is a third-party module.
-    from matplotlib.path import Path
-
-    # Fuzz to slightly expand rHEALPix image so that
-    # points on the boundary count as lying in the image.
-    eps = 1e-15
-    vertices = [
-        (-pi - eps, pi / 4 + eps),
-        (-pi + north_square * pi / 2 - eps, pi / 4 + eps),
-        (-pi + north_square * pi / 2 - eps, 3 * pi / 4 + eps),
-        (-pi + (north_square + 1) * pi / 2 + eps, 3 * pi / 4 + eps),
-        (-pi + (north_square + 1) * pi / 2 + eps, pi / 4 + eps),
-        (pi + eps, pi / 4 + eps),
-        (pi + eps, -pi / 4 - eps),
-        (-pi + (south_square + 1) * pi / 2 + eps, -pi / 4 - eps),
-        (-pi + (south_square + 1) * pi / 2 + eps, -3 * pi / 4 - eps),
-        (-pi + south_square * pi / 2 - eps, -3 * pi / 4 - eps),
-        (-pi + south_square * pi / 2 - eps, -pi / 4 - eps),
-        (-pi - eps, -pi / 4 - eps),
-    ]
-    poly = Path(vertices)
-    return bool(poly.contains_point([x, y]))
+    # This polygon only depends on (north_square, south_square), which are
+    # fixed per DGGS instance, so build it once per distinct pair and reuse
+    # it -- constructing it is not free, and this function may be called
+    # once per point projected.
+    key = (north_square, south_square)
+    poly = _rhealpix_image_polys.get(key)
+    if poly is None:
+        # Fuzz to slightly expand rHEALPix image so that
+        # points on the boundary count as lying in the image.
+        eps = 1e-15
+        vertices = [
+            (-pi - eps, pi / 4 + eps),
+            (-pi + north_square * pi / 2 - eps, pi / 4 + eps),
+            (-pi + north_square * pi / 2 - eps, 3 * pi / 4 + eps),
+            (-pi + (north_square + 1) * pi / 2 + eps, 3 * pi / 4 + eps),
+            (-pi + (north_square + 1) * pi / 2 + eps, pi / 4 + eps),
+            (pi + eps, pi / 4 + eps),
+            (pi + eps, -pi / 4 - eps),
+            (-pi + (south_square + 1) * pi / 2 + eps, -pi / 4 - eps),
+            (-pi + (south_square + 1) * pi / 2 + eps, -3 * pi / 4 - eps),
+            (-pi + south_square * pi / 2 - eps, -3 * pi / 4 - eps),
+            (-pi + south_square * pi / 2 - eps, -pi / 4 - eps),
+            (-pi - eps, -pi / 4 - eps),
+        ]
+        poly = Polygon(vertices)
+        _rhealpix_image_polys[key] = poly
+    # contains_xy (vectorized, coordinate-based) avoids constructing a Point
+    # object per call, unlike the equivalent poly.contains(Point(x, y)).
+    # It's a strict interior test (excludes the boundary), but the eps fuzz
+    # above already pushes genuine boundary points into the interior of
+    # this (slightly larger) polygon, so they still test True -- verified
+    # against every boundary case in this function's own doctest above.
+    return bool(shapely.contains_xy(poly, x, y))
 
 
 def rhealpix_vertices(

@@ -14,7 +14,7 @@ Keep adding tests!
 
 # Import third-party modules.
 from scipy.spatial.distance import euclidean, norm
-from numpy import atleast_1d, array, pi, rad2deg, deg2rad, arcsin
+from numpy import atleast_1d, array, pi, rad2deg, arcsin
 
 # Import standard modules.
 import unittest
@@ -315,6 +315,39 @@ class MyTestCase(unittest.TestCase):
             expect = f(*p, radians=True)
             for i in range(len(expect)):
                 self.assertAlmostEqual(get[i], expect[i])
+
+    def test_in_rhealpix_image_poly_is_cached(self):
+        # Regression test: in_rhealpix_image() used to rebuild its polygon
+        # (originally a matplotlib Path, now a shapely Polygon) on every
+        # call even though it only depends on (north_square, south_square),
+        # which are fixed per DGGS instance. See issue #64.
+        pjr._rhealpix_image_polys.clear()
+        self.assertTrue(pjr.in_rhealpix_image(0, 0, north_square=1, south_square=2))
+        key = (1, 2)
+        self.assertIn(key, pjr._rhealpix_image_polys)
+        cached = pjr._rhealpix_image_polys[key]
+        self.assertTrue(
+            pjr.in_rhealpix_image(0.1, 0.1, north_square=1, south_square=2)
+        )
+        self.assertIs(pjr._rhealpix_image_polys[key], cached)
+        # A different (north_square, south_square) pair gets its own entry.
+        self.assertTrue(pjr.in_rhealpix_image(0, 0, north_square=0, south_square=0))
+        self.assertIn((0, 0), pjr._rhealpix_image_polys)
+        self.assertIsNot(pjr._rhealpix_image_polys[(0, 0)], cached)
+
+    def test_out_of_bounds_raises_value_error(self):
+        # Regression test for issue #52: out-of-bounds coordinates used to
+        # print an error message and return None instead of raising, which
+        # crashed several frames away with a confusing numpy TypeError the
+        # moment rhealpix()'s closure tried to array()-and-unpack it.
+        with self.assertRaises(ValueError):
+            pjr.rhealpix_sphere_inverse(0, 100)
+        with self.assertRaises(ValueError):
+            pjr.rhealpix_ellipsoid_inverse(0, 100)
+        # Same via the public factory function.
+        f = pjr.rhealpix(a=1, e=0.5, north_square=1, south_square=2)
+        with self.assertRaises(ValueError):
+            f(0, 100, radians=True, inverse=True)
 
 
 if __name__ == "__main__":

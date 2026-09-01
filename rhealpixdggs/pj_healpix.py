@@ -21,10 +21,15 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 
 # Import third-party modules.
 from numpy import pi, floor, sqrt, sin, arcsin, sign, array, deg2rad, rad2deg
+import shapely
+from shapely.geometry import Polygon
 from typing import Callable
 
 # Import my modules.
 from rhealpixdggs.utils import my_round, auth_lat, auth_rad
+
+# Cache for in_healpix_image(); see the comment inside that function.
+_healpix_image_poly = None
 
 
 def healpix_sphere(lam: float, phi: float) -> tuple[float, float]:
@@ -76,10 +81,11 @@ def healpix_sphere_inverse(x: float, y: float) -> tuple[float, float]:
         True
 
     """
-    # Throw error if input coordinates are out of bounds.
     if not in_healpix_image(x, y):
-        print("Error (hsi): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
-        return float("inf"), float("inf")
+        raise ValueError(
+            "(%.20f,%.20f) is not a point in the image of the HEALPix "
+            "projection of the unit sphere" % (x, y)
+        )
     y0 = pi / 4
     # Equatorial region.
     if abs(y) <= y0:
@@ -145,11 +151,8 @@ def healpix_ellipsoid_inverse(x: float, y: float, e: float = 0) -> tuple[float, 
         (0, 0.448798950512828)
 
     """
-    # Throw error if input coordinates are out of bounds.
-    if not in_healpix_image(x, y):
-        print("Error (hei): input coordinates (%.20f,%.20f) are out of bounds" % (x, y))
-        return
-
+    # healpix_sphere_inverse() raises ValueError for out-of-bounds (x, y);
+    # no need to duplicate that check here.
     lam, beta = healpix_sphere_inverse(x, y)
     phi = auth_lat(beta, e, radians=True, inverse=True)
     return lam, phi
@@ -193,34 +196,42 @@ def in_healpix_image(x: float, y: float) -> bool:
         False
 
     """
-    # matplotlib is a third-party module.
-    from matplotlib.path import Path
-
-    # Fuzz to slightly expand HEALPix image boundary so that
-    # points on the boundary count as lying in the image.
-    eps = 1e-10
-    vertices = [
-        (-pi - eps, pi / 4 + eps),
-        (-3 * pi / 4, pi / 2 + eps),
-        (-pi / 2, pi / 4 + eps),
-        (-pi / 4, pi / 2 + eps),
-        (0, pi / 4 + eps),
-        (pi / 4, pi / 2 + eps),
-        (pi / 2, pi / 4 + eps),
-        (3 * pi / 4, pi / 2 + eps),
-        (pi + eps, pi / 4 + eps),
-        (pi + eps, -pi / 4 - eps),
-        (3 * pi / 4, -pi / 2 - eps),
-        (pi / 2, -pi / 4 - eps),
-        (pi / 4, -pi / 2 - eps),
-        (0, -pi / 4 - eps),
-        (-pi / 4, -pi / 2 - eps),
-        (-pi / 2, -pi / 4 - eps),
-        (-3 * pi / 4, -pi / 2 - eps),
-        (-pi - eps, -pi / 4 - eps),
-    ]
-    poly = Path(vertices)
-    return bool(poly.contains_point([x, y]))
+    global _healpix_image_poly
+    if _healpix_image_poly is None:
+        # Fuzz to slightly expand HEALPix image boundary so that
+        # points on the boundary count as lying in the image.
+        eps = 1e-10
+        vertices = [
+            (-pi - eps, pi / 4 + eps),
+            (-3 * pi / 4, pi / 2 + eps),
+            (-pi / 2, pi / 4 + eps),
+            (-pi / 4, pi / 2 + eps),
+            (0, pi / 4 + eps),
+            (pi / 4, pi / 2 + eps),
+            (pi / 2, pi / 4 + eps),
+            (3 * pi / 4, pi / 2 + eps),
+            (pi + eps, pi / 4 + eps),
+            (pi + eps, -pi / 4 - eps),
+            (3 * pi / 4, -pi / 2 - eps),
+            (pi / 2, -pi / 4 - eps),
+            (pi / 4, -pi / 2 - eps),
+            (0, -pi / 4 - eps),
+            (-pi / 4, -pi / 2 - eps),
+            (-pi / 2, -pi / 4 - eps),
+            (-3 * pi / 4, -pi / 2 - eps),
+            (-pi - eps, -pi / 4 - eps),
+        ]
+        # This polygon never varies (the function takes no parameters), so
+        # build it once and reuse it -- constructing it is not free, and
+        # this function may be called once per point projected.
+        _healpix_image_poly = Polygon(vertices)
+    # contains_xy (vectorized, coordinate-based) avoids constructing a Point
+    # object per call, unlike the equivalent poly.contains(Point(x, y)).
+    # It's a strict interior test (excludes the boundary), but the eps fuzz
+    # above already pushes genuine boundary points into the interior of
+    # this (slightly larger) polygon, so they still test True -- verified
+    # against every boundary case in this function's own doctest above.
+    return bool(shapely.contains_xy(_healpix_image_poly, x, y))
 
 
 def healpix_vertices() -> list[tuple[float, float, float]]:

@@ -14,7 +14,7 @@ Keep adding tests!
 
 # Import third-party modules.
 from scipy.spatial.distance import euclidean, norm
-from numpy import atleast_1d, array, rad2deg, deg2rad, pi, sqrt, sin, arcsin
+from numpy import atleast_1d, array, rad2deg, pi, sqrt, sin, arcsin
 
 # Import standard modules.
 import unittest
@@ -159,6 +159,35 @@ class MyTestCase(unittest.TestCase):
             for i in range(len(expect)):
                 self.assertAlmostEqual(get[i], expect[i])
             # ------------------------------------------------------------------------------
+
+    def test_in_healpix_image_poly_is_cached(self):
+        # Regression test: in_healpix_image() used to rebuild its polygon
+        # (originally a matplotlib Path, now a shapely Polygon) on every
+        # call even though it takes no parameters (the polygon is always
+        # identical). See issue #64.
+        pjh._healpix_image_poly = None
+        self.assertTrue(pjh.in_healpix_image(0, 0))
+        cached = pjh._healpix_image_poly
+        self.assertIsNotNone(cached)
+        self.assertTrue(pjh.in_healpix_image(0.1, 0.1))
+        self.assertIs(pjh._healpix_image_poly, cached)
+
+    def test_out_of_bounds_raises_value_error(self):
+        # Regression test for issue #52: out-of-bounds coordinates used to
+        # print an error message and return a sentinel (float("inf"), or
+        # bare None for healpix_ellipsoid_inverse) instead of raising --
+        # the sentinel case silently propagated inf into any downstream
+        # arithmetic, and the None case crashed several frames away with a
+        # confusing numpy TypeError the moment healpix()'s closure tried
+        # to array()-and-unpack it.
+        with self.assertRaises(ValueError):
+            pjh.healpix_sphere_inverse(0, 100)
+        with self.assertRaises(ValueError):
+            pjh.healpix_ellipsoid_inverse(0, 100)
+        # Same via the public factory function.
+        f = pjh.healpix(a=1, e=0.5)
+        with self.assertRaises(ValueError):
+            f(0, 100, radians=True, inverse=True)
 
 
 if __name__ == "__main__":

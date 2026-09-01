@@ -1,18 +1,54 @@
 Introduction
 ============
 rHEALPixDGGS is a Python 3 package that implements the rHEALPix discrete global grid system (DGGS).
-This documentation assumes you are familiar with the rHEALPix DGGS as described in [GRS2013]_ and familiar with basic Python 3.3 usage as described in `The Python Tutorial <http://docs.python.org/3/tutorial/>`_.
 
-.. [GRS2013] Robert Gibb, Alexander Raichev, Michael Speth, `The rHEALPix discrete global grid system <https://github.com/manaakiwhenua/rhealpixdggs-2013-gibb-raichev-speth/blob/master/rhealpix_dggs_preprint.pdf>`_, in preparation, 2013.
+.. figure:: images/planar_grid.*
+   :alt: The (0, 0)-rHEALPix planar grid: six resolution 0 cells labeled
+         N, O, P, Q, R, S unfolded from a cube, each subdivided into a
+         3-by-3 resolution 1 sub-grid, with cell P's children labeled
+         with their SUID digits 0 through 8.
+   :width: 85%
+   :align: center
+
+   The (0, 0)-rHEALPix planar grid: the six resolution 0 cells unfolded
+   from a cube, each subdivided into its resolution 1 sub-grid. Cell P's
+   children are labeled with their SUID digits, so e.g. the cell in its
+   lower-right corner is P8.
+
+.. figure:: images/ellipsoidal_cells.*
+   :alt: The resolution 1 ellipsoidal cells of the (0, 0)-rHEALPix DGGS on
+         WGS84, drawn in longitude-latitude coordinates and colored by
+         their resolution 0 cell.
+   :width: 100%
+
+   The same resolution 1 cells mapped back onto the WGS84 ellipsoid, in
+   longitude-latitude coordinates: quad cells in the equatorial band;
+   dart, skew-quad, and cap cells in the polar regions.
+
+.. figure:: images/hierarchy.*
+   :alt: Four nested squares illustrating the cell hierarchy: cell N
+         subdivided into nine children, its center child N4 subdivided
+         in turn, then N44, then N444.
+   :width: 75%
+   :align: center
+
+   The cell hierarchy: each cell subdivides into an N_side-by-N_side
+   grid of children (here N_side = 3), and a cell's address (its SUID)
+   is its parent's address plus one digit -- N contains N4 contains N44
+   contains N444. An address prefix is always an ancestor, which is
+   what makes the predicates ``contains_cell``, ``within`` and the
+   ``compact_cells`` function pure string operations.
+
+This documentation assumes you are familiar with the rHEALPix DGGS as described in [Gibb2016]_ (with full mathematical detail in the preprint [GRS2013]_) and with basic Python usage as described in `The Python Tutorial <https://docs.python.org/3/tutorial/>`_.
 
 Requirements
 ---------------
-- `Python >=3.11 <http://python.org/>`_
-- `NumPy >=1.25.2 <http://www.numpy.org/>`_ Base N-dimensional array package
-- `SciPy >=1.11.2 <http://www.scipy.org/>`_ Fundamental library for scientific computing
-- `Matplotlib >=3.7.2 <http://matplotlib.org/>`_ Comprehensive 2D Plotting
-- `Pyproj >=3.6 <http://code.google.com/p/pyproj/>`_
-  Python interface to the PROJ.4 cartographic library
+- `Python >=3.11 <https://www.python.org/>`_
+- `NumPy >=2.0 <https://www.numpy.org/>`_ Base N-dimensional array package
+- `SciPy >=1.11 <https://www.scipy.org/>`_ Fundamental library for scientific computing
+- `Pyproj >=3.6 <https://pyproj4.github.io/pyproj/>`_
+  Python interface to the PROJ cartographic library
+- `Shapely >=2.1 <https://shapely.readthedocs.io/>`_ Manipulation and analysis of planar GEOS geometries
 
 Installation
 --------------
@@ -20,7 +56,7 @@ The package is available on PyPI, the Package Index from where it can be install
 
 pip install rhealpixdggs
 
-rHEALPixDGGS is also available for download from Landcare Research's github repository `<https://github.com/manaakiwhenua/rhealpixdggs-py>`_ from wher the latest version can be cloned.
+rHEALPixDGGS is also available for download from the Bioeconomy Science Institute's GitHub repository `<https://github.com/manaakiwhenua/rhealpixdggs-py>`_ from where the latest version can be cloned.
 
 Usage
 ------
@@ -35,10 +71,13 @@ For brevity hereafter, the word 'ellipsoid' abbreviates 'ellipsoid of revolution
 
 The module ``projection_wrapper`` implements a wrapper for the map projections of ellipsoids defined in ``pj_healpix``, ``pj_rhealpix``, and Pyproj.
 
-Currently ``projection_wrapper`` uses the HEALPix and rHEALPix projections
-defined in ``pj_healpix`` and ``pj_rhealpix`` and *not* the buggy versions  defined in Pyproj 1.9.3 as ``PJ_healpix.c``.
-Alternatively, you can download a corrected version of ``PJ_healpix.c`` from
-`trac.osgeo.org/proj/changeset/2378 <http://trac.osgeo.org/proj/changeset/2378>`_, rebuild Pyproj with it, and use it in ``dggs`` by editing the ``HOMEMADE_PROJECTIONS`` line in ``projection_wrapper``.
+``projection_wrapper`` uses the HEALPix and rHEALPix projections
+defined in ``pj_healpix`` and ``pj_rhealpix``, this package's own pure-Python
+reference implementations of the projection formulas in [Gibb2016]_, rather
+than the C implementations in the PROJ library (reachable through Pyproj).
+This keeps all grid computations identical regardless of the installed PROJ
+version. To use PROJ's implementations instead, edit the
+``HOMEMADE_PROJECTIONS`` line in ``projection_wrapper``.
 
 Import all the classes, methods, and constants from the module::
 
@@ -313,3 +352,13 @@ Orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand::
             sphere = False
     >>> print(rdggs.cell_from_point(1, p, plane=False))
     Q3
+
+References
+----------
+.. [Gibb2016] Robert Gibb, `The rHEALPix discrete global grid system <https://doi.org/10.1088/1755-1315/34/1/012012>`__, IOP Conference Series: Earth and Environmental Science 34, 012012, 2016.
+.. [GRS2013] Robert Gibb, Alexander Raichev, Michael Speth, `The rHEALPix discrete global grid system <https://github.com/manaakiwhenua/rhealpixdggs-2013-gibb-raichev-speth/blob/master/rhealpix_dggs_preprint.pdf>`__, preprint, 2013. Gives the full mathematical detail of the system this package implements.
+
+Related reading:
+
+- Mark R. Calabretta and Boudewijn F. Roukema, `Mapping on the HEALPix grid <https://doi.org/10.1111/j.1365-2966.2007.12297.x>`__, Monthly Notices of the Royal Astronomical Society 381(2), 865--872, 2007. Defines the HEALPix projection that rHEALPix rearranges.
+- Charles F. F. Karney, `On auxiliary latitudes <https://doi.org/10.48550/arXiv.2212.05818>`__, 2023. Source of the authalic latitude power series used in ``utils.auth_lat``.

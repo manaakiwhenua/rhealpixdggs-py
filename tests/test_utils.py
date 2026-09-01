@@ -14,12 +14,38 @@ Keep adding tests!
 # *****************************************************************************
 
 # Import standard modules.
-from math import pi
+from math import asin, pi, sin
 import unittest
+
+# Import third-party modules.
+from scipy.integrate import quad
 
 # Import my modules.
 from rhealpixdggs.ellipsoids import WGS84_E
 import rhealpixdggs.utils as ut
+
+
+def auth_lat_by_defining_integral(phi: float, e: float) -> float:
+    """
+    Authalic latitude of geodetic latitude `phi` (radians) on an ellipsoid
+    of eccentricity `e`, computed by numerically integrating its defining
+    integral: beta = arcsin(q(phi)/q(pi/2)), where (after substituting
+    u = sin(t) to keep the integrand a smooth rational function)
+    q(phi) = (1 - e^2) * integral of du/(1 - e^2 u^2)^2 from 0 to sin(phi).
+
+    This is deliberately independent of auth_lat()'s own closed-form
+    formula and power series, so it can serve as ground truth for both.
+    """
+
+    def integrand(u):
+        return (1 - e**2) / (1 - (e * u) ** 2) ** 2
+
+    # epsabs/epsrel = 1e-13 keeps quad comfortably clear of its internal
+    # roundoff limits while remaining orders of magnitude tighter than the
+    # assertion tolerances used below.
+    q, _ = quad(integrand, 0, sin(phi), epsabs=1e-13, epsrel=1e-13)
+    q_pole, _ = quad(integrand, 0, 1, epsabs=1e-13, epsrel=1e-13)
+    return asin(q / q_pole)
 
 
 class UtilsTestCase(unittest.TestCase):
@@ -115,6 +141,88 @@ class UtilsTestCase(unittest.TestCase):
         expect = lat
         for i in range(len(expect)):
             self.assertAlmostEqual(auth_lat_inverse[i], expect[i])
+
+    def test_auth_lat_matches_defining_integral(self):
+        # auth_lat() switches implementation on flattening: a closed-form
+        # direct formula for f > 1/150, a power series for f <= 1/150. No
+        # predefined Ellipsoid has a flattening anywhere near 1/150 (WGS84's
+        # f ~ 1/298 uses the series; the sphere presets short-circuit via
+        # e == 0), so the direct-formula branch is only reachable through
+        # user-constructed high-flattening ellipsoids. Validate BOTH
+        # branches against the same independent ground truth -- the
+        # numerically-integrated defining integral of authalic latitude --
+        # which also confirms the two branches agree with each other across
+        # the f = 1/150 switch point.
+        cases = [
+            # (eccentricity, which branch it exercises)
+            (0.8, "direct formula, extreme flattening (f = 0.4)"),
+            (0.1155, "direct formula, just above the f = 1/150 threshold"),
+            (WGS84_E, "power series, well below the threshold"),
+        ]
+        lat_degs = [-89, -80, -60, -45, -30, -10, 0, 10, 30, 45, 60, 80, 89]
+        for e, label in cases:
+            for deg in lat_degs:
+                phi = deg * pi / 180
+                expected = auth_lat_by_defining_integral(phi, e)
+                got_rad = ut.auth_lat(phi, e, radians=True)
+                self.assertAlmostEqual(got_rad, expected, places=12, msg=label)
+                # Degrees mode must agree with radians mode.
+                got_deg = ut.auth_lat(deg, e, radians=False)
+                self.assertAlmostEqual(
+                    got_deg, expected * 180 / pi, places=10, msg=label
+                )
+
+    def test_auth_lat_large_flattening_basic_properties(self):
+        # Structural properties of the direct-formula branch (f > 1/150):
+        # authalic latitude is an odd function of geodetic latitude, fixes
+        # the equator and the poles, pulls every other latitude strictly
+        # toward the equator on an oblate ellipsoid, and is strictly
+        # increasing.
+        e = 0.8
+        self.assertEqual(ut.auth_lat(0, e, radians=True), 0)
+        self.assertAlmostEqual(ut.auth_lat(pi / 2, e, radians=True), pi / 2, places=12)
+        self.assertAlmostEqual(
+            ut.auth_lat(-pi / 2, e, radians=True), -pi / 2, places=12
+        )
+        previous = None
+        for deg in range(-89, 90, 2):
+            phi = deg * pi / 180
+            beta = ut.auth_lat(phi, e, radians=True)
+            self.assertAlmostEqual(
+                beta, -ut.auth_lat(-phi, e, radians=True), places=12
+            )
+            if deg != 0:
+                self.assertLess(abs(beta), abs(phi))
+            if previous is not None:
+                self.assertGreater(beta, previous)
+            previous = beta
+
+    def test_auth_lat_large_flattening_inverse_round_trip(self):
+        # The inverse always uses the power series in the third flattening
+        # n, truncated at n^6, whatever the flattening -- so for a large
+        # flattening the round trip is only approximate: for e = 0.8,
+        # n = 0.25 and the truncation error is of order n^7 ~ 6e-5. Assert
+        # the round trip lands within 1e-3 radians (~0.06 degrees), which
+        # the observed worst case (~5e-4 rad) clears with headroom to spare
+        # while still catching any gross regression in either direction of
+        # the conversion.
+        e = 0.8
+        for deg in range(-89, 90, 7):
+            phi = deg * pi / 180
+            round_trip = ut.auth_lat(
+                ut.auth_lat(phi, e, radians=True), e, radians=True, inverse=True
+            )
+            self.assertAlmostEqual(round_trip, phi, delta=1e-3)
+        # For a flattening just above the direct-formula threshold
+        # (f ~ 1/149, n ~ 1/298), the same n^7 truncation bound puts the
+        # round trip within double-precision noise.
+        e = 0.1155
+        for deg in range(-89, 90, 7):
+            phi = deg * pi / 180
+            round_trip = ut.auth_lat(
+                ut.auth_lat(phi, e, radians=True), e, radians=True, inverse=True
+            )
+            self.assertAlmostEqual(round_trip, phi, places=12)
 
 
 # ------------------------------------------------------------------------------

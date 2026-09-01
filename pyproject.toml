@@ -7,15 +7,20 @@ name = "rHEALPixDGGS"
 version = "0.6.0"
 description = "An implementation of the rHEALPix discrete global grid system"
 authors = [
-    { name = "Alexander Raichev", email = "alex@raichev.net" }
+    { name = "Alexander Raichev", email = "alex@raichev.net" },
+    { name = "Robert Gibb", email = "gibbr@landcareresearch.co.nz" }
 ]
-readme = "README.rst"
-license = "GPL-3.0-or-later"
+maintainers = [
+    { name = "Richard Law", email = "lawr@landcareresearch.co.nz" }
+]
+readme = "README.md"
+# Dual-licensed: the user may choose either license. See LICENSE,
+# LICENSE-LGPL, and LICENSE-MIT.
+license = "LGPL-3.0-or-later OR MIT"
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=2.0",
     "scipy>=1.11",
-    "matplotlib>=3.7",
     "pyproj>=3.6",
     "shapely>=2.1"
 ]
@@ -31,12 +36,14 @@ keywords = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Topic :: Utilities",
-    ### "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -50,6 +57,19 @@ source = "https://github.com/manaakiwhenua/rhealpixdggs-py"
 black = "^23"
 pytest = "^7.4.0"
 sphinx = "^7.2"
+furo = ">=2024.8"
+
+# Only needed to regenerate the committed docs figures (docs/make_figures.py
+# / `make -C docs figures`); install with `poetry install --with figures`.
+[tool.poetry.group.figures]
+optional = true
+
+[tool.poetry.group.figures.dependencies]
+matplotlib = ">=3.8"
 
 [tool.poetry]
-include = ["tests/","docs/"]
+# Ship the tests and docs sources in the sdist (they are not included in
+# the wheel). NOTE: these include patterns override gitignore, so nothing
+# transient may live under docs/ -- e.g. make_figures.py keeps its
+# downloaded-data cache at the repository root, not in docs/.
+include = ["tests/", "docs/"]

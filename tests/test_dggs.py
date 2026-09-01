@@ -81,6 +81,32 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             c = a.successor()
             self.assertEqual(str(b), str(c))
 
+    def test_area_error_budget(self):
+        import sys
+
+        rdggs = WGS84_003
+        budget = rdggs.area_error_budget()
+        # One entry per resolution, none missing, none extra.
+        self.assertEqual(
+            sorted(budget.keys()), list(range(rdggs.max_resolution + 1))
+        )
+        rel_tol = 10 * sys.float_info.epsilon
+        previous_area = None
+        for r in range(rdggs.max_resolution + 1):
+            entry = budget[r]
+            # The budgeted area is exactly the ellipsoidal cell area at
+            # that resolution.
+            self.assertEqual(entry["cell_area_m2"], rdggs.cell_area(r, plane=False))
+            # Documented invariants: the relative tolerance is 10 machine
+            # epsilons at every resolution, and the absolute tolerance is
+            # the area scaled by it.
+            self.assertEqual(entry["rel_tolerance"], rel_tol)
+            self.assertEqual(entry["abs_tolerance"], entry["cell_area_m2"] * rel_tol)
+            # Areas strictly decrease with resolution.
+            if previous_area is not None:
+                self.assertLess(entry["cell_area_m2"], previous_area)
+            previous_area = entry["cell_area_m2"]
+
     def test_interval(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             # Should produce the correct number of cells
@@ -118,6 +144,29 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
                 old_index = new_index
                 count += 1
             self.assertEqual(count, correct_count)
+
+    def test_interval_N_side_ge_4(self):
+        # Regression test for issue #71: interval() walks cells via
+        # cell.successor() and terminates on `cell <= b`, and __le__ used
+        # to compare a string rendering of the suid, which breaks for
+        # N_side >= 4 (some digits, e.g. 10-15, are multi-character).
+        # Confirm interval() still produces the correct, fully-ordered
+        # sequence of cells in that case.
+        rdggs = RHEALPixDGGS(N_side=4)
+        A = rdggs.cell((N, 9))
+        B = rdggs.cell((N, 12))
+        start_index = A.index(order="level")
+        end_index = B.index(order="level")
+        correct_count = end_index - start_index + 1
+        count = 0
+        old_index = start_index - 1
+        for X in rdggs.interval(A, B):
+            new_index = X.index(order="level")
+            self.assertEqual(new_index, old_index + 1)
+            old_index = new_index
+            count += 1
+        self.assertEqual(count, correct_count)
+        self.assertEqual(old_index, end_index)
 
     def test_cell_from_point(self):
         # The nucleus of a cell should yield the cell.
@@ -177,6 +226,157 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         c1 = rdggs.cell_from_point(1, p1, plane=False)
         c2 = rdggs.cell_from_point(1, p2, plane=False)
         self.assertEqual(c1, c2)
+
+    def test_cells_from_line(self):
+        rdggs = WGS84_003
+
+        # Both endpoints in the same cell.
+        cells = rdggs.cells_from_line(1, (10, 10), (11, 11), plane=False)
+        self.assertEqual([str(c) for c in cells], ["Q3"])
+
+        # An endpoint outside the (planar) grid: no trace.
+        R = rdggs.ellipsoid.R_A
+        outside = (0.9 * pi * R, 0.6 * pi * R)
+        inside = (0.1 * R, 0.1 * R)
+        self.assertEqual(rdggs.cells_from_line(1, inside, outside, plane=True), [])
+
+        # A planar segment crossing a void of the cross-shaped image:
+        # cells on both sides of the gap, in order, and nothing invented
+        # in between. From the N square rightward across the void into
+        # the R face's top row.
+        n_square_point = (-0.6 * pi * R, 1.5 * R)  # in N (the polar square)
+        r_face_point = (0.75 * pi * R, 0.7 * R)  # in R (equatorial band)
+        cells = rdggs.cells_from_line(0, n_square_point, r_face_point, plane=True)
+        self.assertEqual([str(c) for c in cells], ["N", "R"])
+
+        # Antimeridian: longitude-latitude segments are straight in
+        # coordinate space and by default don't wrap, so a segment from
+        # longitude 179 to -179 runs the long way around through
+        # longitude 0.
+        cells = rdggs.cells_from_line(0, (179, 10), (-179, 10), plane=False)
+        self.assertEqual([str(c) for c in cells], ["R", "Q", "P", "O"])
+        # With wrap_antimeridian=True it takes the short way, across the
+        # antimeridian -- and traces exactly the same cells as splitting
+        # the segment at the antimeridian (RFC 7946 style) and
+        # concatenating the halves' traces.
+        wrapped = rdggs.cells_from_line(
+            0, (179, 10), (-179, 10), plane=False, wrap_antimeridian=True
+        )
+        self.assertEqual([str(c) for c in wrapped], ["R", "O"])
+        halves = rdggs.cells_from_line(
+            0, (179, 10), (180, 10), plane=False
+        ) + rdggs.cells_from_line(0, (-180, 10), (-179, 10), plane=False)
+        deduped = [c for i, c in enumerate(halves) if i == 0 or c != halves[i - 1]]
+        self.assertEqual(wrapped, deduped)
+
+        # Consecutive traced cells always touch (edge- or
+        # corner-adjacent), across face and region boundaries; endpoints
+        # match cell_from_point. Fixed deterministic segments spanning
+        # equatorial, polar, and region-crossing geometry.
+        segments = [
+            (2, (-11.399091685979357, 64.59420811683768),
+                (-57.31373531501049, 87.0761010527302)),
+            (3, (-11.399091685979357, 64.59420811683768),
+                (-57.31373531501049, 87.0761010527302)),
+            (3, (165.50972831262268, 26.027432190353828),
+                (-12.994806100831056, 60.11220272134576)),
+            (2, (-170, -80), (170, -60)),
+            (2, (-45, 88), (135, 88)),
+        ]
+        for res, a, b in segments:
+            cells = rdggs.cells_from_line(res, a, b, plane=False)
+            self.assertEqual(cells[0], rdggs.cell_from_point(res, a, plane=False))
+            self.assertEqual(cells[-1], rdggs.cell_from_point(res, b, plane=False))
+            for c0, c1 in zip(cells, cells[1:]):
+                self.assertTrue(c0.touches(c1), msg=f"{c0} !~ {c1} on {a}->{b}")
+                self.assertNotEqual(c0, c1)
+
+        # Exactness regressions: these segments pass through a cell over
+        # only a tiny fraction of a cell width (about 1/50 and 1/500 of a
+        # cell, confirmed by ultra-dense point location), which
+        # sampling-based tracing misses.
+        cells = rdggs.cells_from_line(
+            3,
+            (-11.399091685979357, 64.59420811683768),
+            (-57.31373531501049, 87.0761010527302),
+            plane=False,
+        )
+        self.assertIn("N455", [str(c) for c in cells])
+        cells = rdggs.cells_from_line(
+            3,
+            (165.50972831262268, 26.027432190353828),
+            (-12.994806100831056, 60.11220272134576),
+            plane=False,
+        )
+        self.assertIn("N241", [str(c) for c in cells])
+
+    def test_cell_boundaries(self):
+        from numpy import allclose
+
+        rdggs = WGS84_003
+
+        # Agreement with each cell's own boundary() -- same count, order,
+        # and coordinates -- across cell shapes, across a region
+        # boundary, and across mixed resolutions.
+        cell_sets = [
+            list(rdggs.cell((P, 0)).subcells()),  # quads
+            list(rdggs.cell((N, 4)).subcells()),  # cap + darts + skew quads
+            [rdggs.cell((Q, i)) for i in (0, 1, 2)]
+            + [rdggs.cell((N, i)) for i in (6, 7, 8)],  # region-crossing
+            [rdggs.cell((P, 0))] + list(rdggs.cell((P, 0)).subcells()),
+        ]
+        for cells in cell_sets:
+            for n in (2, 3, 7):
+                boundaries = rdggs.cell_boundaries(cells, n=n, plane=False)
+                for c in cells:
+                    expected = c.boundary(n=n, plane=False)
+                    self.assertEqual(len(boundaries[c]), len(expected))
+                    for got, want in zip(boundaries[c], expected):
+                        self.assertTrue(
+                            allclose(got, want, rtol=0, atol=1e-9),
+                            msg=f"{c} n={n}: {got} != {want}",
+                        )
+
+        # The new guarantee: adjacent same-region cells' copies of their
+        # shared edge points are identical values, not merely close.
+        cells = list(rdggs.cell((P, 0)).subcells())
+        n = 5
+        boundaries = rdggs.cell_boundaries(cells, n=n, plane=False)
+        a = set(map(tuple, boundaries[rdggs.cell((P, 0, 1))]))
+        b = set(map(tuple, boundaries[rdggs.cell((P, 0, 2))]))
+        self.assertGreaterEqual(len(a & b), n)
+
+        # And the point of it all: strictly fewer projection calls than
+        # computing each cell's boundary independently (interior edges
+        # projected once, not twice).
+        class CountingProjection:
+            def __init__(self, inner):
+                self.inner = inner
+                self.count = 0
+
+            def __call__(self, *args, **kwargs):
+                self.count += 1
+                return self.inner(*args, **kwargs)
+
+        block = [rdggs.cell((P, i, j)) for i in range(9) for j in range(9)]
+        counter = CountingProjection(rdggs.rhealpix)
+        rdggs.rhealpix = counter
+        try:
+            for c in block:
+                c.boundary(n=4, plane=False)
+            per_cell_calls = counter.count
+            counter.count = 0
+            rdggs.cell_boundaries(block, n=4, plane=False)
+            batched_calls = counter.count
+        finally:
+            del rdggs.__dict__["rhealpix"]
+        self.assertLess(batched_calls, 0.6 * per_cell_calls)
+
+        # Planar mode is a plain convenience passthrough.
+        cells = list(rdggs.cell((P, 0)).subcells())
+        boundaries = rdggs.cell_boundaries(cells, n=3, plane=True)
+        for c in cells:
+            self.assertEqual(boundaries[c], c.boundary(n=3, plane=True))
 
     def test_cell_from_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
@@ -447,189 +647,5 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
 
 
 # ------------------------------------------------------------------------------
-#     # Test CellFamily methods
-#     def test_CellFamily_init(self):
-#         X = WGS84_123.cell((S, 0))
-#         Y = WGS84_123.cell((P, 3, 3))
-#         Z = WGS84_123.cell('S')
-#         F = CellFamily([X, Y, X, Z, Y])
-#         cells = [Y, Z]
-#         min_resolution = 0
-#         max_resolution = 2
-#         self.assertEqual(len(F.cells), len(cells))
-#         for i in range(len(F.cells)):
-#             self.assertEqual(F.cells[i].suid, cells[i].suid)
-#         self.assertEqual(F.min_resolution, min_resolution)
-#         self.assertEqual(F.max_resolution, max_resolution)
-#
-#     def test_CellFamily_contains(self):
-#         f = CellFamily(list(WGS84_123.grid(1)))
-#         c = WGS84_123.cell((O, 5))
-#         d = WGS84_123.cell((O, 5, 5))
-#         self.assertTrue(c in f)
-#         self.assertTrue(d not in f)
-#
-#     def test_CellFamily_delitem(self):
-#         f = CellFamily(list(WGS84_123.grid(1)))
-#         c = WGS84_123.cell((N, 0))
-#         del(f[0])
-#         self.assertTrue(c not in f)
-#
-#     def test_CellFamily_add(self):
-#         f = CellFamily(list(WGS84_123.grid(0)))
-#         del f[2]    # Remove cell C.
-#
-#         # Should add cell C7 to f in correct spot.
-#         c = WGS84_123.cell((P, 7))
-#         f.add(c)
-#         self.assertTrue(str(f[2]), str(c))
-#
-#         # Should not add cell B7 to f since it's a subcell of a cell in f.
-#         d = WGS84_123.cell((O, 7))
-#         f.add(d)
-#         self.assertTrue(d not in f)
-#
-#     def test_CellFamily_minimize(self):
-#         # The minimizeion of the empty cell family should be itself.
-#         f = CellFamily()
-#         fc = f.minimize()
-#         self.assertTrue(f is fc)
-#         self.assertEqual(fc.min_resolution, None)
-#         self.assertEqual(fc.max_resolution, None)
-#
-#         # Minimize.
-#         A00 = WGS84_123.cell((S, 0, 0))
-#         B = WGS84_123.cell('O')
-#         C00 = WGS84_123.cell((P, 0, 0))
-#         C02 = WGS84_123.cell((P, 0, 2))
-#         f = CellFamily([A00, C00, C02] + list(B.subcells(3)))
-#         fc = f.minimize()
-#         g = CellFamily([A00, B, C00, C02])
-#         self.assertTrue(fc == g)
-#         self.assertEqual(fc.min_resolution, 0)
-#         self.assertEqual(fc.max_resolution, 2)
-#
-#         # This family can't be minimizeed.
-#         cells = list(B.subcells(1))
-#         cells.pop(7)
-#         f = CellFamily(cells)
-#         fc = f.minimize()
-#         self.assertTrue(f == fc)
-#         self.assertEqual(fc.min_resolution, 1)
-#         self.assertEqual(fc.max_resolution, 1)
-#
-#     def test_CellFamily_union(self):
-#         # Union with the empty cell family.
-#         f = CellFamily()
-#         g = CellFamily(list(WGS84_123.grid(0)))
-#         self.assertTrue(f.union(g) == g)
-#
-#         # Union.
-#         p17 = WGS84_123.cell((P, 1, 7))
-#         p23 = WGS84_123.cell((P, 2, 3))
-#         p345 = WGS84_123.cell((P, 3, 4, 5))
-#         p346 = WGS84_123.cell((P, 3, 4, 6))
-#         p381 = WGS84_123.cell((P, 3, 8, 1))
-#         p2 = WGS84_123.cell((P, 2))
-#         p3 = WGS84_123.cell((P, 3))
-#         f1 = CellFamily([p17, p23, p345, p346, p381])
-#         f2 = CellFamily([p2, p3])
-#         u = f1.union(f2)
-#         uu = CellFamily([p17, p2, p3])
-#         self.assertTrue(u == uu)
-#
-#         # Union with filtering.
-#         u = f1.union(f2, filter_resolution=1)
-#         uu = CellFamily([p2, p3])
-#         self.assertTrue(u == uu)
-#
-#         u = f1.union(f2, filter_resolution=0)
-#         uu = CellFamily()
-#         self.assertTrue(u == uu)
-#
-#     def test_CellFamily_union_all(self):
-#         # Union.
-#         p17 = WGS84_123.cell((P, 1, 7))
-#         p23 = WGS84_123.cell((P, 2, 3))
-#         p345 = WGS84_123.cell((P, 3, 4, 5))
-#         p346 = WGS84_123.cell((P, 3, 4, 6))
-#         p381 = WGS84_123.cell((P, 3, 8, 1))
-#         p2 = WGS84_123.cell((P, 2))
-#         p3 = WGS84_123.cell((P, 3))
-#         p34 = WGS84_123.cell((P, 3, 4))
-#         p38 = WGS84_123.cell((P, 3, 8))
-#         f1 = CellFamily([p17, p23, p345, p346, p381])
-#         f2 = CellFamily([p2, p3])
-#         f3 = CellFamily([p2, p34, p38])
-#         u = f1.union_all([f2, f3])
-#         uu = CellFamily([p17, p2, p3])
-#         self.assertTrue(u == uu)
-#
-#         # Union with filtering.
-#         u = f1.union_all([f2, f3], filter_resolution=1)
-#         uu = CellFamily([p2, p3])
-#         self.assertTrue(u == uu)
-#
-#         u = f1.union_all([f2, f3], filter_resolution=0)
-#         uu = CellFamily()
-#         self.assertTrue(u == uu)
-#
-#     def test_CellFamily_intersect(self):
-#         # Intersect with an empty cell family.
-#         f = CellFamily()
-#         g = CellFamily(list(WGS84_123.grid(0)))
-#         self.assertTrue(f.intersect(g) == f)
-#
-#         # Intersect.
-#         p17 = WGS84_123.cell((P, 1, 7))
-#         p23 = WGS84_123.cell((P, 2, 3))
-#         p345 = WGS84_123.cell((P, 3, 4, 5))
-#         p346 = WGS84_123.cell((P, 3, 4, 6))
-#         p381 = WGS84_123.cell((P, 3, 8, 1))
-#         p2 = WGS84_123.cell((P, 2))
-#         p3 = WGS84_123.cell((P, 3))
-#         f1 = CellFamily([p17, p23, p345, p346, p381])
-#         f2 = CellFamily([p2, p3])
-#         v = f1.intersect(f2)
-#         vv = CellFamily([p23, p345, p346, p381])
-#         self.assertTrue(v == vv)
-#
-#         # Intersect with filtering.
-#         v = f1.intersect(f2, filter_resolution=2)
-#         vv = CellFamily([p23])
-#         self.assertTrue(v == vv)
-#
-#         v = f1.intersect(f2, filter_resolution=1)
-#         vv = CellFamily()
-#         self.assertTrue(v == vv)
-#
-#     def test_CellFamily_intersect_all(self):
-#         # Intersect.
-#          p17 = WGS84_123.cell((P, 1, 7))
-#          p23 = WGS84_123.cell((P, 2, 3))
-#          p345 = WGS84_123.cell((P, 3, 4, 5))
-#          p346 = WGS84_123.cell((P, 3, 4, 6))
-#          p381 = WGS84_123.cell((P, 3, 8, 1))
-#          p2 = WGS84_123.cell((P, 2))
-#          p3 = WGS84_123.cell((P, 3))
-#          p34 = WGS84_123.cell((P, 3, 4))
-#          p38 = WGS84_123.cell((P, 3, 8))
-#          f1 = CellFamily([p17, p23, p345, p346, p381])
-#          f2 = CellFamily([p2, p3])
-#          f3 = CellFamily([p2, p34, p38])
-#          v = f1.intersect_all([f2, f3])
-#          vv = CellFamily([p23, p345, p346, p381])
-#          self.assertTrue(v == vv)
-#
-#          # Intersect with filtering.
-#          v = f1.intersect_all([f2, f3], filter_resolution=2)
-#          vv = CellFamily([p23])
-#          self.assertTrue(v == vv)
-#
-#          v = f1.intersect_all([f2, f3], filter_resolution=1)
-#          vv = CellFamily()
-#          self.assertTrue(v == vv)
-#
-# #------------------------------------------------------------------------------
 if __name__ == "__main__":
     unittest.main()

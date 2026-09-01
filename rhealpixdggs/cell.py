@@ -1,11 +1,14 @@
 # from rhealpixdggs.dggs import WGS84_003
 
 from numpy import array, base_repr, pi  # pi is just for the doctests
+from numpy import vectorize as numpy_vectorize
 from scipy import integrate
 from itertools import product
 from random import uniform
 from colorsys import hsv_to_rgb
 from functools import total_ordering, cached_property
+
+from rhealpixdggs.utils import wrap_longitude
 
 # Level 0 cell IDs, which are anomalous.
 CELLS0 = ["N", "O", "P", "Q", "R", "S"]
@@ -151,19 +154,21 @@ class Cell(object):
         self.resolution = None  # Level of self in grid hierarchy.
         if suid is not None:
             # A little error checking.
-            assert isinstance(suid, list) or isinstance(suid, tuple), (
-                "Cell suid must be a list or tuple. Got %s." % suid
-            )
-            assert (len(suid) > 0) and (
-                len(suid) <= rdggs.max_resolution + 1
-            ), "Need 0 < len(suid) <= %s. Got %s." % (rdggs.max_resolution + 1, suid)
-            assert suid[0] in CELLS0, "suid[0] must lie in %s. Got %s." % (
-                CELLS0,
-                suid[0],
-            )
+            if not isinstance(suid, (list, tuple)):
+                raise TypeError("Cell suid must be a list or tuple. Got %s." % suid)
+            if not (0 < len(suid) <= rdggs.max_resolution + 1):
+                raise ValueError(
+                    "Need 0 < len(suid) <= %s. Got %s."
+                    % (rdggs.max_resolution + 1, suid)
+                )
+            if suid[0] not in CELLS0:
+                raise ValueError(
+                    "suid[0] must lie in %s. Got %s." % (CELLS0, suid[0])
+                )
             digits = set(range(self.N_side**2))
             for x in suid[1:]:
-                assert x in digits, "Digits of suid must lie in %s" % digits
+                if x not in digits:
+                    raise ValueError("Digits of suid must lie in %s. Got %s." % (digits, x))
 
             self.suid = [suid[0]] + [int(n) for n in suid[1:]]
             self.suid = tuple(self.suid)
@@ -197,6 +202,12 @@ class Cell(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        # Consistent with __eq__ (equal cells have equal suids), and
+        # makes cells usable as dictionary keys and set members. A
+        # cell's suid never changes after construction.
+        return hash(self.suid)
+
     def __le__(self, other):
         """
         The (strictly) less-than relation on cells.
@@ -205,12 +216,18 @@ class Cell(object):
         Return True if (`self.suid < other.suid` and
         `self.suid` is not a prefix of `other.suid`) or
         `self` is a subcell of `other`.
-        Here < is the lexicographic order.
+        Here < is the lexicographic order on the suid tuple itself (face
+        letter, then digits compared as the integers they are -- not on
+        any string rendering of it, which for `N_side >= 4` would compare
+        multi-character digits like 10-15 character-by-character rather
+        than numerically).
         Returns False otherwise.
         """
-        s = ",".join([str(x) for x in self.suid])
-        t = ",".join([str(x) for x in other.suid])
-        if (s <= t and not t.startswith(s)) or s.startswith(t):
+        s = self.suid
+        t = other.suid
+        t_starts_with_s = t[: len(s)] == s
+        s_starts_with_t = s[: len(t)] == t
+        if (s <= t and not t_starts_with_s) or s_starts_with_t:
             return True
         else:
             return False
@@ -449,9 +466,14 @@ class Cell(object):
             False
 
         """
-        s = ",".join([str(x) for x in self.suid])
-        t = ",".join([str(x) for x in other.suid])
-        return s.startswith(t)
+        # Compare the suid tuples directly (not a string rendering of
+        # them): for N_side >= 4, some digits are multi-character (e.g.
+        # 10-15), and comparing stringified, comma-joined suids with
+        # startswith() can misfire, e.g. treating ('N', 15) as a subcell
+        # of ('N', 1), since "N,15" starts with "N,1" as a string even
+        # though these are same-resolution siblings, not ancestor and
+        # descendant.
+        return self.suid[: len(other.suid)] == other.suid
 
     def subcells(self, resolution=None):
         """
@@ -766,10 +788,17 @@ class Cell(object):
         interior of the cell, which is convenient for some graphics methods.
 
         When `plane` = False, the cost scales with `n` because each point
-        requires an inverse projection call. For quad and cap cells the cell
-        edges are already well-represented by their vertices, so callers can
-        use ``cell.ellipsoidal_shape`` to avoid the overhead and fall back
-        to ``vertices(plane=False)`` for those shapes.
+        requires an inverse projection call. For quad and cap cells, `n` = 2
+        is short-circuited straight to ``vertices(plane=False)`` (skipping the
+        projection calls entirely), since that's what the general algorithm
+        below would compute anyway. For `n` > 2 on quad/cap cells the general,
+        per-point-projected algorithm still runs -- unlike dart/skew_quad
+        cells, quad/cap edges are known to be lines of constant longitude or
+        latitude on the ellipsoid, so in principle the extra points could be
+        computed directly without projecting each one, but doing that
+        correctly for cap cells requires careful antimeridian-wrapping
+        arithmetic (a cap cell's boundary is a single constant-latitude ring
+        split into 4 arcs by longitude) that hasn't been implemented yet.
 
         EXAMPLES::
 
@@ -802,15 +831,17 @@ class Cell(object):
             (157.49999999999997, 58.41366190347208)
 
         """
+        if n < 2:
+            n = 2
         # Quad and cap cells have straight or rotationally-symmetric edges on
-        # the ellipsoid, so extra boundary points add no accuracy. Fall back to
-        # vertices() and avoid the per-point projection cost entirely.
-        if not plane and self.ellipsoidal_shape in ("quad", "cap"):
+        # the ellipsoid, so at n=2 extra boundary points would add no accuracy.
+        # Fall back to vertices() and avoid the per-point projection cost
+        # entirely. For n>2 this cell falls through to the general algorithm
+        # below, same as any other shape (see the n>2 note in the docstring).
+        if not plane and n == 2 and self.ellipsoidal_shape in ("quad", "cap"):
             return self.vertices(plane=False)
         ul = self.ul_vertex(plane=True)
         w = self.width(plane=True)
-        if n < 2:
-            n == 2
         if interior:
             eps = w / 10000  # A smidgen.
         else:
@@ -969,14 +1000,21 @@ class Cell(object):
 
     def overlaps(self, other_cell):
         """
-        Determines whether two DGGS cells overlap.
-        Where cells are of different resolution, they will have different suid lengths. The zip function truncates the longer
-        to be the same length as the shorter, producing two lists for comparison. If these lists are equal, the cells overlap.
-        :param cell_one: the first DGGS cell
-        :param cell_two: the second DGGS cell
-        :return: True if overlaps
+        Return True if one of this cell and `other_cell` contains the
+        other (they are the same cell, or one is an ancestor of the
+        other), and False otherwise: the test is whether one cell's suid
+        is a prefix of the other's.
+
+        Note the name predates the DE-9IM predicates below and uses
+        "overlap" loosely: in the DE-9IM sense two grid cells can never
+        partially overlap (they either nest, touch, or are disjoint), and
+        what this method computes is containment-in-either-direction. It
+        is kept under this name for backward compatibility; for the
+        precisely-named relations, see `contains_cell()`, `within()`,
+        `touches()`, and `disjoint()`.
         """
-        assert self.suid is not tuple()  # cell cannot be empty
+        if not self.suid:
+            raise ValueError("Cannot test overlap for an empty cell.")
         for i, j in zip(self.suid, other_cell.suid):
             if i != j:
                 return False
@@ -984,10 +1022,10 @@ class Cell(object):
 
     def region_overlaps(self, region: list):
         """
-        Determine whether a cell overlaps with any cell in a list of cells
-        :param cell: a DGGS cell
-        :param region: a list of DGGS cells
-        :return: True if any overlapping cells
+        Return True if `overlaps()` holds between this cell and any cell
+        in the list `region`, and False otherwise (including for an empty
+        list). See `overlaps()` for what is (and is not) meant by
+        "overlap" here.
         """
         for component_cell in region:
             if self.overlaps(component_cell):
@@ -1092,14 +1130,9 @@ class Cell(object):
         # This cell is ellipsoidal.
         # So we have to do some work.
         nucleus = self.nucleus(plane=False)
-        vertices = self.vertices(plane=False)
         shape = self.ellipsoidal_shape
         if shape == "cap":
             return nucleus
-        if shape == "quad":
-            lam_bar = nucleus[0]
-            phi_bar = sum([v[1] for v in vertices]) / 4
-            return lam_bar, phi_bar
         planar_vertices = self.vertices(plane=True)
         x1 = min([v[0] for v in planar_vertices])
         x2 = max([v[0] for v in planar_vertices])
@@ -1113,6 +1146,32 @@ class Cell(object):
         def phi(x, y):
             return self.rdggs.rhealpix(x, y, inverse=True)[1]
 
+        if shape == "quad":
+            # A quad cell is symmetric about its nucleus meridian, and its
+            # meridians are equally spaced in planar x, so the mean
+            # longitude is the nucleus longitude. Latitude is independent
+            # of planar x on a quad cell, so the area-weighted mean
+            # latitude reduces to a single integral over y. Note it is
+            # NOT the midpoint of the two edge latitudes: latitude is a
+            # nonlinear function of planar y, so the mean sits closer to
+            # the equator than the midpoint (by up to ~0.6 degrees for
+            # resolution 1 cells).
+            lam_bar = nucleus[0]
+            # Integrate along the nucleus meridian's planar x, which is
+            # safely interior to the cell (any x in the cell would do,
+            # since latitude doesn't depend on it). Fixed-order
+            # Gauss-Legendre quadrature is effectively exact here -- the
+            # integrand is smooth, and n=20 agrees with adaptive
+            # quadrature to machine precision -- while avoiding adaptive
+            # quadrature's error estimation, whose requested tolerances
+            # collide with the projection stack's floating-point noise
+            # floor and trigger spurious IntegrationWarnings.
+            x_mid = self.nucleus(plane=True)[0]
+            phi_of_y = numpy_vectorize(lambda y: phi(x_mid, y))
+            phi_bar = (1 / (y2 - y1)) * integrate.fixed_quad(
+                phi_of_y, y1, y2, n=20
+            )[0]
+            return lam_bar, phi_bar
         if shape == "dart":
             lam_bar = nucleus[0]
             phi_bar = (1 / area) * integrate.dblquad(
@@ -1124,38 +1183,10 @@ class Cell(object):
         phi_bar = (1 / area) * integrate.dblquad(
             phi, y1, y2, lambda x: x1, lambda x: x2
         )[0]
-        # lam_bar formula changes.
-        # Option 1 (clean, possibly slow):
-        # Compute lam_bar by numerical integration.
+        # lam_bar formula changes; compute by numerical integration.
         lam_bar = (1 / area) * integrate.dblquad(
             lam, y1, y2, lambda x: x1, lambda x: x2
         )[0]
-        # Option 2 (messy, possibly fast):
-        # Evaluate the integral symbolically and then plug in values.
-        # w = x2 - x1 # Cell width.
-        # R_A = self.rdggs.ellipsoid.R_A
-        # hx0, hy0 = self.rdggs.healpix(*nucleus)
-        # # x and y extremes of the HEALPix projection of this cell's interior:
-        # hx1 = hx0 - w/2
-        # hx2 = hx0 + w/2
-        # # Without loss of generality, force HEALPix y coordinates into
-        # # the northern hemisphere:
-        # hy1 = abs(hy0) - w/2
-        # hy2 = abs(hy0) + w/2
-        # # Compute xc.
-        # cap_number = floor(2*hx0/(pi*R_A) + 2)
-        # if cap_number >= 4:
-        #     # Rounding error.
-        #     cap_number = 3
-        # xc = -3*pi/4 + (pi/2)*cap_number
-        # integral = lambda x, y: (pi/8)*x*(2*R_A*xc - x)*\
-        #            log(1 - 2*y/(pi*R_A)) + xc*x*y
-        # lam_bar = (1/area)*\
-        #           (integral(hx2, hy2) - integral(hx1, hy2) -\
-        #            integral(hx2, hy1) + integral(hx1, hy1))
-        # if not self.rdggs.ellipsoid.radians:
-        #     # Convert to degrees.
-        #     lam_bar = rad2deg(lam_bar)
         return lam_bar, phi_bar
 
     def rotate_entry(self, x, quarter_turns):
@@ -1406,15 +1437,10 @@ class Cell(object):
                 result["north_2"] = nuc_cell[2][2]
                 result["north_3"] = nuc_cell[3][2]
         elif shape == "skew_quad":
-            # To avoid east-west longitude wrapping, move prime meridian
-            # so that nucleus of this cell is at longitude 0.
-            old_lon_0 = self.rdggs.ellipsoid.lon_0
-            self.rdggs.ellipsoid.lon_0 = -self.nucleus(plane=False)[0]
-            # Get lon-lat coordinates of neighbor centroids.
-            nuc_cell = []
-            for cell in list(plane_neighbors.values()):
-                nucleus = cell.nucleus(plane=False)
-                nuc_cell.append((nucleus[0], nucleus[1], cell))
+            # Get lon-lat coordinates of neighbor centroids, paired with
+            # longitude relative to this cell's nucleus (see the helper's
+            # docstring for why "relative" instead of raw longitude).
+            nuc_cell = self._neighbor_nuclei_by_relative_longitude(plane_neighbors)
             # Max latitude cell is north neighbor:
             north = max(nuc_cell, key=lambda x: x[1])
             result["north"] = north[2]
@@ -1423,25 +1449,14 @@ class Cell(object):
             south = min(nuc_cell, key=lambda x: x[1])
             result["south"] = south[2]
             nuc_cell.remove(south)
-            # Max longitude cell is east neighbor
-            # (because i moved the prime meridian):
+            # Max relative longitude cell is east neighbor:
             result["east"] = max(nuc_cell, key=lambda x: x[0])[2]
-            # Min longitude cell is west neighbor
-            # (because i moved the prime meridian and removed cap cells):
+            # Min relative longitude cell is west neighbor:
             result["west"] = min(nuc_cell, key=lambda x: x[0])[2]
-            # Return prime meridian to its original position.
-            self.rdggs.ellipsoid.lon_0 = old_lon_0
         else:
             # Dart cell.
-            # To avoid east-west longitude wrapping, move prime meridian
-            # so that nucleus of this cell is at longitude 0.
-            old_lon_0 = self.rdggs.ellipsoid.lon_0
-            self.rdggs.ellipsoid.lon_0 = -self.nucleus(plane=False)[0]
-            nuc_cell = []
-            for cell in list(plane_neighbors.values()):
-                nucleus = cell.nucleus(plane=False)
-                nuc_cell.append((nucleus[0], nucleus[1], cell))
-            # Sort cells by longitude. Works because moved prime meridian.
+            nuc_cell = self._neighbor_nuclei_by_relative_longitude(plane_neighbors)
+            # Sort cells by longitude relative to this cell's nucleus.
             nuc_cell.sort()
             if self.region() == "north_polar":
                 result["west"] = nuc_cell[0][2]
@@ -1453,9 +1468,343 @@ class Cell(object):
                 result["north_west"] = nuc_cell[1][2]
                 result["north_east"] = nuc_cell[2][2]
                 result["east"] = nuc_cell[3][2]
-            # Return prime meridian to its original position.
-            self.rdggs.ellipsoid.lon_0 = old_lon_0
         return result
+
+    def _neighbor_nuclei_by_relative_longitude(self, plane_neighbors):
+        """
+        Return a list of `(relative_longitude, latitude, cell)` triples,
+        one per cell in `plane_neighbors`, where `relative_longitude` is
+        each neighbor's nucleus longitude minus this cell's own nucleus
+        longitude, wrapped into `(-pi, pi]` (or `(-180, 180]` in degrees
+        mode). Used by `neighbors()` for the dart and skew_quad cases to
+        compare/sort neighbors by longitude without an east-west
+        antimeridian wrap-around artefact -- e.g. a neighbor at -179
+        degrees is 2 degrees *east* of one at 179 degrees, not far to the
+        west, and comparing raw longitudes would get that backwards.
+        Computed relative to this cell's own nucleus rather than any
+        global reference, so the result is independent of the ellipsoid's
+        `lon_0` and touches no shared state.
+        """
+        self_lon = self.nucleus(plane=False)[0]
+        radians = self.rdggs.ellipsoid.radians
+        nuc_cell = []
+        for cell in plane_neighbors.values():
+            nucleus = cell.nucleus(plane=False)
+            rel_lon = wrap_longitude(nucleus[0] - self_lon, radians=radians)
+            nuc_cell.append((rel_lon, nucleus[1], cell))
+        return nuc_cell
+
+    # Diagonal (corner-touching only) directions, each a (row, column)
+    # direction pair, keyed to match neighbor()'s own plane direction names.
+    _DIAGONAL_DIRECTIONS = {
+        "up_left": ("up", "left"),
+        "up_right": ("up", "right"),
+        "down_left": ("down", "left"),
+        "down_right": ("down", "right"),
+    }
+
+    def diagonal_neighbor(self, direction):
+        """
+        Return this cell's diagonal (corner-touching only, not sharing an
+        edge) planar neighbor in the given `direction`, one of
+        'up_left', 'up_right', 'down_left', 'down_right'.
+
+        Return `None` if this cell sits at a genuine cube corner in that
+        direction (i.e. all of its ancestors, down to and including its
+        resolution 0 cell, are positioned exactly in that corner). Cube
+        corners are 3-valent -- exactly 3 cells meet there, not 4 -- so
+        there is no diagonal 4th cell distinct from the two already
+        reachable via `neighbor()`.
+
+        Unlike `neighbor()`, this has no `plane` parameter: cell adjacency
+        is a property of the grid's topology, independent of whether it's
+        expressed in planar or ellipsoidal coordinates, so this is always
+        computed in the (topologically primary) planar grid.
+
+        Note this is not simply `self.neighbor(d1, plane=True).neighbor(d2,
+        plane=True)` (nor the same composed in the other order): composing
+        two independently rotation-corrected edge steps does not reliably
+        commute near a face boundary, since crossing one face in the first
+        step can change what "the other direction" even means for the
+        second step. This computes both directions' digit-carrying in a
+        single pass, matching how `neighbor()` itself only ever applies one
+        rotation correction, and applies that same correction once, for
+        whichever single direction (if any) actually crosses a face.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> c = Cell(RHEALPixDGGS(), ['N', 4, 0])
+            >>> print(c.diagonal_neighbor('up_left'))
+            N08
+
+        """
+        row_dir, col_dir = Cell._DIAGONAL_DIRECTIONS[direction]
+        an = self.rdggs.atomic_neighbors
+        child_order = self.rdggs.child_order
+        N = self.N_side
+        self_suid = list(self.suid)
+        neighbor_suid = list(self_suid)
+        row_active = True
+        col_active = True
+        # Scan the numeric digits from finest to coarsest, carrying each
+        # dimension (row, column) independently into the parent for as
+        # long as it keeps landing on that dimension's border -- exactly
+        # neighbor()'s own carrying rule, just tracked for two dimensions
+        # at once instead of one.
+        for i in reversed(range(1, len(self_suid))):
+            row, col = child_order[self_suid[i]]
+            if row_active:
+                if (row == 0 and row_dir == "up") or (
+                    row == N - 1 and row_dir == "down"
+                ):
+                    row = N - 1 if row_dir == "up" else 0
+                else:
+                    row = row - 1 if row_dir == "up" else row + 1
+                    row_active = False
+            if col_active:
+                if (col == 0 and col_dir == "left") or (
+                    col == N - 1 and col_dir == "right"
+                ):
+                    col = N - 1 if col_dir == "left" else 0
+                else:
+                    col = col - 1 if col_dir == "left" else col + 1
+                    col_active = False
+            neighbor_suid[i] = child_order[(row, col)]
+            if not row_active and not col_active:
+                # Both dimensions resolved locally: everything coarser,
+                # including the resolution 0 cell, is unchanged.
+                return Cell(self.rdggs, neighbor_suid)
+
+        # Every numeric digit was on the border in at least one dimension,
+        # so the resolution 0 cell itself must change in whichever
+        # dimension(s) are still active.
+        if row_active and col_active:
+            return None
+        face = self_suid[0]
+        single_dir = row_dir if row_active else col_dir
+        neighbor_suid[0] = an[face][single_dir]
+        neighbor = Cell(self.rdggs, neighbor_suid)
+
+        # Apply the same rotation correction neighbor() applies for a
+        # single step in single_dir, since crossing between a polar
+        # (N or S) and non-polar resolution 0 cell needs it regardless of
+        # whether that crossing happens alone or as half of a diagonal step.
+        self0 = self_suid[0]
+        neighbor0 = neighbor_suid[0]
+        if (
+            (self0 == CELLS0[5] and neighbor0 == an[self0]["left"])
+            or (self0 == an[CELLS0[5]]["right"] and neighbor0 == CELLS0[5])
+            or (self0 == CELLS0[0] and neighbor0 == an[self0]["right"])
+            or (self0 == an[CELLS0[0]]["left"] and neighbor0 == CELLS0[0])
+        ):
+            neighbor = neighbor.rotate(1)
+        elif (
+            (self0 == CELLS0[5] and neighbor0 == an[self0]["down"])
+            or (self0 == an[CELLS0[5]]["down"] and neighbor0 == CELLS0[5])
+            or (self0 == CELLS0[0] and neighbor0 == an[self0]["up"])
+            or (self0 == an[CELLS0[0]]["up"] and neighbor0 == CELLS0[0])
+        ):
+            neighbor = neighbor.rotate(2)
+        elif (
+            (self0 == CELLS0[5] and neighbor0 == an[self0]["right"])
+            or (self0 == an[CELLS0[5]]["left"] and neighbor0 == CELLS0[5])
+            or (self0 == CELLS0[0] and neighbor0 == an[self0]["left"])
+            or (self0 == an[CELLS0[0]]["right"] and neighbor0 == CELLS0[0])
+        ):
+            neighbor = neighbor.rotate(3)
+        return neighbor
+
+    def _check_comparable(self, other, verb):
+        """
+        Raise `ValueError` if `self` and `other` aren't cells of the same
+        `RHEALPixDGGS`, or if either is the empty cell. Shared precondition
+        check for the topological predicates below, whose result would
+        otherwise be meaningless (comparing SUIDs from two differently
+        configured grids) or undefined (an empty cell has no spatial
+        extent to compare).
+        """
+        if self.rdggs != other.rdggs:
+            raise ValueError(
+                "Cannot test %s between cells of different RHEALPixDGGS "
+                "instances." % verb
+            )
+        if not self.suid or not other.suid:
+            raise ValueError("Cannot test %s for an empty cell." % verb)
+
+    def equals(self, other):
+        """
+        DE-9IM `equals` predicate: return True if this cell and `other`
+        are the same cell, and False otherwise. Equivalent to `self ==
+        other`.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N', 0]).equals(Cell(rdggs, ['N', 0]))
+            True
+            >>> Cell(rdggs, ['N', 0]).equals(Cell(rdggs, ['N', 1]))
+            False
+
+        """
+        return self == other
+
+    def contains_cell(self, other):
+        """
+        DE-9IM-style `contains` predicate for a pair of cells: return True
+        if `other` is this cell or a descendant of it, and False
+        otherwise.
+
+        Named `contains_cell` rather than `contains` to avoid confusion
+        with the pre-existing `contains()` method, which tests whether
+        this cell contains a *point*, not another cell.
+
+        Note this coincides with `covers()`: because cells form a strict
+        hierarchical partition, a descendant cell's boundary that touches
+        its ancestor's boundary is still entirely contained in the
+        ancestor's closed region, so there's no DE-9IM-style distinction
+        here between "contains" (usually excludes boundary-touching) and
+        "covers" (usually includes it) the way there can be for general
+        geometries.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N']).contains_cell(Cell(rdggs, ['N', 0]))
+            True
+            >>> Cell(rdggs, ['N', 0]).contains_cell(Cell(rdggs, ['N']))
+            False
+
+        """
+        self._check_comparable(other, "containment")
+        return self.overlaps(other) and len(self.suid) <= len(other.suid)
+
+    def within(self, other):
+        """
+        DE-9IM `within` predicate: return True if this cell is `other` or
+        a descendant of it, and False otherwise. The converse of
+        `contains_cell()`; see that method's docstring for why this also
+        coincides with `covered_by()` for cells.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N', 0]).within(Cell(rdggs, ['N']))
+            True
+
+        """
+        return other.contains_cell(self)
+
+    def covers(self, other):
+        """
+        DE-9IM `covers` predicate. See `contains_cell()`'s docstring for
+        why this is the same relation as `contains_cell()` for cells.
+        """
+        return self.contains_cell(other)
+
+    def covered_by(self, other):
+        """
+        DE-9IM `coveredBy` predicate. See `within()`'s docstring for why
+        this is the same relation as `within()` for cells.
+        """
+        return other.contains_cell(self)
+
+    def touches(self, other):
+        """
+        DE-9IM `touches` predicate: return True if this cell and `other`
+        share at least one boundary point but neither contains the other
+        (equivalently, no ancestor/descendant relationship and no shared
+        interior), and False otherwise. `self` and `other` may be of
+        different resolutions.
+
+        Two cells of the *same* resolution touch exactly when one is an
+        edge or diagonal (corner-only) neighbor of the other -- see
+        `neighbor()` and `diagonal_neighbor()`.
+
+        For cells of *different* resolutions (informally, "cousins" --
+        neither an ancestor of the other, but nested in siblings that are
+        themselves edge/diagonal neighbors, possibly several levels up),
+        this finds their two ancestors at the shallower of the two
+        resolutions and checks those for edge/diagonal adjacency. If
+        they're edge-adjacent, the deeper cell touches the shallower one
+        exactly when every one of the deeper cell's digits below that
+        ancestor lies in the row or column bordering the shared edge (so
+        the deeper cell never strays from that edge); if they're
+        diagonally adjacent, the same must hold for the single digit
+        value that is that shared corner, since a corner is a single
+        point rather than a whole edge. Since the shallower cell exposes
+        its entire edge or corner at that resolution, nothing else needs
+        checking on its side.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N', 0]).touches(Cell(rdggs, ['N', 1]))
+            True
+            >>> Cell(rdggs, ['O']).touches(Cell(rdggs, ['P', 3]))
+            True
+            >>> Cell(rdggs, ['N', 0]).touches(Cell(rdggs, ['N', 8]))
+            False
+
+        """
+        self._check_comparable(other, "touches")
+        if self.overlaps(other):
+            # One is an ancestor of (or the same cell as) the other: their
+            # closed regions share interior points, so this isn't touches.
+            return False
+        r = min(self.resolution, other.resolution)
+        shallow, deep = (self, other) if self.resolution == r else (other, self)
+        deep_ancestor = Cell(self.rdggs, deep.suid[: r + 1])
+        # deep_ancestor != shallow is guaranteed here: if they were equal,
+        # self.overlaps(other) above would already have been True.
+        tail = deep.suid[r + 1 :]
+        child_order = self.rdggs.child_order
+        N = self.N_side
+        row_edge = {"up": 0, "down": N - 1}
+        col_edge = {"left": 0, "right": N - 1}
+        for direction in ("up", "down", "left", "right"):
+            if deep_ancestor.neighbor(direction, plane=True) == shallow:
+                if direction in row_edge:
+                    return all(child_order[d][0] == row_edge[direction] for d in tail)
+                else:
+                    return all(child_order[d][1] == col_edge[direction] for d in tail)
+        for direction in ("up_left", "up_right", "down_left", "down_right"):
+            if deep_ancestor.diagonal_neighbor(direction) == shallow:
+                target_row = 0 if direction.startswith("up") else N - 1
+                target_col = 0 if direction.endswith("left") else N - 1
+                return all(child_order[d] == (target_row, target_col) for d in tail)
+        return False
+
+    def disjoint(self, other):
+        """
+        DE-9IM `disjoint` predicate: return True if this cell and `other`
+        share no point at all (no shared interior and no shared
+        boundary), and False otherwise.
+
+        Note DE-9IM's `intersects` is simply the negation of this, and
+        `crosses`/`overlaps` (in the DE-9IM sense, not to be confused
+        with the pre-existing, differently-named `Cell.overlaps()`
+        method above) can never hold between two cells of a hierarchical
+        grid: two cells always either nest (one contains the other),
+        touch along their boundary only, or are fully disjoint -- partial
+        interior overlap without full containment is impossible.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N', 0]).disjoint(Cell(rdggs, ['S', 0]))
+            True
+            >>> Cell(rdggs, ['N', 0]).disjoint(Cell(rdggs, ['N', 1]))
+            False
+
+        """
+        self._check_comparable(other, "disjoint")
+        return not (self.overlaps(other) or self.touches(other))
 
     def random_point(self, plane=True):
         """

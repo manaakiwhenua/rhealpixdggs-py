@@ -20,18 +20,12 @@ from rhealpixdggs.dggs import WGS84_003
 # List of resolution 0 cell addresses (i.e. cube faces)
 from rhealpixdggs.cell import CELLS0
 
-# Cell neighbour directions and reverse directions (to detect steps across cube face boundaries)
-NEIGHBOURS = ["right", "down", "left", "up"]
-NEIGHBOUR_INVERSE = {"right": "left", "down": "up", "left": "right", "up": "down"}
-
 # Warnings
 PARENT_RESOLUTION_WARNING = "WARNING: You requested a parent resolution that is higher than the cell resolution. Returning the cell address itself."
 CHILD_RESOLUTION_WARNING = "WARNING: You requested a child resolution that is lower than the cell resolution. Returning the cell address itself."
 CELL_CENTRE_WARNING = "WARNING: You requested a centre cell for a DGGS that has an even number of cells on a side. Returning None."
-CELL_RING_WARNING = "WARNING: Implementation of cell rings is incomplete. Requesting a {0} ring that involves more than two resolution 0 cube faces will return unexpected results."
 POLYFILL_GEOMETRY_WARNING = "WARNING: Empty or missing geometry, unsupported geometry type (not Polygon or MultiPolygon), or geometry with no area. Returning None."
 LINETRACE_GEOMETRY_WARNING = "WARNING: Empty or missing line geometry, unsupported line type (not LineString or MultiLineString), or line with no length. Returning None."
-LINETRACE_WARNING = "WARNING: Implementation of linetrace is incomplete. Lines crossing one of the cap cells may not be converted to the correct sequence of cells."
 
 
 # ======== Main API ======== #
@@ -363,144 +357,78 @@ def cell_area(
 
 
 def cell_ring(
-    rhpindex: str, k: int = 1, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+    rhpindex: str, k: int = 1, dggs: RHEALPixDGGS = WGS84_003
 ) -> list[str] | None:
     """
-    Returns the ring of cell indices around rhpindex at distance k, or None if rhpindex
-    is invalid.
+    Returns the ring of cell indices around rhpindex at distance k (in graph
+    distance -- shortest number of edge/corner hops -- not straight-line
+    distance), or None if rhpindex is invalid.
 
     Also returns None if k < 0.
 
     Returns [ rhpindex ] if k == 0 (by convention).
 
-    Returns the four neighbouring faces at resolution 0 if k > 0 and cell resolution is 0
-    (by convention).
+    Built by growing the ring outward one shell at a time from `neighbor()`
+    (edge-adjacent) and `diagonal_neighbor()` (corner-adjacent) steps, so
+    this is correct near a cube corner too: exactly 3 cells meet at each of
+    the cube's 8 corners rather than 4, so a ring passing near one has fewer
+    cells there than the usual 8*k for an interior ring, rather than an
+    incorrect or duplicate cell.
 
     EXAMPLES::
 
-        >>> cell_ring('S001450634', verbose=False)
-        ['S001450630', 'S001450631', 'S001450632', 'S001450635', 'S001450638', 'S001450637', 'S001450636', 'S001450633']
-        >>> cell_ring('S001450634', k=2, verbose=False)
-        ['S001442828', 'S001450606', 'S001450607', 'S001450608', 'S001450616', 'S001450640', 'S001450643', 'S001450646', 'S001450670', 'S001450662', 'S001450661', 'S001450660', 'S001442882', 'S001442858', 'S001442855', 'S001442852']
-        >>> cell_ring('S001450634', k=0, verbose=False)
+        >>> cell_ring('S001450634')
+        ['S001450631', 'S001450632', 'S001450635', 'S001450638', 'S001450637', 'S001450636', 'S001450633', 'S001450630']
+        >>> cell_ring('S001450634', k=2)
+        ['S001450607', 'S001450608', 'S001450606', 'S001450616', 'S001450640', 'S001450643', 'S001450646', 'S001450670', 'S001450662', 'S001450661', 'S001450660', 'S001442882', 'S001442858', 'S001442855', 'S001442852', 'S001442828']
+        >>> cell_ring('S001450634', k=0)
         ['S001450634']
-        >>> cell_ring('S', k=1, verbose=False)
-        ['P', 'Q', 'R', 'O']
-        >>> cell_ring('S', k=-1, verbose=False)
+        >>> cell_ring('S', k=1)
+        ['O', 'P', 'Q', 'R']
+        >>> cell_ring('S', k=-1)
     """
-
     if not rhp_is_valid(rhpindex, dggs) or (k < 0):
         return None
 
-    if verbose:
-        warn(str.format(CELL_RING_WARNING, "cell"))
-
-    # A cell ring at distance 0 just consists of the cell itself
     if k == 0:
         return [rhpindex]
 
-    # Grab the centre cell
     suid = [int(d) if d.isdigit() else d for d in rhpindex]
-    cell = dggs.cell(suid)
-
-    # Maximum ring distance from centre cell
-    half_circle = 2 * cell.N_side ** rhp_get_resolution(rhpindex)
-
-    # Just return the opposite cell if k is beyond what the resolution can do
-    if k > half_circle:
-        cell = _mirror_cell_on_cube(cell)
-        return [str(cell)]
-
-    # Init the ring
-    ring = []
-
-    # Top-level cells (cube faces) are special
-    if len(rhpindex) == 1:
-        for direction in NEIGHBOURS:
-            ring.append(cell.neighbor(direction).suid[0])
-
-    # Start in the upper left corner of the ring: it's k times left and k times up
-    else:
-        # Initialise iteration parameters
-        k_eff, max_steps, cell = _cell_ring_setup(cell, half_circle // 2, k)
-
-        # We're done if k_eff takes us all the way to the opposite cell (shouldn't happen at this point...)
-        if k_eff < 1:
-            ring.append(str(cell))
-
-        # We have to do the full walk around the ring
-        else:
-            # Set starting point
-            cell, direction, n_steps = _find_cell_ring_start(
-                cell, k_eff, max_steps, NEIGHBOURS, NEIGHBOUR_INVERSE
-            )
-
-            # Walk around the ring one side at a time and collect cell addresses
-            for _ in range(0, len(NEIGHBOURS)):
-                step = 0
-                while step < n_steps:
-                    # Add index to ring, take a step
-                    ring.append(str(cell))
-                    next = cell.neighbor(direction)
-
-                    # Looking back not being the same as looking ahead means we need to realign
-                    if next.neighbor(NEIGHBOUR_INVERSE[direction]) != cell:
-                        direction = NEIGHBOUR_INVERSE[_neighbor_direction(next, cell)]
-
-                    # Take the step
-                    cell = next
-                    step = step + 1
-
-                # Prepare walking direction for next ring side
-                if n_steps == 2 * k_eff:
-                    direction = NEIGHBOURS[
-                        (NEIGHBOURS.index(direction) + 1) % len(NEIGHBOURS)
-                    ]
-
-                # Reset number of steps along a side
-                n_steps = max_steps
-
-    return ring
+    center = dggs.cell(suid)
+    return [str(cell) for cell in _rings_up_to(center, k)[k]]
 
 
 def k_ring(
-    rhpindex: str, k: int = 1, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+    rhpindex: str, k: int = 1, dggs: RHEALPixDGGS = WGS84_003
 ) -> list[str] | None:
     """
-    Returns the k-ring of cell indices around rhpindex at distance k (or None if rhpindex is invalid).
+    Returns the k-ring (the centre cell together with every ring out to
+    distance k, in graph distance -- see cell_ring()) of cell indices around
+    rhpindex, or None if rhpindex is invalid.
 
     Also returns None if k < 0.
 
     EXAMPLES::
 
-        >>> k_ring('S001450634', verbose=False)
-        ['S001450634', 'S001450630', 'S001450631', 'S001450632', 'S001450635', 'S001450638', 'S001450637', 'S001450636', 'S001450633']
-        >>> k_ring('S001450634', k=2, verbose=False)
-        ['S001450634', 'S001450630', 'S001450631', 'S001450632', 'S001450635', 'S001450638', 'S001450637', 'S001450636', 'S001450633', 'S001442828', 'S001450606', 'S001450607', 'S001450608', 'S001450616', 'S001450640', 'S001450643', 'S001450646', 'S001450670', 'S001450662', 'S001450661', 'S001450660', 'S001442882', 'S001442858', 'S001442855', 'S001442852']
-        >>> k_ring('S001450634', k=0, verbose=False)
+        >>> k_ring('S001450634')
+        ['S001450634', 'S001450631', 'S001450632', 'S001450635', 'S001450638', 'S001450637', 'S001450636', 'S001450633', 'S001450630']
+        >>> k_ring('S001450634', k=2)
+        ['S001450634', 'S001450631', 'S001450632', 'S001450635', 'S001450638', 'S001450637', 'S001450636', 'S001450633', 'S001450630', 'S001450607', 'S001450608', 'S001450606', 'S001450616', 'S001450640', 'S001450643', 'S001450646', 'S001450670', 'S001450662', 'S001450661', 'S001450660', 'S001442882', 'S001442858', 'S001442855', 'S001442852', 'S001442828']
+        >>> k_ring('S001450634', k=0)
         ['S001450634']
-        >>> k_ring('S001450634', k=-1, verbose=False)
-        >>> k_ring('INVALID', verbose=False)
+        >>> k_ring('S001450634', k=-1)
+        >>> k_ring('INVALID')
 
     """
-
     if not rhp_is_valid(rhpindex, dggs) or (k < 0):
         return None
 
-    if verbose:
-        warn(str.format(CELL_RING_WARNING, "k"))
-
-    # A k-ring at distance 0 just consists of the centre cell itself
     if k == 0:
         return [rhpindex]
 
-    distance = min(2 * dggs.N_side ** rhp_get_resolution(rhpindex), k)
-    kring = [rhpindex]
-
-    for d in range(1, distance + 1):
-        kring = kring + cell_ring(rhpindex, d, verbose=False, dggs=dggs)
-
-    return kring
+    suid = [int(d) if d.isdigit() else d for d in rhpindex]
+    center = dggs.cell(suid)
+    return [str(cell) for ring in _rings_up_to(center, k) for cell in ring]
 
 
 def polyfill(
@@ -529,7 +457,11 @@ def polyfill(
     boundary is outside the exterior boundary of its polygon, or if two polygons in a
     multipolygon overlap.
 
-    TODO: decide what to do with the antimeridian (if anything)
+    Polygon edges are straight in the input coordinate space (shapely
+    geometries are planar) and do not wrap around the antimeridian; a
+    region straddling it must be split into a MultiPolygon along the
+    antimeridian by the caller first, as is standard for planar GIS
+    geometry.
 
     EXAMPLES::
         >>> from shapely import Polygon
@@ -609,7 +541,7 @@ def polyfill(
 
     # Merge cells inside polygon into larger ones where possible
     if compress:
-        cells = compact_cells(cells)
+        cells = compact_cells(cells, N_side=dggs.N_side)
 
     return cells
 
@@ -620,6 +552,7 @@ def linetrace(
     plane: bool = True,
     verbose: bool = False,
     dggs: RHEALPixDGGS = WGS84_003,
+    wrap_antimeridian: bool = False,
 ) -> list[str] | None:
     """
     Returns the list of cell indices touched by a shapely linestring or multilinestring
@@ -636,7 +569,21 @@ def linetrace(
     Returns None if the geometry is invalid in other ways, e.g. if a linestring contains
     self intersecting segments.
 
-    TODO: decide what to do with the antimeridian (if anything)
+    A linestring's segments are straight in the input coordinate space
+    (shapely geometries are planar): planar rHEALPix coordinates if
+    `plane` = True, longitude-latitude coordinates otherwise -- so
+    longitude-latitude segments are plate carree lines, not geodesics,
+    and by default do not wrap around the antimeridian (a segment from
+    longitude 179 to -179 runs the long way around, through longitude 0
+    -- the literal planar reading). Splitting inputs at the antimeridian,
+    as GeoJSON's RFC 7946 prescribes for data producers, avoids the
+    ambiguity entirely; alternatively pass `wrap_antimeridian` = True to
+    trace segments spanning more than half a turn of longitude the short
+    way, across the antimeridian, which traces the same cells as
+    splitting them there. To trace a geodesic, densify it into short
+    segments first (e.g. with pyproj.Geod). See
+    RHEALPixDGGS.cells_from_line, which traces each segment exactly, for
+    the details.
 
     EXAMPLES::
 
@@ -645,9 +592,6 @@ def linetrace(
         >>> linetrace(line, res=9, plane=False)
         ['S001450634', 'S001450635']
     """
-    if verbose:
-        warn(LINETRACE_WARNING)
-
     # Stop early if the line geometry is malformed
     if _malformed_lines(geometry):
         if verbose:
@@ -677,7 +621,9 @@ def linetrace(
             i, j = vertex_pair
 
             # Convert line segment to cell ids
-            line_cells = dggs.cells_from_line(res, i, j, plane)
+            line_cells = dggs.cells_from_line(
+                res, i, j, plane, wrap_antimeridian=wrap_antimeridian
+            )
 
             # Convert cells to string ids and add to collection
             if line_cells:
@@ -692,134 +638,72 @@ def linetrace(
 # ======== Helper functions ======== #
 
 
-def _neighbor_direction(cell: Cell, neighbor: Cell) -> str | None:
-    n_dict = cell.neighbors()
-    for dir in n_dict:
-        if n_dict[dir] == neighbor:
-            return dir
+# Fixed clockwise order for a cell's up-to-8 edge/corner neighbors, paired
+# with whether that direction is an edge step (neighbor()) or a corner-only
+# step (diagonal_neighbor()).
+_RING_STEP_DIRECTIONS = [
+    ("up", False),
+    ("up_right", True),
+    ("right", False),
+    ("down_right", True),
+    ("down", False),
+    ("down_left", True),
+    ("left", False),
+    ("up_left", True),
+]
 
-    return None
 
-
-def _mirror_cell_on_cube(cell: Cell) -> Cell:
-    # Cube faces map to their opposites
-    face_mapping = {"N": "S", "S": "N", "O": "Q", "P": "R", "Q": "O", "R": "P"}
-    transformed_suid = [face_mapping[cell.suid[0]]]
-
-    # Skip the numerical digits part for top-level cells
-    if len(cell.suid) > 1:
-        # Transform row or column indices depending on region and rearrange into pairs
-        region = cell.region()
-        rowcolidxs = cell.suid_rowcol()
-        rowidxs = rowcolidxs[0][1:]
-        colidxs = rowcolidxs[1][1:]
-        transformed_idxs = [
-            cell.N_side - idx - 1
-            for idx in (rowidxs if region == "equatorial" else colidxs)
-        ]
-        rowcols = (
-            zip(transformed_idxs, colidxs)
-            if region == "equatorial"
-            else zip(rowidxs, transformed_idxs)
+def _ring_step_neighbors(cell: Cell) -> list[Cell]:
+    """
+    Return this cell's up to 8 distinct edge- and corner-adjacent
+    neighbors, in a fixed clockwise order starting from "up". Skips any
+    direction with no neighbor: a genuine cube corner, where exactly 3
+    cells meet rather than 4 (see Cell.diagonal_neighbor()).
+    """
+    neighbors = []
+    for direction, diagonal in _RING_STEP_DIRECTIONS:
+        neighbor = (
+            cell.diagonal_neighbor(direction)
+            if diagonal
+            else cell.neighbor(direction, plane=True)
         )
-
-        # Reapply transformed indices to suid digits
-        for row, col in rowcols:
-            transformed_suid.append(cell.N_side * row + col)
-
-    return Cell(cell.rdggs, transformed_suid)
+        if neighbor is not None:
+            neighbors.append(neighbor)
+    return neighbors
 
 
-def _cell_ring_setup(
-    cell: Cell, quarter_circle: int, k: int
-) -> tuple[int, int, Cell, bool]:
-    # Cell ring distance farther than the hemisphere equator requires mirroring
-    if k > quarter_circle:
-        k_eff = max(2 * quarter_circle - k, 0)
-        starting_cell = _mirror_cell_on_cube(cell)
-    else:
-        k_eff = k
-        starting_cell = cell
+def _rings_up_to(center: Cell, k: int) -> list[list[Cell]]:
+    """
+    Return `[ring_0, ring_1, ..., ring_k]`, where `ring_0 == [center]` and
+    `ring_i` (`i` >= 1) is the list of cells at graph distance exactly `i`
+    from `center` -- the shortest number of edge/corner hops, via
+    `_ring_step_neighbors()` -- computed by growing the ring outward one
+    shell at a time.
 
-    # Cell ring distance taking k beyond resolution requires clamping
-    if 2 * k_eff > quarter_circle:
-        max_steps = quarter_circle
-    else:
-        max_steps = 2 * k_eff
-
-    return (k_eff, max_steps, starting_cell)
-
-
-def _find_cell_ring_start(
-    cell: Cell,
-    k: int,
-    max_steps: int,
-    directions: list[str],
-    direction_inverse: dict[str, str],
-) -> tuple[Cell, str, int]:
-    # Always start by going left
-    dir_idx = directions.index("left")
-
-    # Work your way to the starting point one (left, up) pair of steps at a time
-    steps_from_start = -1
-    num_edges = 0
-    d = 0
-    while d < k:
-        # Prep for later
-        d = d + 1
-
-        # One step to local left
-        direction = directions[dir_idx]
-        next = cell.neighbor(direction)
-
-        # Detect edge crossing on cube
-        if cell.suid[0] != next.suid[0]:
-            num_edges = num_edges + 1
-            # Looking back not being the same as looking ahead means we need to realign as well
-            if next.neighbor(direction_inverse[direction]) != cell:
-                dir_idx = directions.index(
-                    direction_inverse[_neighbor_direction(next, cell)]
-                )
-
-        # Take the step
-        cell = next
-
-        # One step to local up
-        direction = directions[(dir_idx + 1) % len(directions)]
-        next = cell.neighbor(direction)
-
-        # Detect edge crossing on cube
-        if cell.suid[0] != next.suid[0]:
-            num_edges = num_edges + 1
-
-            # Looking back not being the same as looking ahead means we need to realign as well
-            if next.neighbor(direction_inverse[direction]) != cell:
-                dir_idx = (
-                    directions.index(direction_inverse[_neighbor_direction(next, cell)])
-                    - 1
-                ) % len(directions)
-
-            # Handle unexpected corner and end the loop
-            if num_edges > 1:
-                dir_idx = (dir_idx - 1) % len(directions)
-                steps_from_start = d
-                d = k
-
-        # Take the step
-        cell = next
-
-    # Initialise walking direction and side length
-    direction = direction_inverse[directions[dir_idx]]
-    if steps_from_start >= 0:
-        n_steps = min(k + steps_from_start - 1, max_steps)  # TODO: this is wrong
-        local_up = directions[(directions.index(direction) - 1) % len(directions)]
-        for _ in range(0, k - steps_from_start):
-            next = cell.neighbor(local_up)
-            cell = next
-    else:
-        n_steps = max_steps
-
-    return (cell, direction, n_steps)
+    Each ring's cells are visited in a stable order: each cell in the
+    previous ring is expanded via `_ring_step_neighbors()`'s fixed
+    clockwise order, in previous-ring order, keeping the first occurrence
+    of any cell reachable from more than one previous-ring cell. Cells
+    already seen in an earlier ring (tracked cumulatively, not just the
+    immediately preceding one, so this is a proper breadth-first search)
+    are skipped, so a ring near a genuine cube corner naturally comes out
+    with fewer cells than the usual 8*i for an interior ring, rather than
+    a duplicate or incorrect cell.
+    """
+    rings = [[center]]
+    seen_suids = {center.suid}
+    for _ in range(k):
+        next_ring = []
+        seen_this_ring = set()
+        for cell in rings[-1]:
+            for neighbor in _ring_step_neighbors(cell):
+                if neighbor.suid in seen_suids or neighbor.suid in seen_this_ring:
+                    continue
+                seen_this_ring.add(neighbor.suid)
+                next_ring.append(neighbor)
+        seen_suids.update(seen_this_ring)
+        rings.append(next_ring)
+    return rings
 
 
 def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
