@@ -5,65 +5,140 @@ How to publish a new release of rHEALPixDGGS. Requires
 project's `pyproject.toml` uses the PEP 621 `[project]` table, which older
 Poetry versions cannot read (they fail with a cryptic `'name'` error).
 
-## 1. Prepare the release
+`release.py` drives the whole process. It is stdlib-only, so there is
+nothing to install beyond Poetry itself.
 
-- [ ] Update the version number in `pyproject.toml` (the single source of
-      truth: the docs and package metadata read it from there).
-- [ ] Update `CHANGES.rst` with the release notes, including explicit
-      **Breaking change:** callouts where applicable.
-- [ ] Update `CITATION.CFF`: `version` and `date-released`.
-- [ ] Check the copyright year range in `LICENSE` and `LICENSE-MIT` covers
-      the current year (the docs' copyright line computes its end year at
-      build time, but the license files are updated by hand).
-- [ ] Run the tests and doctests:
+## The short version
 
-  ```sh
-  ./run_unittests.sh
-  ./run_doctests.sh
-  ```
-
-## 2. Tag
+Write the release notes first (see [Before you start](#before-you-start)),
+then, from a clean `master`:
 
 ```sh
+python release.py check    0.7.0   # preflight only, changes nothing
+python release.py prepare  0.7.0   # bump versions, test, build, verify
+python release.py tag      0.7.0   # commit, tag, push
+python release.py publish  0.7.0   # upload to PyPI
+python release.py announce 0.7.0   # GitHub release from the changelog
+```
+
+Each stage re-runs the checks it depends on, so stopping to fix something
+and starting again is safe. Nothing irreversible happens without you asking
+for it by name, and the two stages visible from outside your machine
+(`tag`, which pushes, and `publish`, which uploads) also prompt before
+acting. Add `--dry-run` to any stage to see what it would do, or `--yes` to
+skip the prompts; either flag works before or after the stage name.
+
+## Before you start
+
+The script checks everything it can, but two things are yours to write:
+
+- [ ] **Release notes in `CHANGES.rst`**, under a section header for the new
+      version, with explicit **Breaking change:** callouts where applicable.
+      `check` fails if the section is missing or empty, but it cannot tell
+      you whether the notes are any good.
+- [ ] **The copyright year range in `LICENSE` and `LICENSE-MIT`**, if the
+      year has rolled over. `check` fails if the range ends before the
+      current year. (The docs' copyright line computes its end year at build
+      time; the license files are maintained by hand.)
+
+## What each stage does
+
+### `check`
+
+Read-only. Verifies that Poetry is present and new enough; that you are on a
+clean `master` in step with `origin`; that the version is well formed and
+newer than the current one; that `v<VERSION>` is not already tagged locally
+or on `origin`; that `CHANGES.rst` has notes for it; that the copyright
+years are current; and, via `gh`, that CI is green on the exact commit being
+released. Run it as often as you like.
+
+### `prepare`
+
+Sets `version` in `pyproject.toml` (the single source of truth — the docs
+and package metadata both read it from there) and `version` plus
+`date-released` in `CITATION.CFF`. Then runs `run_unittests.sh` and
+`run_doctests.sh`, clears `dist/` (stale artifacts are easy to upload by
+accident), builds, and verifies the results:
+
+- the wheel and sdist filenames carry the new version;
+- the wheel's `METADATA` declares that version, the
+  `LGPL-3.0-or-later OR MIT` license expression, all three license files,
+  and a `text/markdown` README (without which PyPI will not render it);
+- the sdist ships `tests/` and `docs/source/` and has **not** swept up build
+  leftovers. Poetry's `include` patterns override gitignore, so anything
+  transient under `docs/` stows away in the sdist — this is the check for
+  that.
+
+Stop here and `git diff` before going on.
+
+### `tag`
+
+Commits the version bump as `Release <VERSION>`, tags it `v<VERSION>` — the
+`v` prefix matches every existing tag — and pushes the branch and the tag.
+Prompts first, and shows you exactly what it will commit.
+
+### `publish`
+
+Uploads the built artifacts, after re-verifying them and confirming the tag
+exists. Rehearse against TestPyPI first if you want:
+
+```sh
+python release.py publish 0.7.0 --test-pypi
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple rhealpixdggs
+python release.py publish 0.7.0
+```
+
+A released version number cannot be reused or replaced, which is why this
+stage asks twice over: once for the tag, once at the prompt.
+
+### `announce`
+
+Creates the GitHub release for `v<VERSION>` via `gh`, with the version's
+`CHANGES.rst` section as the body. The notes are converted from
+reStructuredText to Markdown on the way — ``literals`` become backticks and
+`--` becomes an em dash; **bold**, bullet lists and `#123` issue references
+already mean the same thing in both, and GitHub links the issue references
+itself. Only that subset is handled, so if you reach for anything more
+elaborate in the changelog, check the rendering.
+
+The notes are printed for you to read before anything is created, and the
+stage refuses to clobber a release that already exists. A version like
+`0.7.0rc1` is marked as a prerelease automatically.
+
+```sh
+python release.py announce 0.7.0 --draft    # review in the browser first
+python release.py announce 0.7.0 --attach   # also upload the wheel and sdist
+```
+
+## After publishing
+
+The **conda package** is maintained at
+[conda-forge/rhealpixdggs-feedstock](https://github.com/conda-forge/rhealpixdggs-feedstock);
+its bot normally opens a version-bump PR automatically after the PyPI
+release appears.
+
+## Doing it by hand
+
+If `release.py` is in the way, the underlying steps are:
+
+```sh
+# 1. edit pyproject.toml (version), CITATION.CFF (version, date-released)
+./run_unittests.sh
+./run_doctests.sh
+
+# 2. tag
 git commit -am "Release <VERSION>"
-git tag <VERSION>
+git tag v<VERSION>
 git push
 git push --tags
-```
 
-## 3. Build
-
-Stale artifacts in `dist/` are easy to upload by accident, so clear it
-first:
-
-```sh
+# 3. build
 rm -rf dist/
 poetry build
-```
 
-This produces the sdist (`.tar.gz`) and wheel (`.whl`) in `dist/`. Sanity
-check: the wheel filename carries the new version number.
-
-## 4. Publish
-
-Optionally rehearse against TestPyPI:
-
-```sh
-poetry publish --repository testpypi
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple rhealpixdggs
-```
-
-Then publish for real:
-
-```sh
+# 4. publish
 poetry publish
+
+# 5. GitHub release, with the CHANGES.rst entry as the body
+gh release create v<VERSION> --title <VERSION> --notes-file <notes.md>
 ```
-
-## 5. After publishing
-
-- The **conda package** is maintained at
-  [conda-forge/rhealpixdggs-feedstock](https://github.com/conda-forge/rhealpixdggs-feedstock);
-  its bot normally opens a version-bump PR automatically after the PyPI
-  release appears.
-- Consider creating a GitHub release from the tag, pasting the
-  `CHANGES.rst` entry.
