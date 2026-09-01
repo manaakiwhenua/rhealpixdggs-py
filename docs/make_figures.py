@@ -17,6 +17,10 @@ contributors) in the optional "figures" dependency group:
 
     poetry install --with figures
 
+The SVGs are post-processed by svg_shrink (see that module), which strips
+matplotlib's surplus coordinate precision; the committed figures are stored
+in that form, so regenerating an unchanged figure still produces no diff.
+
 All grid geometry is drawn from the library itself (Cell.ul_vertex,
 Cell.boundary, Cell.nucleus). Coastlines are Natural Earth 1:110m data
 (public domain), downloaded on first run (pinned to a specific upstream
@@ -44,8 +48,12 @@ from matplotlib.colors import to_rgba
 from matplotlib.patches import Polygon as PolygonPatch
 from matplotlib.patches import Rectangle
 
-# Draw from this repository's rhealpixdggs, not any installed copy.
+# Draw from this repository's rhealpixdggs, not any installed copy, and pick
+# up svg_shrink from alongside this file however the script was invoked.
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+
+import svg_shrink
 
 from rhealpixdggs.dggs import WGS84_003, CELLS0
 
@@ -1228,3 +1236,12 @@ fig.savefig(OUT / "compaction.svg", bbox_inches="tight")
 fig.savefig(OUT / "compaction.pdf", bbox_inches="tight")
 plt.close(fig)
 print("compaction figure written")
+
+# Drop matplotlib's six decimal places of coordinate precision, which is
+# around a nanometre on the page and about a third of every SVG's bytes.
+# Committed figures are stored shrunk, so this keeps regeneration diff-free.
+saved = 0
+for svg in sorted(OUT.glob("*.svg")):
+    before, after = svg_shrink.shrink_file(svg)
+    saved += before - after
+print(f"figures shrunk: {saved:,} bytes of surplus coordinate precision removed")
