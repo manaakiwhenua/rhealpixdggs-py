@@ -108,7 +108,9 @@ def run(
             f"command failed ({result.returncode}): {' '.join(command)}"
             + (f"\n{detail}" if detail else "")
         )
-    return (result.stdout or "").strip()
+    # rstrip only: `git status --porcelain` lines start with a meaningful
+    # space (e.g. " M file"), which a full strip() would eat off line one.
+    return (result.stdout or "").rstrip()
 
 
 def git(*args: str, check: bool = True) -> str:
