@@ -546,20 +546,18 @@ class ConversionUtilsTestCase(unittest.TestCase):
         from shapely.geometry import Polygon as ShapelyPolygon
 
         # Small polygon near the south pole, similar to the reported case (~84°S, 150°W).
-        south_poly = ShapelyPolygon([
-            (-151, -85), (-149, -85), (-149, -84), (-151, -84), (-151, -85)
-        ])
+        south_poly = ShapelyPolygon(
+            [(-151, -85), (-149, -85), (-149, -84), (-151, -84), (-151, -85)]
+        )
         result = get_finest_containing_cell(south_poly)
         assert result is not None, "Expected a cap cell, got None"
-        assert str(result) == 'S4', f"Expected S4 cap cell, got {result}"
+        assert str(result) == "S4", f"Expected S4 cap cell, got {result}"
 
         # Symmetric check for the north pole.
-        north_poly = ShapelyPolygon([
-            (29, 84), (31, 84), (31, 85), (29, 85), (29, 84)
-        ])
+        north_poly = ShapelyPolygon([(29, 84), (31, 84), (31, 85), (29, 85), (29, 84)])
         result = get_finest_containing_cell(north_poly)
         assert result is not None, "Expected a cap cell, got None"
-        assert str(result) == 'N4', f"Expected N4 cap cell, got {result}"
+        assert str(result) == "N4", f"Expected N4 cap cell, got {result}"
 
     def test_CellZoneFromPoly(self):
         """

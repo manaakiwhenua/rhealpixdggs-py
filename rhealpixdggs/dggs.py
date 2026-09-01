@@ -1694,8 +1694,6 @@ class RHEALPixDGGS(object):
         # return [t[0] for t in cover]
 
 
-
-
 # Some common rHEALPix DGGSs.
 WGS84_002 = RHEALPixDGGS(
     ellipsoid=WGS84_ELLIPSOID, north_square=0, south_square=0, N_side=2

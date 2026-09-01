@@ -90,7 +90,11 @@ def note(message: str) -> None:
 
 
 def run(
-    command: list[str], *, capture: bool = True, check: bool = True, cwd: pathlib.Path = ROOT
+    command: list[str],
+    *,
+    capture: bool = True,
+    check: bool = True,
+    cwd: pathlib.Path = ROOT,
 ) -> str:
     """Run a command, echoing it when it changes something."""
     if not capture:
@@ -172,11 +176,16 @@ def set_pyproject_version(version: str) -> bool:
 
 def set_citation(version: str, released: datetime.date) -> bool:
     text = CITATION.read_text()
-    new_text, count = re.subn(r"(?m)^(version:\s*).*$", rf"\g<1>{version}", text, count=1)
+    new_text, count = re.subn(
+        r"(?m)^(version:\s*).*$", rf"\g<1>{version}", text, count=1
+    )
     if count != 1:
         raise Failure("could not find the version line in CITATION.CFF")
     new_text, count = re.subn(
-        r"(?m)^(date-released:\s*).*$", rf"\g<1>{released.isoformat()}", new_text, count=1
+        r"(?m)^(date-released:\s*).*$",
+        rf"\g<1>{released.isoformat()}",
+        new_text,
+        count=1,
     )
     if count != 1:
         raise Failure("could not find the date-released line in CITATION.CFF")
@@ -243,7 +252,8 @@ def check_git_state(version: str, *, expect_bumped: bool) -> None:
     ok(f"on {RELEASE_BRANCH}")
 
     dirty_names = sorted(
-        line[3:] for line in git("status", "--porcelain", "--untracked-files=no").splitlines()
+        line[3:]
+        for line in git("status", "--porcelain", "--untracked-files=no").splitlines()
     )
     if expect_bumped:
         allowed = {"pyproject.toml", "CITATION.CFF", CHANGELOG.name}
@@ -265,11 +275,13 @@ def check_git_state(version: str, *, expect_bumped: bool) -> None:
         ok("working tree clean")
 
     git("fetch", "--quiet", "--tags", "origin", check=False)
-    upstream = git("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}", check=False)
+    upstream = git(
+        "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}", check=False
+    )
     if upstream:
-        behind, ahead = (
-            git("rev-list", "--left-right", "--count", f"{upstream}...HEAD").split()
-        )
+        behind, ahead = git(
+            "rev-list", "--left-right", "--count", f"{upstream}...HEAD"
+        ).split()
         if int(behind):
             raise Failure(f"{behind} commit(s) behind {upstream}; pull first")
         if int(ahead) and not expect_bumped:
@@ -410,7 +422,9 @@ def check_ci() -> None:
         note(f"no CI runs found for {head[:8]}; verify it by hand")
         return
     failed = [
-        r for r in runs if r.get("status") == "completed" and r.get("conclusion") != "success"
+        r
+        for r in runs
+        if r.get("status") == "completed" and r.get("conclusion") != "success"
     ]
     pending = [r for r in runs if r.get("status") != "completed"]
     if failed:
@@ -498,12 +512,12 @@ def verify_artifacts(version: str) -> None:
         )
     ok(f"METADATA License-Expression: {LICENSE_EXPRESSION}")
 
-    shipped_licences = {pathlib.PurePosixPath(p).name for p in metadata_field("License-File")}
+    shipped_licences = {
+        pathlib.PurePosixPath(p).name for p in metadata_field("License-File")
+    }
     missing = [name for name in LICENSE_FILES if name not in shipped_licences]
     if missing:
-        raise Failure(
-            "the wheel is missing license file(s): " + ", ".join(missing)
-        )
+        raise Failure("the wheel is missing license file(s): " + ", ".join(missing))
     ok("all three license files are in the wheel")
 
     content_type = metadata_field("Description-Content-Type")
@@ -621,9 +635,7 @@ def stage_publish(version: str, *, test_pypi: bool) -> None:
     check_version_argument(version)
     check_tools(need_poetry=True)
     if pyproject_version() != version:
-        raise Failure(
-            f"pyproject.toml says {pyproject_version()}, expected {version}"
-        )
+        raise Failure(f"pyproject.toml says {pyproject_version()}, expected {version}")
     if not DIST.exists():
         raise Failure(f"no {DIST.name}/ directory; run the prepare stage first")
     verify_artifacts(version)
@@ -696,9 +708,7 @@ def stage_announce(version: str, *, attach: bool) -> None:
 
     tag = f"v{version}"
     if not git("ls-remote", "--tags", "origin", tag):
-        raise Failure(
-            f"tag {tag} is not on origin; run the tag stage first"
-        )
+        raise Failure(f"tag {tag} is not on origin; run the tag stage first")
     ok(f"tag {tag} is on origin")
 
     existing = run(["gh", "release", "view", tag, "--json", "url,isDraft"], check=False)
@@ -777,16 +787,12 @@ def stage_finalize(version: str) -> None:
     say(f"Publishing the draft GitHub release for {version}\n")
     check_version_argument(version)
     if shutil.which("gh") is None:
-        raise Failure(
-            "gh is not on PATH; publish the draft from the browser instead"
-        )
+        raise Failure("gh is not on PATH; publish the draft from the browser instead")
 
     tag = f"v{version}"
     existing = run(["gh", "release", "view", tag, "--json", "url,isDraft"], check=False)
     if not existing.startswith("{"):
-        raise Failure(
-            f"no GitHub release for {tag}; run the announce stage first"
-        )
+        raise Failure(f"no GitHub release for {tag}; run the announce stage first")
     release = json.loads(existing)
     if not release.get("isDraft"):
         raise Failure(

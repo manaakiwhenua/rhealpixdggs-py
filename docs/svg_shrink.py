@@ -97,7 +97,9 @@ def shrink(svg: str, decimals: int = DEFAULT_DECIMALS) -> str:
     return "".join(out)
 
 
-def shrink_file(path: pathlib.Path, decimals: int = DEFAULT_DECIMALS) -> tuple[int, int]:
+def shrink_file(
+    path: pathlib.Path, decimals: int = DEFAULT_DECIMALS
+) -> tuple[int, int]:
     """Shrink ``path`` in place. Returns the byte count before and after."""
     original = path.read_text(encoding="utf-8")
     shrunk = shrink(original, decimals)

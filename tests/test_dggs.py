@@ -87,9 +87,7 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         rdggs = WGS84_003
         budget = rdggs.area_error_budget()
         # One entry per resolution, none missing, none extra.
-        self.assertEqual(
-            sorted(budget.keys()), list(range(rdggs.max_resolution + 1))
-        )
+        self.assertEqual(sorted(budget.keys()), list(range(rdggs.max_resolution + 1)))
         rel_tol = 10 * sys.float_info.epsilon
         previous_area = None
         for r in range(rdggs.max_resolution + 1):
@@ -274,12 +272,21 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         # match cell_from_point. Fixed deterministic segments spanning
         # equatorial, polar, and region-crossing geometry.
         segments = [
-            (2, (-11.399091685979357, 64.59420811683768),
-                (-57.31373531501049, 87.0761010527302)),
-            (3, (-11.399091685979357, 64.59420811683768),
-                (-57.31373531501049, 87.0761010527302)),
-            (3, (165.50972831262268, 26.027432190353828),
-                (-12.994806100831056, 60.11220272134576)),
+            (
+                2,
+                (-11.399091685979357, 64.59420811683768),
+                (-57.31373531501049, 87.0761010527302),
+            ),
+            (
+                3,
+                (-11.399091685979357, 64.59420811683768),
+                (-57.31373531501049, 87.0761010527302),
+            ),
+            (
+                3,
+                (165.50972831262268, 26.027432190353828),
+                (-12.994806100831056, 60.11220272134576),
+            ),
             (2, (-170, -80), (170, -60)),
             (2, (-45, 88), (135, 88)),
         ]
