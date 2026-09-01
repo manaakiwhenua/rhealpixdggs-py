@@ -33,6 +33,24 @@ jobs:
       - name: Doctests
         run: ./scripts/run_doctests.sh
 
+  lint:
+    runs-on: ubuntu-latest
+    name: Formatting
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Same bound as the dev dependency in pyproject.toml: black's stable
+      # style only changes between major versions, so any 25.x agrees with
+      # the version the code was formatted with.
+      - name: black --check
+        run: |
+          python -m pip install "black>=25,<26"
+          black --check --diff .
+
   docs:
     runs-on: ubuntu-latest
     name: Docs build

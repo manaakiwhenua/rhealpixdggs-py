@@ -1,0 +1,6 @@
+# Commits to skip in `git blame` (pass --ignore-revs-file, or set it once
+# with `git config blame.ignoreRevsFile .git-blame-ignore-revs`; GitHub's
+# blame view picks this file up automatically).
+
+# Whole-repository reformat with black 25.12.0
+bab4e1960372a36c60fc115d88fe2dd1e62d366c
