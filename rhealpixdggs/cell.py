@@ -162,13 +162,13 @@ class Cell(object):
                     % (rdggs.max_resolution + 1, suid)
                 )
             if suid[0] not in CELLS0:
-                raise ValueError(
-                    "suid[0] must lie in %s. Got %s." % (CELLS0, suid[0])
-                )
+                raise ValueError("suid[0] must lie in %s. Got %s." % (CELLS0, suid[0]))
             digits = set(range(self.N_side**2))
             for x in suid[1:]:
                 if x not in digits:
-                    raise ValueError("Digits of suid must lie in %s. Got %s." % (digits, x))
+                    raise ValueError(
+                        "Digits of suid must lie in %s. Got %s." % (digits, x)
+                    )
 
             self.suid = [suid[0]] + [int(n) for n in suid[1:]]
             self.suid = tuple(self.suid)
@@ -1168,9 +1168,7 @@ class Cell(object):
             # floor and trigger spurious IntegrationWarnings.
             x_mid = self.nucleus(plane=True)[0]
             phi_of_y = numpy_vectorize(lambda y: phi(x_mid, y))
-            phi_bar = (1 / (y2 - y1)) * integrate.fixed_quad(
-                phi_of_y, y1, y2, n=20
-            )[0]
+            phi_bar = (1 / (y2 - y1)) * integrate.fixed_quad(phi_of_y, y1, y2, n=20)[0]
             return lam_bar, phi_bar
         if shape == "dart":
             lam_bar = nucleus[0]

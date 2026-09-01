@@ -5,6 +5,7 @@ Keep adding tests!
 
 - Alexander Raichev (AR), 2013-01-26: Initial version based on previous test code.
 """
+
 # *****************************************************************************
 #       Copyright (C) 2013 Alexander Raichev <alex.raichev@gmail.com>
 #
@@ -326,9 +327,7 @@ class MyTestCase(unittest.TestCase):
         key = (1, 2)
         self.assertIn(key, pjr._rhealpix_image_polys)
         cached = pjr._rhealpix_image_polys[key]
-        self.assertTrue(
-            pjr.in_rhealpix_image(0.1, 0.1, north_square=1, south_square=2)
-        )
+        self.assertTrue(pjr.in_rhealpix_image(0.1, 0.1, north_square=1, south_square=2))
         self.assertIs(pjr._rhealpix_image_polys[key], cached)
         # A different (north_square, south_square) pair gets its own entry.
         self.assertTrue(pjr.in_rhealpix_image(0, 0, north_square=0, south_square=0))

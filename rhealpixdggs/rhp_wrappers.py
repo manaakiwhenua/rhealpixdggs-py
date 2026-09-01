@@ -195,7 +195,7 @@ def rhp_to_center_child(
 
         # Derive index of centre child and append that to rhpindex
         # NOTE: only works for odd values of N_side
-        c_index = int((dggs.N_side ** 2 - 1) / 2)
+        c_index = int((dggs.N_side**2 - 1) / 2)
 
         # Append the required number of child digits to cell index
         child_index = rhpindex + "".join(str(c_index) for _ in range(0, added_levels))
@@ -311,7 +311,7 @@ def rhp_is_valid(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> bool:
         return False
 
     # Addresses that have digits out of range are invalid
-    num_subcells = dggs.N_side ** 2
+    num_subcells = dggs.N_side**2
     for d in rhpindex[1:]:
         if not d.isdigit() or (int(d) >= num_subcells):
             return False
@@ -351,7 +351,7 @@ def cell_area(
 
     # Scale area if needed
     if unit == "km^2":
-        area = area / 10 ** 6
+        area = area / 10**6
 
     return float(area)
 

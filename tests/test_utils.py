@@ -188,9 +188,7 @@ class UtilsTestCase(unittest.TestCase):
         for deg in range(-89, 90, 2):
             phi = deg * pi / 180
             beta = ut.auth_lat(phi, e, radians=True)
-            self.assertAlmostEqual(
-                beta, -ut.auth_lat(-phi, e, radians=True), places=12
-            )
+            self.assertAlmostEqual(beta, -ut.auth_lat(-phi, e, radians=True), places=12)
             if deg != 0:
                 self.assertLess(abs(beta), abs(phi))
             if previous is not None:

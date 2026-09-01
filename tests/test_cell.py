@@ -593,9 +593,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         # Cell built from this rdggs) and restore it afterwards. Confirm
         # it's never touched at all, for both the dart and skew_quad
         # branches where the mutation used to happen.
-        ellipsoid = Ellipsoid(
-            a=WGS84_ELLIPSOID.a, f=WGS84_ELLIPSOID.f, lon_0=-131.25
-        )
+        ellipsoid = Ellipsoid(a=WGS84_ELLIPSOID.a, f=WGS84_ELLIPSOID.f, lon_0=-131.25)
         rdggs = RHEALPixDGGS(ellipsoid=ellipsoid, N_side=3)
         before = ellipsoid.lon_0
         for suid in [(N, 6), (N, 3)]:  # dart, skew_quad
@@ -650,9 +648,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             return cells[i].neighbors(plane=False)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
-            futures = [
-                pool.submit(compute, i % len(cells)) for i in range(200)
-            ]
+            futures = [pool.submit(compute, i % len(cells)) for i in range(200)]
             for i, future in enumerate(futures):
                 result = future.result()
                 self.assertEqual(result, expected[i % len(cells)])

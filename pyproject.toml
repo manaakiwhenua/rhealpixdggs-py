@@ -54,7 +54,7 @@ bug_reports = "https://github.com/manaakiwhenua/rhealpixdggs-py/issues"
 source = "https://github.com/manaakiwhenua/rhealpixdggs-py"
  
 [tool.poetry.group.dev.dependencies]
-black = "^23"
+black = "^25"
 pytest = "^7.4.0"
 sphinx = "^7.2"
 furo = ">=2024.8"

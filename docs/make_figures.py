@@ -27,6 +27,7 @@ Cell.boundary, Cell.nucleus). Coastlines are Natural Earth 1:110m data
 commit for reproducibility) and cached under .cache/ at the repository
 root (outside docs/, which is shipped in the sdist).
 """
+
 import json
 import os
 import pathlib
@@ -208,9 +209,7 @@ ax.set_ylim(-2.6, 2.6)
 ax.set_aspect("equal")
 ax.set_xlabel("x / authalic radius")
 ax.set_ylabel("y / authalic radius")
-ax.set_title(
-    "(0, 0)-rHEALPix planar grid: resolution 0 cells, resolution 1 sub-grid"
-)
+ax.set_title("(0, 0)-rHEALPix planar grid: resolution 0 cells, resolution 1 sub-grid")
 fig.tight_layout()
 fig.savefig(OUT / "planar_grid.svg", bbox_inches="tight")
 fig.savefig(OUT / "planar_grid.pdf", bbox_inches="tight")
@@ -357,11 +356,12 @@ def draw_globe(ax, lon0, lat0, title):
             x, y = np.where(vis, x, np.nan), np.where(vis, y, np.nan)
             ax.plot(x, y, color=color, linewidth=1.0)
             nx, ny, nvis = ortho(*cell.nucleus(plane=False), lon0, lat0)
-            ncos = (
-                np.sin(np.radians(lat0)) * np.sin(np.radians(cell.nucleus(plane=False)[1]))
-                + np.cos(np.radians(lat0))
-                * np.cos(np.radians(cell.nucleus(plane=False)[1]))
-                * np.cos(np.radians(cell.nucleus(plane=False)[0] - lon0))
+            ncos = np.sin(np.radians(lat0)) * np.sin(
+                np.radians(cell.nucleus(plane=False)[1])
+            ) + np.cos(np.radians(lat0)) * np.cos(
+                np.radians(cell.nucleus(plane=False)[1])
+            ) * np.cos(
+                np.radians(cell.nucleus(plane=False)[0] - lon0)
             )
             if nvis and ncos > 0.45:
                 ax.text(
@@ -445,9 +445,7 @@ for ax in axes:
     ax.set_xlabel("longitude (degrees)")
 axes[0].set_ylabel("latitude (degrees)")
 
-filled = rhp_wrappers.polyfill(
-    Polygon(NZ_POLYGON), RESOLUTION, plane=False, dggs=rdggs
-)
+filled = rhp_wrappers.polyfill(Polygon(NZ_POLYGON), RESOLUTION, plane=False, dggs=rdggs)
 draw_cells_lonlat(axes[0], filled)
 axes[0].plot(*zip(*(NZ_POLYGON + [NZ_POLYGON[0]])), color="#222222", linewidth=1.6)
 axes[0].set_title(f"polyfill(polygon, res={RESOLUTION}, plane=False)")
@@ -489,20 +487,33 @@ for seg in COASTLINES:
     lons = [p[0] for p in seg]
     lats = [p[1] for p in seg]
     x, y, vis = ortho(lons, lats, *VIEW)
-    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-            color=COAST_COLOR, linewidth=0.7, zorder=1)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color=COAST_COLOR,
+        linewidth=0.7,
+        zorder=1,
+    )
 
 # Graticule: parallels and meridians in the window.
 for glat in (82, 84, 86, 88):
     lons = np.linspace(-180, 180, 721)
     x, y, vis = ortho(lons, np.full_like(lons, glat), *VIEW)
-    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-            color="#cccccc", linewidth=0.4)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color="#cccccc",
+        linewidth=0.4,
+    )
 for glon in range(-180, 180, 30):
     lats = np.linspace(78, 90, 121)
     x, y, vis = ortho(np.full_like(lats, glon), lats, *VIEW)
-    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-            color="#cccccc", linewidth=0.4)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color="#cccccc",
+        linewidth=0.4,
+    )
 
 # The resolution 4 sub-grid, as a faint outline.
 for cell3 in rdggs.cell(["N", 4, 4]).subcells():
@@ -510,8 +521,14 @@ for cell3 in rdggs.cell(["N", 4, 4]).subcells():
         pts = cell4.boundary(n=20, plane=False)
         pts = pts + [pts[0]]
         x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *VIEW)
-        ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-                color=FACE_COLORS["N"], linewidth=0.35, alpha=0.45, zorder=2)
+        ax.plot(
+            np.where(vis, x, np.nan),
+            np.where(vis, y, np.nan),
+            color=FACE_COLORS["N"],
+            linewidth=0.35,
+            alpha=0.45,
+            zorder=2,
+        )
 
 # The resolution 3 cells around the pole (the children of N44), traced
 # ones filled.
@@ -524,8 +541,13 @@ for cell in rdggs.cell(["N", 4, 4]).subcells():
     name = str(cell)
     if name in traced_set:
         ax.fill(x, y, color=FACE_COLORS["N"], alpha=0.3, linewidth=0)
-    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-            color=FACE_COLORS["N"], linewidth=1.2, zorder=3)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color=FACE_COLORS["N"],
+        linewidth=1.2,
+        zorder=3,
+    )
     nx, ny, _ = ortho(*cell.nucleus(plane=False), *VIEW)
     ax.text(
         nx,
@@ -547,8 +569,12 @@ for a, b in zip(CAP_LINE, CAP_LINE[1:]):
     lons = a[0] + ts * (b[0] - a[0])
     lats = a[1] + ts * (b[1] - a[1])
     x, y, vis = ortho(lons, lats, *VIEW)
-    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-            color="#222222", linewidth=1.8)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color="#222222",
+        linewidth=1.8,
+    )
 sx, sy, _ = ortho(*CAP_LINE[0], *VIEW)
 ex, ey, _ = ortho(*CAP_LINE[-1], *VIEW)
 ax.plot([sx], [sy], marker="o", color="#222222", markersize=5, zorder=4)
@@ -665,23 +691,38 @@ for ax, (shape, suid) in zip(axes, SHAPE_EXAMPLES):
     ax.plot(np.cos(t), np.sin(t), color="#555555", linewidth=1.0)
     for seg in COASTLINES:
         x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], *view)
-        ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-                color=COAST_COLOR, linewidth=0.4, zorder=1)
+        ax.plot(
+            np.where(vis, x, np.nan),
+            np.where(vis, y, np.nan),
+            color=COAST_COLOR,
+            linewidth=0.4,
+            zorder=1,
+        )
     # Neighboring resolution 1 cells for context.
     for face in CELLS0:
         for other in rdggs.cell([face]).subcells():
             pts = other.boundary(n=40, plane=False)
             pts = pts + [pts[0]]
             x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
-            ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-                    color="#bbbbbb", linewidth=0.4, zorder=2)
+            ax.plot(
+                np.where(vis, x, np.nan),
+                np.where(vis, y, np.nan),
+                color="#bbbbbb",
+                linewidth=0.4,
+                zorder=2,
+            )
     pts = cell.boundary(n=60, plane=False)
     pts = pts + [pts[0]]
     x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
     if vis.all():
         ax.fill(x, y, color=FACE_COLORS[suid[0]], alpha=0.35, linewidth=0)
-    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-            color=FACE_COLORS[suid[0]], linewidth=1.6, zorder=3)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color=FACE_COLORS[suid[0]],
+        linewidth=1.6,
+        zorder=3,
+    )
     ax.set_xlim(-1.03, 1.03)
     ax.set_ylim(-1.03, 1.03)
     ax.set_aspect("equal")
@@ -749,12 +790,25 @@ for ax, (title, highlight) in zip(axes, cases):
         # The containing cell is P4 itself: outline the whole frame.
         ax.add_patch(
             Rectangle(
-                (0, 0), 1, 1, facecolor=A_COLOR, alpha=0.18,
-                edgecolor=A_COLOR, linewidth=2.0,
+                (0, 0),
+                1,
+                1,
+                facecolor=A_COLOR,
+                alpha=0.18,
+                edgecolor=A_COLOR,
+                linewidth=2.0,
             )
         )
-        ax.text(0.02, 1.04, "P4", fontsize=11, fontweight="bold",
-                color=A_COLOR, ha="left", va="bottom")
+        ax.text(
+            0.02,
+            1.04,
+            "P4",
+            fontsize=11,
+            fontweight="bold",
+            color=A_COLOR,
+            ha="left",
+            va="bottom",
+        )
     ax.set_title(title, fontsize=11)
 fig.tight_layout()
 fig.savefig(OUT / "predicates.svg", bbox_inches="tight")
@@ -781,22 +835,31 @@ def draw_ortho_cells(ax, view, context, highlight, mark=None, label_at=None):
         color = highlight.get(name)
         if color is not None and vis.all():
             ax.fill(x, y, color=color, alpha=0.45, linewidth=0, zorder=2)
-        ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-                color=color or "#999999",
-                linewidth=1.6 if color else 0.6,
-                zorder=3 if color else 1)
+        ax.plot(
+            np.where(vis, x, np.nan),
+            np.where(vis, y, np.nan),
+            color=color or "#999999",
+            linewidth=1.6 if color else 0.6,
+            zorder=3 if color else 1,
+        )
         lon_c, lat_c = (label_at or {}).get(name) or cell.centroid(plane=False)
         nx, ny, nvis = ortho(lon_c, lat_c, *view)
         if nvis:
-            ax.text(nx, ny, name, ha="center", va="center",
-                    fontsize=9 if color else 7,
-                    fontweight="bold" if color else "normal",
-                    color="#333333", zorder=5)
+            ax.text(
+                nx,
+                ny,
+                name,
+                ha="center",
+                va="center",
+                fontsize=9 if color else 7,
+                fontweight="bold" if color else "normal",
+                color="#333333",
+                zorder=5,
+            )
     if mark is not None:
         mx, my, mvis = ortho(mark[0], mark[1], *view)
         if mvis:
-            ax.plot([mx], [my], marker="o", color="#222222", markersize=6,
-                    zorder=6)
+            ax.plot([mx], [my], marker="o", color="#222222", markersize=6, zorder=6)
     ax.set_aspect("equal")
     ax.axis("off")
 
@@ -810,17 +873,42 @@ _lat_n4 = min(p[1] for p in rdggs.cell(["N", 4]).boundary(n=40, plane=False))
 _lat_n44 = min(p[1] for p in rdggs.cell(["N", 4, 4]).boundary(n=40, plane=False))
 polar_cases = [
     # (title, highlight, context, view, radius, mark, label_at)
-    ("cap touches skew quad (edge)",
-     {"N4": B_COLOR, "N1": A_COLOR}, N_CONTEXT, POLE_VIEW, 0.80, None, None),
-    ("cap touches dart (corner only)",
-     {"N4": B_COLOR, "N0": A_COLOR}, N_CONTEXT, POLE_VIEW, 0.80,
-     rdggs.cell(["N", 4]).ul_vertex(plane=False), None),
-    ("cap within cap",
-     {"N44": B_COLOR, "N4": A_COLOR}, N_CONTEXT, POLE_VIEW, 0.80, None,
-     {"N4": (0.0, 0.5 * (_lat_n4 + _lat_n44))}),
-    ("cube corner: all pairs touch (edges)",
-     {"N0": A_COLOR, "Q2": B_COLOR, "R0": "#79b791"},
-     ["N1", "N3", "Q1", "Q5", "R1", "R3"], CORNER, 0.55, CORNER, None),
+    (
+        "cap touches skew quad (edge)",
+        {"N4": B_COLOR, "N1": A_COLOR},
+        N_CONTEXT,
+        POLE_VIEW,
+        0.80,
+        None,
+        None,
+    ),
+    (
+        "cap touches dart (corner only)",
+        {"N4": B_COLOR, "N0": A_COLOR},
+        N_CONTEXT,
+        POLE_VIEW,
+        0.80,
+        rdggs.cell(["N", 4]).ul_vertex(plane=False),
+        None,
+    ),
+    (
+        "cap within cap",
+        {"N44": B_COLOR, "N4": A_COLOR},
+        N_CONTEXT,
+        POLE_VIEW,
+        0.80,
+        None,
+        {"N4": (0.0, 0.5 * (_lat_n4 + _lat_n44))},
+    ),
+    (
+        "cube corner: all pairs touch (edges)",
+        {"N0": A_COLOR, "Q2": B_COLOR, "R0": "#79b791"},
+        ["N1", "N3", "Q1", "Q5", "R1", "R3"],
+        CORNER,
+        0.55,
+        CORNER,
+        None,
+    ),
 ]
 fig, axes = plt.subplots(1, 4, figsize=(12.5, 3.4))
 for ax, (title, highlight, context, view, radius, mark, label_at) in zip(
@@ -848,8 +936,13 @@ t = np.linspace(0, 2 * np.pi, 400)
 ax.plot(np.cos(t), np.sin(t), color="#555555", linewidth=1.0)
 for seg in COASTLINES:
     x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], *view)
-    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-            color=COAST_COLOR, linewidth=0.5, zorder=1)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color=COAST_COLOR,
+        linewidth=0.5,
+        zorder=1,
+    )
 meeting = {"N0": "the cell", "Q2": "neighbor('up')", "R0": "neighbor('left')"}
 context = ["N1", "N3", "N4", "Q1", "Q5", "R1", "R3"]
 for name in list(meeting) + context:
@@ -861,22 +954,39 @@ for name in list(meeting) + context:
     bold = name in meeting
     if bold and vis.all():
         ax.fill(x, y, color=color, alpha=0.30, linewidth=0)
-    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-            color=color, linewidth=1.8 if bold else 0.6, zorder=3 if bold else 2)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color=color,
+        linewidth=1.8 if bold else 0.6,
+        zorder=3 if bold else 2,
+    )
     lon_c, lat_c = cell.centroid(plane=False)
     nx, ny, nvis = ortho(lon_c, lat_c, *view)
     if nvis:
-        label = name + ("\n" + meeting[name] if bold and meeting[name] != "the cell" else "")
-        ax.text(nx, ny, label, ha="center", va="center",
-                fontsize=10 if bold else 8,
-                fontweight="bold" if bold else "normal",
-                color="#333333", zorder=5)
+        label = name + (
+            "\n" + meeting[name] if bold and meeting[name] != "the cell" else ""
+        )
+        ax.text(
+            nx,
+            ny,
+            label,
+            ha="center",
+            va="center",
+            fontsize=10 if bold else 8,
+            fontweight="bold" if bold else "normal",
+            color="#333333",
+            zorder=5,
+        )
 cx, cy, _ = ortho(corner_lon, corner_lat, *view)
 ax.plot([cx], [cy], marker="o", color="#222222", markersize=7, zorder=6)
 ax.annotate(
     "cube corner: 3 cells meet here\nN0.diagonal_neighbor('up_left') is None",
-    xy=(cx, cy), xytext=(cx - 0.55, cy + 0.62), fontsize=10,
-    ha="center", color="#222222",
+    xy=(cx, cy),
+    xytext=(cx - 0.55, cy + 0.62),
+    fontsize=10,
+    ha="center",
+    color="#222222",
     arrowprops=dict(arrowstyle="->", color="#222222"),
 )
 lim = 0.9
@@ -938,24 +1048,38 @@ for face, to_cube in CUBE_FACE_POINT.items():
                 )
             )
             lx, ly = iso(*to_cube((col + 0.5) / 3, (row + 0.5) / 3))
-            ax.text(lx, ly, name, ha="center", va="center",
-                    fontsize=8 if key else 7,
-                    fontweight="bold" if key else "normal",
-                    color="#333333", zorder=4)
+            ax.text(
+                lx,
+                ly,
+                name,
+                ha="center",
+                va="center",
+                fontsize=8 if key else 7,
+                fontweight="bold" if key else "normal",
+                color="#333333",
+                zorder=4,
+            )
 
 # Outer silhouette and the three edges that meet at the corner vertex.
 silhouette = [(0, 1, 1), (0, 0, 1), (1, 0, 1), (1, 0, 0), (1, 1, 0), (0, 1, 0)]
-ax.plot(*zip(*[iso(*v) for v in silhouette + [silhouette[0]]]),
-        color="#444444", linewidth=1.4, zorder=5)
+ax.plot(
+    *zip(*[iso(*v) for v in silhouette + [silhouette[0]]]),
+    color="#444444",
+    linewidth=1.4,
+    zorder=5,
+)
 for far in [(0, 1, 1), (1, 0, 1), (1, 1, 0)]:
-    ax.plot(*zip(iso(1, 1, 1), iso(*far)), color="#444444", linewidth=1.0,
-            zorder=5)
+    ax.plot(*zip(iso(1, 1, 1), iso(*far)), color="#444444", linewidth=1.0, zorder=5)
 
 vx, vy = iso(1, 1, 1)
 ax.plot([vx], [vy], marker="o", color="#222222", markersize=7, zorder=6)
 ax.annotate(
     "cube corner: 3 cells meet here\nN0.diagonal_neighbor('up_left') is None",
-    xy=(vx, vy), xytext=(0, -1.0), fontsize=10, ha="center", va="top",
+    xy=(vx, vy),
+    xytext=(0, -1.0),
+    fontsize=10,
+    ha="center",
+    va="top",
     color="#222222",
     arrowprops=dict(arrowstyle="->", color="#222222", shrinkB=6),
 )
@@ -977,32 +1101,59 @@ from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 
 fig, axes = plt.subplots(2, 1, figsize=(8, 6.4))
 for ax, (ns, ss) in zip(axes, [(0, 0), (1, 2)]):
-    rd = RHEALPixDGGS(ellipsoid=WGS84_ELLIPSOID, north_square=ns, south_square=ss, N_side=3)
+    rd = RHEALPixDGGS(
+        ellipsoid=WGS84_ELLIPSOID, north_square=ns, south_square=ss, N_side=3
+    )
     Rl = rd.ellipsoid.R_A
     for face in CELLS0:
         c0 = rd.cell([face])
         x, y = c0.ul_vertex()
         w = c0.width()
         ax.add_patch(
-            Rectangle((x / Rl, (y - w) / Rl), w / Rl, w / Rl,
-                      facecolor=FACE_COLORS[face], alpha=0.35,
-                      edgecolor="black", linewidth=1.2))
-        ax.text((x + 0.5 * w) / Rl, (y - 0.5 * w) / Rl, face,
-                ha="center", va="center", fontsize=16, fontweight="bold",
-                color="#333333", alpha=0.85)
+            Rectangle(
+                (x / Rl, (y - w) / Rl),
+                w / Rl,
+                w / Rl,
+                facecolor=FACE_COLORS[face],
+                alpha=0.35,
+                edgecolor="black",
+                linewidth=1.2,
+            )
+        )
+        ax.text(
+            (x + 0.5 * w) / Rl,
+            (y - 0.5 * w) / Rl,
+            face,
+            ha="center",
+            va="center",
+            fontsize=16,
+            fontweight="bold",
+            color="#333333",
+            alpha=0.85,
+        )
     for seg in COASTLINES:
         xy = [rd.rhealpix(lon, lat) for lon, lat in seg]
         run = [xy[0]]
         for prev, cur in zip(xy, xy[1:]):
             if abs(cur[0] - prev[0]) > 0.15 * Rl or abs(cur[1] - prev[1]) > 0.15 * Rl:
                 if len(run) > 1:
-                    ax.plot([p[0] / Rl for p in run], [p[1] / Rl for p in run],
-                            color=COAST_COLOR, linewidth=0.4, zorder=1)
+                    ax.plot(
+                        [p[0] / Rl for p in run],
+                        [p[1] / Rl for p in run],
+                        color=COAST_COLOR,
+                        linewidth=0.4,
+                        zorder=1,
+                    )
                 run = []
             run.append(cur)
         if len(run) > 1:
-            ax.plot([p[0] / Rl for p in run], [p[1] / Rl for p in run],
-                    color=COAST_COLOR, linewidth=0.4, zorder=1)
+            ax.plot(
+                [p[0] / Rl for p in run],
+                [p[1] / Rl for p in run],
+                color=COAST_COLOR,
+                linewidth=0.4,
+                zorder=1,
+            )
     ax.set_xlim(-3.4, 3.4)
     ax.set_ylim(-2.6, 2.6)
     ax.set_aspect("equal")
@@ -1046,18 +1197,22 @@ for seg in split_chart_discontinuities(pts):
         ax.fill(*zip(*seg), color=FACE_COLORS[str(akl_cell)[0]], alpha=0.4, zorder=3)
 ax.plot([AKL[0]], [AKL[1]], marker="*", color="#222222", markersize=12, zorder=4)
 ax.annotate(
-    f"Auckland maps to planar x = 0,\n"
-    f"on the P|Q face edge: cell {akl_cell}",
-    xy=AKL, xytext=(AKL[0] - 120, AKL[1] - 30),
-    fontsize=9, color="#222222",
-    arrowprops=dict(arrowstyle="->", color="#222222"))
+    f"Auckland maps to planar x = 0,\n" f"on the P|Q face edge: cell {akl_cell}",
+    xy=AKL,
+    xytext=(AKL[0] - 120, AKL[1] - 30),
+    fontsize=9,
+    color="#222222",
+    arrowprops=dict(arrowstyle="->", color="#222222"),
+)
 ax.set_xlim(-180, 180)
 ax.set_ylim(-90, 90)
 ax.set_xticks(range(-180, 181, 60))
 ax.set_yticks(range(-90, 91, 30))
 ax.set_xlabel("longitude (degrees)")
 ax.set_ylabel("latitude (degrees)")
-ax.set_title("Resolution 1 cells of a DGGS recentred on the Auckland meridian (lon_0=174)")
+ax.set_title(
+    "Resolution 1 cells of a DGGS recentred on the Auckland meridian (lon_0=174)"
+)
 ax.grid(True, linewidth=0.3, alpha=0.5)
 fig.tight_layout()
 fig.savefig(OUT / "recentred.svg", bbox_inches="tight")
@@ -1088,19 +1243,36 @@ def draw_ring_panel(ax, center_name, max_k, window_faces):
                 k = membership.get(name)
                 color = RING_COLORS[k] if k is not None else "#ffffff"
                 ax.add_patch(
-                    Rectangle((x, y - w), w, w,
-                              facecolor=color,
-                              alpha=0.55 if k is not None else 1.0,
-                              edgecolor="#aaaaaa", linewidth=0.3))
+                    Rectangle(
+                        (x, y - w),
+                        w,
+                        w,
+                        facecolor=color,
+                        alpha=0.55 if k is not None else 1.0,
+                        edgecolor="#aaaaaa",
+                        linewidth=0.3,
+                    )
+                )
     # face outlines
     for face in window_faces:
         c0 = rdggs.cell([face])
         x, y = c0.ul_vertex()
         w = c0.width()
-        ax.add_patch(Rectangle((x, y - w), w, w, facecolor="none",
-                               edgecolor="#444444", linewidth=1.2))
-        ax.text(x + 0.06 * w, y - 0.06 * w, face, ha="left", va="top",
-                fontsize=12, fontweight="bold", color="#444444")
+        ax.add_patch(
+            Rectangle(
+                (x, y - w), w, w, facecolor="none", edgecolor="#444444", linewidth=1.2
+            )
+        )
+        ax.text(
+            x + 0.06 * w,
+            y - 0.06 * w,
+            face,
+            ha="left",
+            va="top",
+            fontsize=12,
+            fontweight="bold",
+            color="#444444",
+        )
     ax.set_aspect("equal")
     ax.axis("off")
 
@@ -1128,8 +1300,13 @@ for k in (1, 2, 3):
         membership[nm] = k
 for seg in COASTLINES:
     x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], *view)
-    ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-            color=COAST_COLOR, linewidth=0.5, zorder=1)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color=COAST_COLOR,
+        linewidth=0.5,
+        zorder=1,
+    )
 for face in ("N", "Q", "R"):
     for cell1 in rdggs.cell([face]).subcells():
         for cell in cell1.subcells():
@@ -1139,8 +1316,13 @@ for face in ("N", "Q", "R"):
             k = membership.get(str(cell))
             if k is not None and vis.all():
                 ax.fill(x, y, color=RING_COLORS[k], alpha=0.55, linewidth=0)
-            ax.plot(np.where(vis, x, np.nan), np.where(vis, y, np.nan),
-                    color="#aaaaaa", linewidth=0.3, zorder=2)
+            ax.plot(
+                np.where(vis, x, np.nan),
+                np.where(vis, y, np.nan),
+                color="#aaaaaa",
+                linewidth=0.3,
+                zorder=2,
+            )
 cx, cy, _ = ortho(corner_lon, corner_lat, *view)
 ax.plot([cx], [cy], marker="o", color="#222222", markersize=5, zorder=6)
 lim = 0.42
@@ -1162,8 +1344,9 @@ SEG = ((179.0, 10.0), (-179.0, 10.0))
 fig, axes = plt.subplots(2, 1, figsize=(9, 6.6))
 for ax, wrap in zip(axes, (False, True)):
     draw_coastlines_lonlat(ax, linewidth=0.5)
-    traced = rdggs.cells_from_line(1, SEG[0], SEG[1], plane=False,
-                                   wrap_antimeridian=wrap)
+    traced = rdggs.cells_from_line(
+        1, SEG[0], SEG[1], plane=False, wrap_antimeridian=wrap
+    )
     for cell in traced:
         pts = cell.boundary(n=20, plane=False)
         pts = pts + [pts[0]]
@@ -1176,8 +1359,9 @@ for ax, wrap in zip(axes, (False, True)):
         ax.plot([SEG[0][0], 180], [SEG[0][1], SEG[0][1]], color="#222222", linewidth=2)
         ax.plot([-180, SEG[1][0]], [SEG[1][1], SEG[1][1]], color="#222222", linewidth=2)
     else:
-        ax.plot([SEG[0][0], SEG[1][0]], [SEG[0][1], SEG[1][1]],
-                color="#222222", linewidth=2)
+        ax.plot(
+            [SEG[0][0], SEG[1][0]], [SEG[0][1], SEG[1][1]], color="#222222", linewidth=2
+        )
     ax.plot([SEG[0][0]], [SEG[0][1]], marker="o", color="#222222", markersize=6)
     ax.plot([SEG[1][0]], [SEG[1][1]], marker="s", color="#222222", markersize=6)
     ax.set_xlim(-180, 180)
@@ -1186,9 +1370,15 @@ for ax, wrap in zip(axes, (False, True)):
     ax.set_yticks(range(-60, 61, 30))
     ax.grid(True, linewidth=0.3, alpha=0.5)
     ax.set_title(
-        "wrap_antimeridian=%s: (179, 10) to (-179, 10) traced %s" % (
-            wrap, "the short way, across the antimeridian" if wrap
-            else "the long way, through longitude 0 (the literal planar reading)"),
+        "wrap_antimeridian=%s: (179, 10) to (-179, 10) traced %s"
+        % (
+            wrap,
+            (
+                "the short way, across the antimeridian"
+                if wrap
+                else "the long way, through longitude 0 (the literal planar reading)"
+            ),
+        ),
         fontsize=10,
     )
 axes[1].set_xlabel("longitude (degrees)")
@@ -1208,7 +1398,11 @@ compacted = compact_cells(filled, N_side=rdggs.N_side)
 fig, axes = plt.subplots(1, 2, figsize=(11, 5.2), sharey=True)
 for ax, cells, title in (
     (axes[0], filled, "polyfill(polygon, res=%d): %d cells" % (FILL_RES, len(filled))),
-    (axes[1], compacted, "compact_cells(...): %d cells, mixed resolutions" % len(compacted)),
+    (
+        axes[1],
+        compacted,
+        "compact_cells(...): %d cells, mixed resolutions" % len(compacted),
+    ),
 ):
     draw_coastlines_lonlat(ax, linewidth=0.7)
     for address in sorted(cells):
@@ -1219,10 +1413,14 @@ for ax, cells, title in (
         depth = len(address) - 1
         alpha = 0.55 - 0.08 * (depth - 3)
         color = FACE_COLORS[address[0]]
-        ax.fill([p[0] for p in pts], [p[1] for p in pts],
-                color=color, alpha=max(alpha, 0.2), linewidth=0)
-        ax.plot([p[0] for p in pts], [p[1] for p in pts],
-                color=color, linewidth=0.5)
+        ax.fill(
+            [p[0] for p in pts],
+            [p[1] for p in pts],
+            color=color,
+            alpha=max(alpha, 0.2),
+            linewidth=0,
+        )
+        ax.plot([p[0] for p in pts], [p[1] for p in pts], color=color, linewidth=0.5)
     ax.plot(*zip(*(NZ_POLYGON + [NZ_POLYGON[0]])), color="#222222", linewidth=1.4)
     ax.set_xlim(163, 181)
     ax.set_ylim(-49, -32)
