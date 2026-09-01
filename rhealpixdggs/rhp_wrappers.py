@@ -105,7 +105,10 @@ def rhp_to_geo(
 
 
 def rhp_to_parent(
-    rhpindex: str, res: int = None, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+    rhpindex: str,
+    res: int | None = None,
+    verbose: bool = True,
+    dggs: RHEALPixDGGS = WGS84_003,
 ) -> str | None:
     """
     Returns parent of rhpindex at resolution res (immediate parent if res == None).
@@ -145,7 +148,10 @@ def rhp_to_parent(
 
 
 def rhp_to_center_child(
-    rhpindex: str, res: int = None, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+    rhpindex: str,
+    res: int | None = None,
+    verbose: bool = True,
+    dggs: RHEALPixDGGS = WGS84_003,
 ) -> str | None:
     """
     Returns central child of rhpindex at resolution res (immediate central
@@ -716,10 +722,7 @@ def _malformed_geometry(geometry: Polygon | MultiPolygon) -> bool:
         return True
 
     # Geometry has to have an area, i.e. not be collapsed to a line
-    if geometry.area == 0:
-        return True
-
-    return False
+    return geometry.area == 0
 
 
 def _malformed_lines(lines: LineString | MultiLineString) -> bool:
@@ -735,10 +738,7 @@ def _malformed_lines(lines: LineString | MultiLineString) -> bool:
         return True
 
     # Lines need to have a length, i.e. not be collapsed into points
-    if lines.length == 0:
-        return True
-
-    return False
+    return lines.length == 0
 
 
 def _remove_sequential_duplicates(cells: list[str]) -> list[str]:

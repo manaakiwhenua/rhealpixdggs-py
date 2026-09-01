@@ -85,8 +85,8 @@ def healpix_sphere_inverse(x: float, y: float) -> tuple[float, float]:
     """
     if not in_healpix_image(x, y):
         raise ValueError(
-            "(%.20f,%.20f) is not a point in the image of the HEALPix "
-            "projection of the unit sphere" % (x, y)
+            f"({x:.20f},{y:.20f}) is not a point in the image of the HEALPix "
+            "projection of the unit sphere"
         )
     y0 = pi / 4
     # Equatorial region.

@@ -124,10 +124,7 @@ class Ellipsoid:
         return "\n".join(result)
 
     def __eq__(self, other):
-        if self.a == other.a and self.b == other.b:
-            return True
-        else:
-            return False
+        return self.a == other.a and self.b == other.b
 
     def __ne__(self, other):
         """
@@ -312,14 +309,15 @@ class Ellipsoid:
         whitespace and angles given in degrees.
         """
         result = []
-        for line in open(filename, "rb"):
-            if line[0] not in ["-", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-                # Ignore line.
-                continue
-            else:
-                # Split coordinate pair on whitespace.
-                p = [float(x) for x in line.split()]
-                result.append(p)
+        with open(filename, "rb") as file:
+            for line in file:
+                if line[0] not in ["-", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+                    # Ignore line.
+                    continue
+                else:
+                    # Split coordinate pair on whitespace.
+                    p = [float(x) for x in line.split()]
+                    result.append(p)
         if self.radians:
             # Convert to radians.
             result = [deg2rad(p) for p in result]

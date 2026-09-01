@@ -332,9 +332,9 @@ def rhealpix_sphere_inverse(
         x, y, south_square=south_square, north_square=north_square
     ):
         raise ValueError(
-            "(%.20f,%.20f) is not a point in the image of the "
-            "(%d, %d)-rHEALPix projection of the unit sphere"
-            % (x, y, north_square, south_square)
+            f"({x:.20f},{y:.20f}) is not a point in the image of the "
+            f"({north_square}, {south_square})-rHEALPix projection of the "
+            "unit sphere"
         )
     if region != "equatorial":
         x, y = combine_triangles(
@@ -410,9 +410,9 @@ def rhealpix_ellipsoid_inverse(
         x, y, south_square=south_square, north_square=north_square
     ):
         raise ValueError(
-            "(%.20f,%.20f) is not a point in the image of the "
-            "(%d, %d)-rHEALPix projection of the unit sphere"
-            % (x, y, north_square, south_square)
+            f"({x:.20f},{y:.20f}) is not a point in the image of the "
+            f"({north_square}, {south_square})-rHEALPix projection of the "
+            "unit sphere"
         )
 
     if region != "equatorial":

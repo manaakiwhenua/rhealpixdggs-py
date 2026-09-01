@@ -28,6 +28,7 @@ commit for reproducibility) and cached under .cache/ at the repository
 root (outside docs/, which is shipped in the sdist).
 """
 
+import itertools
 import json
 import os
 import pathlib
@@ -53,6 +54,7 @@ from matplotlib.patches import Rectangle
 # up svg_shrink from alongside this file however the script was invoked.
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
+
 
 import svg_shrink
 
@@ -106,7 +108,7 @@ def coastline_segments():
         )
         for line in lines:
             current = [line[0]]
-            for prev, cur in zip(line, line[1:]):
+            for prev, cur in itertools.pairwise(line):
                 if abs(cur[0] - prev[0]) > 180:
                     segments.append(current)
                     current = []
@@ -171,7 +173,7 @@ for face in CELLS0:
 for seg in COASTLINES:
     xy = [rdggs.rhealpix(lon, lat) for lon, lat in seg]
     run = [xy[0]]
-    for prev, cur in zip(xy, xy[1:]):
+    for prev, cur in itertools.pairwise(xy):
         if abs(cur[0] - prev[0]) > 0.15 * R or abs(cur[1] - prev[1]) > 0.15 * R:
             if len(run) > 1:
                 ax.plot(
@@ -228,7 +230,7 @@ def split_chart_discontinuities(points):
     off the equator, whose cells can overflow past a pole -- wherever
     the latitude wraps from one pole to the other."""
     segs = [[points[0]]]
-    for prev, cur in zip(points, points[1:]):
+    for prev, cur in itertools.pairwise(points):
         if abs(cur[0] - prev[0]) > 180 or abs(cur[1] - prev[1]) > 90:
             segs.append([])
         segs[-1].append(cur)
@@ -241,7 +243,7 @@ def fill_lonlat_polygon(ax, points, **kwargs):
     longitudes into one continuous ring, then draw it at every 360-degree
     offset that intersects the axis window and let clipping do the rest."""
     lons = [points[0][0]]
-    for prev, cur in zip(points, points[1:]):
+    for prev, cur in itertools.pairwise(points):
         d = cur[0] - prev[0]
         if d > 180:
             d -= 360
@@ -394,6 +396,7 @@ print("globe views written")
 # The H3-style wrappers in action over New Zealand: polyfill (cells whose
 # centroids fall inside a polygon) and linetrace (cells touched by a
 # linestring).
+
 from shapely.geometry import LineString, Polygon
 
 from rhealpixdggs import rhp_wrappers
@@ -409,7 +412,7 @@ def draw_cells_lonlat(ax, addresses, fill_alpha=0.35):
         pts = cell.boundary(n=10, plane=False)
         pts = pts + [pts[0]]
         color = FACE_COLORS[address[0]]
-        if all(abs(cur[0] - prev[0]) <= 180 for prev, cur in zip(pts, pts[1:])):
+        if all(abs(cur[0] - prev[0]) <= 180 for prev, cur in itertools.pairwise(pts)):
             ax.fill(
                 [p[0] for p in pts],
                 [p[1] for p in pts],
@@ -465,6 +468,7 @@ print("wrapper examples written")
 # ---------------------------------------------------------------- figure 5
 # linetrace across the north polar cap: the case where cells are not
 # rectangles in longitude-latitude space, seen from above the pole.
+
 from rhealpixdggs import rhp_wrappers
 
 CAP_LINE = [
@@ -557,14 +561,14 @@ for cell in rdggs.cell(["N", 4, 4]).subcells():
         va="center",
         fontsize=9,
         color="#333333",
-        bbox=dict(facecolor="white", alpha=0.6, linewidth=0, pad=1),
+        bbox={"facecolor": "white", "alpha": 0.6, "linewidth": 0, "pad": 1},
         zorder=5,
     )
 
 # The linestring, densified per leg in longitude-latitude space (its
 # segments are straight in that space, so on the globe each leg curves
 # around the pole).
-for a, b in zip(CAP_LINE, CAP_LINE[1:]):
+for a, b in itertools.pairwise(CAP_LINE):
     ts = np.linspace(0, 1, 400)
     lons = a[0] + ts * (b[0] - a[0])
     lats = a[1] + ts * (b[1] - a[1])
@@ -586,8 +590,8 @@ ax.set_ylim(-lim, lim)
 ax.set_aspect("equal")
 ax.axis("off")
 ax.set_title(
-    "linetrace across the north polar cap (resolution %d, view from above the pole)\n"
-    "traced: %s" % (CAP_RES, " → ".join(traced)),
+    f"linetrace across the north polar cap (resolution {CAP_RES}, view from above the pole)\n"
+    f"traced: {' → '.join(traced)}",
     fontsize=10,
 )
 fig.tight_layout()
@@ -656,7 +660,7 @@ for suid, color, lw in zip(level_cells, level_colors, (1.2, 1.6, 2.0, 2.4)):
         color=color,
         ha="right",
         va="bottom",
-        arrowprops=dict(arrowstyle="-", color=color, linewidth=0.8),
+        arrowprops={"arrowstyle": "-", "color": color, "linewidth": 0.8},
     )
 ax.set_xlim(-0.2, 1.02)
 ax.set_ylim(-0.02, 1.15)
@@ -987,7 +991,7 @@ ax.annotate(
     fontsize=10,
     ha="center",
     color="#222222",
-    arrowprops=dict(arrowstyle="->", color="#222222"),
+    arrowprops={"arrowstyle": "->", "color": "#222222"},
 )
 lim = 0.9
 ax.set_xlim(-lim, lim)
@@ -1081,7 +1085,7 @@ ax.annotate(
     ha="center",
     va="top",
     color="#222222",
-    arrowprops=dict(arrowstyle="->", color="#222222", shrinkB=6),
+    arrowprops={"arrowstyle": "->", "color": "#222222", "shrinkB": 6},
 )
 ax.set_xlim(-1.0, 1.0)
 ax.set_ylim(-1.45, 1.3)
@@ -1096,6 +1100,7 @@ print("cube corner (cube view) figure written")
 
 # --------------------------------------------------------------- figure 10
 # The north_square/south_square parameters: where the polar squares sit.
+
 from rhealpixdggs.dggs import RHEALPixDGGS
 from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 
@@ -1134,7 +1139,7 @@ for ax, (ns, ss) in zip(axes, [(0, 0), (1, 2)]):
     for seg in COASTLINES:
         xy = [rd.rhealpix(lon, lat) for lon, lat in seg]
         run = [xy[0]]
-        for prev, cur in zip(xy, xy[1:]):
+        for prev, cur in itertools.pairwise(xy):
             if abs(cur[0] - prev[0]) > 0.15 * Rl or abs(cur[1] - prev[1]) > 0.15 * Rl:
                 if len(run) > 1:
                     ax.plot(
@@ -1202,7 +1207,7 @@ ax.annotate(
     xytext=(AKL[0] - 120, AKL[1] - 30),
     fontsize=9,
     color="#222222",
-    arrowprops=dict(arrowstyle="->", color="#222222"),
+    arrowprops={"arrowstyle": "->", "color": "#222222"},
 )
 ax.set_xlim(-180, 180)
 ax.set_ylim(-90, 90)
@@ -1226,7 +1231,7 @@ RING_COLORS = ["#e5735c", "#e8c34f", "#79bf6f", "#5cc3c9"]
 
 
 def draw_ring_panel(ax, center_name, max_k, window_faces):
-    center = rdggs.cell([c if c in CELLS0 else int(c) for c in center_name])
+    rdggs.cell([c if c in CELLS0 else int(c) for c in center_name])
     rings = {0: [center_name]}
     for k in range(1, max_k + 1):
         rings[k] = rhp_wrappers.cell_ring(center_name, k)
@@ -1370,8 +1375,7 @@ for ax, wrap in zip(axes, (False, True)):
     ax.set_yticks(range(-60, 61, 30))
     ax.grid(True, linewidth=0.3, alpha=0.5)
     ax.set_title(
-        "wrap_antimeridian=%s: (179, 10) to (-179, 10) traced %s"
-        % (
+        "wrap_antimeridian={}: (179, 10) to (-179, 10) traced {}".format(
             wrap,
             (
                 "the short way, across the antimeridian"
@@ -1397,11 +1401,11 @@ filled = rhp_wrappers.polyfill(Polygon(NZ_POLYGON), FILL_RES, plane=False, dggs=
 compacted = compact_cells(filled, N_side=rdggs.N_side)
 fig, axes = plt.subplots(1, 2, figsize=(11, 5.2), sharey=True)
 for ax, cells, title in (
-    (axes[0], filled, "polyfill(polygon, res=%d): %d cells" % (FILL_RES, len(filled))),
+    (axes[0], filled, f"polyfill(polygon, res={FILL_RES}): {len(filled)} cells"),
     (
         axes[1],
         compacted,
-        "compact_cells(...): %d cells, mixed resolutions" % len(compacted),
+        f"compact_cells(...): {len(compacted)} cells, mixed resolutions",
     ),
 ):
     draw_coastlines_lonlat(ax, linewidth=0.7)

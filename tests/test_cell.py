@@ -101,7 +101,9 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             expect = (P, 1)
 
             def num(k):
-                return rdggs.num_cells(res_1=k, subcells=True)
+                # rdggs is stable across this loop iteration, and num() is
+                # only called within it.
+                return rdggs.num_cells(res_1=k, subcells=True)  # noqa: B023
 
             i = 2 * num(0) + 1 * num(1) + num(1) - 1
             get = Cell(rdggs, post_order_index=i).suid
@@ -167,7 +169,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             c = Cell(rdggs, (O, 1, 2))
             self.assertTrue(a < b)
             self.assertTrue(a < c)
-            self.assertFalse(a < a)
+            self.assertFalse(a < a)  # noqa: PLR0124 -- tests < irreflexivity
             self.assertFalse(b < a)
             self.assertFalse(c < a)
 
@@ -207,7 +209,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             c = Cell(rdggs, (O, 1, 2))
             self.assertFalse(a > b)
             self.assertFalse(a > c)
-            self.assertFalse(a > a)
+            self.assertFalse(a > a)  # noqa: PLR0124 -- tests > irreflexivity
             self.assertTrue(b > a)
             self.assertTrue(c > a)
 
@@ -239,8 +241,9 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             self.assertEqual(c.index(order="level"), b.index(order="level") + 1)
 
             # It should invert suid_from_index().
-            M = rdggs.num_cells(0, rdggs.max_resolution)
-            k = 3616048  # randint(0, M - 1)
+            # A fixed index; originally drawn as
+            # randint(0, rdggs.num_cells(0, rdggs.max_resolution) - 1).
+            k = 3616048
             get = Cell(rdggs, Cell.suid_from_index(rdggs, k, order="level")).index(
                 order="level"
             )
@@ -269,7 +272,6 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             # Assume that nucleus() and vertices() work.
             for suid in [[N, 3, 1], [P, 5, 7, 5, 1, 3], [S, 0]]:
                 c = Cell(rdggs, suid)
-                w = c.width()
                 for plane in [True, False]:
                     nucleus = c.nucleus(plane=plane)
                     vertices = c.vertices(plane=plane)
@@ -459,7 +461,6 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             (x, y) = a.ul_vertex()
             error = 1e-10
             for row, col in product(list(range(3)), repeat=2):
-                s = str(row * 3 + col)
                 # Child cell in (row, column) position relative to a:
                 b = Cell(rdggs, list(a.suid) + [3 * row + col])
                 get = b.nucleus()
@@ -548,7 +549,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             # Quad.
             c = Cell(rdggs, (O, 0))
             get = c.neighbors(plane=False)
-            expect = dict()
+            expect = {}
             expect["north"] = Cell(rdggs, (N, 6))
             expect["south"] = Cell(rdggs, (O, 3))
             expect["west"] = Cell(rdggs, (R, 2))
@@ -558,7 +559,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             # Cap.
             c = Cell(rdggs, (S, 4))
             get = c.neighbors(plane=False)
-            expect = dict()
+            expect = {}
             expect["north_0"] = Cell(rdggs, (S, 1))
             expect["north_1"] = Cell(rdggs, (S, 5))
             expect["north_2"] = Cell(rdggs, (S, 7))
@@ -568,7 +569,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             # Dart.
             c = Cell(rdggs, (N, 6))
             get = c.neighbors(plane=False)
-            expect = dict()
+            expect = {}
             expect["west"] = Cell(rdggs, (N, 3))
             expect["east"] = Cell(rdggs, (N, 7))
             expect["south_west"] = Cell(rdggs, (R, 2))
@@ -578,7 +579,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             # Skew quad.
             c = Cell(rdggs, (N, 3))
             get = c.neighbors(plane=False)
-            expect = dict()
+            expect = {}
             expect["north"] = Cell(rdggs, (N, 4))
             expect["south"] = Cell(rdggs, (R, 1))
             expect["west"] = Cell(rdggs, (N, 0))
@@ -974,7 +975,9 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             y2 = max(v[1] for v in pv)
 
             def phi(y):
-                return rdggs.rhealpix(x1, y, inverse=True)[1]
+                # rdggs and x1 are stable across this loop iteration, and
+                # phi() is only integrated within it.
+                return rdggs.rhealpix(x1, y, inverse=True)[1]  # noqa: B023
 
             expected_lat = (
                 integrate.quad(phi, y1, y2, epsabs=1e-5, epsrel=1e-10)[0]

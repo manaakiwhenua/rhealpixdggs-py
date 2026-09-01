@@ -4,6 +4,7 @@ from colorsys import hsv_to_rgb
 from functools import cached_property, total_ordering
 from itertools import product
 from random import uniform
+from typing import ClassVar
 
 # pi is doctest-only: the doctests use it from the module globals.
 from numpy import array, base_repr, pi  # noqa: F401
@@ -157,20 +158,17 @@ class Cell:
         if suid is not None:
             # A little error checking.
             if not isinstance(suid, (list, tuple)):
-                raise TypeError("Cell suid must be a list or tuple. Got %s." % suid)
+                raise TypeError(f"Cell suid must be a list or tuple. Got {suid}.")
             if not (0 < len(suid) <= rdggs.max_resolution + 1):
                 raise ValueError(
-                    "Need 0 < len(suid) <= %s. Got %s."
-                    % (rdggs.max_resolution + 1, suid)
+                    f"Need 0 < len(suid) <= {rdggs.max_resolution + 1}. Got {suid}."
                 )
             if suid[0] not in CELLS0:
-                raise ValueError("suid[0] must lie in %s. Got %s." % (CELLS0, suid[0]))
+                raise ValueError(f"suid[0] must lie in {CELLS0}. Got {suid[0]}.")
             digits = set(range(self.N_side**2))
             for x in suid[1:]:
                 if x not in digits:
-                    raise ValueError(
-                        "Digits of suid must lie in %s. Got %s." % (digits, x)
-                    )
+                    raise ValueError(f"Digits of suid must lie in {digits}. Got {x}.")
 
             self.suid = [suid[0]] + [int(n) for n in suid[1:]]
             self.suid = tuple(self.suid)
@@ -229,10 +227,7 @@ class Cell:
         t = other.suid
         t_starts_with_s = t[: len(s)] == s
         s_starts_with_t = s[: len(t)] == t
-        if (s <= t and not t_starts_with_s) or s_starts_with_t:
-            return True
-        else:
-            return False
+        return (s <= t and not t_starts_with_s) or s_starts_with_t
 
     def index(self, order="resolution"):
         """
@@ -1090,7 +1085,7 @@ class Cell:
             return "cap"
         # Dart check 1.
         dart = True
-        S = set([i * (N + 1) for i in range(N)])
+        S = {i * (N + 1) for i in range(N)}
         for n in suid[1:]:
             if n not in S:
                 dart = False
@@ -1099,7 +1094,7 @@ class Cell:
             return "dart"
         # Dark check 2.
         dart = True
-        S = set([(i + 1) * (N - 1) for i in range(N)])
+        S = {(i + 1) * (N - 1) for i in range(N)}
         for n in suid[1:]:
             if n not in S:
                 dart = False
@@ -1227,7 +1222,7 @@ class Cell:
         A = self.rdggs.child_order
         # Function (written as a dictionary) describing action of rotating A
         # one quarter turn anticlockwise.
-        f = dict()
+        f = {}
         for i in range(N):
             for j in range(N):
                 n = A[(i, j)]
@@ -1327,9 +1322,9 @@ class Cell:
             neighbor_suid = []
             N = self.N_side
             up_border = set(range(N))
-            down_border = set([(N - 1) * N + i for i in range(N)])
-            left_border = set([i * N for i in range(N)])
-            right_border = set([(i + 1) * N - 1 for i in range(N)])
+            down_border = {(N - 1) * N + i for i in range(N)}
+            left_border = {i * N for i in range(N)}
+            right_border = {(i + 1) * N - 1 for i in range(N)}
             border = {
                 "left": left_border,
                 "right": right_border,
@@ -1405,13 +1400,13 @@ class Cell:
             up Q2
 
         """
-        plane_neighbors = dict()
+        plane_neighbors = {}
         for d in ["left", "right", "down", "up"]:
             plane_neighbors[d] = self.neighbor(d, "plane")
         if plane:
             return plane_neighbors
         # Ellipsoid case.
-        result = dict()
+        result = {}
         shape = self.ellipsoidal_shape
         if shape == "quad":
             result["north"] = plane_neighbors["up"]
@@ -1495,7 +1490,7 @@ class Cell:
 
     # Diagonal (corner-touching only) directions, each a (row, column)
     # direction pair, keyed to match neighbor()'s own plane direction names.
-    _DIAGONAL_DIRECTIONS = {
+    _DIAGONAL_DIRECTIONS: ClassVar[dict[str, tuple[str, str]]] = {
         "up_left": ("up", "left"),
         "up_right": ("up", "right"),
         "down_left": ("down", "left"),
@@ -1625,11 +1620,11 @@ class Cell:
         """
         if self.rdggs != other.rdggs:
             raise ValueError(
-                "Cannot test %s between cells of different RHEALPixDGGS "
-                "instances." % verb
+                f"Cannot test {verb} between cells of different RHEALPixDGGS "
+                "instances."
             )
         if not self.suid or not other.suid:
-            raise ValueError("Cannot test %s for an empty cell." % verb)
+            raise ValueError(f"Cannot test {verb} for an empty cell.")
 
     def equals(self, other):
         """
@@ -1853,7 +1848,7 @@ class Cell:
         """
         suid = self.suid
         N = self.rdggs.N_side
-        hue_resolution0 = dict([(v, k / 6.0) for (k, v) in enumerate(CELLS0)])
+        hue_resolution0 = {v: k / 6.0 for (k, v) in enumerate(CELLS0)}
         hue = hue_resolution0[suid[0]]
         n = len(suid)
         if n > 1:

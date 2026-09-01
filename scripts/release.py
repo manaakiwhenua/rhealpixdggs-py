@@ -208,8 +208,6 @@ def write_if_changed(path: pathlib.Path, old: str, new: str) -> bool:
 
 
 def check_tools(*, need_poetry: bool) -> None:
-    if sys.version_info < (3, 11):
-        raise Failure("this script needs Python 3.11 or newer (tomllib)")
     if not need_poetry:
         return
     if shutil.which("poetry") is None:
@@ -379,7 +377,9 @@ def rst_to_markdown(text: str) -> str:
 
 
 def check_copyright_year() -> None:
-    this_year = datetime.date.today().year
+    # The releaser's local date is the right one here: it matches what a
+    # human writes in the license files.
+    this_year = datetime.date.today().year  # noqa: DTZ011
     for name in COPYRIGHT_FILES:
         path = ROOT / name
         match = re.search(r"Copyright \(c\) (\d{4})-(\d{4})", path.read_text())
@@ -578,7 +578,8 @@ def stage_prepare(version: str) -> None:
         note(f"already at {version}; leaving the version files alone")
     else:
         check_version_bump(version, expect_bumped=False)
-        today = datetime.date.today()
+        # The releaser's local date is the right release date to record.
+        today = datetime.date.today()  # noqa: DTZ011
         say("\nSetting the version")
         if set_pyproject_version(version):
             ok(f"pyproject.toml -> {version}")

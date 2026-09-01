@@ -152,7 +152,7 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
 # *****************************************************************************
 # Import third-party modules.
 # Import standard modules.
-from itertools import product
+from itertools import pairwise, product
 from math import asin, copysign, floor
 from random import randint
 
@@ -356,11 +356,11 @@ class RHEALPixDGGS:
 
     def __str__(self):
         result = ["rHEALPix DGGS:"]
-        result.append("    N_side = %s" % self.N_side)
-        result.append("    north_square = %s" % self.north_square)
-        result.append("    south_square = %s" % self.south_square)
-        result.append("    max_areal_resolution = %s" % self.max_areal_resolution)
-        result.append("    max_resolution = %s" % self.max_resolution)
+        result.append(f"    N_side = {self.N_side}")
+        result.append(f"    north_square = {self.north_square}")
+        result.append(f"    south_square = {self.south_square}")
+        result.append(f"    max_areal_resolution = {self.max_areal_resolution}")
+        result.append(f"    max_resolution = {self.max_resolution}")
         result.append("    ellipsoid:")
         for k, v in sorted(self.ellipsoid.__dict__.items()):
             if k == "phi_0":
@@ -639,7 +639,9 @@ class RHEALPixDGGS:
             yield cs
             cs = cs.successor(resolution)
 
-    def num_cells(self, res_1: int, res_2: int = None, subcells: bool = False) -> int:
+    def num_cells(
+        self, res_1: int, res_2: int | None = None, subcells: bool = False
+    ) -> int:
         """
         Return the number of cells of resolutions `res_1` to `res_2`
         (inclusive).
@@ -1286,7 +1288,7 @@ class RHEALPixDGGS:
             )
             lo = min(lstart[0], lend[0]) - ell.lon_0
             hi = max(lstart[0], lend[0]) - ell.lon_0
-            k0, k1 = int(floor(lo / quarter)), int(ceil(hi / quarter))
+            k0, k1 = floor(lo / quarter), int(ceil(hi / quarter))
             add_linear_crossings(
                 lstart[0],
                 lend[0],
@@ -1301,8 +1303,8 @@ class RHEALPixDGGS:
 
         def lattice_lines_between(a, b, anchor):
             lo, hi = (a, b) if a <= b else (b, a)
-            i0 = int(floor((lo - anchor) / w)) + 1
-            i1 = int(floor((hi - anchor) / w))
+            i0 = floor((lo - anchor) / w) + 1
+            i1 = floor((hi - anchor) / w)
             return [anchor + i * w for i in range(i0, i1 + 1)]
 
         def root(f, ta, tb, fa):
@@ -1352,7 +1354,7 @@ class RHEALPixDGGS:
                     cuts.append(0.5 * (lo + hi))
                     direction = d
             cuts.append(tb)
-            return list(zip(cuts, cuts[1:]))
+            return list(pairwise(cuts))
 
         crossings = set()
         for pa, pb in zip(sorted(breakpoints), sorted(breakpoints)[1:]):
@@ -1379,7 +1381,7 @@ class RHEALPixDGGS:
 
         ts = [0.0] + sorted(crossings) + [1.0]
         line_cells = [start]
-        for a, b in zip(ts, ts[1:]):
+        for a, b in pairwise(ts):
             cell = self.cell_from_point(resolution, point_at(0.5 * (a + b)), plane)
             if cell is not None and cell != line_cells[-1]:
                 line_cells.append(cell)
@@ -1635,7 +1637,7 @@ class RHEALPixDGGS:
         # Pick a random point in that cell.
         return c.random_point(plane=plane)
 
-    def random_cell(self, resolution: int = None) -> Cell:
+    def random_cell(self, resolution: int | None = None) -> Cell:
         """
         Return a cell of the given resolution chosen uniformly at random
         from all cells at that resolution.
@@ -1685,7 +1687,7 @@ class RHEALPixDGGS:
             ['N0214', 'P7334']
 
         """
-        cover = dict()  # Use a dictionary to ignore repeated cells.
+        cover = {}  # Use a dictionary to ignore repeated cells.
         for p in points:
             c = self.cell_from_point(resolution, p, plane=plane)
             # nuc = c.nucleus(plane=plane)
