@@ -2,25 +2,27 @@
 """
 Drive the rHEALPixDGGS release process described in RELEASING.md.
 
-The release is split into five stages, each its own invocation. Nothing
+The release is split into six stages, each its own invocation. Nothing
 irreversible happens without you asking for it by name, and every stage that
 can be seen from outside the machine -- ``tag``, which pushes, ``publish``,
-which uploads, and ``announce``, which posts the GitHub release -- also asks
-for confirmation::
+which uploads, ``announce``, which drafts the GitHub release, and
+``finalize``, which makes that draft public -- also asks for confirmation::
 
     python scripts/release.py check    0.7.0   # preflight only, changes nothing
     python scripts/release.py prepare  0.7.0   # bump versions, test, build, verify
     python scripts/release.py tag      0.7.0   # commit, tag, push
     python scripts/release.py publish  0.7.0   # upload to PyPI (--test-pypi first)
-    python scripts/release.py announce 0.7.0   # GitHub release from the changelog
+    python scripts/release.py announce 0.7.0   # draft GitHub release: changelog + generated notes
+    python scripts/release.py finalize 0.7.0   # publish the draft GitHub release
 
 Run them in that order. Each stage re-runs the checks it depends on, so
 stopping to fix something and starting again is safe.
 
 Stdlib only, so it runs without installing anything. Requires Python 3.11+
-(tomllib) and, for the later stages, Poetry 2.0+ -- this project's
-pyproject.toml uses the PEP 621 [project] table, which older Poetry cannot
-read.
+(tomllib) and, for the later stages, Poetry 2.2+ -- this project's
+pyproject.toml uses the PEP 621 [project] table (unreadable before Poetry
+2.0), and the artifact verification demands the PEP 639 License-Expression
+metadata that only poetry-core 2.2+ writes.
 
 Add --yes to skip the confirmation prompts, --dry-run to print the commands
 a stage would run without running them.
@@ -202,7 +204,7 @@ def check_tools(*, need_poetry: bool) -> None:
     if not need_poetry:
         return
     if shutil.which("poetry") is None:
-        raise Failure("poetry is not on PATH; this project needs Poetry 2.0 or later")
+        raise Failure("poetry is not on PATH; this project needs Poetry 2.2 or later")
     reported = run(["poetry", "--version"], check=False)
     match = re.search(r"(\d+)\.(\d+)", reported)
     if not match:
@@ -210,11 +212,13 @@ def check_tools(*, need_poetry: bool) -> None:
             "could not determine the Poetry version -- `poetry --version` said:\n"
             f"{reported or '(no output)'}"
         )
-    if int(match.group(1)) < 2:
+    if (int(match.group(1)), int(match.group(2))) < (2, 2):
         raise Failure(
-            f"Poetry 2.0 or later is required, found {match.group(0)}. Older versions "
-            "cannot read this project's PEP 621 [project] table and fail with a "
-            "cryptic \"'name'\" error."
+            f"Poetry 2.2 or later is required, found {match.group(0)}. Poetry "
+            "before 2.0 cannot read this project's PEP 621 [project] table, and "
+            "before 2.2 poetry-core writes legacy license metadata instead of the "
+            "PEP 639 License-Expression field that the artifact verification "
+            "requires. Upgrade with `poetry self update`."
         )
     ok(f"poetry {match.group(0)}")
 
@@ -651,13 +655,38 @@ def stage_publish(version: str, *, test_pypi: bool) -> None:
         say(
             f"\nPublished {version}. Now:\n"
             f"    python scripts/release.py announce {version}\n"
+            f"    python scripts/release.py finalize {version}\n"
             "conda-forge/rhealpixdggs-feedstock's bot normally opens a "
             "version-bump PR by itself once PyPI updates."
         )
 
 
-def stage_announce(version: str, *, draft: bool, attach: bool) -> None:
-    say(f"Creating the GitHub release for {version}\n")
+def generated_release_notes(tag: str) -> str:
+    """GitHub's auto-generated notes for ``tag`` (the "What's Changed" PR
+    list, new contributors, and full-changelog link). The generate-notes
+    endpoint is a preview: it creates nothing."""
+    raw = run(
+        [
+            "gh",
+            "api",
+            "repos/{owner}/{repo}/releases/generate-notes",
+            "-f",
+            f"tag_name={tag}",
+        ],
+        check=False,
+    )
+    try:
+        return json.loads(raw)["body"]
+    except (json.JSONDecodeError, KeyError):
+        raise Failure(
+            "could not auto-generate the release notes -- "
+            "`gh api .../releases/generate-notes` said:\n"
+            f"{raw or '(no output)'}"
+        )
+
+
+def stage_announce(version: str, *, attach: bool) -> None:
+    say(f"Drafting the GitHub release for {version}\n")
     check_version_argument(version)
     if shutil.which("gh") is None:
         raise Failure(
@@ -672,10 +701,18 @@ def stage_announce(version: str, *, draft: bool, attach: bool) -> None:
         )
     ok(f"tag {tag} is on origin")
 
-    existing = run(["gh", "release", "view", tag, "--json", "url"], check=False)
+    existing = run(["gh", "release", "view", tag, "--json", "url,isDraft"], check=False)
     if existing.startswith("{"):
+        release = json.loads(existing)
+        if release.get("isDraft"):
+            raise Failure(
+                f"a draft release for {tag} already exists: {release['url']}\n"
+                f"Publish it with `python scripts/release.py finalize {version}`, "
+                f"or delete it with `gh release delete {tag}` and run this "
+                "stage again."
+            )
         raise Failure(
-            f"a GitHub release for {tag} already exists: {json.loads(existing)['url']}\n"
+            f"a GitHub release for {tag} already exists: {release['url']}\n"
             "Edit it in the browser, or delete it with "
             f"`gh release delete {tag}` and run this stage again."
         )
@@ -684,6 +721,11 @@ def stage_announce(version: str, *, draft: bool, attach: bool) -> None:
     if not notes.strip():
         raise Failure(f"the {version} section of {CHANGELOG.name} is empty")
     ok(f"release notes: {len(notes.splitlines())} lines from {CHANGELOG.name}")
+
+    generated = generated_release_notes(tag).strip()
+    if generated:
+        notes = f"{notes.rstrip()}\n\n{generated}\n"
+        ok("appended GitHub's auto-generated notes")
 
     prerelease = bool(re.search(r"(a|b|rc)\d+$", version))
     if prerelease:
@@ -699,10 +741,9 @@ def stage_announce(version: str, *, draft: bool, attach: bool) -> None:
     say(notes)
     say("--- end ---\n")
 
-    if draft:
-        note("creating this as a draft; publish it from the browser when ready")
+    note("the release is created as a draft; nothing goes public yet")
     confirm(
-        f"Create the {'draft ' if draft else ''}GitHub release {tag}"
+        f"Create the draft GitHub release {tag}"
         + (" and upload the artifacts?" if assets else "?")
     )
 
@@ -716,21 +757,49 @@ def stage_announce(version: str, *, draft: bool, attach: bool) -> None:
             "create",
             tag,
             "--title",
-            version,
+            tag,
             "--notes-file",
             str(notes_file),
+            "--draft",
         ]
-        if draft:
-            command.append("--draft")
         if prerelease:
             command.append("--prerelease")
         command += assets
         run(command, capture=False)
 
     say(
-        f"\nGitHub release {tag} created"
-        + (" as a draft; publish it when you are happy with it." if draft else ".")
+        f"\nDraft GitHub release {tag} created. Review it, then make it "
+        f"public:\n    python scripts/release.py finalize {version}"
     )
+
+
+def stage_finalize(version: str) -> None:
+    say(f"Publishing the draft GitHub release for {version}\n")
+    check_version_argument(version)
+    if shutil.which("gh") is None:
+        raise Failure(
+            "gh is not on PATH; publish the draft from the browser instead"
+        )
+
+    tag = f"v{version}"
+    existing = run(["gh", "release", "view", tag, "--json", "url,isDraft"], check=False)
+    if not existing.startswith("{"):
+        raise Failure(
+            f"no GitHub release for {tag}; run the announce stage first"
+        )
+    release = json.loads(existing)
+    if not release.get("isDraft"):
+        raise Failure(
+            f"the GitHub release for {tag} is already public: {release['url']}"
+        )
+    ok(f"found the draft release for {tag}")
+
+    confirm(f"Publish the GitHub release {tag}? This makes it publicly visible.")
+    run(["gh", "release", "edit", tag, "--draft=false"], capture=False)
+
+    published = run(["gh", "release", "view", tag, "--json", "url"], check=False)
+    url = json.loads(published)["url"] if published.startswith("{") else ""
+    say(f"\nGitHub release {tag} is public" + (f": {url}" if url else "."))
 
 
 # --------------------------------------------------------------------------
@@ -770,7 +839,8 @@ def main(argv: list[str]) -> int:
         ("prepare", "bump the version files, run the tests, build, verify"),
         ("tag", "commit the bump, tag, and push"),
         ("publish", "upload the built artifacts"),
-        ("announce", "create the GitHub release from the tag and the changelog"),
+        ("announce", "draft the GitHub release: changelog + auto-generated notes"),
+        ("finalize", "publish the draft GitHub release"),
     ):
         sub = subparsers.add_parser(name, help=help_text, parents=[shared])
         sub.add_argument("version", help="the version being released, e.g. 0.7.0")
@@ -781,11 +851,6 @@ def main(argv: list[str]) -> int:
                 help="rehearse against TestPyPI instead of PyPI",
             )
         if name == "announce":
-            sub.add_argument(
-                "--draft",
-                action="store_true",
-                help="create it as a draft, to review before it goes live",
-            )
             sub.add_argument(
                 "--attach",
                 action="store_true",
@@ -811,7 +876,9 @@ def main(argv: list[str]) -> int:
         elif args.stage == "publish":
             stage_publish(args.version, test_pypi=args.test_pypi)
         elif args.stage == "announce":
-            stage_announce(args.version, draft=args.draft, attach=args.attach)
+            stage_announce(args.version, attach=args.attach)
+        elif args.stage == "finalize":
+            stage_finalize(args.version)
     except Failure as failure:
         print(f"\nstopped: {failure}", file=sys.stderr)
         return 1
