@@ -135,7 +135,9 @@ by any predefined ellipsoid) is now validated against the numerically
 integrated defining integral of authalic latitude, alongside the power
 series branch; ``projection_wrapper`` gained functional tests
 (forward/inverse round trips for homemade and PROJ-backed projections,
-``lon_0``/``lat_0`` recentring, projection keyword pass-through);
+``lon_0``/``lat_0`` recentring, projection keyword pass-through -- note
+that ``lat_0`` round trips cleanly without the resulting grid being
+sound, see the known limitation at the end of this entry);
 ``Cell.area()``, ``Cell.color()``, ``Cell.region_overlaps()``, and
 ``RHEALPixDGGS.area_error_budget()`` gained their first tests (including
 checking that every resolution's cells sum to the authalic sphere's
@@ -297,7 +299,27 @@ dependency, faster.
 
 **Breaking change (harmless):** removed the ``RhealPolygon`` stub class
 (``__init__`` only, no other methods, no references or tests anywhere).
-Follow-up from a whole-repository code review; see ``CODE_REVIEW.md``.
+
+**Known limitation, not fixed in this release:** an ellipsoid with a
+nonzero ``lat_0`` does not give a coherent DGGS. ``Projection.__call__``
+recentres by translating the input coordinates, which is a true rotation
+of the ellipsoid for ``lon_0`` but not for ``lat_0``: a latitude pushed
+past a pole is reflected to the antipodal latitude at the *same*
+longitude, instead of continuing over the pole and down the far side.
+Any ``lat_0 != 0`` therefore folds a band of width ``|lat_0|`` around one
+pole, which collides the two poles onto a single planar point, leaves
+cells covering two disjoint geographic patches (one near each pole), and
+destroys the equal-area property -- measured at 5.1x the uniform share
+for the worst resolution 1 cell under ``lon_0=174, lat_0=-37``. Forward
+and inverse round trips still succeed, because the reflection is applied
+symmetrically in both directions, which is why the defect stayed
+invisible. None of the predefined ellipsoids uses a nonzero ``lat_0``,
+so only user-constructed ellipsoids are affected, and recentring by
+``lon_0`` alone is sound. Note that the ``dggs`` module docstring's
+Auckland example does construct its ellipsoid with ``lat_0=-37``; use
+``lon_0`` only. This is not a regression: the same recentring appears in
+rHEALPixDGGS 0.4, the earliest version of the code in this repository's
+history. Tracked as issue #93, milestoned for 0.8.0.
 
 0.6.0
 ^^^^^
