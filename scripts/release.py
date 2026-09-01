@@ -8,11 +8,11 @@ can be seen from outside the machine -- ``tag``, which pushes, ``publish``,
 which uploads, and ``announce``, which posts the GitHub release -- also asks
 for confirmation::
 
-    python release.py check    0.7.0   # preflight only, changes nothing
-    python release.py prepare  0.7.0   # bump versions, test, build, verify
-    python release.py tag      0.7.0   # commit, tag, push
-    python release.py publish  0.7.0   # upload to PyPI (--test-pypi first)
-    python release.py announce 0.7.0   # GitHub release from the changelog
+    python scripts/release.py check    0.7.0   # preflight only, changes nothing
+    python scripts/release.py prepare  0.7.0   # bump versions, test, build, verify
+    python scripts/release.py tag      0.7.0   # commit, tag, push
+    python scripts/release.py publish  0.7.0   # upload to PyPI (--test-pypi first)
+    python scripts/release.py announce 0.7.0   # GitHub release from the changelog
 
 Run them in that order. Each stage re-runs the checks it depends on, so
 stopping to fix something and starting again is safe.
@@ -41,7 +41,8 @@ import tempfile
 import tomllib
 import zipfile
 
-ROOT = pathlib.Path(__file__).resolve().parent
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
 PYPROJECT = ROOT / "pyproject.toml"
 CITATION = ROOT / "CITATION.CFF"
 CHANGELOG = ROOT / "CHANGES.rst"
@@ -426,8 +427,8 @@ def check_ci() -> None:
 
 def run_tests() -> None:
     say("\nRunning the tests and doctests")
-    run(["bash", "run_unittests.sh"], capture=False)
-    run(["bash", "run_doctests.sh"], capture=False)
+    run(["bash", str(SCRIPTS / "run_unittests.sh")], capture=False)
+    run(["bash", str(SCRIPTS / "run_doctests.sh")], capture=False)
     ok("tests and doctests pass")
 
 
@@ -540,7 +541,7 @@ def stage_check(version: str) -> None:
     check_changelog(version)
     check_copyright_year()
     check_ci()
-    say(f"\nReady to prepare {version}:  python release.py prepare {version}")
+    say(f"\nReady to prepare {version}:  python scripts/release.py prepare {version}")
 
 
 def stage_prepare(version: str) -> None:
@@ -572,7 +573,7 @@ def stage_prepare(version: str) -> None:
     say(
         f"\nPrepared {version}. Review the changes:\n"
         "    git diff\n"
-        f"then:  python release.py tag {version}"
+        f"then:  python scripts/release.py tag {version}"
     )
 
 
@@ -603,8 +604,8 @@ def stage_tag(version: str) -> None:
 
     say(
         f"\nTagged and pushed {tag}. Once CI is green:\n"
-        f"    python release.py publish {version} --test-pypi   # rehearsal\n"
-        f"    python release.py publish {version}"
+        f"    python scripts/release.py publish {version} --test-pypi   # rehearsal\n"
+        f"    python scripts/release.py publish {version}"
     )
 
 
@@ -642,12 +643,12 @@ def stage_publish(version: str, *, test_pypi: bool) -> None:
             "\nRehearsal uploaded. Check it installs:\n"
             "    pip install --index-url https://test.pypi.org/simple/ "
             "--extra-index-url https://pypi.org/simple rhealpixdggs\n"
-            f"then:  python release.py publish {version}"
+            f"then:  python scripts/release.py publish {version}"
         )
     else:
         say(
             f"\nPublished {version}. Now:\n"
-            f"    python release.py announce {version}\n"
+            f"    python scripts/release.py announce {version}\n"
             "conda-forge/rhealpixdggs-feedstock's bot normally opens a "
             "version-bump PR by itself once PyPI updates."
         )
@@ -737,8 +738,8 @@ def main(argv: list[str]) -> int:
     global _dry_run, _assume_yes
 
     # Accepted either side of the stage name, so both of these work:
-    #   release.py --dry-run prepare 0.7.0
-    #   release.py prepare 0.7.0 --dry-run
+    #   scripts/release.py --dry-run prepare 0.7.0
+    #   scripts/release.py prepare 0.7.0 --dry-run
     # SUPPRESS keeps the subparser's default from clobbering a flag that was
     # given before the stage name; the values are read back with getattr.
     shared = argparse.ArgumentParser(add_help=False)

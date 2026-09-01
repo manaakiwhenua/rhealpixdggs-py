@@ -97,8 +97,8 @@ The files in the `tests` directory test the rHEALPixDGGS modules. These files ar
 
 Two UNIX shell scripts are included in this repository to run all unit and doc tests:
 
-- `run_doctests.sh`
-- `run_unittests.sh`
+- `scripts/run_doctests.sh`
+- `scripts/run_unittests.sh`
 
 Running the command `python tests/test_<foo>.py` performs a sequence of automated tests of `<foo>.py`.
 

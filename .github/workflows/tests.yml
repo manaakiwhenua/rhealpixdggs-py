@@ -28,10 +28,10 @@ jobs:
         run: python -m pip install .
 
       - name: Unit tests
-        run: ./run_unittests.sh
+        run: ./scripts/run_unittests.sh
 
       - name: Doctests
-        run: ./run_doctests.sh
+        run: ./scripts/run_doctests.sh
 
   docs:
     runs-on: ubuntu-latest

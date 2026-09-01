@@ -92,6 +92,17 @@ priority); the figure generator's download cache now lives at the
 repository root. Enforcement of ``black`` formatting is deliberately
 deferred (issue #82).
 
+``RELEASING.md``'s checklist is now carried out by ``scripts/release.py``,
+which stages the release (preflight checks, version bump, tests, build,
+tag, upload, GitHub release) so that each step that is visible outside
+the machine has to be asked for by name. Beyond the checklist it verifies
+the built wheel's metadata and that the sdist has not swept up build
+leftovers. The two test runners move alongside it: ``run_unittests.sh``
+and ``run_doctests.sh`` are now ``scripts/run_unittests.sh`` and
+``scripts/run_doctests.sh``, leaving the repository root to project
+metadata, and both now work from any directory rather than only from the
+repository root.
+
 
 Documentation fixes (issue #57): the Sphinx manual now includes pages for
 the ``cell``, ``conversion``, and ``rhp_wrappers`` modules, which were
