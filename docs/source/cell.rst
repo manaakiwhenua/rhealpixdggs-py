@@ -16,7 +16,7 @@ The cell Module
    faces N and S are *caps* (the cell containing the pole), *darts*
    (three-cornered cells) or *skew quads* (four-cornered cells whose
    edges are not meridians and parallels). A cell's shape is reported by
-   :attr:`Cell.ellipsoidal_shape`.
+   :attr:`rhealpixdggs.cell.Cell.ellipsoidal_shape`.
 
 .. figure:: images/predicates.*
    :alt: Four three-by-three planar grids of the children of cell P4,
