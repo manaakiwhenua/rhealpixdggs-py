@@ -56,6 +56,9 @@ source = "https://github.com/manaakiwhenua/rhealpixdggs-py"
 [tool.poetry.group.dev.dependencies]
 black = "^25"
 ruff = "^0.16"
+mypy = "^2.3"
+scipy-stubs = "*"
+types-shapely = "*"
 pytest = "^7.4.0"
 sphinx = "^7.2"
 furo = ">=2024.8"
@@ -74,3 +77,8 @@ matplotlib = ">=3.8"
 # transient may live under docs/ -- e.g. make_figures.py keeps its
 # downloaded-data cache at the repository root, not in docs/.
 include = ["tests/", "docs/"]
+[tool.mypy]
+files = ["rhealpixdggs"]
+# Non-strict starting point (issue #109): the goal at this stage is that
+# every *existing* annotation is true. Untyped defs are allowed and their
+# bodies unchecked; strictness ratchets up as coverage grows.

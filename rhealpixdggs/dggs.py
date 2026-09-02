@@ -153,6 +153,7 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
 from itertools import pairwise, product
 from math import asin, copysign, floor
 from random import randint
+from typing import Literal, overload
 
 from numpy import array, base_repr, ceil, log, pi
 
@@ -235,7 +236,7 @@ class RHEALPixDGGS:
         )
 
         self.ellipsoid = ellipsoid
-        self._projection_cache: dict[str, object] = {}
+        self._projection_cache: dict[str, pw.Projection] = {}
 
         # Dictionary of the ordering (Morton order) of child cells of a cell
         # in terms of the row-column coordinates in the matrix of child cells.
@@ -458,7 +459,9 @@ class RHEALPixDGGS:
         # Scale up.
         return tuple(R_A * array((u, v)))
 
-    def triangle(self, x: float, y: float, inverse: bool = True) -> tuple[int, str]:
+    def triangle(
+        self, x: float, y: float, inverse: bool = True
+    ) -> tuple[int | None, str]:
         """
         If `inverse` = False, then assume `(x,y)` lies in the image of the
         HEALPix projection that comes with this DGGS, and
@@ -557,6 +560,7 @@ class RHEALPixDGGS:
         # Shift rHEALPix projection (with (x, y) in it) so that cell O
         # has downleft corner (0, 0).
         x, y = array((x, y)) + array((2 * w, w / 2))
+        q: tuple[float, float, float]
         # Fold projection.
         if y < 0:
             # S
@@ -596,8 +600,8 @@ class RHEALPixDGGS:
             x += -3 * w
             q = (0, y, x - w)
         # Translate the cube's center to (0, 0).
-        q = array(q) + (w / 2) * array((-1, -1, 1))
-        return tuple(q)
+        centered = array(q) + (w / 2) * array((-1, -1, 1))
+        return tuple(centered)
 
     def cell(self, suid=None, level_order_index=None, post_order_index=None):
         """
@@ -676,7 +680,13 @@ class RHEALPixDGGS:
             num = int(6 * (k ** (res_2 + 1) - k**res_1) / (k - 1))
         return num
 
-    def cell_width(self, resolution: int, plane: bool = True) -> float:
+    @overload
+    def cell_width(self, resolution: int, plane: Literal[True] = ...) -> float: ...
+
+    @overload
+    def cell_width(self, resolution: int, plane: Literal[False]) -> None: ...
+
+    def cell_width(self, resolution: int, plane: bool = True) -> float | None:
         """
         Return the width of a planar cell at the given resolution.
         If `plane` = False, then return None,
@@ -693,6 +703,7 @@ class RHEALPixDGGS:
         """
         if plane:
             return self.ellipsoid.R_A * (pi / 2) * self.N_side ** (-resolution)
+        return None
 
     def cell_area(self, resolution: int, plane: bool = True) -> float:
         """
@@ -803,7 +814,7 @@ class RHEALPixDGGS:
 
     def cell_from_point(
         self, resolution: int, p: tuple[float, float], plane: bool = True
-    ) -> Cell:
+    ) -> Cell | None:
         """
         Return the resolution `resolution` cell that contains the point `p`.
         If `plane` = True, then `p` and the output cell lie in the
@@ -899,7 +910,7 @@ class RHEALPixDGGS:
 
     def cell_from_region(
         self, ul: tuple[float, float], dr: tuple[float, float], plane: bool = True
-    ) -> Cell:
+    ) -> Cell | None:
         """
         Return the smallest planar or ellipsoidal cell wholly containing
         the region bounded by the axis-aligned rectangle with upper left
@@ -958,6 +969,8 @@ class RHEALPixDGGS:
         resolution = self.max_resolution
         ul_cell = self.cell_from_point(resolution, ul)
         dr_cell = self.cell_from_point(resolution, dr)
+        if ul_cell is None or dr_cell is None:
+            return None
         ul_suid = ul_cell.suid
         dr_suid = dr_cell.suid
 
@@ -1093,6 +1106,8 @@ class RHEALPixDGGS:
             return []
         start = self.cell_from_point(resolution, (lam, phi_max), plane=False)
         end = self.cell_from_point(resolution, (lam, phi_min), plane=False)
+        # Points on the ellipsoid always land in a cell.
+        assert start is not None and end is not None
         if start == end:
             return [start]
         # Get latitudes of cell nuclei that lie ibetween start and end.
@@ -1105,6 +1120,7 @@ class RHEALPixDGGS:
         result = []
         for phi in reversed(phis):
             c = self.cell_from_point(resolution, (lam, phi), plane=False)
+            assert c is not None  # points on the ellipsoid always land in a cell
             new_cells = [c]
             if c.ellipsoidal_shape in ["dart", "skew_quad"]:
                 # Either the east or the west neighbor of c
@@ -1145,6 +1161,8 @@ class RHEALPixDGGS:
             return []
         start = self.cell_from_point(resolution, (lam_min, phi), plane=False)
         end = self.cell_from_point(resolution, (lam_max, phi), plane=False)
+        # Points on the ellipsoid always land in a cell.
+        assert start is not None and end is not None
         PI = self.ellipsoid.pi()
         if start == end:
             if start.ellipsoidal_shape == "cap" or lam_max - lam_min < PI / 2:
@@ -1459,7 +1477,7 @@ class RHEALPixDGGS:
                     round((p[1] - y_anchor) / pitch),
                 )
                 if key not in cache:
-                    cache[key] = self.rhealpix(*p, inverse=True, region=region)
+                    cache[key] = self.rhealpix(p[0], p[1], inverse=True, region=region)
                 points.append(cache[key])
             result[cell] = points
         return result
@@ -1551,19 +1569,19 @@ class RHEALPixDGGS:
         if plane:
             # Rectangle region.
             # Get the four corner cells.
-            ur = self.cell_from_point(resolution, (dr[0], ul[1]), plane)
-            dl = self.cell_from_point(resolution, (ul[0], dr[1]), plane)
-            ul = self.cell_from_point(resolution, ul, plane)
-            dr = self.cell_from_point(resolution, dr, plane)
-            if ur is None or dl is None:
+            ur_cell = self.cell_from_point(resolution, (dr[0], ul[1]), plane)
+            dl_cell = self.cell_from_point(resolution, (ul[0], dr[1]), plane)
+            ul_cell = self.cell_from_point(resolution, ul, plane)
+            dr_cell = self.cell_from_point(resolution, dr, plane)
+            if ul_cell is None or ur_cell is None or dl_cell is None or dr_cell is None:
                 return []
-            if ul == dr:
-                return [[ul]]
+            if ul_cell == dr_cell:
+                return [[ul_cell]]
             # Starting from ul, collect cells from left to right and
             # then top to bottom, ending at dr.
             result = []
-            row_start = ul
-            row_end = ur
+            row_start = ul_cell
+            row_end = ur_cell
             while True:
                 row = []
                 current = row_start
@@ -1572,7 +1590,7 @@ class RHEALPixDGGS:
                     current = current.neighbor("right", plane)
                 row.append(current)
                 result.append(row)
-                if current == dr:
+                if current == dr_cell:
                     # Done.
                     break
                 # Update row start and end cells to their down neighbors,
@@ -1649,7 +1667,7 @@ class RHEALPixDGGS:
         """
         if resolution == None:
             resolution = randint(0, self.max_resolution)
-        suid = []
+        suid: list[str | int] = []
         suid.append(CELLS0[randint(0, 5)])
         for i in range(1, resolution + 1):
             suid.append(randint(0, self.N_side**2 - 1))
@@ -1684,13 +1702,13 @@ class RHEALPixDGGS:
             ['N0214', 'P7334']
 
         """
-        cover = {}  # Use a dictionary to ignore repeated cells.
+        cover: dict[str, Cell] = {}  # Use a dictionary to ignore repeated cells.
         for p in points:
             c = self.cell_from_point(resolution, p, plane=plane)
-            # nuc = c.nucleus(plane=plane)
-            cover[str(c)] = c  # (c, nuc[0], nuc[1])
-        cover = list(cover.values())
-        return cover
+            if c is not None:
+                # nuc = c.nucleus(plane=plane)
+                cover[str(c)] = c  # (c, nuc[0], nuc[1])
+        return list(cover.values())
         # Sort cells by nuclei y-coordinate and then by x-coordinate.
         # cover.sort(key=lambda x: (x[2], -x[1]), reverse=True)
         # return [t[0] for t in cover]

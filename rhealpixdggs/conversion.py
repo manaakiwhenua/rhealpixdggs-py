@@ -9,7 +9,7 @@ from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
 
 def get_finest_containing_cell(
     polygon: Polygon, rdggs: RHEALPixDGGS = WGS84_003
-) -> Cell:
+) -> Cell | None:
     """
     Finds the finest DGGS Cell containing a given cartesian polygon
     """
@@ -51,6 +51,7 @@ def get_finest_containing_cell(
         finest = _get_finest_cell(polygon, suid, rdggs)
         if finest is not None:
             return finest
+    return None
 
 
 # TODO class should be a general class for collections of cells (believe the term is 'zone'?)
@@ -69,7 +70,7 @@ class CellZoneFromPoly:
         self.res_limit = res_limit
         self.return_cells = return_cells
         if return_cells:
-            self.cells_list = []
+            self.cells_list: list[Cell] = []
         # self.i = 0
         self.file = file
         if file:

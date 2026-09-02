@@ -51,7 +51,7 @@ ROTATE = {
 }
 
 # Cache for in_rhealpix_image(); see the comment inside that function.
-_rhealpix_image_polys = {}
+_rhealpix_image_polys: dict[tuple[int, int], Polygon] = {}
 
 
 def combine_triangles(
@@ -99,6 +99,7 @@ def combine_triangles(
     if region == "equatorial":
         # (x,y) remains fixed
         return x, y
+    assert c is not None  # triangle() returns None only for 'equatorial'
     xy = array((x, y))
     tc = array((-3 * pi / 4 + c * pi / 2, sign(y) * pi / 2))
     if not inverse:
@@ -129,7 +130,7 @@ def triangle(
     north_square: int = 0,
     south_square: int = 0,
     inverse: bool = False,
-) -> tuple[int, str]:
+) -> tuple[int | None, str]:
     """
     Return the number of the polar triangle and region that `(x, y)` lies in.
     If `inverse` = False, then assume `(x,y)` lies in the image of the HEALPix
