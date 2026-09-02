@@ -1,3 +1,17 @@
+0.7.1
+^^^^^
+**Breaking change:** removed the plotting-era point generators, none of
+which has had a caller in any tree in this repository's history (issue
+#110): ``Ellipsoid.get_points`` (which has also returned ``[]`` for any
+input for the whole of the project's Python 3 life, due to a bytes-vs-str
+comparison), ``Ellipsoid.lattice``, ``Ellipsoid.graticule``,
+``Ellipsoid.meridian``, ``Ellipsoid.parallel``,
+``pj_healpix.healpix_vertices`` and ``pj_rhealpix.rhealpix_vertices``.
+They predate the DGGS layer; cell geometry (``Cell.ul_vertex``,
+``Cell.width``, ``Cell.boundary``, ``RHEALPixDGGS.cell_boundaries``) is
+the supported way to draw the grid and the projection image, as
+``docs/make_figures.py`` demonstrates.
+
 0.7.0
 ^^^^^
 Added ``RHEALPixDGGS.cell_boundaries(cells, n=2, plane=True)``: boundary

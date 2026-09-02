@@ -13,16 +13,12 @@ Keep adding tests!
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import standard modules.
 import unittest
 from math import asin, pi, sin
 
-# Import third-party modules.
 from scipy.integrate import quad
 
 import rhealpixdggs.utils as ut
-
-# Import my modules.
 from rhealpixdggs.ellipsoids import WGS84_E
 
 

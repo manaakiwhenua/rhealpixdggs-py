@@ -19,14 +19,12 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import third-party modules.
 from collections.abc import Callable
 
 import shapely
 from numpy import arcsin, array, deg2rad, floor, pi, rad2deg, sign, sin, sqrt
 from shapely.geometry import Polygon
 
-# Import my modules.
 # my_round is doctest-only: the doctests use it from the module globals.
 from rhealpixdggs.utils import auth_lat, auth_rad, my_round  # noqa: F401
 
@@ -234,33 +232,6 @@ def in_healpix_image(x: float, y: float) -> bool:
     # this (slightly larger) polygon, so they still test True -- verified
     # against every boundary case in this function's own doctest above.
     return bool(shapely.contains_xy(_healpix_image_poly, x, y))
-
-
-def healpix_vertices() -> list[tuple[float, float, float]]:
-    """
-    Return a list of the planar vertices of the HEALPix projection of
-    the unit sphere.
-    """
-    return [
-        (pi, pi / 4),
-        (3 * pi / 4, pi / 2),
-        (pi / 2, pi / 4),
-        (pi / 4, pi / 2),
-        (0, pi / 4),
-        (-pi / 4, pi / 2),
-        (-pi / 2, pi / 4),
-        (-3 * pi / 4, pi / 2),
-        (-pi, pi / 4),
-        (-pi, -pi / 4),
-        (-3 * pi / 4, -pi / 2),
-        (-pi / 2, -pi / 4),
-        (-pi / 4, -pi / 2),
-        (0, -pi / 4),
-        (pi / 4, -pi / 2),
-        (pi / 2, -pi / 4),
-        (3 * pi / 4, -pi / 2),
-        (pi, -pi / 4),
-    ]
 
 
 def healpix(

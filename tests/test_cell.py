@@ -1,12 +1,9 @@
-# Import third-party modules.
-# Import standard modules
 import unittest
 from itertools import product
 from math import pi
 
 from scipy.spatial.distance import euclidean, norm
 
-# Import my modules.
 from rhealpixdggs.cell import CELLS0, Cell
 from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
 from rhealpixdggs.ellipsoids import (

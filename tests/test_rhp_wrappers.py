@@ -11,16 +11,12 @@ Keep adding tests!
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import standard modules
 import unittest
 
-# Import helper modules
 import numpy as np
 import shapely as sh
 
 import rhealpixdggs.dggs as gs
-
-# Import my modules and classes
 import rhealpixdggs.rhp_wrappers as rhpw
 
 

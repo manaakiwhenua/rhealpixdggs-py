@@ -17,14 +17,12 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import third-party modules.
 from collections.abc import Callable
 
 import shapely
 from numpy import array, deg2rad, dot, identity, pi, rad2deg, sign
 from shapely.geometry import Polygon
 
-# Import my modules.
 from rhealpixdggs.pj_healpix import (
     healpix_ellipsoid,
     healpix_ellipsoid_inverse,
@@ -491,44 +489,6 @@ def in_rhealpix_image(
     # this (slightly larger) polygon, so they still test True -- verified
     # against every boundary case in this function's own doctest above.
     return bool(shapely.contains_xy(poly, x, y))
-
-
-def rhealpix_vertices(
-    north_square: int = 0, south_square: int = 0
-) -> list[tuple[float, float]]:
-    """
-    Return a list of the planar vertices of the rHEALPix projection of
-    the unit sphere.
-    """
-    vertices = [
-        (pi, pi / 4),
-        (-pi + (north_square + 1) * pi / 2, pi / 4),
-        (-pi + (north_square + 1) * pi / 2, 3 * pi / 4),
-        (-pi + north_square * pi / 2, 3 * pi / 4),
-        (-pi + north_square * pi / 2, pi / 4),
-        (-pi, pi / 4),
-        (-pi, -pi / 4),
-        (-pi + south_square * pi / 2, -pi / 4),
-        (-pi + south_square * pi / 2, -3 * pi / 4),
-        (-pi + (south_square + 1) * pi / 2, -3 * pi / 4),
-        (-pi + (south_square + 1) * pi / 2, -pi / 4),
-        (pi, -pi / 4),
-    ]
-    # Delete unnecessary non-vertices.
-    if north_square == 3:
-        vertices.remove((pi, pi / 4))
-        vertices.remove((pi, pi / 4))
-    elif north_square == 0:
-        vertices.remove((-pi, pi / 4))
-        vertices.remove((-pi, pi / 4))
-    if south_square == 3:
-        vertices.remove((pi, -pi / 4))
-        vertices.remove((pi, -pi / 4))
-    elif south_square == 0:
-        vertices.remove((-pi, -pi / 4))
-        vertices.remove((-pi, -pi / 4))
-
-    return vertices
 
 
 def rhealpix(

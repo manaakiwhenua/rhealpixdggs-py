@@ -17,15 +17,12 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import third-party modules.
-# Import standard modules.
 import importlib
 
 import pyproj
 
 from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 
-# Import my modules.
 # my_round is doctest-only: the doctests use it from the module globals.
 from rhealpixdggs.utils import my_round, wrap_latitude, wrap_longitude  # noqa: F401
 

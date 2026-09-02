@@ -6,12 +6,10 @@ Keep adding tests!
 - David Habgood (DH), 2020-10-27: Initial version.
 """
 
-# Import standard modules.
 import unittest
 
 from shapely import wkt
 
-# Import my modules.
 from rhealpixdggs.conversion import *
 
 test_geom = """
