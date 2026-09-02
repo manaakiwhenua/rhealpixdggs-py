@@ -325,7 +325,7 @@ def rhp_is_valid(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> bool:
 def cell_area(
     rhpindex: str,
     unit: Literal["km^2", "m^2"] = "km^2",
-    plane=True,
+    plane: bool = True,
     dggs: RHEALPixDGGS = WGS84_003,
 ) -> float | None:
     """
