@@ -514,10 +514,10 @@ def polyfill(
 
     # Extract list of polygons from geometry: Polygon needs to be wrapped in
     # one, MultiPolygon has it stashed in a property
-    if geometry.geom_type == "Polygon":
+    if isinstance(geometry, Polygon):
         geoms = [geometry]
     else:
-        geoms = geometry.geoms
+        geoms = list(geometry.geoms)
 
     # Collect cells in regions of interest
     cells = set()
@@ -607,10 +607,10 @@ def linetrace(
 
     # Extract list of linestrings from geometry: LineString needs to be wrapped in
     # one, MultiLineString has it stashed in a property
-    if geometry.geom_type == "LineString":
+    if isinstance(geometry, LineString):
         lines = [geometry]
     else:
-        lines = geometry.geoms
+        lines = list(geometry.geoms)
 
     cells: list[str] = []
     for linestring in lines:
@@ -624,7 +624,11 @@ def linetrace(
 
             # Convert line segment to cell ids
             line_cells = dggs.cells_from_line(
-                res, i, j, plane, wrap_antimeridian=wrap_antimeridian
+                res,
+                (i[0], i[1]),
+                (j[0], j[1]),
+                plane,
+                wrap_antimeridian=wrap_antimeridian,
             )
 
             # Convert cells to string ids and add to collection
