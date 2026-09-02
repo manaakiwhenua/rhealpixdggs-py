@@ -1,7 +1,11 @@
 0.7.1
 ^^^^^
-Adopted mypy (issue #109, first stage): every existing type annotation is
-now checked in CI and true. Annotations that claimed more than the code
+Adopted mypy (issue #109, first two stages): every existing type
+annotation is now checked in CI and true, and the bodies of untyped
+functions are checked too (``check_untyped_defs``). ``Cell.suid`` and
+``Cell.resolution`` gained honest attribute types
+(``tuple[str | int, ...]`` and ``int | None`` — None only for the empty
+cell). Annotations that claimed more than the code
 delivers were corrected — e.g. ``cell_from_point``, ``cell_from_region``,
 ``get_finest_containing_cell``, ``rhp_get_resolution`` and
 ``rhp_get_base_cell`` are now declared ``... | None``, matching their
