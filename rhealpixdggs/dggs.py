@@ -150,10 +150,11 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
 #  Distributed under the terms of the GNU Lesser General Public License (LGPL)
 #                  http: //www.gnu.org/licenses/
 # *****************************************************************************
+from collections.abc import Callable, Iterable, Iterator
 from itertools import pairwise, product
 from math import asin, copysign, floor
 from random import randint
-from typing import Literal, overload
+from typing import Literal, cast, overload
 
 from numpy import array, base_repr, ceil, log, pi
 
@@ -168,6 +169,7 @@ from rhealpixdggs.ellipsoids import (
     UNIT_SPHERE_RADIANS,
     WGS84_ELLIPSOID,
     WGS84_ELLIPSOID_RADIANS,
+    Ellipsoid,
 )
 
 # my_round is doctest-only: the doctests use it from the module globals.
@@ -216,12 +218,12 @@ class RHEALPixDGGS:
 
     def __init__(
         self,
-        ellipsoid=WGS84_ELLIPSOID,
-        N_side=3,
-        north_square=0,
-        south_square=0,
-        max_areal_resolution=1,  # square metres
-    ):
+        ellipsoid: Ellipsoid = WGS84_ELLIPSOID,
+        N_side: int = 3,
+        north_square: int = 0,
+        south_square: int = 0,
+        max_areal_resolution: float = 1,  # square metres
+    ) -> None:
         self.N_side = N_side
         self.north_square = north_square % 4  # = 0, 1, 2, or 3.
         self.south_square = south_square % 4  # = 0, 1, 2, or 3.
@@ -250,7 +252,7 @@ class RHEALPixDGGS:
         #   --------
         #     0 1 2
         #
-        child_order = {}
+        child_order: dict[tuple[int, int] | int, int | tuple[int, int]] = {}
         for row, col in product(list(range(N_side)), repeat=2):
             order = row * N_side + col
             # Handy to have both coordinates and order as dictionary keys.
@@ -348,12 +350,12 @@ class RHEALPixDGGS:
             }
         # Adjust left and right edge cases.
         for i in range(0, N**2, N):
-            an[i]["left"] = an[i]["left"] + N
+            an[i]["left"] = i - 1 + N
         for i in range(N - 1, N**2, N):
-            an[i]["right"] = an[i]["right"] - N
+            an[i]["right"] = i + 1 - N
         self.atomic_neighbors = an
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = ["rHEALPix DGGS:"]
         result.append(f"    N_side = {self.N_side}")
         result.append(f"    north_square = {self.north_square}")
@@ -367,7 +369,9 @@ class RHEALPixDGGS:
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, RHEALPixDGGS):
+            return NotImplemented
         return (
             other is not None
             and self.ellipsoid == other.ellipsoid
@@ -377,7 +381,7 @@ class RHEALPixDGGS:
             and self.max_resolution == other.max_resolution
         )
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def healpix(self, u: float, v: float, inverse: bool = False) -> tuple[float, float]:
@@ -399,7 +403,9 @@ class RHEALPixDGGS:
             self._projection_cache["healpix"] = pw.Projection(
                 ellipsoid=self.ellipsoid, proj="healpix"
             )
-        return self._projection_cache["healpix"](u, v, inverse=inverse)
+        result = self._projection_cache["healpix"](u, v, inverse=inverse)
+        assert result is not None
+        return result
 
     def rhealpix(
         self, u: float, v: float, inverse: bool = False, region: str = "none"
@@ -426,7 +432,9 @@ class RHEALPixDGGS:
                 south_square=self.south_square,
                 region=region,
             )
-        return self._projection_cache[region](u, v, inverse=inverse)
+        result = self._projection_cache[region](u, v, inverse=inverse)
+        assert result is not None
+        return result
 
     def combine_triangles(
         self, u: float, v: float, inverse: bool = False, region: str = "none"
@@ -604,7 +612,12 @@ class RHEALPixDGGS:
         centered = array(q) + (w / 2) * array((-1, -1, 1))
         return tuple(centered)
 
-    def cell(self, suid=None, level_order_index=None, post_order_index=None):
+    def cell(
+        self,
+        suid: list[str | int] | tuple[str | int, ...] | None = None,
+        level_order_index: int | None = None,
+        post_order_index: int | None = None,
+    ) -> Cell:
         """
         Return a cell (Cell instance) of this DGGS either from its ID or
         from its resolution and index.
@@ -621,7 +634,7 @@ class RHEALPixDGGS:
         """
         return Cell(self, suid, level_order_index, post_order_index)
 
-    def grid(self, resolution: int):
+    def grid(self, resolution: int) -> Iterator[Cell]:
         """
         Generator function for all the cells at resolution `resolution`.
 
@@ -686,6 +699,9 @@ class RHEALPixDGGS:
 
     @overload
     def cell_width(self, resolution: int, plane: Literal[False]) -> None: ...
+
+    @overload
+    def cell_width(self, resolution: int, plane: bool) -> float | None: ...
 
     def cell_width(self, resolution: int, plane: bool = True) -> float | None:
         """
@@ -786,7 +802,7 @@ class RHEALPixDGGS:
             }
         return budget
 
-    def interval(self, a, b):
+    def interval(self, a: Cell, b: Cell) -> Iterator[Cell]:
         """
         Generator function for all the resolution
         `max(a.resolution, b.resolution)` cells between cell
@@ -804,12 +820,13 @@ class RHEALPixDGGS:
 
         """
         # Choose the starting cell, which might not be A.
+        assert a.resolution is not None and b.resolution is not None
         resolution = max(a.resolution, b.resolution)
         if a.resolution < resolution:
             cell = a.successor(resolution)
         else:
             cell = Cell(self, a.suid[: resolution + 1])
-        while cell <= b:
+        while cell is not None and cell <= b:
             yield cell
             cell = cell.successor(resolution)
 
@@ -873,7 +890,7 @@ class RHEALPixDGGS:
             # (x, y) doesn't lie in the DGGS.
             return None
 
-        suid = [s0]
+        suid: list[str | int] = [s0]
         if resolution == 0:
             # Done.
             return Cell(self, suid)
@@ -881,8 +898,8 @@ class RHEALPixDGGS:
         # Compute the horizontal and vertical distances between (x, y) and
         # the ul_vertex of c0 as fractions of the width of c0.
         w = self.cell_width(0)
-        dx = abs(x - self.ul_vertex[suid[0]][0]) / w
-        dy = abs(y - self.ul_vertex[suid[0]][1]) / w
+        dx = abs(x - self.ul_vertex[s0][0]) / w
+        dy = abs(y - self.ul_vertex[s0][1]) / w
         if dx == 1:
             # This case is analytically impossible
             # but, i guess, numerically possible because of rounding errors.
@@ -906,7 +923,8 @@ class RHEALPixDGGS:
 
         # Use the column and row SUIDs of c to get the SUID of c.
         for i in range(resolution):
-            suid.append(self.child_order[(int(suid_row[i], N), int(suid_col[i], N))])
+            digit = self.child_order[(int(suid_row[i], N), int(suid_col[i], N))]
+            suid.append(cast(int, digit))
         return Cell(self, suid)
 
     def cell_from_region(
@@ -1129,6 +1147,7 @@ class RHEALPixDGGS:
                 # So include the neighbor too.
                 west = c.neighbor("west", plane=False)
                 east = c.neighbor("east", plane=False)
+                assert west is not None and east is not None
                 if west.intersects_meridian(lam):
                     new_cells = [west, c]
                 elif east.intersects_meridian(lam):
@@ -1171,11 +1190,14 @@ class RHEALPixDGGS:
             else:
                 # Need to wrap all the way around globe.
                 end = start.neighbor("west", plane=False)
+                assert end is not None
         result = []
         current = start
         while current != end:
             result.append(current)
-            current = current.neighbor("east", plane=False)
+            nxt = current.neighbor("east", plane=False)
+            assert nxt is not None
+            current = nxt
         result.append(end)
         return result
 
@@ -1252,7 +1274,7 @@ class RHEALPixDGGS:
         R = self.ellipsoid.R_A
         w = self.cell_width(resolution)
 
-        def point_at(t):
+        def point_at(t: float) -> tuple[float, float]:
             return (
                 lstart[0] + t * (lend[0] - lstart[0]),
                 lstart[1] + t * (lend[1] - lstart[1]),
@@ -1263,7 +1285,7 @@ class RHEALPixDGGS:
         else:
             proj = self.rhealpix
 
-            def q(t):
+            def q(t: float) -> tuple[float, float]:
                 return proj(*point_at(t))
 
         # Piece boundaries: parameter values where the planar image of
@@ -1276,7 +1298,9 @@ class RHEALPixDGGS:
         # the parameter.
         breakpoints = {0.0, 1.0}
 
-        def add_linear_crossings(f0, f1, targets):
+        def add_linear_crossings(
+            f0: float, f1: float, targets: Iterable[float]
+        ) -> None:
             for target in targets:
                 if f1 != f0:
                     t = (target - f0) / (f1 - f0)
@@ -1317,13 +1341,13 @@ class RHEALPixDGGS:
         x_anchor = -pi * R
         y_anchor = -3 * pi * R / 4
 
-        def lattice_lines_between(a, b, anchor):
+        def lattice_lines_between(a: float, b: float, anchor: float) -> list[float]:
             lo, hi = (a, b) if a <= b else (b, a)
             i0 = floor((lo - anchor) / w) + 1
             i1 = floor((hi - anchor) / w)
             return [anchor + i * w for i in range(i0, i1 + 1)]
 
-        def root(f, ta, tb, fa):
+        def root(f: Callable[[float], float], ta: float, tb: float, fa: float) -> float:
             # Bisection to machine precision on a bracketed sign change.
             for _ in range(120):
                 tm = 0.5 * (ta + tb)
@@ -1338,7 +1362,7 @@ class RHEALPixDGGS:
                     ta, fa = tm, fm
             return 0.5 * (ta + tb)
 
-        def monotone_runs(axis, ta, tb):
+        def monotone_runs(axis: int, ta: float, tb: float) -> list[tuple[float, float]]:
             # Split [ta, tb] into runs on which q(t)[axis] is monotone:
             # scan for direction flips, then pin each extremum by ternary
             # search. Within one smooth piece each planar coordinate has
@@ -1386,7 +1410,7 @@ class RHEALPixDGGS:
                     vb = float(q(rb)[axis])
                     for line in lattice_lines_between(va, vb, anchor):
 
-                        def f(t, line=line, axis=axis):
+                        def f(t: float, line: float = line, axis: int = axis) -> float:
                             return q(t)[axis] - line
 
                         crossings.add(root(f, ra, rb, va - line))
@@ -1406,8 +1430,8 @@ class RHEALPixDGGS:
         return line_cells
 
     def cell_boundaries(
-        self, cells, n: int = 2, plane: bool = True
-    ) -> dict[Cell, list]:
+        self, cells: Iterable[Cell], n: int = 2, plane: bool = True
+    ) -> dict[Cell, list[tuple[float, float]]]:
         """
         Return a dictionary mapping each cell in `cells` to its boundary
         points -- each value agreeing with that cell's own
@@ -1588,7 +1612,9 @@ class RHEALPixDGGS:
                 current = row_start
                 while current != row_end:
                     row.append(current)
-                    current = current.neighbor("right", plane)
+                    nxt = current.neighbor("right", plane)
+                    assert nxt is not None
+                    current = nxt
                 row.append(current)
                 result.append(row)
                 if current == dr_cell:
@@ -1596,8 +1622,11 @@ class RHEALPixDGGS:
                     break
                 # Update row start and end cells to their down neighbors,
                 # and collect another row of cells.
-                row_start = row_start.neighbor("down", plane)
-                row_end = row_end.neighbor("down", plane)
+                next_start = row_start.neighbor("down", plane)
+                next_end = row_end.neighbor("down", plane)
+                assert next_start is not None and next_end is not None
+                row_start = next_start
+                row_end = next_end
                 current = row_start
             return result
         # Ellipsoid: quad or cap region.

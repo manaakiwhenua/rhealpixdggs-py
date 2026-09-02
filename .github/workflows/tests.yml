@@ -43,27 +43,21 @@ jobs:
         with:
           python-version: "3.12"
 
-      # Same bounds as the dev dependencies in pyproject.toml: black's
-      # stable style only changes between major versions, so any 25.x
-      # agrees with the version the code was formatted with, and ruff's
-      # default rule set is stable within a minor series.
-      - name: black --check
+      # Install the exact locked tool versions, so this job always agrees
+      # with a local `poetry run` check.
+      - name: Install locked dev environment
         run: |
-          python -m pip install "black>=25,<26"
-          black --check --diff .
+          python -m pip install poetry
+          poetry install --with dev
+
+      - name: black --check
+        run: poetry run black --check --diff .
 
       - name: ruff check
-        run: |
-          python -m pip install "ruff>=0.16,<0.17"
-          ruff check .
+        run: poetry run ruff check .
 
-      # mypy needs the package's dependencies importable for their type
-      # information, so install the package itself too. Scope and
-      # strictness come from [tool.mypy] in pyproject.toml.
       - name: mypy
-        run: |
-          python -m pip install . "mypy>=2.3,<3" scipy-stubs types-shapely
-          mypy
+        run: poetry run mypy
 
   docs:
     runs-on: ubuntu-latest

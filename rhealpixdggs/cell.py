@@ -1,10 +1,14 @@
 # from rhealpixdggs.dggs import WGS84_003
 
+from collections.abc import Iterator
 from colorsys import hsv_to_rgb
 from functools import cached_property, total_ordering
 from itertools import product
 from random import uniform
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal, cast, overload
+
+if TYPE_CHECKING:
+    from rhealpixdggs.dggs import RHEALPixDGGS
 
 # pi is doctest-only: the doctests use it from the module globals.
 from numpy import array, base_repr, pi  # noqa: F401
@@ -46,7 +50,9 @@ class Cell:
     """
 
     @staticmethod
-    def suid_from_index(rdggs, index, order="resolution"):
+    def suid_from_index(
+        rdggs: "RHEALPixDGGS", index: int, order: str = "resolution"
+    ) -> tuple[str | int, ...]:
         """
         Return the suid of a cell from its index.
         The index is according to the cell ordering `order`,
@@ -61,7 +67,7 @@ class Cell:
             digits: list[int] = []
             p = index
 
-            def num(k):
+            def num(k: int) -> int:
                 return rdggs.num_cells(res_1=k, subcells=True)
 
             # Consider the tree T of all cells.
@@ -93,7 +99,7 @@ class Cell:
             b = rdggs.N_side**2
 
             # Compute suid from level order index.
-            def ind(k):
+            def ind(k: int) -> int:
                 """
                 Return the level order index of the first cell at
                 resolution k.
@@ -121,8 +127,12 @@ class Cell:
         return (CELLS0[digits[0]], *digits[1:])
 
     def __init__(
-        self, rdggs=None, suid=None, level_order_index=None, post_order_index=None
-    ):
+        self,
+        rdggs: "RHEALPixDGGS",
+        suid: list[str | int] | tuple[str | int, ...] | None = None,
+        level_order_index: int | None = None,
+        post_order_index: int | None = None,
+    ) -> None:
         """
         Create a cell either from its suid or from its level order or
         post order index.
@@ -177,10 +187,10 @@ class Cell:
             self.suid = Cell.suid_from_index(self.rdggs, post_order_index, order="post")
         self.resolution = len(self.suid) - 1
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self.suid)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if (self.rdggs.N_side) ** 2 < 10:
             s0 = str(self.suid[0])
             s = "".join(str(n) for n in self.suid[1:])
@@ -189,23 +199,23 @@ class Cell:
             # Comma separate suid entries.
             return "(" + str(self.suid[0]) + str(self.suid)[4:]
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (
-            (other is not None)
+            isinstance(other, Cell)
             and (self.rdggs == other.rdggs)
             and (self.suid == other.suid)
         )
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # Consistent with __eq__ (equal cells have equal suids), and
         # makes cells usable as dictionary keys and set members. A
         # cell's suid never changes after construction.
         return hash(self.suid)
 
-    def __le__(self, other):
+    def __le__(self, other: "Cell") -> bool:
         """
         The (strictly) less-than relation on cells.
         Derived from the post order traversal of the tree T of all cells
@@ -226,7 +236,7 @@ class Cell:
         s_starts_with_t = s[: len(t)] == t
         return (s <= t and not t_starts_with_s) or s_starts_with_t
 
-    def index(self, order="resolution"):
+    def index(self, order: str = "resolution") -> int | None:
         """
         Return the index of `self` when it's ordered according to `order`.
         Here `order` can be 'resolution' (default) or 'post'.
@@ -265,7 +275,7 @@ class Cell:
         s = [CELLS0.index(str(self.suid[0]))] + [int(d) for d in self.suid[1:]]
         if order == "post":
 
-            def num(k):
+            def num(k: int) -> int:
                 return self.rdggs.num_cells(res_1=k, subcells=True)
 
             result = sum(s[i] * num(i) for i in range(L + 1)) + num(L) - 1
@@ -278,7 +288,9 @@ class Cell:
             )
         return result
 
-    def suid_rowcol(self):
+    def suid_rowcol(
+        self,
+    ) -> tuple[tuple[str | int, ...], tuple[str | int, ...]]:
         """
         Return the pair of row- and column-suids of `self`, each as tuples.
 
@@ -294,15 +306,21 @@ class Cell:
             True
 
         """
-        suid_row = [self.suid[0]]
-        suid_col = [self.suid[0]]
+        suid_row: list[str | int] = [self.suid[0]]
+        suid_col: list[str | int] = [self.suid[0]]
         for n in self.suid[1:]:
-            row, col = self.rdggs.child_order[n]
+            row, col = cast("tuple[int, int]", self.rdggs.child_order[int(n)])
             suid_row.append(row)
             suid_col.append(col)
         return tuple(suid_row), tuple(suid_col)
 
-    def width(self, plane=True):
+    @overload
+    def width(self, plane: Literal[True] = ...) -> float: ...
+
+    @overload
+    def width(self, plane: Literal[False]) -> None: ...
+
+    def width(self, plane: bool = True) -> float | None:
         """
         Return the width of this cell.
         If `plane` = False, then return None, because ellipsoidal cells
@@ -318,15 +336,17 @@ class Cell:
             True
 
         """
+        assert self.resolution is not None
         return self.rdggs.cell_width(self.resolution, plane=plane)
 
-    def area(self, plane=True):
+    def area(self, plane: bool = True) -> float:
         """
         Return the area of this cell.
         """
+        assert self.resolution is not None
         return self.rdggs.cell_area(self.resolution, plane=plane)
 
-    def successor(self, resolution=None):
+    def successor(self, resolution: int | None = None) -> "Cell | None":
         """
         Return the least resolution `resolution` cell greater than `self`.
         Note: `self` need not be a resolution `resolution` cell.
@@ -345,6 +365,7 @@ class Cell:
             N830
 
         """
+        assert self.resolution is not None
         suid = list(self.suid)
         if resolution is None:
             resolution = self.resolution
@@ -354,9 +375,9 @@ class Cell:
         elif resolution > self.resolution:
             # Find the resolution self.resolution successor of suid
             # and pad it with zeros.
-            suid = list(self.successor().suid) + [
-                0 for i in range(resolution - self.resolution)
-            ]
+            base = self.successor()
+            assert base is not None
+            suid = list(base.suid) + [0 for i in range(resolution - self.resolution)]
             return Cell(self.rdggs, suid)
 
         # Can now assume resolution = self.resolution.
@@ -377,7 +398,7 @@ class Cell:
                 return None
             else:
                 i = CELLS0.index(str(suid[0]))
-                suid = [CELLS0[i + 1]] + [0 for j in range(resolution)]
+                suid = [CELLS0[i + 1], *(0 for j in range(resolution))]
         else:
             # suid[greatest] is a number.
             suid = (
@@ -387,7 +408,7 @@ class Cell:
             )
         return Cell(self.rdggs, suid)
 
-    def predecessor(self, resolution=None):
+    def predecessor(self, resolution: int | None = None) -> "Cell | None":
         """
         Return the greatest resolution `resolution` cell less than `self`.
         Note: `self` need not be a resolution `resolution` cell.
@@ -407,6 +428,7 @@ class Cell:
 
         """
         M = self.N_side**2 - 1
+        assert self.resolution is not None
         suid = list(self.suid)
         if resolution is None:
             resolution = self.resolution
@@ -436,7 +458,7 @@ class Cell:
                 # End of the line. No predecessor.
                 return None
             else:
-                suid = [CELLS0[i - 1]] + [M for i in range(resolution)]
+                suid = [CELLS0[i - 1], *(M for i in range(resolution))]
         else:
             # nome[greatest] is a number > 0.
             suid = (
@@ -446,7 +468,7 @@ class Cell:
             )
         return Cell(self.rdggs, suid)
 
-    def subcell(self, other):
+    def subcell(self, other: "Cell") -> bool:
         """
         Subcell (subset) relation on cells.
 
@@ -470,7 +492,7 @@ class Cell:
         # descendant.
         return self.suid[: len(other.suid)] == other.suid
 
-    def subcells(self, resolution=None):
+    def subcells(self, resolution: int | None = None) -> Iterator["Cell"]:
         """
         Generator function for the set of all resolution `resolution` subcells
         of this cell.
@@ -498,7 +520,7 @@ class Cell:
         for t in product(list(range(N**2)), repeat=resolution - L):
             yield Cell(self.rdggs, list(self.suid) + list(t))
 
-    def ul_vertex(self, plane=True):
+    def ul_vertex(self, plane: bool = True) -> tuple[float, float]:
         """
         If `plane` = True, then return the upper left vertex of this
         planar cell.
@@ -521,7 +543,7 @@ class Cell:
         """
         # Call this cell c.
         # Find the location of the resolution 0 cell c0 containing c.
-        x0, y0 = self.rdggs.ul_vertex[self.suid[0]]
+        x0, y0 = self.rdggs.ul_vertex[str(self.suid[0])]
         resolution = self.resolution
         assert resolution is not None  # the empty cell has no vertices
 
@@ -549,7 +571,7 @@ class Cell:
             x, y = self.rdggs.rhealpix(x, y, inverse=True)
         return x, y
 
-    def nw_vertex(self, plane=True):
+    def nw_vertex(self, plane: bool = True) -> tuple[float, float]:
         """
         If `plane` = False, then return the northwest vertex of this
         ellipsoidal cell.
@@ -617,6 +639,7 @@ class Cell:
             # the cell lies in.
             rdggs = self.rdggs
             triangle, region = rdggs.triangle(*self.nucleus(plane=True))
+            assert triangle is not None
             if region == "north_polar":
                 ns = rdggs.north_square
                 i = (triangle - ns) % 4
@@ -641,7 +664,7 @@ class Cell:
             result = self.rdggs.rhealpix(*result, inverse=True)
         return result
 
-    def nucleus(self, plane=True):
+    def nucleus(self, plane: bool = True) -> tuple[float, float]:
         """
         Return the nucleus and vertices of this planar or ellipsoidal cell
         in the order (nucleus, upper left corner, lower left corner,
@@ -671,7 +694,9 @@ class Cell:
             result = self.rdggs.rhealpix(*result, inverse=True)
         return result
 
-    def vertices(self, plane=True, trim_dart=False):
+    def vertices(
+        self, plane: bool = True, trim_dart: bool = False
+    ) -> list[tuple[float, float]]:
         """
         If `plane` = True, then assume this cell is planar and return
         its four vertices in the order (upper left corner, upper right corner,
@@ -750,7 +775,7 @@ class Cell:
                     result.pop(1)
         return result
 
-    def xy_range(self):
+    def xy_range(self) -> tuple[tuple[float, float], tuple[float, float]]:
         """
         Return the x- and y-coordinate extremes of the planar version of
         this cell in the format ((x_min, x_max), (y_min, y_max)).
@@ -772,7 +797,9 @@ class Cell:
         y_min = y_max - w
         return (x_min, x_max), (y_min, y_max)
 
-    def boundary(self, n=2, plane=True, interior=False):
+    def boundary(
+        self, n: int = 2, plane: bool = True, interior: bool = False
+    ) -> list[tuple[float, float]]:
         """
         Return a list of `4*n - 4` boundary points of this cell,
         `n` on each edge, where `n` >= 2.
@@ -868,7 +895,9 @@ class Cell:
             ]
         return result
 
-    def interior(self, n=2, plane=True, flatten=False):
+    def interior(
+        self, n: int = 2, plane: bool = True, flatten: bool = False
+    ) -> list[tuple[float, float]] | list[list[tuple[float, float]]]:
         """
         Return an `n` x `n` matrix of interior points of this cell.
         If the cell is planar, space the interior points on a regular
@@ -901,26 +930,24 @@ class Cell:
         eps = 1e-6
         delta = (w - 2 * eps) / (n - 1)
 
-        def g(x, y):
+        def g(x: float, y: float) -> tuple[float, float]:
             if plane:
                 return (x, y)
             else:
                 return self.rdggs.rhealpix(x, y, inverse=True)
 
         if flatten:
-            result = [
+            return [
                 g(ul[0] + eps + delta * j, ul[1] - eps - delta * i)
                 for j in range(n)
                 for i in range(n)
             ]
-        else:
-            result = [
-                [g(ul[0] + eps + delta * j, ul[1] - eps - delta * i) for j in range(n)]
-                for i in range(n)
-            ]
-        return result
+        return [
+            [g(ul[0] + eps + delta * j, ul[1] - eps - delta * i) for j in range(n)]
+            for i in range(n)
+        ]
 
-    def contains(self, p, plane=True):
+    def contains(self, p: tuple[float, float], plane: bool = True) -> bool:
         """
         Return True if this cell contains point `p`, and return False
         otherwise.
@@ -942,9 +969,10 @@ class Cell:
         # deciding which of its edges it contains involves several cases,
         # because the rHEALPix map projection does not contain all of its
         # edges.
+        assert self.resolution is not None
         return self.rdggs.cell_from_point(self.resolution, p, plane=plane) == self
 
-    def intersects_meridian(self, lam):
+    def intersects_meridian(self, lam: float) -> bool:
         """
         Return True if this ellipsoidal cell's boundary intersects the
         meridian of longitude `lam`, and return False otherwise.
@@ -976,7 +1004,7 @@ class Cell:
             # Typical case.
             return lon_min <= lam <= lon_max
 
-    def intersects_parallel(self, phi):
+    def intersects_parallel(self, phi: float) -> bool:
         """
         Return True if this cell's boundary intersects the parallel of latitude
         `phi`, and return False otherwise.
@@ -994,7 +1022,7 @@ class Cell:
         else:
             return lat_min <= phi and lat_max >= phi
 
-    def overlaps(self, other_cell):
+    def overlaps(self, other_cell: "Cell") -> bool:
         """
         Return True if one of this cell and `other_cell` contains the
         other (they are the same cell, or one is an ancestor of the
@@ -1016,7 +1044,7 @@ class Cell:
                 return False
         return True
 
-    def region_overlaps(self, region: list):
+    def region_overlaps(self, region: "list[Cell]") -> bool:
         """
         Return True if `overlaps()` holds between this cell and any cell
         in the list `region`, and False otherwise (including for an empty
@@ -1028,7 +1056,7 @@ class Cell:
                 return True
         return False
 
-    def region(self):
+    def region(self) -> str:
         """
         Return the region of this cell: 'equatorial', 'north_polar', or
         'south_polar'.
@@ -1051,7 +1079,7 @@ class Cell:
             return "equatorial"
 
     @cached_property
-    def ellipsoidal_shape(self):
+    def ellipsoidal_shape(self) -> str:
         """
         Return the shape of this cell ('quad', 'cap', 'dart', or
         'skew_quad') when viewed on the ellipsoid.
@@ -1104,7 +1132,7 @@ class Cell:
         # Must be a skew quad then.
         return "skew_quad"
 
-    def centroid(self, plane=True):
+    def centroid(self, plane: bool = True) -> tuple[float, float]:
         """
         Return the centroid of this planar or ellipsoidal cell.
 
@@ -1136,10 +1164,10 @@ class Cell:
         y2 = max([v[1] for v in planar_vertices])
         area = (x2 - x1) ** 2
 
-        def lam(x, y):
+        def lam(x: float, y: float) -> float:
             return self.rdggs.rhealpix(x, y, inverse=True)[0]
 
-        def phi(x, y):
+        def phi(x: float, y: float) -> float:
             return self.rdggs.rhealpix(x, y, inverse=True)[1]
 
         if shape == "quad":
@@ -1152,7 +1180,7 @@ class Cell:
             # nonlinear function of planar y, so the mean sits closer to
             # the equator than the midpoint (by up to ~0.6 degrees for
             # resolution 1 cells).
-            lam_bar = nucleus[0]
+            lam_bar = float(nucleus[0])
             # Integrate along the nucleus meridian's planar x, which is
             # safely interior to the cell (any x in the cell would do,
             # since latitude doesn't depend on it). Fixed-order
@@ -1164,10 +1192,12 @@ class Cell:
             # floor and trigger spurious IntegrationWarnings.
             x_mid = self.nucleus(plane=True)[0]
             phi_of_y = numpy_vectorize(lambda y: phi(x_mid, y))
-            phi_bar = (1 / (y2 - y1)) * integrate.fixed_quad(phi_of_y, y1, y2, n=20)[0]
+            phi_bar = float(
+                (1 / (y2 - y1)) * integrate.fixed_quad(phi_of_y, y1, y2, n=20)[0]
+            )
             return lam_bar, phi_bar
         if shape == "dart":
-            lam_bar = nucleus[0]
+            lam_bar = float(nucleus[0])
             phi_bar = (1 / area) * integrate.dblquad(
                 phi, y1, y2, lambda x: x1, lambda x: x2
             )[0]
@@ -1183,7 +1213,7 @@ class Cell:
         )[0]
         return lam_bar, phi_bar
 
-    def rotate_entry(self, x, quarter_turns):
+    def rotate_entry(self, x: str | int, quarter_turns: int) -> str | int:
         """
         Let N = self.N_side and rotate the N x N matrix of subcell numbers ::
 
@@ -1222,11 +1252,11 @@ class Cell:
         A = self.rdggs.child_order
         # Function (written as a dictionary) describing action of rotating A
         # one quarter turn anticlockwise.
-        f = {}
+        f: dict[str | int, str | int] = {}
         for i in range(N):
             for j in range(N):
-                n = A[(i, j)]
-                f[n] = A[(j, N - 1 - i)]
+                n = cast(int, A[(i, j)])
+                f[n] = cast(int, A[(j, N - 1 - i)])
         # Level 0 cell names stay the same.
         for c in CELLS0:
             f[c] = c
@@ -1241,7 +1271,7 @@ class Cell:
         else:
             return x
 
-    def rotate(self, quarter_turns):
+    def rotate(self, quarter_turns: int) -> "Cell":
         """
         Return the cell that is the result of rotating this cell's
         resolution 0 supercell by `quarter_turns` quarter turns anticlockwise.
@@ -1258,7 +1288,7 @@ class Cell:
         suid = [self.rotate_entry(x, quarter_turns) for x in self.suid]
         return Cell(self.rdggs, suid)
 
-    def neighbor(self, direction, plane=True):
+    def neighbor(self, direction: str, plane: bool = True) -> "Cell | None":
         """
         Return this cell's (edge) neighbor in the given direction.
         If `plane` = True, then the direction is one of the strings
@@ -1381,7 +1411,7 @@ class Cell:
                 neighbor = None
         return neighbor
 
-    def neighbors(self, plane=True):
+    def neighbors(self, plane: bool = True) -> "dict[str, Cell]":
         """
         Return this cell's planar or ellipsoidal (edge) neighbors
         as a dictionary whose keys are the directions of the neighbors.
@@ -1400,9 +1430,11 @@ class Cell:
             up Q2
 
         """
-        plane_neighbors = {}
+        plane_neighbors: dict[str, Cell] = {}
         for d in ["left", "right", "down", "up"]:
-            plane_neighbors[d] = self.neighbor(d, "plane")
+            neighbor = self.neighbor(d, plane=True)
+            assert neighbor is not None
+            plane_neighbors[d] = neighbor
         if plane:
             return plane_neighbors
         # Ellipsoid case.
@@ -1464,7 +1496,9 @@ class Cell:
                 result["east"] = nuc_cell[3][2]
         return result
 
-    def _neighbor_nuclei_by_relative_longitude(self, plane_neighbors):
+    def _neighbor_nuclei_by_relative_longitude(
+        self, plane_neighbors: "dict[str, Cell]"
+    ) -> "list[tuple[float, float, Cell]]":
         """
         Return a list of `(relative_longitude, latitude, cell)` triples,
         one per cell in `plane_neighbors`, where `relative_longitude` is
@@ -1497,7 +1531,7 @@ class Cell:
         "down_right": ("down", "right"),
     }
 
-    def diagonal_neighbor(self, direction):
+    def diagonal_neighbor(self, direction: str) -> "Cell | None":
         """
         Return this cell's diagonal (corner-touching only, not sharing an
         edge) planar neighbor in the given `direction`, one of
@@ -1547,7 +1581,7 @@ class Cell:
         # neighbor()'s own carrying rule, just tracked for two dimensions
         # at once instead of one.
         for i in reversed(range(1, len(self_suid))):
-            row, col = child_order[self_suid[i]]
+            row, col = cast("tuple[int, int]", child_order[int(self_suid[i])])
             if row_active:
                 if (row == 0 and row_dir == "up") or (
                     row == N - 1 and row_dir == "down"
@@ -1564,7 +1598,7 @@ class Cell:
                 else:
                     col = col - 1 if col_dir == "left" else col + 1
                     col_active = False
-            neighbor_suid[i] = child_order[(row, col)]
+            neighbor_suid[i] = cast(int, child_order[(row, col)])
             if not row_active and not col_active:
                 # Both dimensions resolved locally: everything coarser,
                 # including the resolution 0 cell, is unchanged.
@@ -1609,7 +1643,7 @@ class Cell:
             neighbor = neighbor.rotate(3)
         return neighbor
 
-    def _check_comparable(self, other, verb):
+    def _check_comparable(self, other: "Cell", verb: str) -> None:
         """
         Raise `ValueError` if `self` and `other` aren't cells of the same
         `RHEALPixDGGS`, or if either is the empty cell. Shared precondition
@@ -1626,7 +1660,7 @@ class Cell:
         if not self.suid or not other.suid:
             raise ValueError(f"Cannot test {verb} for an empty cell.")
 
-    def equals(self, other):
+    def equals(self, other: "Cell") -> bool:
         """
         DE-9IM `equals` predicate: return True if this cell and `other`
         are the same cell, and False otherwise. Equivalent to `self ==
@@ -1644,7 +1678,7 @@ class Cell:
         """
         return self == other
 
-    def contains_cell(self, other):
+    def contains_cell(self, other: "Cell") -> bool:
         """
         DE-9IM-style `contains` predicate for a pair of cells: return True
         if `other` is this cell or a descendant of it, and False
@@ -1675,7 +1709,7 @@ class Cell:
         self._check_comparable(other, "containment")
         return self.overlaps(other) and len(self.suid) <= len(other.suid)
 
-    def within(self, other):
+    def within(self, other: "Cell") -> bool:
         """
         DE-9IM `within` predicate: return True if this cell is `other` or
         a descendant of it, and False otherwise. The converse of
@@ -1692,21 +1726,21 @@ class Cell:
         """
         return other.contains_cell(self)
 
-    def covers(self, other):
+    def covers(self, other: "Cell") -> bool:
         """
         DE-9IM `covers` predicate. See `contains_cell()`'s docstring for
         why this is the same relation as `contains_cell()` for cells.
         """
         return self.contains_cell(other)
 
-    def covered_by(self, other):
+    def covered_by(self, other: "Cell") -> bool:
         """
         DE-9IM `coveredBy` predicate. See `within()`'s docstring for why
         this is the same relation as `within()` for cells.
         """
         return other.contains_cell(self)
 
-    def touches(self, other):
+    def touches(self, other: "Cell") -> bool:
         """
         DE-9IM `touches` predicate: return True if this cell and `other`
         share at least one boundary point but neither contains the other
@@ -1750,6 +1784,7 @@ class Cell:
             # One is an ancestor of (or the same cell as) the other: their
             # closed regions share interior points, so this isn't touches.
             return False
+        assert self.resolution is not None and other.resolution is not None
         r = min(self.resolution, other.resolution)
         shallow, deep = (self, other) if self.resolution == r else (other, self)
         deep_ancestor = Cell(self.rdggs, deep.suid[: r + 1])
@@ -1763,17 +1798,27 @@ class Cell:
         for direction in ("up", "down", "left", "right"):
             if deep_ancestor.neighbor(direction, plane=True) == shallow:
                 if direction in row_edge:
-                    return all(child_order[d][0] == row_edge[direction] for d in tail)
+                    return all(
+                        cast("tuple[int, int]", child_order[int(d)])[0]
+                        == row_edge[direction]
+                        for d in tail
+                    )
                 else:
-                    return all(child_order[d][1] == col_edge[direction] for d in tail)
+                    return all(
+                        cast("tuple[int, int]", child_order[int(d)])[1]
+                        == col_edge[direction]
+                        for d in tail
+                    )
         for direction in ("up_left", "up_right", "down_left", "down_right"):
             if deep_ancestor.diagonal_neighbor(direction) == shallow:
                 target_row = 0 if direction.startswith("up") else N - 1
                 target_col = 0 if direction.endswith("left") else N - 1
-                return all(child_order[d] == (target_row, target_col) for d in tail)
+                return all(
+                    child_order[int(d)] == (target_row, target_col) for d in tail
+                )
         return False
 
-    def disjoint(self, other):
+    def disjoint(self, other: "Cell") -> bool:
         """
         DE-9IM `disjoint` predicate: return True if this cell and `other`
         share no point at all (no shared interior and no shared
@@ -1800,7 +1845,7 @@ class Cell:
         self._check_comparable(other, "disjoint")
         return not (self.overlaps(other) or self.touches(other))
 
-    def random_point(self, plane=True):
+    def random_point(self, plane: bool = True) -> tuple[float, float]:
         """
         Return a random point in this cell.
         If `plane` = True, then choose the point from
@@ -1841,7 +1886,7 @@ class Cell:
                     # Success
                     return lam, phi
 
-    def color(self, saturation=0.5):
+    def color(self, saturation: float = 0.5) -> tuple[float, float, float]:
         """
         Return a unique RGB color tuple for this cell.
         Inessential graphics method.
