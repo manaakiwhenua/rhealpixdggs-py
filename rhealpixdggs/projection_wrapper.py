@@ -18,10 +18,12 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 # *****************************************************************************
 
 import importlib
+from collections.abc import Callable
+from typing import Any
 
 import pyproj
 
-from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
+from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID, Ellipsoid
 
 # my_round is doctest-only: the doctests use it from the module globals.
 from rhealpixdggs.utils import my_round, wrap_latitude, wrap_longitude  # noqa: F401
@@ -67,7 +69,12 @@ class Projection:
     For example, see the healpix() function in ``pj_healpix.py``.
     """
 
-    def __init__(self, ellipsoid=WGS84_ELLIPSOID, proj=None, **kwargs):
+    def __init__(
+        self,
+        ellipsoid: Ellipsoid = WGS84_ELLIPSOID,
+        proj: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         self.proj = proj
         # Keyword arguments related to the projection but not to its
         # underlying ellipsoid, e.g. for rhealpix these could be
@@ -78,9 +85,9 @@ class Projection:
         # attributes this depends on) never change after construction, so
         # the underlying projection callable only ever needs to be built
         # once, no matter how many times __call__() is invoked.
-        self._f = None
+        self._f: Callable[..., tuple[float, float]] | pyproj.Proj | None = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = ["map projection:"]
         result.append(f"    proj = {self.proj}")
         result.append(f"    kwargs = {self.kwargs}")
@@ -89,7 +96,7 @@ class Projection:
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 
-    def _get_f(self):
+    def _get_f(self) -> Callable[..., tuple[float, float]] | pyproj.Proj | None:
         """
         Return the underlying f(u, v, radians=False, inverse=False)
         callable for this projection, building it on first use and
@@ -114,14 +121,16 @@ class Projection:
                 self._f = pyproj.Proj(proj=self.proj, a=a, e=e, **self.kwargs)
         return self._f
 
-    def __call__(self, u, v, inverse=False):
+    def __call__(
+        self, u: float, v: float, inverse: bool = False
+    ) -> tuple[float, float] | None:
         ellipsoid = self.ellipsoid
         lon_0 = ellipsoid.lon_0
         lat_0 = ellipsoid.lat_0
         radians = ellipsoid.radians
         f = self._get_f()
         if f is None:
-            return
+            return None
         if not inverse:
             # Translate longitudes and latitudes so that
             # (lon_0, lat_0) maps to (0, 0) in the plane.

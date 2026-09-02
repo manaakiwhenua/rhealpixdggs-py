@@ -1,20 +1,21 @@
 from collections.abc import Iterable
 from itertools import compress
+from typing import TextIO
 
-from shapely.geometry import Point, Polygon
+from shapely.geometry import MultiPolygon, Point, Polygon
 
 from rhealpixdggs.cell import Cell
 from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
 
 
 def get_finest_containing_cell(
-    polygon: Polygon, rdggs: RHEALPixDGGS = WGS84_003
+    polygon: Polygon | MultiPolygon, rdggs: RHEALPixDGGS = WGS84_003
 ) -> Cell | None:
     """
     Finds the finest DGGS Cell containing a given cartesian polygon
     """
 
-    def _cell_contains(cell: Cell, poly) -> bool:
+    def _cell_contains(cell: Cell, poly: Polygon | MultiPolygon) -> bool:
         # Cap cells span all longitudes at the pole, so their boundary cannot
         # be represented as a simple polygon in geographic coordinates.
         # Project both sides to the rHEALPix plane and test containment there.
@@ -30,7 +31,11 @@ def get_finest_containing_cell(
             )
         return Polygon(cell.vertices(plane=False)).contains(poly)
 
-    def _get_finest_cell(polygon, suid, rdggs=rdggs):
+    def _get_finest_cell(
+        polygon: Polygon | MultiPolygon,
+        suid: tuple[str | int, ...],
+        rdggs: RHEALPixDGGS = rdggs,
+    ) -> Cell | None:
         parent_cell = Cell(rdggs=rdggs, suid=suid)
         # get the children cells and polygons for these cells
         children_cells = [cell for cell in parent_cell.subcells()]
@@ -58,13 +63,13 @@ def get_finest_containing_cell(
 class CellZoneFromPoly:
     def __init__(
         self,
-        feature,
-        res_limit,
+        feature: tuple[str, Polygon | MultiPolygon],
+        res_limit: int,
         return_cells: bool,
-        file=None,
-        bounding_cell=None,
-        rdggs=WGS84_003,
-    ):
+        file: TextIO | None = None,
+        bounding_cell: Cell | None = None,
+        rdggs: RHEALPixDGGS = WGS84_003,
+    ) -> None:
         self.label = feature[0]
         self.geometry = feature[1]
         self.res_limit = res_limit
@@ -74,19 +79,23 @@ class CellZoneFromPoly:
         # self.i = 0
         self.file = file
         if file:
-            self.file.write(f"\n{self.label},")
+            file.write(f"\n{self.label},")
         if bounding_cell is None:
-            self._get_dggs_poly(get_finest_containing_cell(self.geometry, rdggs))
+            finest = get_finest_containing_cell(self.geometry, rdggs)
+            if finest is None:
+                raise ValueError("no cell wholly contains the geometry")
+            self._get_dggs_poly(finest)
         else:
             self._get_dggs_poly(bounding_cell)
 
-    def _get_dggs_poly(self, bounding_cell):
+    def _get_dggs_poly(self, bounding_cell: Cell) -> list[Cell]:
         bounding_poly = Polygon(bounding_cell.vertices(plane=False))
         if self.geometry.contains(
             bounding_poly
         ):  # edge case where the polygon is the same as the bounding cell
             self._write_cells(bounding_cell, bounding_poly, "bounding poly")
         else:
+            assert bounding_cell.resolution is not None
             if bounding_cell.resolution + 1 > self.res_limit:
                 pass
             else:
@@ -103,7 +112,7 @@ class CellZoneFromPoly:
         # print('****************')
         return self.cells_list
 
-    def _process_children(self, together):
+    def _process_children(self, together: list[tuple[Cell, Polygon]]) -> None:
         for child_cell, child_poly in together:
             # 1: add contained cells
             if self.geometry.contains(child_poly):
@@ -117,7 +126,7 @@ class CellZoneFromPoly:
                 if self.geometry.overlaps(child_poly):
                     self._get_dggs_poly(child_cell)
 
-    def _write_cells(self, cell, poly, desc):
+    def _write_cells(self, cell: Cell, poly: Polygon, desc: str) -> None:
         """
         Writes cell / polygon details to either or both of a list or a file.
         """

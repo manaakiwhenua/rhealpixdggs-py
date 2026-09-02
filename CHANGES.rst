@@ -1,8 +1,13 @@
 0.7.1
 ^^^^^
-Adopted mypy (issue #109, first two stages): every existing type
-annotation is now checked in CI and true, and the bodies of untyped
-functions are checked too (``check_untyped_defs``). ``Cell.suid`` and
+Adopted mypy (issue #109, first three stages): every function in the
+package is now annotated and checked in CI (``check_untyped_defs`` plus
+``disallow_untyped_defs``). Small behavioural edges tightened along the
+way: comparing a ``Cell`` against a non-``Cell`` returns ``False``
+instead of raising ``AttributeError``; ``Cell()`` without a DGGS raises
+``TypeError`` immediately (it could never construct a usable cell); and
+several operations that would crash on the empty cell now fail with an
+explicit assertion. ``Cell.suid`` and
 ``Cell.resolution`` gained honest attribute types
 (``tuple[str | int, ...]`` and ``int | None`` — None only for the empty
 cell). Annotations that claimed more than the code

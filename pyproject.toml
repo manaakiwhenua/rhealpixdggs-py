@@ -80,6 +80,4 @@ include = ["tests/", "docs/"]
 [tool.mypy]
 files = ["rhealpixdggs"]
 check_untyped_defs = true
-# Non-strict starting point (issue #109): the goal at this stage is that
-# every *existing* annotation is true. Untyped defs are allowed and their
-# bodies unchecked; strictness ratchets up as coverage grows.
+disallow_untyped_defs = true

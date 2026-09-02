@@ -63,15 +63,15 @@ class Ellipsoid:
 
     def __init__(
         self,
-        R=None,
-        a=WGS84_A,
-        b=None,
-        e=None,
-        f=WGS84_F,
-        lon_0=0,
-        lat_0=0,
-        radians=False,
-    ):
+        R: float | None = None,
+        a: float = WGS84_A,
+        b: float | None = None,
+        e: float | None = None,
+        f: float = WGS84_F,
+        lon_0: float = 0,
+        lat_0: float = 0,
+        radians: bool = False,
+    ) -> None:
         self.lon_0 = lon_0
         self.lat_0 = lat_0
         self.radians = radians
@@ -82,8 +82,8 @@ class Ellipsoid:
             self.R = R
             self.a = R
             self.b = R
-            self.e = 0
-            self.f = 0
+            self.e: float = 0
+            self.f: float = 0
             self.R_A = R
         else:
             self.sphere = False
@@ -108,7 +108,7 @@ class Ellipsoid:
             # Convert to degrees.
             self.phi_0 = rad2deg(self.phi_0)
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = ["ellipsoid:"]
         # result.append('lengths measured in meters')
         for k, v in sorted(self.__dict__.items()):
@@ -120,10 +120,12 @@ class Ellipsoid:
                 result.append("    " + k + " = " + str(my_round(v, 15)))
         return "\n".join(result)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Ellipsoid):
+            return NotImplemented
         return self.a == other.a and self.b == other.b
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         """
         The inequality relation on cells.
         Since Python 3.3 doesn't automatically create reverse relations
@@ -131,7 +133,7 @@ class Ellipsoid:
         """
         return not self.__eq__(other)
 
-    def pi(self):
+    def pi(self) -> float:
         """
         Return pi if `self.radians` = True and 180 otherwise.
         """
@@ -140,7 +142,13 @@ class Ellipsoid:
         else:
             return 180.0
 
-    def random_point(self, lam_min=None, lam_max=None, phi_min=None, phi_max=None):
+    def random_point(
+        self,
+        lam_min: float | None = None,
+        lam_max: float | None = None,
+        phi_min: float | None = None,
+        phi_max: float | None = None,
+    ) -> tuple[float, float]:
         """
         Return a point (given in geodetic coordinates) sampled uniformly at
         random from the section of this ellipsoid with longitude in the range
@@ -202,7 +210,7 @@ class Ellipsoid:
             lam, phi = rad2deg([lam, phi])
         return lam, phi
 
-    def xyz(self, lam, phi):
+    def xyz(self, lam: float, phi: float) -> tuple[float, float, float]:
         """
         Given a point on this ellipsoid with longitude-latitude coordinates
         `(lam, phi)`, return the point's 3D rectangular coordinates.
