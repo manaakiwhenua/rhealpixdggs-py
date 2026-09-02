@@ -260,6 +260,23 @@ class MyTestCase(unittest.TestCase):
                 pp = pjr.rhealpix_sphere_inverse(*q, north_square=ns, south_square=ss)
                 self.assertTrue(euclidean(p, pp) < error)
 
+    def test_rhealpix_sphere_region_hint(self):
+        # region='equatorial' promises to skip the polar-triangle
+        # rearrangement, matching rhealpix_ellipsoid()'s handling of the
+        # same hint; rhealpix_sphere() used to accept and ignore it.
+        p = (0, pi / 3)  # a genuinely polar point
+        for ns, ss in product(list(range(4)), repeat=2):
+            hinted = pjr.rhealpix_sphere(
+                *p, north_square=ns, south_square=ss, region="equatorial"
+            )
+            self.assertEqual(hinted, pjh.healpix_sphere(*p))
+            self.assertEqual(
+                hinted,
+                pjr.rhealpix_ellipsoid(
+                    *p, north_square=ns, south_square=ss, region="equatorial"
+                ),
+            )
+
     def test_rhealpix_ellipsoid(self):
         # Test map projection.
         # Should return the same output as healpix_ellipsoid(), followed
