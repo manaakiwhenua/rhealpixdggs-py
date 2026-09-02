@@ -1,5 +1,19 @@
 0.7.1
 ^^^^^
+Adopted mypy (issue #109, first stage): every existing type annotation is
+now checked in CI and true. Annotations that claimed more than the code
+delivers were corrected — e.g. ``cell_from_point``, ``cell_from_region``,
+``get_finest_containing_cell``, ``rhp_get_resolution`` and
+``rhp_get_base_cell`` are now declared ``... | None``, matching their
+long-documented behaviour, and ``pj_rhealpix.triangle`` is declared to
+return ``None`` for equatorial points as its docstring always said. Three
+edge-case behaviour fixes fell out of the same pass:
+``RHEALPixDGGS.minimal_cover`` now skips points that lie outside the
+planar grid instead of collecting a spurious ``None`` entry,
+``cells_from_region`` returns ``[]`` when any corner of a planar region
+falls outside the grid instead of raising ``AttributeError``, and
+``cell_from_region`` likewise returns ``None`` instead of raising when a
+corner is off-grid.
 **Breaking change:** removed the plotting-era point generators, none of
 which has had a caller in any tree in this repository's history (issue
 #110): ``Ellipsoid.get_points`` (which has also returned ``[]`` for any

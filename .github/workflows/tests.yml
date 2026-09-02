@@ -57,6 +57,14 @@ jobs:
           python -m pip install "ruff>=0.16,<0.17"
           ruff check .
 
+      # mypy needs the package's dependencies importable for their type
+      # information, so install the package itself too. Scope and
+      # strictness come from [tool.mypy] in pyproject.toml.
+      - name: mypy
+        run: |
+          python -m pip install . "mypy>=2.3,<3" scipy-stubs types-shapely
+          mypy
+
   docs:
     runs-on: ubuntu-latest
     name: Docs build

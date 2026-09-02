@@ -101,7 +101,7 @@ def rhp_to_geo(
         # lng/lat -> lat/lng to make it consistent with h3
         centroid = centroid[::-1]
 
-    return tuple(map(float, centroid))
+    return (float(centroid[0]), float(centroid[1]))
 
 
 def rhp_to_parent(
@@ -252,10 +252,10 @@ def rhp_to_geo_boundary(
         # last point same as first
         verts += (verts[0],)
 
-    return tuple(tuple(float(x) for x in v) for v in verts)
+    return tuple((float(v[0]), float(v[1])) for v in verts)
 
 
-def rhp_get_resolution(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> int:
+def rhp_get_resolution(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> int | None:
     """
     Returns the resolution of a given cell index (or None if invalid).
 
@@ -271,7 +271,7 @@ def rhp_get_resolution(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> int:
     return len(rhpindex) - 1
 
 
-def rhp_get_base_cell(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> str:
+def rhp_get_base_cell(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> str | None:
     """
     Returns the resolution 0 cell id of a given cell index (or None if invalid).
 
@@ -534,10 +534,10 @@ def polyfill(
 
         if roi_cells:
             # Flatten list of lists of cells in bbox
-            roi_cells = [cell for nested_list in roi_cells for cell in nested_list]
+            flat_cells = [cell for nested_list in roi_cells for cell in nested_list]
 
             # Check each cell against geometry, add to results if inside polygon
-            for cell in roi_cells:
+            for cell in flat_cells:
                 if geom.contains(Point(cell.centroid(plane))):
                     cells.add(str(cell))
 
@@ -612,7 +612,7 @@ def linetrace(
     else:
         lines = geometry.geoms
 
-    cells = []
+    cells: list[str] = []
     for linestring in lines:
         # Extract coordinate pairs along the line segments
         coords = zip(linestring.coords, linestring.coords[1:])
