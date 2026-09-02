@@ -300,29 +300,6 @@ class Ellipsoid:
             phi += spacing
         return result
 
-    def get_points(self, filename):
-        """
-        Return a list of longitude-latitude points contained in
-        the file with filename `filename`.
-        Assume the file is a text file containing at most one
-        longitude-latitude point per line with the coordinates separated by
-        whitespace and angles given in degrees.
-        """
-        result = []
-        with open(filename, "rb") as file:
-            for line in file:
-                if line[0] not in ["-", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-                    # Ignore line.
-                    continue
-                else:
-                    # Split coordinate pair on whitespace.
-                    p = [float(x) for x in line.split()]
-                    result.append(p)
-        if self.radians:
-            # Convert to radians.
-            result = [deg2rad(p) for p in result]
-        return result
-
     def xyz(self, lam, phi):
         """
         Given a point on this ellipsoid with longitude-latitude coordinates
