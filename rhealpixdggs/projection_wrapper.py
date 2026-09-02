@@ -18,15 +18,16 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 # *****************************************************************************
 
 # Import third-party modules.
-import pyproj
-
 # Import standard modules.
 import importlib
 
-# Import my modules.
-from rhealpixdggs.utils import my_round, wrap_longitude, wrap_latitude
+import pyproj
+
 from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 
+# Import my modules.
+# my_round is doctest-only: the doctests use it from the module globals.
+from rhealpixdggs.utils import my_round, wrap_latitude, wrap_longitude  # noqa: F401
 
 # Homemade map projections, as opposed to those in the PROJ.4 library.
 # Remove 'healpix' and 'rhealpix' to use the PROJ.4 versions instead,
@@ -35,7 +36,7 @@ HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
 # HOMEMADE_PROJECTIONS = {"isea", "csea", "qsc"}
 
 
-class Projection(object):
+class Projection:
     """
     Represents a map projection of a given ellipsoid.
 
@@ -84,8 +85,8 @@ class Projection(object):
 
     def __str__(self):
         result = ["map projection:"]
-        result.append("    proj = %s" % self.proj)
-        result.append("    kwargs = %s" % self.kwargs)
+        result.append(f"    proj = {self.proj}")
+        result.append(f"    kwargs = {self.kwargs}")
         result.append("    ellipsoid:")
         for k, v in sorted(self.ellipsoid.__dict__.items()):
             result.append(" " * 8 + k + " = " + str(v))
@@ -109,7 +110,7 @@ class Projection(object):
                     module = importlib.import_module("rhealpixdggs.pj_" + self.proj)
                     self._f = getattr(module, self.proj)(a=a, e=e, **self.kwargs)
                 except (AttributeError, ModuleNotFoundError):
-                    print("Oops! Projection %s is not implemented." % self.proj)
+                    print(f"Oops! Projection {self.proj} is not implemented.")
                     return None
             else:
                 # Use a projection from the PROJ library.

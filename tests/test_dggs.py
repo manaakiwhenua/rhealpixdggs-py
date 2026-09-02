@@ -15,22 +15,22 @@ Keep adding tests!
 # *****************************************************************************
 
 # Import third-party modules.
-from numpy import array, pi
-
 # Import standard modules
+import itertools
 import unittest
 from random import randint  # , uniform
+
+from numpy import array, pi
 
 # Import my modules.
 # import rhealpixdggs.dggs as dggs
 from rhealpixdggs.cell import CELLS0
-from rhealpixdggs.dggs import RHEALPixDGGS, WGS84_003, WGS84_003_RADIANS
+from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
 from rhealpixdggs.ellipsoids import (
-    Ellipsoid,
     WGS84_ELLIPSOID,
     WGS84_ELLIPSOID_RADIANS,
+    Ellipsoid,
 )
-
 
 # Level 0 cell names
 N = CELLS0[0]
@@ -294,7 +294,7 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             cells = rdggs.cells_from_line(res, a, b, plane=False)
             self.assertEqual(cells[0], rdggs.cell_from_point(res, a, plane=False))
             self.assertEqual(cells[-1], rdggs.cell_from_point(res, b, plane=False))
-            for c0, c1 in zip(cells, cells[1:]):
+            for c0, c1 in itertools.pairwise(cells):
                 self.assertTrue(c0.touches(c1), msg=f"{c0} !~ {c1} on {a}->{b}")
                 self.assertNotEqual(c0, c1)
 
@@ -520,7 +520,6 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             phi = PI / 3
             lam_min = -PI
             lam_max = PI
-            end_points = [(lam_min, phi), (lam_max, phi)]
             get = rdggs.cells_from_parallel(1, phi, lam_min, lam_max)
             expect = [
                 rdggs.cell([N, 6]),
@@ -537,7 +536,6 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             phi = PI / 3
             lam_min = -PI
             lam_max = -PI + 0.1
-            end_points = [(lam_min, phi), (lam_max, phi)]
             get = rdggs.cells_from_parallel(1, phi, lam_min, lam_max)
             expect = [rdggs.cell([N, 6])]
             self.assertEqual(get, expect)
@@ -545,7 +543,6 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             phi = PI / 3
             lam_min = -PI
             lam_max = 0
-            end_points = [(lam_min, phi), (lam_max, phi)]
             get = rdggs.cells_from_parallel(1, phi, lam_min, lam_max)
             expect = [
                 rdggs.cell([N, 6]),

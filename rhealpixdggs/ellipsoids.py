@@ -20,14 +20,14 @@ Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordin
 # *****************************************************************************
 
 # Import third-party modules.
-import pyproj
-from numpy import pi, sqrt, sin, cos, arcsin, arctanh, deg2rad, rad2deg
-
 # Import standard modules.
 from random import uniform
 
+import pyproj
+from numpy import arcsin, arctanh, cos, deg2rad, pi, rad2deg, sin, sqrt
+
 # Import my modules.
-from rhealpixdggs.utils import my_round, auth_lat, auth_rad
+from rhealpixdggs.utils import auth_lat, auth_rad, my_round
 
 # Parameters of some common ellipsoids.
 WGS84_A = pyproj.get_ellps_map()["WGS84"]["a"]  # 6378137.0
@@ -38,7 +38,7 @@ WGS84_R_A = sqrt(WGS84_A**2 / 2 + WGS84_B**2 / 2 * (arctanh(WGS84_E) / WGS84_E))
 R_EM = pyproj.get_ellps_map()["sphere"]["a"]  # 6371000 (Earth's mean radius)
 
 
-class Ellipsoid(object):
+class Ellipsoid:
     """
     Represents an ellipsoid of revolution (possibly a sphere) with a
     geodetic longitude-latitude coordinate frame.
@@ -124,10 +124,7 @@ class Ellipsoid(object):
         return "\n".join(result)
 
     def __eq__(self, other):
-        if self.a == other.a and self.b == other.b:
-            return True
-        else:
-            return False
+        return self.a == other.a and self.b == other.b
 
     def __ne__(self, other):
         """
@@ -312,14 +309,15 @@ class Ellipsoid(object):
         whitespace and angles given in degrees.
         """
         result = []
-        for line in open(filename, "rb"):
-            if line[0] not in ["-", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-                # Ignore line.
-                continue
-            else:
-                # Split coordinate pair on whitespace.
-                p = [float(x) for x in line.split()]
-                result.append(p)
+        with open(filename, "rb") as file:
+            for line in file:
+                if line[0] not in ["-", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+                    # Ignore line.
+                    continue
+                else:
+                    # Split coordinate pair on whitespace.
+                    p = [float(x) for x in line.split()]
+                    result.append(p)
         if self.radians:
             # Convert to radians.
             result = [deg2rad(p) for p in result]

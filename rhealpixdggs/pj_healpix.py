@@ -20,13 +20,15 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 # *****************************************************************************
 
 # Import third-party modules.
-from numpy import pi, floor, sqrt, sin, arcsin, sign, array, deg2rad, rad2deg
+from collections.abc import Callable
+
 import shapely
+from numpy import arcsin, array, deg2rad, floor, pi, rad2deg, sign, sin, sqrt
 from shapely.geometry import Polygon
-from typing import Callable
 
 # Import my modules.
-from rhealpixdggs.utils import my_round, auth_lat, auth_rad
+# my_round is doctest-only: the doctests use it from the module globals.
+from rhealpixdggs.utils import auth_lat, auth_rad, my_round  # noqa: F401
 
 # Cache for in_healpix_image(); see the comment inside that function.
 _healpix_image_poly = None
@@ -83,8 +85,8 @@ def healpix_sphere_inverse(x: float, y: float) -> tuple[float, float]:
     """
     if not in_healpix_image(x, y):
         raise ValueError(
-            "(%.20f,%.20f) is not a point in the image of the HEALPix "
-            "projection of the unit sphere" % (x, y)
+            f"({x:.20f},{y:.20f}) is not a point in the image of the HEALPix "
+            "projection of the unit sphere"
         )
     y0 = pi / 4
     # Equatorial region.

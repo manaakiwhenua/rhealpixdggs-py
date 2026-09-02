@@ -32,8 +32,8 @@ import sys
 
 # <defs>, <g ...>, </g> and <path .../>. Attribute values in matplotlib's
 # output never contain '>', so matching up to the first '>' is safe here.
-_TAG = re.compile(r"<(/?)(defs|g|path)\b([^>]*)>", re.S)
-_D_ATTR = re.compile(r'(\sd=")([^"]*)(")', re.S)
+_TAG = re.compile(r"<(/?)(defs|g|path)\b([^>]*)>", re.DOTALL)
+_D_ATTR = re.compile(r'(\sd=")([^"]*)(")', re.DOTALL)
 _NUMBER = re.compile(r"-?\d+\.\d+")
 
 DEFAULT_DECIMALS = 2

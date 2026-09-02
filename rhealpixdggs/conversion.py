@@ -1,8 +1,10 @@
-from shapely.geometry import Polygon, Point
-from rhealpixdggs.dggs import RHEALPixDGGS, WGS84_003
-from rhealpixdggs.cell import Cell
-from itertools import compress
 from collections.abc import Iterable
+from itertools import compress
+
+from shapely.geometry import Point, Polygon
+
+from rhealpixdggs.cell import Cell
+from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
 
 
 def get_finest_containing_cell(
@@ -119,7 +121,7 @@ class CellZoneFromPoly:
         Writes cell / polygon details to either or both of a list or a file.
         """
         if self.file is not None:
-            self.file.write(f"{str(cell)} {desc}\n ")
+            self.file.write(f"{cell!s} {desc}\n ")
             # self.file.write(f"{poly.wkt}\n")
         if self.return_cells:
             # cell = self.add_int_suid(cell)

@@ -14,15 +14,16 @@ Keep adding tests!
 # *****************************************************************************
 
 # Import standard modules.
-from math import asin, pi, sin
 import unittest
+from math import asin, pi, sin
 
 # Import third-party modules.
 from scipy.integrate import quad
 
+import rhealpixdggs.utils as ut
+
 # Import my modules.
 from rhealpixdggs.ellipsoids import WGS84_E
-import rhealpixdggs.utils as ut
 
 
 def auth_lat_by_defining_integral(phi: float, e: float) -> float:

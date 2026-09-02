@@ -1,24 +1,20 @@
-from typing import Literal, Union
+from typing import Literal
 from warnings import warn
-from shapely import is_valid_reason
-from shapely.geometry import Point, Polygon, MultiPolygon, LineString, MultiLineString
 
-from rhealpixdggs.dggs import RHEALPixDGGS
-from rhealpixdggs.cell import Cell
+from shapely import is_valid_reason
+from shapely.geometry import LineString, MultiLineString, MultiPolygon, Point, Polygon
+
+# List of resolution 0 cell addresses (i.e. cube faces)
+from rhealpixdggs.cell import CELLS0, Cell
 from rhealpixdggs.conversion import compact_cells
 
 # ======== Messages and constants ======== #
-
-
 # Pre-defined DGGS with WGS84 ellipsoid, coordinates in degrees, n == 3 to subdivide
 # cell sides, and both N and S polar cube face attached to O equatorial cube face:
 # N
 # O P Q R
 # S
-from rhealpixdggs.dggs import WGS84_003
-
-# List of resolution 0 cell addresses (i.e. cube faces)
-from rhealpixdggs.cell import CELLS0
+from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
 
 # Warnings
 PARENT_RESOLUTION_WARNING = "WARNING: You requested a parent resolution that is higher than the cell resolution. Returning the cell address itself."
@@ -109,7 +105,10 @@ def rhp_to_geo(
 
 
 def rhp_to_parent(
-    rhpindex: str, res: int = None, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+    rhpindex: str,
+    res: int | None = None,
+    verbose: bool = True,
+    dggs: RHEALPixDGGS = WGS84_003,
 ) -> str | None:
     """
     Returns parent of rhpindex at resolution res (immediate parent if res == None).
@@ -149,7 +148,10 @@ def rhp_to_parent(
 
 
 def rhp_to_center_child(
-    rhpindex: str, res: int = None, verbose: bool = True, dggs: RHEALPixDGGS = WGS84_003
+    rhpindex: str,
+    res: int | None = None,
+    verbose: bool = True,
+    dggs: RHEALPixDGGS = WGS84_003,
 ) -> str | None:
     """
     Returns central child of rhpindex at resolution res (immediate central
@@ -198,7 +200,7 @@ def rhp_to_center_child(
         c_index = int((dggs.N_side**2 - 1) / 2)
 
         # Append the required number of child digits to cell index
-        child_index = rhpindex + "".join(str(c_index) for _ in range(0, added_levels))
+        child_index = rhpindex + "".join(str(c_index) for _ in range(added_levels))
 
         return child_index
 
@@ -432,7 +434,7 @@ def k_ring(
 
 
 def polyfill(
-    geometry: Union[Polygon, MultiPolygon],
+    geometry: Polygon | MultiPolygon,
     res: int,
     plane: bool = True,
     compress: bool = False,
@@ -547,7 +549,7 @@ def polyfill(
 
 
 def linetrace(
-    geometry: Union[LineString, MultiLineString],
+    geometry: LineString | MultiLineString,
     res: int,
     plane: bool = True,
     verbose: bool = False,
@@ -706,7 +708,7 @@ def _rings_up_to(center: Cell, k: int) -> list[list[Cell]]:
     return rings
 
 
-def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
+def _malformed_geometry(geometry: Polygon | MultiPolygon) -> bool:
     # Geometry has to have things in it
     if geometry is None or geometry.is_empty:
         return True
@@ -720,13 +722,10 @@ def _malformed_geometry(geometry: Union[Polygon, MultiPolygon]) -> bool:
         return True
 
     # Geometry has to have an area, i.e. not be collapsed to a line
-    if geometry.area == 0:
-        return True
-
-    return False
+    return geometry.area == 0
 
 
-def _malformed_lines(lines: Union[LineString, MultiLineString]) -> bool:
+def _malformed_lines(lines: LineString | MultiLineString) -> bool:
     # There have to be lines
     if lines is None or lines.is_empty:
         return True
@@ -739,10 +738,7 @@ def _malformed_lines(lines: Union[LineString, MultiLineString]) -> bool:
         return True
 
     # Lines need to have a length, i.e. not be collapsed into points
-    if lines.length == 0:
-        return True
-
-    return False
+    return lines.length == 0
 
 
 def _remove_sequential_duplicates(cells: list[str]) -> list[str]:

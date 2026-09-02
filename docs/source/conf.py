@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # rHEALPixDGGS documentation build configuration file, created by
 # sphinx-quickstart on Wed Jan 16 11:03:44 2013.
@@ -11,8 +10,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -73,7 +72,7 @@ import datetime
 project = "rHEALPixDGGS"
 # First publication year through the year of the build; the end year is
 # computed so it can't go stale.
-copyright = f"2013–{datetime.date.today().year}, Robert Gibb, Alexander Raichev and contributors"
+copyright = f"2013–{datetime.date.today().year}, Robert Gibb, Alexander Raichev and contributors"  # noqa: DTZ011
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
