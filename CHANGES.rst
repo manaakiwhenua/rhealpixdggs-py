@@ -17,7 +17,9 @@ planar grid instead of collecting a spurious ``None`` entry,
 ``cells_from_region`` returns ``[]`` when any corner of a planar region
 falls outside the grid instead of raising ``AttributeError``, and
 ``cell_from_region`` likewise returns ``None`` instead of raising when a
-corner is off-grid.
+corner is off-grid. ``pj_rhealpix.rhealpix_sphere`` now honours the
+``region="equatorial"`` hint like its three siblings instead of silently
+ignoring it.
 **Breaking change:** removed the plotting-era point generators, none of
 which has had a caller in any tree in this repository's history (issue
 #110): ``Ellipsoid.get_points`` (which has also returned ``[]`` for any

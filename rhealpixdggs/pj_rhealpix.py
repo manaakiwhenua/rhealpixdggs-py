@@ -304,7 +304,11 @@ def rhealpix_sphere(
         *---*---*---*---*
     """
     x, y = healpix_sphere(lam, phi)
-    return combine_triangles(x, y, north_square=north_square, south_square=south_square)
+    if region != "equatorial":
+        x, y = combine_triangles(
+            x, y, north_square=north_square, south_square=south_square
+        )
+    return x, y
 
 
 def rhealpix_sphere_inverse(
