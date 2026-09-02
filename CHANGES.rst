@@ -25,6 +25,7 @@ falls outside the grid instead of raising ``AttributeError``, and
 corner is off-grid. ``pj_rhealpix.rhealpix_sphere`` now honours the
 ``region="equatorial"`` hint like its three siblings instead of silently
 ignoring it.
+
 **Breaking change:** removed the plotting-era point generators, none of
 which has had a caller in any tree in this repository's history (issue
 #110): ``Ellipsoid.get_points`` (which has also returned ``[]`` for any
