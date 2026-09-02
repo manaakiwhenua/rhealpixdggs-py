@@ -1192,9 +1192,9 @@ class Cell:
             # floor and trigger spurious IntegrationWarnings.
             x_mid = self.nucleus(plane=True)[0]
             phi_of_y = numpy_vectorize(lambda y: phi(x_mid, y))
-            phi_bar: float = (1 / (y2 - y1)) * integrate.fixed_quad(
-                phi_of_y, y1, y2, n=20
-            )[0]
+            phi_bar = float(
+                (1 / (y2 - y1)) * integrate.fixed_quad(phi_of_y, y1, y2, n=20)[0]
+            )
             return lam_bar, phi_bar
         if shape == "dart":
             lam_bar = float(nucleus[0])
