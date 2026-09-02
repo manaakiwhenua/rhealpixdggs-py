@@ -12,7 +12,6 @@ The pj_rhealpix Module
     rhealpix_ellipsoid_inverse
     rhealpix_sphere
     rhealpix_sphere_inverse
-    rhealpix_vertices
     triangle
 
 .. automodule:: rhealpixdggs.pj_rhealpix

@@ -10,7 +10,6 @@ The pj_healpix Module
     healpix_ellipsoid_inverse
     healpix_sphere
     healpix_sphere_inverse
-    healpix_vertices
     in_healpix_image
 
 .. automodule:: rhealpixdggs.pj_healpix

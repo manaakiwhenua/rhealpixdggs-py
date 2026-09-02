@@ -14,15 +14,12 @@ Keep adding tests!
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import third-party modules.
-# Import standard modules
 import itertools
 import unittest
 from random import randint  # , uniform
 
 from numpy import array, pi
 
-# Import my modules.
 # import rhealpixdggs.dggs as dggs
 from rhealpixdggs.cell import CELLS0
 from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS

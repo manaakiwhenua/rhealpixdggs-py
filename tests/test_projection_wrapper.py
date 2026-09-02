@@ -4,7 +4,6 @@ Beware, these tests cover only some functions and only some scenarios.
 Keep adding tests!
 """
 
-# Import standard modules.
 import unittest
 
 from rhealpixdggs.ellipsoids import (
@@ -12,8 +11,6 @@ from rhealpixdggs.ellipsoids import (
     WGS84_ELLIPSOID_RADIANS,
     Ellipsoid,
 )
-
-# Import my modules.
 from rhealpixdggs.projection_wrapper import Projection
 
 

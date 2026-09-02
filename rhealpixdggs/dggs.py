@@ -150,8 +150,6 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
 #  Distributed under the terms of the GNU Lesser General Public License (LGPL)
 #                  http: //www.gnu.org/licenses/
 # *****************************************************************************
-# Import third-party modules.
-# Import standard modules.
 from itertools import pairwise, product
 from math import asin, copysign, floor
 from random import randint
@@ -161,7 +159,6 @@ from numpy import array, base_repr, ceil, log, pi
 # assert_allclose is doctest-only: the doctests use it from the module globals.
 from numpy.testing import assert_allclose  # noqa: F401
 
-# Import my modules.
 import rhealpixdggs.pj_rhealpix as pjr
 import rhealpixdggs.projection_wrapper as pw
 from rhealpixdggs.cell import CELLS0, Cell

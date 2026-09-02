@@ -13,14 +13,11 @@ Keep adding tests!
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import third-party modules.
-# Import standard modules.
 import unittest
 
 from numpy import arcsin, array, atleast_1d, pi, rad2deg, sin, sqrt
 from scipy.spatial.distance import euclidean, norm
 
-# Import my modules.
 import rhealpixdggs.pj_healpix as pjh
 from rhealpixdggs.utils import auth_lat, auth_rad
 

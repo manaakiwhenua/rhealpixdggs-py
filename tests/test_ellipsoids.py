@@ -13,10 +13,8 @@ Keep adding tests!
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import standard modules.
 import unittest
 
-# Import my modules.
 import rhealpixdggs.ellipsoids as ell
 
 

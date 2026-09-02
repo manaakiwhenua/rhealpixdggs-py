@@ -16,7 +16,6 @@ unless indicated otherwise.
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import standard modules.
 from math import asin, copysign, log, pi, sin, sqrt
 from typing import Any
 

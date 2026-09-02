@@ -19,14 +19,11 @@ Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordin
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-# Import third-party modules.
-# Import standard modules.
 from random import uniform
 
 import pyproj
 from numpy import arcsin, arctanh, cos, deg2rad, pi, rad2deg, sin, sqrt
 
-# Import my modules.
 from rhealpixdggs.utils import auth_lat, auth_rad, my_round
 
 # Parameters of some common ellipsoids.
@@ -204,101 +201,6 @@ class Ellipsoid:
             # Convert back to degrees.
             lam, phi = rad2deg([lam, phi])
         return lam, phi
-
-    def lattice(self, n=90):
-        """
-        Return a 2n x n square lattice of longitude-latitude points.
-
-        EXAMPLES::
-
-            >>> E = UNIT_SPHERE
-            >>> for p in E.lattice(n=3):
-            ...     print(p)
-            (-150.0, -60.0)
-            (-150.0, 0.0)
-            (-150.0, 60.0)
-            (-90.0, -60.0)
-            (-90.0, 0.0)
-            (-90.0, 60.0)
-            (-30.0, -60.0)
-            (-30.0, 0.0)
-            (-30.0, 60.0)
-            (30.0, -60.0)
-            (30.0, 0.0)
-            (30.0, 60.0)
-            (90.0, -60.0)
-            (90.0, 0.0)
-            (90.0, 60.0)
-            (150.0, -60.0)
-            (150.0, 0.0)
-            (150.0, 60.0)
-
-        """
-        PI = self.pi()
-        # Longitudinal and latitudinal spacing between points.
-        delta = PI / n
-        return [
-            (-PI + delta * (0.5 + i), -PI / 2 + delta * (0.5 + j))
-            for i in range(2 * n)
-            for j in range(n)
-        ]
-
-    def meridian(self, lam, n=200):
-        """
-        Return a list of `n` equispaced longitude-latitude
-        points lying along the meridian of longitude `lam`.
-        Avoid the poles.
-        """
-        PI = self.pi()
-        delta = PI / n
-        return [(lam, -PI / 2 + delta * (0.5 + i)) for i in range(n)]
-
-    def parallel(self, phi, n=200):
-        """
-        Return a list of `2*n` equispaced longitude-latitude
-        points lying along the parallel of latitude `phi`.
-        """
-        PI = self.pi()
-        delta = PI / n
-        return [(-PI + delta * (0.5 + i), phi) for i in range(2 * n)]
-
-    def graticule(self, n=400, spacing=None):
-        """
-        Return a list of longitude-latitude points sampled from a
-        longitude-latitude graticule on this ellipsoid with the given
-        spacing between meridians and between parallels.
-        The number of points on longitude and latitude per pi radians is `n`.
-        The spacing should be specified in the angle units used for this
-        ellipsoid.
-        If `spacing=None`, then a default spacing of pi/16 radians will be set.
-
-        EXAMPLES::
-
-            >>> E = UNIT_SPHERE
-            >>> print(len(E.graticule(n=400)))
-            25600
-
-        """
-        PI = self.pi()
-        result = []
-        # delta = PI/n
-        # Set default spacing.
-        if spacing is None:
-            spacing = PI / 16
-        # Longitude lines.
-        lam = -PI
-        while lam < PI:
-            # result.extend([(lam, -PI/2 + delta*(0.5 + i)) for i in range(n)])
-            result.extend(self.meridian(lam, n))
-            lam += spacing
-        # Latitude lines. Avoid the poles.
-        eps = PI / 360
-        phi = -PI / 2 + eps
-        while phi < PI / 2:
-            # result.extend([(-PI + delta*(0.5 + i), phi) for i in range(2*n)])
-            result.extend(self.parallel(phi, n))
-            phi += spacing
-        return result
 
     def xyz(self, lam, phi):
         """
