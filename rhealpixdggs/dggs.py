@@ -293,7 +293,8 @@ class RHEALPixDGGS:
         #   3 4 5
         #   6 7 8   (example for N_side=3).
         #
-        an = {}
+        # Face-letter keys map to face-letter values; int keys to ints.
+        an: dict[str | int, dict[str, str | int]] = {}
         # Neighbors of CELLS0[1], ..., CELLS0[4]
         an[CELLS0[1]] = {
             "left": CELLS0[4],

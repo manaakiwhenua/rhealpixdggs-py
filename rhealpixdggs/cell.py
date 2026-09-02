@@ -58,7 +58,7 @@ class Cell:
 
         if order == "post":
             # Compute suid from post order index one character at a time.
-            suid = []
+            digits: list[int] = []
             p = index
 
             def num(k):
@@ -85,13 +85,10 @@ class Cell:
             for i in range(rdggs.max_resolution + 1):
                 n = num(i)
                 q, r = divmod(p, n)
-                suid.append(q)
+                digits.append(q)
                 p = r
                 if p == n - 1:
                     break
-            # Replace first digit with appropriate letter.
-            suid[0] = CELLS0[suid[0]]
-            suid = tuple(suid)
         else:
             b = rdggs.N_side**2
 
@@ -116,14 +113,12 @@ class Cell:
                 L = k - 1
                 remainder = index - ind(L)
             # Now compute cell suid from remainder.
-            suid = base_repr(remainder, b)
+            digits_str = base_repr(remainder, b)
             # If necessary, prepend with zeros to get a length L + 1 string.
-            suid = "0" * (L + 1 - len(suid)) + suid
-            suid = [int(s) for s in suid]
-            # Replace first digit with appropriate letter.
-            suid[0] = CELLS0[suid[0]]
-            suid = tuple(suid)
-        return suid
+            digits_str = "0" * (L + 1 - len(digits_str)) + digits_str
+            digits = [int(s) for s in digits_str]
+        # Replace the first digit with the appropriate letter.
+        return (CELLS0[digits[0]], *digits[1:])
 
     def __init__(
         self, rdggs=None, suid=None, level_order_index=None, post_order_index=None
@@ -153,8 +148,11 @@ class Cell:
         self.rdggs = rdggs
         self.ellipsoid = rdggs.ellipsoid
         self.N_side = rdggs.N_side
-        self.suid = ()  # Spatially unique identifier of self.
-        self.resolution = None  # Level of self in grid hierarchy.
+        # Spatially unique identifier of self: a face letter followed by
+        # int digits, or empty for the (rarely used) empty cell.
+        self.suid: tuple[str | int, ...] = ()
+        # Level of self in grid hierarchy; None only for the empty cell.
+        self.resolution: int | None = None
         if suid is not None:
             # A little error checking.
             if not isinstance(suid, (list, tuple)):
@@ -170,8 +168,7 @@ class Cell:
                 if x not in digits:
                     raise ValueError(f"Digits of suid must lie in {digits}. Got {x}.")
 
-            self.suid = [suid[0]] + [int(n) for n in suid[1:]]
-            self.suid = tuple(self.suid)
+            self.suid = tuple([suid[0]] + [int(n) for n in suid[1:]])
         elif level_order_index is not None:
             self.suid = Cell.suid_from_index(
                 self.rdggs, level_order_index, order="resolution"
@@ -185,12 +182,12 @@ class Cell:
 
     def __str__(self):
         if (self.rdggs.N_side) ** 2 < 10:
-            s0 = self.suid[0]
+            s0 = str(self.suid[0])
             s = "".join(str(n) for n in self.suid[1:])
             return s0 + s
         else:
             # Comma separate suid entries.
-            return "(" + self.suid[0] + str(self.suid)[4:]
+            return "(" + str(self.suid[0]) + str(self.suid)[4:]
 
     def __eq__(self, other):
         return (
@@ -260,11 +257,12 @@ class Cell:
             2
 
         """
-        L = self.resolution
         if not self.suid:
             return None
-        s = list(self.suid)
-        s[0] = CELLS0.index(s[0])
+        L = self.resolution
+        assert L is not None  # non-empty cells always have a resolution
+        # suid[0] is the face letter; the rest are int digits already.
+        s = [CELLS0.index(str(self.suid[0]))] + [int(d) for d in self.suid[1:]]
         if order == "post":
 
             def num(k):
@@ -378,13 +376,13 @@ class Cell:
                 # End of the line. No successor.
                 return None
             else:
-                i = CELLS0.index(suid[0])
+                i = CELLS0.index(str(suid[0]))
                 suid = [CELLS0[i + 1]] + [0 for j in range(resolution)]
         else:
             # suid[greatest] is a number.
             suid = (
                 suid[0:greatest]
-                + [suid[greatest] + 1]
+                + [int(suid[greatest]) + 1]
                 + [0 for j in range(resolution - greatest)]
             )
         return Cell(self.rdggs, suid)
@@ -433,7 +431,7 @@ class Cell:
         # if possible.
         if greatest == 0:
             # suid[greatest] is a letter.
-            i = CELLS0.index(suid[greatest])
+            i = CELLS0.index(str(suid[greatest]))
             if i == 0:
                 # End of the line. No predecessor.
                 return None
@@ -443,7 +441,7 @@ class Cell:
             # nome[greatest] is a number > 0.
             suid = (
                 suid[0:greatest]
-                + [suid[greatest] - 1]
+                + [int(suid[greatest]) - 1]
                 + [M for i in range(resolution - greatest)]
             )
         return Cell(self.rdggs, suid)
@@ -488,6 +486,7 @@ class Cell:
 
         """
         L = self.resolution
+        assert L is not None  # the empty cell has no subcells
         if resolution is None:
             resolution = L + 1
         if resolution < L:
@@ -524,6 +523,7 @@ class Cell:
         # Find the location of the resolution 0 cell c0 containing c.
         x0, y0 = self.rdggs.ul_vertex[self.suid[0]]
         resolution = self.resolution
+        assert resolution is not None  # the empty cell has no vertices
 
         # The column and row SUIDs of c give the the horizontal and vertical
         # distances, respectively, between the ul_vertex of c0 and
@@ -1849,7 +1849,7 @@ class Cell:
         suid = self.suid
         N = self.rdggs.N_side
         hue_resolution0 = {v: k / 6.0 for (k, v) in enumerate(CELLS0)}
-        hue = hue_resolution0[suid[0]]
+        hue = hue_resolution0[str(suid[0])]
         n = len(suid)
         if n > 1:
             hue += sum([suid[i] * N ** (-2 * i) for i in range(1, n)]) / 6.0
