@@ -19,6 +19,12 @@ and cap cells now honours ``interior``; since 0.6.0 those two shapes had
 returned the plain vertices for that call. Planar boundary points are
 built with float arithmetic instead of a two-element numpy array per
 point, and are returned as Python floats; the values are unchanged.
+``pj_healpix.in_healpix_image`` and ``pj_rhealpix.in_rhealpix_image``
+test their rectangles and triangles with arithmetic instead of a shapely
+point-in-polygon query, cutting the two checks that every inverse
+projection performs from about 40% of its cost to almost nothing (issue
+#116). The accepted region is unchanged for rHEALPix and differs for
+HEALPix only within the 1e-10 fuzz margin outside the image.
 
 0.7.1
 ^^^^^
