@@ -17,11 +17,18 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-from collections.abc import Callable
+from typing import cast
 
+import numpy as np
 from numpy import array, deg2rad, dot, identity, pi, rad2deg, sign
 
 from rhealpixdggs.pj_healpix import (
+    _as_float_arrays,
+    _healpix_ellipsoid_array,
+    _healpix_ellipsoid_inverse_array,
+    _healpix_sphere_array,
+    _healpix_sphere_inverse_array,
+    _raise_out_of_image,
     healpix_ellipsoid,
     healpix_ellipsoid_inverse,
     healpix_sphere,
@@ -29,7 +36,15 @@ from rhealpixdggs.pj_healpix import (
 )
 
 # my_round is doctest-only: the doctests use it from the module globals.
-from rhealpixdggs.utils import auth_rad, my_round  # noqa: F401
+from rhealpixdggs.utils import (  # noqa: F401
+    FloatArray,
+    ProjectionFunction,
+    auth_rad,
+    my_round,
+)
+
+_IMAGE_EPS = 1e-15
+_TRIANGLE_EPS = 1e-15
 
 # Matrix for anticlockwise rotation by pi/2:
 ROTATE1 = array([[0, -1], [1, 0]])
@@ -117,6 +132,53 @@ def combine_triangles(
             u = array((-3 * pi / 4 + south_square * pi / 2, -pi / 2))
             x, y = dot(ROTATE[c - south_square], xy - u) + tc
     return x, y
+
+
+def _combine_triangles_array(
+    x: FloatArray,
+    y: FloatArray,
+    north_square: int = 0,
+    south_square: int = 0,
+    inverse: bool = False,
+) -> tuple[FloatArray, FloatArray]:
+    """
+    ``combine_triangles`` applied elementwise to arrays. Rotation by k
+    quarter turns is written out per case, which is exact, in place of the
+    ``ROTATE`` matrices.
+    """
+    x, y = _as_float_arrays(x, y)
+    north_square = north_square % 4
+    south_square = south_square % 4
+    tri, region = _triangle_array(
+        x, y, north_square=north_square, south_square=south_square, inverse=inverse
+    )
+    x_out = x.copy()
+    y_out = y.copy()
+    polar = region != 0
+    if not polar.any():
+        return x_out, y_out
+    north = region[polar] == 1
+    c = tri[polar].astype(np.float64)
+    xp, yp = x[polar], y[polar]
+    tc_x = -3 * pi / 4 + c * pi / 2
+    tc_y = np.sign(yp) * pi / 2
+    square = np.where(north, north_square, south_square)
+    u_x = -3 * pi / 4 + square * pi / 2
+    u_y = np.where(north, pi / 2, -pi / 2)
+    if not inverse:
+        dx, dy = xp - tc_x, yp - tc_y
+        k = np.where(north, c - north_square, -(c - south_square))
+        o_x, o_y = u_x, u_y
+    else:
+        dx, dy = xp - u_x, yp - u_y
+        k = np.where(north, -(c - north_square), c - south_square)
+        o_x, o_y = tc_x, tc_y
+    k = k.astype(np.int64) % 4
+    r_x = np.select([k == 0, k == 1, k == 2], [dx, -dy, -dx], default=dy)
+    r_y = np.select([k == 0, k == 1, k == 2], [dy, dx, -dy], default=-dx)
+    x_out[polar] = r_x + o_x
+    y_out[polar] = r_y + o_y
+    return x_out, y_out
 
 
 def triangle(
@@ -259,6 +321,52 @@ def triangle(
     return triangle_number, region
 
 
+def _triangle_array(
+    x: FloatArray,
+    y: FloatArray,
+    north_square: int = 0,
+    south_square: int = 0,
+    inverse: bool = False,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    ``triangle`` applied elementwise to arrays, with integer codes in place
+    of its labels: triangle number -1 for equatorial points, and region 0
+    for equatorial, 1 for north polar, -1 for south polar.
+    """
+    x, y = _as_float_arrays(x, y)
+    region = np.where(y > pi / 4, 1, np.where(y < -pi / 4, -1, 0)).astype(np.int8)
+    if not inverse:
+        tri = np.select([x < -pi / 2, x < 0, x < pi / 2], [0, 1, 2], default=3)
+    else:
+        eps = _TRIANGLE_EPS
+        ns, ss = north_square, south_square
+        L1 = x - (-3 * pi / 4 + (ns - 1) * pi / 2)
+        L2 = -x + (-3 * pi / 4 + (ns + 1) * pi / 2)
+        tri_north = np.select(
+            [
+                (y < L1 - eps) & (y >= L2 - eps),
+                (y >= L1 - eps) & (y > L2 + eps),
+                (y > L1 + eps) & (y <= L2 + eps),
+            ],
+            [(ns + 1) % 4, (ns + 2) % 4, (ns + 3) % 4],
+            default=ns,
+        )
+        L1 = x - (-3 * pi / 4 + (ss + 1) * pi / 2)
+        L2 = -x + (-3 * pi / 4 + (ss - 1) * pi / 2)
+        tri_south = np.select(
+            [
+                (y <= L1 + eps) & (y > L2 + eps),
+                (y < L1 - eps) & (y <= L2 + eps),
+                (y >= L1 - eps) & (y < L2 - eps),
+            ],
+            [(ss + 1) % 4, (ss + 2) % 4, (ss + 3) % 4],
+            default=ss,
+        )
+        tri = np.where(region == 1, tri_north, tri_south)
+    tri = np.where(region == 0, -1, tri).astype(np.int8)
+    return tri, region
+
+
 def rhealpix_sphere(
     lam: float,
     phi: float,
@@ -306,6 +414,24 @@ def rhealpix_sphere(
     return x, y
 
 
+def _rhealpix_sphere_array(
+    lam: FloatArray,
+    phi: FloatArray,
+    north_square: int = 0,
+    south_square: int = 0,
+    region: str = "none",
+) -> tuple[FloatArray, FloatArray]:
+    """
+    ``rhealpix_sphere`` applied elementwise to arrays.
+    """
+    x, y = _healpix_sphere_array(lam, phi)
+    if region != "equatorial":
+        x, y = _combine_triangles_array(
+            x, y, north_square=north_square, south_square=south_square
+        )
+    return x, y
+
+
 def rhealpix_sphere_inverse(
     x: float,
     y: float,
@@ -339,6 +465,30 @@ def rhealpix_sphere_inverse(
             x, y, north_square=north_square, south_square=south_square, inverse=True
         )
     return healpix_sphere_inverse(x, y)
+
+
+def _rhealpix_sphere_inverse_array(
+    x: FloatArray,
+    y: FloatArray,
+    north_square: int = 0,
+    south_square: int = 0,
+    region: str = "none",
+) -> tuple[FloatArray, FloatArray]:
+    """
+    ``rhealpix_sphere_inverse`` applied elementwise to arrays. Raises
+    ``ValueError`` if any point lies outside the image.
+    """
+    x, y = _as_float_arrays(x, y)
+    ok = _in_rhealpix_image_array(
+        x, y, north_square=north_square, south_square=south_square
+    )
+    if not ok.all():
+        _raise_out_of_image(x, y, ok, f"({north_square}, {south_square})-rHEALPix")
+    if region != "equatorial":
+        x, y = _combine_triangles_array(
+            x, y, north_square=north_square, south_square=south_square, inverse=True
+        )
+    return _healpix_sphere_inverse_array(x, y)
 
 
 def rhealpix_ellipsoid(
@@ -383,6 +533,25 @@ def rhealpix_ellipsoid(
     return x, y
 
 
+def _rhealpix_ellipsoid_array(
+    lam: FloatArray,
+    phi: FloatArray,
+    e: float = 0,
+    north_square: int = 0,
+    south_square: int = 0,
+    region: str = "none",
+) -> tuple[FloatArray, FloatArray]:
+    """
+    ``rhealpix_ellipsoid`` applied elementwise to arrays.
+    """
+    x, y = _healpix_ellipsoid_array(lam, phi, e)
+    if region != "equatorial":
+        x, y = _combine_triangles_array(
+            x, y, north_square=north_square, south_square=south_square
+        )
+    return x, y
+
+
 def rhealpix_ellipsoid_inverse(
     x: float,
     y: float,
@@ -419,6 +588,31 @@ def rhealpix_ellipsoid_inverse(
         )
 
     return healpix_ellipsoid_inverse(x, y, e=e)
+
+
+def _rhealpix_ellipsoid_inverse_array(
+    x: FloatArray,
+    y: FloatArray,
+    e: float = 0,
+    north_square: int = 0,
+    south_square: int = 0,
+    region: str = "none",
+) -> tuple[FloatArray, FloatArray]:
+    """
+    ``rhealpix_ellipsoid_inverse`` applied elementwise to arrays. Raises
+    ``ValueError`` if any point lies outside the image.
+    """
+    x, y = _as_float_arrays(x, y)
+    ok = _in_rhealpix_image_array(
+        x, y, north_square=north_square, south_square=south_square
+    )
+    if not ok.all():
+        _raise_out_of_image(x, y, ok, f"({north_square}, {south_square})-rHEALPix")
+    if region != "equatorial":
+        x, y = _combine_triangles_array(
+            x, y, north_square=north_square, south_square=south_square, inverse=True
+        )
+    return _healpix_ellipsoid_inverse_array(x, y, e=e)
 
 
 def in_rhealpix_image(
@@ -469,13 +663,33 @@ def in_rhealpix_image(
     return -pi + square * pi / 2 - eps < x < -pi + (square + 1) * pi / 2 + eps
 
 
+def _in_rhealpix_image_array(
+    x: FloatArray, y: FloatArray, north_square: int = 0, south_square: int = 0
+) -> np.ndarray:
+    """
+    ``in_rhealpix_image`` applied elementwise to arrays.
+    """
+    x, y = _as_float_arrays(x, y)
+    eps = _IMAGE_EPS
+    abs_y = np.abs(y)
+    band = abs_y < pi / 4 + eps
+    in_band = (-pi - eps < x) & (x < pi + eps)
+    square = np.where(y > 0, north_square, south_square)
+    in_square = (
+        (abs_y < 3 * pi / 4 + eps)
+        & (-pi + square * pi / 2 - eps < x)
+        & (x < -pi + (square + 1) * pi / 2 + eps)
+    )
+    return np.asarray(np.where(band, in_band, in_square))
+
+
 def rhealpix(
     a: float = 1,
     e: float = 0,
     north_square: int = 0,
     south_square: int = 0,
     region: str = "none",
-) -> Callable[[float, float, bool, bool], tuple[float, float]]:
+) -> ProjectionFunction:
     """
     Return a function object that wraps the rHEALPix projection and its inverse
     of an ellipsoid with major radius `a` and eccentricity `e`.
@@ -497,12 +711,47 @@ def rhealpix(
     OUTPUT:
 
     - A function object of the form f(u, v, radians=False, inverse=False).
+      `u` and `v` may be floats or numpy arrays of a common shape; arrays
+      come back as a pair of float64 arrays.
     """
     R_A = auth_rad(a, e)
 
+    def f_array(
+        u: float | FloatArray, v: float | FloatArray, radians: bool, inverse: bool
+    ) -> tuple[FloatArray, FloatArray]:
+        u, v = _as_float_arrays(u, v)
+        if not inverse:
+            if not radians:
+                u, v = deg2rad(u), deg2rad(v)
+            x, y = _rhealpix_ellipsoid_array(
+                u,
+                v,
+                e=e,
+                north_square=north_square,
+                south_square=south_square,
+                region=region,
+            )
+            return R_A * x, R_A * y
+        lam, phi = _rhealpix_ellipsoid_inverse_array(
+            u / R_A,
+            v / R_A,
+            e=e,
+            north_square=north_square,
+            south_square=south_square,
+            region=region,
+        )
+        if not radians:
+            lam, phi = rad2deg(lam), rad2deg(phi)
+        return lam, phi
+
     def f(
-        u: float, v: float, radians: bool = False, inverse: bool = False
-    ) -> tuple[float, float]:
+        u: float | FloatArray,
+        v: float | FloatArray,
+        radians: bool = False,
+        inverse: bool = False,
+    ) -> tuple[float, float] | tuple[FloatArray, FloatArray]:
+        if isinstance(u, np.ndarray) or isinstance(v, np.ndarray):
+            return f_array(u, v, radians, inverse)
         if not inverse:
             lam, phi = u, v
             if not radians:
@@ -540,4 +789,4 @@ def rhealpix(
                 lam, phi = rad2deg([lam, phi])
             return lam, phi
 
-    return f
+    return cast(ProjectionFunction, f)
