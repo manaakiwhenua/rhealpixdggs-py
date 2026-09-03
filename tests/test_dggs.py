@@ -358,10 +358,12 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             def __init__(self, inner):
                 self.inner = inner
                 self.count = 0
+                self.calls = 0
 
             def __call__(self, *args, **kwargs):
                 # Count projected points, whether passed singly or as arrays.
                 self.count += np.size(args[0])
+                self.calls += 1
                 return self.inner(*args, **kwargs)
 
         for face, ratio in ((N, 0.6), (P, 0.15)):
@@ -373,11 +375,18 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
                     c.boundary(n=4, plane=False)
                 per_cell_calls = counter.count
                 counter.count = 0
+                counter.calls = 0
                 boundaries = rdggs.cell_boundaries(block, n=4, plane=False)
                 batched_calls = counter.count
+                batched_invocations = counter.calls
             finally:
                 del rdggs.__dict__["rhealpix"]
             self.assertLess(batched_calls, ratio * per_cell_calls, face)
+            # One resolution and one region: a single array call, plus the
+            # four scalar projections nw_vertex makes per dart cell while
+            # the planar boundaries are gathered (issue #122).
+            darts = sum(c.ellipsoidal_shape == "dart" for c in block)
+            self.assertEqual(batched_invocations, 1 + 4 * darts, face)
 
         # In the equatorial region the batch exploits the projection's
         # separability: every point in one lattice column gets one
