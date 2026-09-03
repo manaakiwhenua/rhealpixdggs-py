@@ -11,8 +11,8 @@ if TYPE_CHECKING:
     from rhealpixdggs.dggs import RHEALPixDGGS
 
 # pi is doctest-only: the doctests use it from the module globals.
+import numpy as np
 from numpy import base_repr, pi  # noqa: F401
-from numpy import vectorize as numpy_vectorize
 from scipy import integrate
 
 from rhealpixdggs.utils import wrap_longitude
@@ -900,17 +900,17 @@ class Cell:
             i = (n - 1) * i  # Index of northwest vertex in result.
             result = result[i:] + result[:i]
             # Project to ellipsoid.
-            region = self.region()
-            result = [
-                self.rdggs.rhealpix(*p, inverse=True, region=region) for p in result
-            ]
+            xs = np.array([p[0] for p in result])
+            ys = np.array([p[1] for p in result])
+            lons, lats = self.rdggs.rhealpix(xs, ys, inverse=True, region=self.region())
+            return list(zip(lons, lats))
         return result
 
     def _quad_boundary(self, n: int, eps: float) -> list[tuple[float, float]]:
         """
         Return ``boundary(n, plane=False)`` for this quad cell, its planar
-        square shrunk inward by `eps`, projecting only the four corners and
-        the interior points of the west and north edges. See ``boundary()``.
+        square shrunk inward by `eps`, projecting only the north and west
+        edges in one array call. See ``boundary()``.
         """
         ul = self.ul_vertex(plane=True)
         w = self.width(plane=True)
@@ -919,15 +919,24 @@ class Cell:
         delta = (w - 2 * eps) / (n - 1)
         region = self.region()
 
-        def project(x: float, y: float) -> tuple[float, float]:
-            return self.rdggs.rhealpix(x, y, inverse=True, region=region)
-
-        nw = project(x_west, y_north)
-        ne = project(x_east, y_north)
-        se = project(x_east, y_south)
-        sw = project(x_west, y_south)
-        lats = [project(x_west, y_north - j * delta)[1] for j in range(1, n - 1)]
-        lons = [project(x_west + j * delta, y_north)[0] for j in range(1, n - 1)]
+        # One batch: the north edge west to east (n points, ending exactly at
+        # x_east), then the west edge below the north-west corner (n - 1
+        # points, ending exactly at y_south).
+        xs = np.concatenate(
+            [x_west + delta * np.arange(n - 1), [x_east], np.full(n - 1, x_west)]
+        )
+        ys = np.concatenate(
+            [np.full(n, y_north), y_north - delta * np.arange(1, n - 1), [y_south]]
+        )
+        all_lons, all_lats = self.rdggs.rhealpix(xs, ys, inverse=True, region=region)
+        lons = list(all_lons[1 : n - 1])
+        lats = list(all_lats[n:-1])
+        nw = (all_lons[0], all_lats[0])
+        ne = (all_lons[n - 1], all_lats[n - 1])
+        sw = (all_lons[-1], all_lats[-1])
+        # Longitude depends only on x and latitude only on y in the
+        # equatorial region, so the south-east corner needs no projection.
+        se = (ne[0], sw[1])
         return (
             [nw]
             + [(lon, nw[1]) for lon in lons]
@@ -973,23 +982,27 @@ class Cell:
         w = self.width(plane=True)
         eps = 1e-6
         delta = (w - 2 * eps) / (n - 1)
-
-        def g(x: float, y: float) -> tuple[float, float]:
-            if plane:
-                return (x, y)
-            else:
-                return self.rdggs.rhealpix(x, y, inverse=True)
-
-        if flatten:
+        if plane:
+            if flatten:
+                return [
+                    (ul[0] + eps + delta * j, ul[1] - eps - delta * i)
+                    for j in range(n)
+                    for i in range(n)
+                ]
             return [
-                g(ul[0] + eps + delta * j, ul[1] - eps - delta * i)
-                for j in range(n)
+                [(ul[0] + eps + delta * j, ul[1] - eps - delta * i) for j in range(n)]
                 for i in range(n)
             ]
-        return [
-            [g(ul[0] + eps + delta * j, ul[1] - eps - delta * i) for j in range(n)]
-            for i in range(n)
-        ]
+        # Project the whole grid in one call; row i, column j is (lons[i, j],
+        # lats[i, j]). The flattened order is column-major, as it always was.
+        xs, ys = np.meshgrid(
+            ul[0] + eps + delta * np.arange(n), ul[1] - eps - delta * np.arange(n)
+        )
+        lons, lats = self.rdggs.rhealpix(xs.ravel(), ys.ravel(), inverse=True)
+        lons, lats = lons.reshape(n, n), lats.reshape(n, n)
+        if flatten:
+            return [(lons[i, j], lats[i, j]) for j in range(n) for i in range(n)]
+        return [[(lons[i, j], lats[i, j]) for j in range(n)] for i in range(n)]
 
     def contains(self, p: tuple[float, float], plane: bool = True) -> bool:
         """
@@ -1235,7 +1248,10 @@ class Cell:
             # collide with the projection stack's floating-point noise
             # floor and trigger spurious IntegrationWarnings.
             x_mid = self.nucleus(plane=True)[0]
-            phi_of_y = numpy_vectorize(lambda y: phi(x_mid, y))
+
+            def phi_of_y(ys: np.ndarray) -> np.ndarray:
+                return self.rdggs.rhealpix(np.full_like(ys, x_mid), ys, inverse=True)[1]
+
             phi_bar = float(
                 (1 / (y2 - y1)) * integrate.fixed_quad(phi_of_y, y1, y2, n=20)[0]
             )

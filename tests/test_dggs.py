@@ -18,6 +18,7 @@ import itertools
 import unittest
 from random import randint  # , uniform
 
+import numpy as np
 from numpy import array, pi
 
 # import rhealpixdggs.dggs as dggs
@@ -359,7 +360,8 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
                 self.count = 0
 
             def __call__(self, *args, **kwargs):
-                self.count += 1
+                # Count projected points, whether passed singly or as arrays.
+                self.count += np.size(args[0])
                 return self.inner(*args, **kwargs)
 
         for face, ratio in ((N, 0.6), (P, 0.15)):
