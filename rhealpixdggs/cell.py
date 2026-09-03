@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from rhealpixdggs.dggs import RHEALPixDGGS
 
 # pi is doctest-only: the doctests use it from the module globals.
-from numpy import array, base_repr, pi  # noqa: F401
+from numpy import base_repr, pi  # noqa: F401
 from numpy import vectorize as numpy_vectorize
 from scipy import integrate
 
@@ -839,7 +839,7 @@ class Cell:
             >>> c.boundary(n=2, plane=True) == c.vertices(plane=True)
             True
             >>> for p in c.boundary(n=3, plane=True):
-            ...     print(tuple(x.tolist() for x in my_round(p, 14)))
+            ...     print(my_round(p, 14))
             (-3.14159265358979, 1.30899693899575)
             (-2.87979326579064, 1.30899693899575)
             (-2.61799387799149, 1.30899693899575)
@@ -882,13 +882,12 @@ class Cell:
         if not plane and self.ellipsoidal_shape == "quad":
             return self._quad_boundary(n, eps)
         delta = (w - 2 * eps) / (n - 1)
-        point = (ul[0] + eps, ul[1] - eps)
-        result = [point]
-        for direction in [(1, 0), (0, -1), (-1, 0), (0, 1)]:
+        x, y = float(ul[0]) + eps, float(ul[1]) - eps
+        result = [(x, y)]
+        for dx, dy in [(1, 0), (0, -1), (-1, 0), (0, 1)]:
             for j in range(1, n):
-                temp = array(point) + j * delta * array(direction)
-                result.append(tuple(temp))
-            point = result[-1]
+                result.append((x + j * delta * dx, y + j * delta * dy))
+            x, y = result[-1]
         # Remove the last point because it's the first point.
         result.pop()
         if not plane:

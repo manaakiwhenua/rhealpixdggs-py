@@ -16,7 +16,9 @@ the projection computed, and all points in a lattice column or row share
 one longitude or latitude value across the whole block, not only where
 cells touch. ``Cell.boundary(n=2, plane=False, interior=True)`` on quad
 and cap cells now honours ``interior``; since 0.6.0 those two shapes had
-returned the plain vertices for that call.
+returned the plain vertices for that call. Planar boundary points are
+built with float arithmetic instead of a two-element numpy array per
+point, and are returned as Python floats; the values are unchanged.
 
 0.7.1
 ^^^^^
