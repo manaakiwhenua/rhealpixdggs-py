@@ -173,7 +173,7 @@ from rhealpixdggs.ellipsoids import (
 )
 
 # my_round is doctest-only: the doctests use it from the module globals.
-from rhealpixdggs.utils import auth_lat, my_round  # noqa: F401
+from rhealpixdggs.utils import FloatArray, auth_lat, my_round  # noqa: F401
 
 
 class RHEALPixDGGS:
@@ -384,16 +384,33 @@ class RHEALPixDGGS:
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    def healpix(self, u: float, v: float, inverse: bool = False) -> tuple[float, float]:
+    @overload
+    def healpix(
+        self, u: float, v: float, inverse: bool = ...
+    ) -> tuple[float, float]: ...
+
+    @overload
+    def healpix(
+        self, u: FloatArray, v: FloatArray, inverse: bool = ...
+    ) -> tuple[FloatArray, FloatArray]: ...
+
+    def healpix(
+        self, u: float | FloatArray, v: float | FloatArray, inverse: bool = False
+    ) -> tuple[float, float] | tuple[FloatArray, FloatArray]:
         """
         Return the HEALPix projection of point `(u, v)` (or its inverse if
-        `inverse` = True) appropriate to this rHEALPix DGGS.
+        `inverse` = True) appropriate to this rHEALPix DGGS. `u` and `v` may
+        be floats or numpy arrays of a common shape; arrays are projected in
+        one pass and come back as a pair of float64 arrays.
 
         EXAMPLES::
 
             >>> rdggs = UNIT_003_RADIANS
             >>> print(tuple(x.tolist() for x in my_round(rdggs.healpix(-pi, pi/2), 14)))
             (-2.35619449019234, 1.5707963267949)
+            >>> x, y = rdggs.healpix(array([-pi, 0.0]), array([pi/2, 0.0]))
+            >>> print(x.round(14).tolist(), y.round(14).tolist())
+            [-2.35619449019234, 0.0] [1.5707963267949, 0.0]
 
         NOTE:
 
@@ -407,18 +424,39 @@ class RHEALPixDGGS:
         assert result is not None
         return result
 
+    @overload
     def rhealpix(
-        self, u: float, v: float, inverse: bool = False, region: str = "none"
-    ) -> tuple[float, float]:
+        self, u: float, v: float, inverse: bool = ..., region: str = ...
+    ) -> tuple[float, float]: ...
+
+    @overload
+    def rhealpix(
+        self, u: FloatArray, v: FloatArray, inverse: bool = ..., region: str = ...
+    ) -> tuple[FloatArray, FloatArray]: ...
+
+    def rhealpix(
+        self,
+        u: float | FloatArray,
+        v: float | FloatArray,
+        inverse: bool = False,
+        region: str = "none",
+    ) -> tuple[float, float] | tuple[FloatArray, FloatArray]:
         """
         Return the rHEALPix projection of the point `(u, v)` (or its inverse if
-        `inverse` = True) appropriate to this rHEALPix DGGS.
+        `inverse` = True) appropriate to this rHEALPix DGGS. `u` and `v` may
+        be floats or numpy arrays of a common shape; arrays are projected in
+        one pass and come back as a pair of float64 arrays. `region` hints
+        that every point lies in that region of the planar image (see
+        ``pj_rhealpix.rhealpix_ellipsoid``).
 
         EXAMPLES::
 
             >>> rdggs = UNIT_003_RADIANS
             >>> print(tuple(x.tolist() for x in my_round(rdggs.rhealpix(0, pi/3), 14)))
             (-1.858272006684, 2.06871881030324)
+            >>> x, y = rdggs.rhealpix(array([0.0, 0.0]), array([pi/3, 0.0]))
+            >>> print(x.round(14).tolist(), y.round(14).tolist())
+            [-1.858272006684, 0.0] [2.06871881030324, 0.0]
 
         NOTE:
 

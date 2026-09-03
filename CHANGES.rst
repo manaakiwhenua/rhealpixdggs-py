@@ -25,6 +25,14 @@ point-in-polygon query, cutting the two checks that every inverse
 projection performs from about 40% of its cost to almost nothing (issue
 #116). The accepted region is unchanged for rHEALPix and differs for
 HEALPix only within the 1e-10 fuzz margin outside the image.
+``RHEALPixDGGS.rhealpix``, ``RHEALPixDGGS.healpix``,
+``projection_wrapper.Projection.__call__`` and the callables returned by
+``pj_healpix.healpix`` and ``pj_rhealpix.rhealpix`` accept numpy arrays
+as well as floats and then project every point in one array pass,
+returning a pair of float64 arrays; scalar calls are unchanged. The
+array path evaluates the same expressions as the scalar one and
+reproduces it to the bit wherever numpy's array and scalar kernels agree
+(issue #88).
 
 0.7.1
 ^^^^^

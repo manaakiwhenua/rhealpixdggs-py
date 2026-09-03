@@ -18,15 +18,23 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 # *****************************************************************************
 
 import importlib
-from collections.abc import Callable
-from typing import Any
+from typing import Any, overload
 
+import numpy as np
 import pyproj
 
 from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID, Ellipsoid
 
 # my_round is doctest-only: the doctests use it from the module globals.
-from rhealpixdggs.utils import my_round, wrap_latitude, wrap_longitude  # noqa: F401
+from rhealpixdggs.utils import (  # noqa: F401
+    FloatArray,
+    ProjectionFunction,
+    _wrap_latitude_array,
+    _wrap_longitude_array,
+    my_round,
+    wrap_latitude,
+    wrap_longitude,
+)
 
 # Homemade map projections, as opposed to those in the PROJ.4 library.
 # Remove 'healpix' and 'rhealpix' to use the PROJ.4 versions instead,
@@ -85,7 +93,7 @@ class Projection:
         # attributes this depends on) never change after construction, so
         # the underlying projection callable only ever needs to be built
         # once, no matter how many times __call__() is invoked.
-        self._f: Callable[..., tuple[float, float]] | pyproj.Proj | None = None
+        self._f: ProjectionFunction | pyproj.Proj | None = None
 
     def __str__(self) -> str:
         result = ["map projection:"]
@@ -96,7 +104,7 @@ class Projection:
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 
-    def _get_f(self) -> Callable[..., tuple[float, float]] | pyproj.Proj | None:
+    def _get_f(self) -> ProjectionFunction | pyproj.Proj | None:
         """
         Return the underlying f(u, v, radians=False, inverse=False)
         callable for this projection, building it on first use and
@@ -121,9 +129,29 @@ class Projection:
                 self._f = pyproj.Proj(proj=self.proj, a=a, e=e, **self.kwargs)
         return self._f
 
+    @overload
     def __call__(
-        self, u: float, v: float, inverse: bool = False
-    ) -> tuple[float, float] | None:
+        self, u: float, v: float, inverse: bool = ...
+    ) -> tuple[float, float] | None: ...
+
+    @overload
+    def __call__(
+        self, u: FloatArray, v: FloatArray, inverse: bool = ...
+    ) -> tuple[FloatArray, FloatArray] | None: ...
+
+    @overload
+    def __call__(
+        self, u: float | FloatArray, v: float | FloatArray, inverse: bool = ...
+    ) -> tuple[float, float] | tuple[FloatArray, FloatArray] | None: ...
+
+    def __call__(
+        self, u: float | FloatArray, v: float | FloatArray, inverse: bool = False
+    ) -> tuple[float, float] | tuple[FloatArray, FloatArray] | None:
+        """
+        Project the point `(u, v)`, or invert it if `inverse` = True. `u` and
+        `v` may be floats or numpy arrays of a common shape; arrays are
+        projected in one pass and come back as a pair of float64 arrays.
+        """
         ellipsoid = self.ellipsoid
         lon_0 = ellipsoid.lon_0
         lat_0 = ellipsoid.lat_0
@@ -131,6 +159,23 @@ class Projection:
         f = self._get_f()
         if f is None:
             return None
+        if isinstance(u, np.ndarray) or isinstance(v, np.ndarray):
+            u_arr, v_arr = np.broadcast_arrays(
+                np.asarray(u, dtype=np.float64), np.asarray(v, dtype=np.float64)
+            )
+            if not inverse:
+                lam_arr = _wrap_longitude_array(u_arr - lon_0, radians=radians)
+                phi_arr = _wrap_latitude_array(v_arr - lat_0, radians=radians)
+                x, y = f(lam_arr, phi_arr, radians=radians)
+                return np.asarray(x, dtype=np.float64), np.asarray(y, dtype=np.float64)
+            lam_arr, phi_arr = f(u_arr, v_arr, radians=radians, inverse=True)
+            lam_arr = _wrap_longitude_array(
+                np.asarray(lam_arr, dtype=np.float64) + lon_0, radians=radians
+            )
+            phi_arr = _wrap_latitude_array(
+                np.asarray(phi_arr, dtype=np.float64) + lat_0, radians=radians
+            )
+            return lam_arr, phi_arr
         if not inverse:
             # Translate longitudes and latitudes so that
             # (lon_0, lat_0) maps to (0, 0) in the plane.
