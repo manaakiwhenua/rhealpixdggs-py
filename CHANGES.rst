@@ -32,9 +32,12 @@ as well as floats and then project every point in one array pass,
 returning a pair of float64 arrays; scalar calls are unchanged. The
 array path evaluates the same expressions as the scalar one and
 reproduces it to the bit wherever numpy's array and scalar kernels agree
-(issue #88). ``Cell.boundary``, ``Cell.interior`` and
-``RHEALPixDGGS.cell_boundaries`` project their points that way, the last
-in one call per resolution and region.
+(issue #88). ``Cell.boundary``, ``Cell.interior``,
+``RHEALPixDGGS.cell_boundaries`` and
+``conversion.get_finest_containing_cell`` project their points that way,
+the batch API in one call per resolution and region. ``scripts/benchmark.py``
+times the projection and the cell geometry it drives, for comparing two
+checkouts.
 
 0.7.1
 ^^^^^

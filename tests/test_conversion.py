@@ -557,6 +557,30 @@ class ConversionUtilsTestCase(unittest.TestCase):
         assert result is not None, "Expected a cap cell, got None"
         assert str(result) == "N4", f"Expected N4 cap cell, got {result}"
 
+    def test_get_finest_containing_cell_projects_polygon_once(self):
+        # The cap-cell containment test works in the plane; the polygon's
+        # ring is projected once as an array, not once per candidate cell.
+        from shapely.geometry import Polygon as ShapelyPolygon
+
+        from rhealpixdggs.dggs import WGS84_003
+
+        calls = []
+        inner = WGS84_003.rhealpix
+
+        def recording(*a, **k):
+            calls.append((a, k))
+            return inner(*a, **k)
+
+        WGS84_003.rhealpix = recording
+        try:
+            north_poly = ShapelyPolygon([(29, 84), (31, 84), (31, 85), (29, 85)])
+            self.assertEqual(str(get_finest_containing_cell(north_poly)), "N4")
+        finally:
+            del WGS84_003.__dict__["rhealpix"]
+        forward = [a for a, k in calls if not k.get("inverse")]
+        self.assertEqual(len(forward), 1)
+        self.assertEqual(len(forward[0][0]), 5)
+
     def test_CellZoneFromPoly(self):
         """
         Tests correct cells are output for the Geofabric Contracted Catchment 12104622 at resolution 9, without ordering

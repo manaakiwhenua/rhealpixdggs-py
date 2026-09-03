@@ -2,6 +2,7 @@ from collections.abc import Iterable
 from itertools import compress
 from typing import TextIO
 
+import numpy as np
 from shapely.geometry import MultiPolygon, Point, Polygon
 
 from rhealpixdggs.cell import Cell
@@ -14,21 +15,22 @@ def get_finest_containing_cell(
     """
     Finds the finest DGGS Cell containing a given cartesian polygon
     """
+    # Cap cells span all longitudes at the pole, so their boundary cannot be
+    # represented as a simple polygon in geographic coordinates; containment
+    # is tested in the rHEALPix plane instead. Project the polygon there
+    # once, each part's ring in one array call. (MultiPolygon has no
+    # .exterior; check each part individually.)
+    parts = list(polygon.geoms) if hasattr(polygon, "geoms") else [polygon]
+    planar_parts = []
+    for part in parts:
+        coords = np.asarray(part.exterior.coords)
+        x, y = rdggs.rhealpix(coords[:, 0], coords[:, 1])
+        planar_parts.append(Polygon(np.column_stack([x, y])))
 
     def _cell_contains(cell: Cell, poly: Polygon | MultiPolygon) -> bool:
-        # Cap cells span all longitudes at the pole, so their boundary cannot
-        # be represented as a simple polygon in geographic coordinates.
-        # Project both sides to the rHEALPix plane and test containment there.
         if cell.ellipsoidal_shape == "cap":
             plane_cell = Polygon(cell.vertices(plane=True))
-            # MultiPolygon has no .exterior; check each part individually.
-            parts = list(poly.geoms) if hasattr(poly, "geoms") else [poly]
-            return all(
-                plane_cell.contains(
-                    Polygon([rdggs.rhealpix(x, y) for x, y in part.exterior.coords])
-                )
-                for part in parts
-            )
+            return all(plane_cell.contains(part) for part in planar_parts)
         return Polygon(cell.vertices(plane=False)).contains(poly)
 
     def _get_finest_cell(
