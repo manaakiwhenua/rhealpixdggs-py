@@ -14,7 +14,9 @@ equatorial cells grow with its perimeter rather than its area (a 9 × 9
 block at ``n=4`` takes 55 instead of 460). Every coordinate is still one
 the projection computed, and all points in a lattice column or row share
 one longitude or latitude value across the whole block, not only where
-cells touch.
+cells touch. ``Cell.boundary(n=2, plane=False, interior=True)`` on quad
+and cap cells now honours ``interior``; since 0.6.0 those two shapes had
+returned the plain vertices for that call.
 
 0.7.1
 ^^^^^

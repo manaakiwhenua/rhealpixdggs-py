@@ -824,8 +824,8 @@ class Cell:
         projection computed, and adjacent quad cells get bit-identical
         shared points.
 
-        For quad and cap cells with `n` = 2 the result is
-        ``vertices(plane=False)``. Cap cells with `n` > 2 take the general
+        For quad and cap cells with `n` = 2 and `interior` = False the result
+        is ``vertices(plane=False)``. Cap cells with `n` > 2 take the general
         per-point path: a cap's boundary is a single parallel and could be
         computed directly too, but there are only two cap cells per
         resolution, so it isn't worth a third code path.
@@ -866,7 +866,12 @@ class Cell:
         # the ellipsoid, so at n=2 extra boundary points would add no accuracy.
         # Fall back to vertices() and avoid the per-point projection cost
         # entirely.
-        if not plane and n == 2 and self.ellipsoidal_shape in ("quad", "cap"):
+        if (
+            not plane
+            and n == 2
+            and not interior
+            and self.ellipsoidal_shape in ("quad", "cap")
+        ):
             return self.vertices(plane=False)
         ul = self.ul_vertex(plane=True)
         w = self.width(plane=True)

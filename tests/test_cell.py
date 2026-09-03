@@ -439,6 +439,8 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         # Regression test for the boundary(plane=False) short-circuit that
         # silently returned only 4 points for quad/cap cells regardless of
         # n, instead of the documented 4*n - 4. See issue #49.
+        from numpy import allclose
+
         rdggs = RHEALPixDGGS()
         quad = Cell(rdggs, [P, 2])
         cap = Cell(rdggs, [N])
@@ -448,6 +450,17 @@ class SCENZGridCELLTestCase(unittest.TestCase):
                 self.assertEqual(len(b), max(4 * n - 4, 4))
             # n=2 (the short-circuited case) must still agree with vertices().
             self.assertEqual(c.boundary(n=2, plane=False), c.vertices(plane=False))
+            # ... unless the points are pushed into the interior.
+            pushed = c.boundary(n=2, plane=False, interior=True)
+            self.assertEqual(len(pushed), 4)
+            planar = c.boundary(n=2, plane=True, interior=True)
+            v = c.vertices(plane=True)
+            i = v.index(c.nw_vertex(plane=True))
+            planar = planar[i:] + planar[:i]
+            for got, p in zip(pushed, planar):
+                want = rdggs.rhealpix(*p, inverse=True, region=c.region())
+                self.assertTrue(allclose(got, want, rtol=0, atol=1e-12), (got, want))
+            self.assertNotEqual(pushed, c.vertices(plane=False))
 
     def test_boundary_quad_direct(self):
         # Quad cells compute boundary(plane=False, n > 2) from the corners
