@@ -1495,15 +1495,16 @@ class RHEALPixDGGS:
         edges along those parallels are computed per region, exactly as
         ``boundary()`` computes them.
 
-        In the equatorial region the inverse projection is separable
-        (longitude depends only on `x`, latitude only on `y`), so there
-        each projected point also yields the longitude of every other
-        point in its column and the latitude of every other point in its
-        row. The number of projections for a block of equatorial cells
-        thus grows with the block's perimeter rather than its area, every
-        coordinate is still one the projection computed rather than an
-        interpolation, and all points in one lattice column (or row)
-        share one longitude (or latitude) value across the whole block.
+        The distinct points of all the cells are projected in one array
+        call per resolution and region. In the equatorial region the
+        inverse projection is separable (longitude depends only on `x`,
+        latitude only on `y`), so that call holds one point per distinct
+        lattice column and one per distinct row: the number of projected
+        points for a block of equatorial cells grows with the block's
+        perimeter rather than its area, every coordinate is still one the
+        projection computed rather than an interpolation, and all points in
+        one lattice column (or row) share one longitude (or latitude) value
+        across the whole block.
 
         `cells` may mix resolutions; sharing happens per resolution.
         For `plane` = True there is no projection work to share and this
@@ -1524,10 +1525,12 @@ class RHEALPixDGGS:
         R = self.ellipsoid.R_A
         x_anchor = -pi * R
         y_anchor = -3 * pi * R / 4
-        cache: dict[tuple[int | None, str, int, int], tuple[float, float]] = {}
-        lons: dict[tuple[int | None, int], float] = {}
-        lats: dict[tuple[int | None, int], float] = {}
-        result = {}
+        # Pass 1: gather every cell's lattice keys, keeping the first planar
+        # coordinates seen for each distinct key.
+        gathered: list[tuple[Cell, str, int | None, list[tuple[int, int]]]] = []
+        eq_cols: dict[tuple[int | None, int], tuple[float, float]] = {}
+        eq_rows: dict[tuple[int | None, int], tuple[float, float]] = {}
+        polar: dict[tuple[int | None, str, int, int], tuple[float, float]] = {}
         for cell in cells:
             # The same planar points, in the same order, as
             # cell.boundary(n=n, plane=False) computes: the planar
@@ -1538,31 +1541,63 @@ class RHEALPixDGGS:
             i = (n - 1) * v.index(nw)
             planar = planar[i:] + planar[:i]
             region = cell.region()
+            resolution = cell.resolution
             # All of this cell's boundary points lie on the fine lattice
             # of pitch w/(n - 1) anchored at the planar image's corner,
             # shared with every same-resolution neighbor's points, so an
             # integer lattice key identifies coincident points robustly.
             pitch = cell.width(plane=True) / (n - 1)
-            points = []
+            keys = []
             for p in planar:
                 col = round((p[0] - x_anchor) / pitch)
                 row = round((p[1] - y_anchor) / pitch)
+                keys.append((col, row))
                 if region == "equatorial":
-                    lon_key = (cell.resolution, col)
-                    lat_key = (cell.resolution, row)
-                    if lon_key not in lons or lat_key not in lats:
-                        lon, lat = self.rhealpix(
-                            p[0], p[1], inverse=True, region=region
-                        )
-                        lons.setdefault(lon_key, lon)
-                        lats.setdefault(lat_key, lat)
-                    points.append((lons[lon_key], lats[lat_key]))
-                    continue
-                key = (cell.resolution, region, col, row)
-                if key not in cache:
-                    cache[key] = self.rhealpix(p[0], p[1], inverse=True, region=region)
-                points.append(cache[key])
-            result[cell] = points
+                    eq_cols.setdefault((resolution, col), p)
+                    eq_rows.setdefault((resolution, row), p)
+                else:
+                    polar.setdefault((resolution, region, col, row), p)
+            gathered.append((cell, region, resolution, keys))
+        # Pass 2: one projection call per resolution and region. In the
+        # equatorial region longitude depends only on x and latitude only
+        # on y, so one point per distinct column and one per distinct row
+        # suffice.
+        lon_of: dict[tuple[int | None, int], float] = {}
+        lat_of: dict[tuple[int | None, int], float] = {}
+        for resolution in {k[0] for k in eq_cols}:
+            col_keys = [k for k in eq_cols if k[0] == resolution]
+            row_keys = [k for k in eq_rows if k[0] == resolution]
+            points = [eq_cols[k] for k in col_keys] + [eq_rows[k] for k in row_keys]
+            lons, lats = self.rhealpix(
+                array([p[0] for p in points]),
+                array([p[1] for p in points]),
+                inverse=True,
+                region="equatorial",
+            )
+            lon_of.update(zip(col_keys, lons[: len(col_keys)]))
+            lat_of.update(zip(row_keys, lats[len(col_keys) :]))
+        polar_of: dict[tuple[int | None, str, int, int], tuple[float, float]] = {}
+        for resolution, region in {k[:2] for k in polar}:
+            keys_in_group = [k for k in polar if k[:2] == (resolution, region)]
+            lons, lats = self.rhealpix(
+                array([polar[k][0] for k in keys_in_group]),
+                array([polar[k][1] for k in keys_in_group]),
+                inverse=True,
+                region=region,
+            )
+            polar_of.update(zip(keys_in_group, zip(lons, lats)))
+        # Pass 3: assemble each cell's boundary from the shared values.
+        result = {}
+        for cell, region, resolution, keys in gathered:
+            if region == "equatorial":
+                result[cell] = [
+                    (lon_of[(resolution, col)], lat_of[(resolution, row)])
+                    for col, row in keys
+                ]
+            else:
+                result[cell] = [
+                    polar_of[(resolution, region, col, row)] for col, row in keys
+                ]
         return result
 
     def cells_from_region(
