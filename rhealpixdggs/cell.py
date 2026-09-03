@@ -812,17 +812,23 @@ class Cell:
         interior of the cell, which is convenient for some graphics methods.
 
         When `plane` = False, the cost scales with `n` because each point
-        requires an inverse projection call. For quad and cap cells, `n` = 2
-        is short-circuited straight to ``vertices(plane=False)`` (skipping the
-        projection calls entirely), since that's what the general algorithm
-        below would compute anyway. For `n` > 2 on quad/cap cells the general,
-        per-point-projected algorithm still runs -- unlike dart/skew_quad
-        cells, quad/cap edges are known to be lines of constant longitude or
-        latitude on the ellipsoid, so in principle the extra points could be
-        computed directly without projecting each one, but doing that
-        correctly for cap cells requires careful antimeridian-wrapping
-        arithmetic (a cap cell's boundary is a single constant-latitude ring
-        split into 4 arcs by longitude) that hasn't been implemented yet.
+        requires an inverse projection call, except on quad cells. A quad
+        cell lies entirely in the equatorial region, where the inverse
+        projection is separable: longitude depends only on `x` and latitude
+        only on `y`. Its east and west edges are meridians sharing the same
+        `n - 2` interior latitudes, and its north and south edges are
+        parallels sharing the same `n - 2` interior longitudes. Only the four
+        corners and the interior points of the west and north edges are
+        projected (`2*n` calls instead of `4*n - 4`); the east and south
+        edges reuse those values. Every coordinate returned is one the
+        projection computed, and adjacent quad cells get bit-identical
+        shared points.
+
+        For quad and cap cells with `n` = 2 the result is
+        ``vertices(plane=False)``. Cap cells with `n` > 2 take the general
+        per-point path: a cap's boundary is a single parallel and could be
+        computed directly too, but there are only two cap cells per
+        resolution, so it isn't worth a third code path.
 
         EXAMPLES::
 
@@ -859,8 +865,7 @@ class Cell:
         # Quad and cap cells have straight or rotationally-symmetric edges on
         # the ellipsoid, so at n=2 extra boundary points would add no accuracy.
         # Fall back to vertices() and avoid the per-point projection cost
-        # entirely. For n>2 this cell falls through to the general algorithm
-        # below, same as any other shape (see the n>2 note in the docstring).
+        # entirely.
         if not plane and n == 2 and self.ellipsoidal_shape in ("quad", "cap"):
             return self.vertices(plane=False)
         ul = self.ul_vertex(plane=True)
@@ -869,6 +874,8 @@ class Cell:
             eps = w / 10000  # A smidgen.
         else:
             eps = 0
+        if not plane and self.ellipsoidal_shape == "quad":
+            return self._quad_boundary(n, eps)
         delta = (w - 2 * eps) / (n - 1)
         point = (ul[0] + eps, ul[1] - eps)
         result = [point]
@@ -894,6 +901,39 @@ class Cell:
                 self.rdggs.rhealpix(*p, inverse=True, region=region) for p in result
             ]
         return result
+
+    def _quad_boundary(self, n: int, eps: float) -> list[tuple[float, float]]:
+        """
+        Return ``boundary(n, plane=False)`` for this quad cell, its planar
+        square shrunk inward by `eps`, projecting only the four corners and
+        the interior points of the west and north edges. See ``boundary()``.
+        """
+        ul = self.ul_vertex(plane=True)
+        w = self.width(plane=True)
+        x_west, y_north = ul[0] + eps, ul[1] - eps
+        x_east, y_south = ul[0] + w - eps, ul[1] - w + eps
+        delta = (w - 2 * eps) / (n - 1)
+        region = self.region()
+
+        def project(x: float, y: float) -> tuple[float, float]:
+            return self.rdggs.rhealpix(x, y, inverse=True, region=region)
+
+        nw = project(x_west, y_north)
+        ne = project(x_east, y_north)
+        se = project(x_east, y_south)
+        sw = project(x_west, y_south)
+        lats = [project(x_west, y_north - j * delta)[1] for j in range(1, n - 1)]
+        lons = [project(x_west + j * delta, y_north)[0] for j in range(1, n - 1)]
+        return (
+            [nw]
+            + [(lon, nw[1]) for lon in lons]
+            + [ne]
+            + [(ne[0], lat) for lat in lats]
+            + [se]
+            + [(lon, se[1]) for lon in reversed(lons)]
+            + [sw]
+            + [(sw[0], lat) for lat in reversed(lats)]
+        )
 
     def interior(
         self, n: int = 2, plane: bool = True, flatten: bool = False

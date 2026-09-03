@@ -1,3 +1,14 @@
+0.8.0
+^^^^^
+``Cell.boundary(plane=False)`` on quad cells now projects only the four
+corners and the interior points of the west and north edges (``2*n``
+inverse projections instead of ``4*n - 4``) and derives the remaining
+points from the equatorial projection's separability: the east edge
+shares the west edge's latitudes and the south edge shares the north
+edge's longitudes. Every coordinate is still one the projection
+computed, and adjacent quad cells still share bit-identical points
+(issue #91).
+
 0.7.1
 ^^^^^
 Adopted mypy (issue #109, first three stages): every function in the

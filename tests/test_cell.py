@@ -1,5 +1,5 @@
 import unittest
-from itertools import product
+from itertools import pairwise, product
 from math import pi
 
 from scipy.spatial.distance import euclidean, norm
@@ -449,13 +449,111 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             # n=2 (the short-circuited case) must still agree with vertices().
             self.assertEqual(c.boundary(n=2, plane=False), c.vertices(plane=False))
 
+    def test_boundary_quad_direct(self):
+        # Quad cells compute boundary(plane=False, n > 2) from the corners
+        # and the west and north edges alone (issue #91). Reference: project
+        # every planar boundary point, as the general algorithm does.
+        from numpy import allclose
+
+        shifted = RHEALPixDGGS(
+            ellipsoid=Ellipsoid(
+                a=6378137.0,
+                b=6356752.314140356,
+                e=0.0578063088401,
+                f=0.003352810681182,
+                lon_0=-131.25,
+            )
+        )
+        for rdggs in (WGS84_003, WGS84_003_RADIANS, WGS84_123, shifted):
+            for suid in [(P, 1), (O, 0, 8), (R, 5), (Q,), (P, 4, 4, 4)]:
+                c = rdggs.cell(suid)
+                self.assertEqual(c.ellipsoidal_shape, "quad")
+                for n in (3, 4, 10):
+                    for interior in (False, True):
+                        got = c.boundary(n=n, plane=False, interior=interior)
+                        planar = c.boundary(n=n, plane=True, interior=interior)
+                        v = c.vertices(plane=True)
+                        i = (n - 1) * v.index(c.nw_vertex(plane=True))
+                        planar = planar[i:] + planar[:i]
+                        expect = [
+                            rdggs.rhealpix(*p, inverse=True, region=c.region())
+                            for p in planar
+                        ]
+                        self.assertEqual(len(got), 4 * n - 4)
+                        for g, e in zip(got, expect):
+                            self.assertTrue(
+                                allclose(g, e, rtol=0, atol=1e-12),
+                                msg=f"{c} n={n} interior={interior}: {g} != {e}",
+                            )
+
+        # With a shifted lon_0 a quad edge can straddle the antimeridian.
+        c = shifted.cell((P, 1))
+        corner_lons = [p[0] for p in c.vertices(plane=False)]
+        self.assertGreater(max(corner_lons) - min(corner_lons), 180)
+        n = 6
+        north_edge = c.boundary(n=n, plane=False)[:n]
+        steps = [(b[0] - a[0]) % 360 for a, b in pairwise(north_edge)]
+        self.assertTrue(all(0 < step < 90 for step in steps), steps)
+        self.assertTrue(all(-180 <= p[0] < 180 for p in north_edge))
+
+        # Only the corners and the west and north edges are projected, and
+        # every returned coordinate is one of the projection's outputs.
+        outputs = []
+        rdggs = WGS84_003
+        inner = rdggs.rhealpix
+
+        def recording(*a, **k):
+            outputs.append(inner(*a, **k))
+            return outputs[-1]
+
+        rdggs.rhealpix = recording
+        try:
+            b = rdggs.cell((P, 4)).boundary(n=10, plane=False)
+        finally:
+            del rdggs.__dict__["rhealpix"]
+        self.assertEqual(len(outputs), 2 * 10)
+        lons = {p[0] for p in outputs}
+        lats = {p[1] for p in outputs}
+        self.assertTrue(all(p[0] in lons and p[1] in lats for p in b))
+
+    def test_boundary_quad_neighbors_share_points(self):
+        # Adjacent quad cells' copies of their shared edge points are
+        # identical floats, across a face boundary and vertically too. A
+        # quad and its differently-shaped polar neighbour agree to
+        # floating point.
+        rdggs = WGS84_003
+        n = 6
+        for a, b in [
+            ((P, 4), (P, 5)),
+            ((P, 5), (Q, 3)),
+            ((R, 2), (O, 0)),
+            ((P, 1), (P, 4)),
+            ((P, 3, 8), (P, 4, 6)),
+        ]:
+            ca, cb = rdggs.cell(a), rdggs.cell(b)
+            self.assertIn(cb, ca.neighbors(plane=True).values())
+            shared = set(map(tuple, ca.boundary(n=n, plane=False))) & set(
+                map(tuple, cb.boundary(n=n, plane=False))
+            )
+            self.assertEqual(len(shared), n, (a, b))
+        quad, skew = rdggs.cell((P, 1)), rdggs.cell((N, 5))
+        self.assertEqual(skew.ellipsoidal_shape, "skew_quad")
+        bq = quad.boundary(n=n, plane=False)
+        bs = skew.boundary(n=n, plane=False)
+        close = [
+            p
+            for p in bq
+            if any(abs(p[0] - q[0]) < 1e-9 and abs(p[1] - q[1]) < 1e-9 for q in bs)
+        ]
+        self.assertEqual(len(close), n)
+
     def test_nucleus(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             # Nuclei of children should be in correct position
             # relative to parent cell in rHEALPix projection.
             a = Cell(rdggs, (S, 7, 4, 1, 2, 1))  # Arbitrary cell.
             w = a.width()
-            (x, y) = a.ul_vertex()
+            x, y = a.ul_vertex()
             error = 1e-10
             for row, col in product(list(range(3)), repeat=2):
                 # Child cell in (row, column) position relative to a:
