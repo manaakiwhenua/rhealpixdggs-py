@@ -66,10 +66,10 @@ class MyTestCase(unittest.TestCase):
             self.assertAlmostEqual(back[1], p[1], delta=1e-6)
 
     def test_ellipsoid_origin_translation(self):
-        # The wrapper recentres on the ellipsoid's (lon_0, lat_0): that
-        # point must project to the planar origin, and the planar origin
-        # must invert back to it.
-        E = Ellipsoid(a=WGS84_ELLIPSOID.a, f=WGS84_ELLIPSOID.f, lon_0=50, lat_0=0)
+        # The wrapper recentres on the ellipsoid's central meridian lon_0:
+        # the point (lon_0, 0) must project to the planar origin, and the
+        # planar origin must invert back to it.
+        E = Ellipsoid(a=WGS84_ELLIPSOID.a, f=WGS84_ELLIPSOID.f, lon_0=50)
         f = Projection(ellipsoid=E, proj="rhealpix", north_square=0, south_square=0)
         self.assertEqual(f(50, 0), (0.0, 0.0))
         self.assertEqual(f(0, 0, inverse=True), (50.0, 0.0))
@@ -168,10 +168,10 @@ class MyTestCase(unittest.TestCase):
         assert_allclose(lat2, lat, rtol=0, atol=1e-6)
 
     def test_ellipsoid_origin_translation_arrays(self):
-        # The recentring on (lon_0, lat_0) and the wrap back into range apply
+        # The recentring on lon_0 and the wrap back into range apply
         # elementwise; a longitude that crosses the antimeridian after the
         # shift wraps exactly as the scalar call does.
-        E = Ellipsoid(a=WGS84_ELLIPSOID.a, f=WGS84_ELLIPSOID.f, lon_0=50, lat_0=0)
+        E = Ellipsoid(a=WGS84_ELLIPSOID.a, f=WGS84_ELLIPSOID.f, lon_0=50)
         f = Projection(ellipsoid=E, proj="rhealpix", north_square=0, south_square=0)
         x, y = f(np.array([50.0, -170.0]), np.array([0.0, 20.0]))
         self.assertEqual((x[0], y[0]), (0.0, 0.0))

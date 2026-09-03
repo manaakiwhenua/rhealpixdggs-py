@@ -155,7 +155,7 @@ Some common ellipsoids are predefined as constants.
         radians = True
         sphere = False
 
-Ellipsoid instances are parametrized by geographic longitude and latitude with the central meridian at ``lon_0`` and the parallel of origin at ``lat_0``.
+Ellipsoid instances are parametrized by geographic longitude and latitude with the central meridian at ``lon_0``. (``lat_0`` is kept for PROJ name compatibility and must be 0: recentring in latitude is not a rotation of the ellipsoid and is not supported.)
 
 Project some points of the ellipsoid using the HEALPix and rHEALPix projections::
 
@@ -327,11 +327,16 @@ Compute the ellipsoidal shape and ellipsoidal nuclei of these cells ::
     R3 quad True
 
 Create the (0, 0)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellipsoid.
-Orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand::
+Rotate the DGGS about the polar axis so that New Zealand sits in the middle of
+an equatorial face: face edges and polar dart cells lie on the meridians
+``lon_0 + k * 90``, so a ``lon_0`` 45 degrees west of Auckland keeps them clear
+of the country. (Recentring in latitude is not supported; ``Ellipsoid`` rejects
+a nonzero ``lat_0`` because a latitude shift is not a rotation of the ellipsoid
+and would break the equal-area property.)::
 
     >>> p = (174, -37)  # Approximate Auckland lon-lat coordinates
     >>> from rhealpixdggs.projection_wrapper import *
-    >>> E = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=p[0], lat_0=p[1])
+    >>> E = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=p[0] - 45)
     >>> rdggs = RHEALPixDGGS(E, N_side=3, north_square=0, south_square=0)
     >>> print(rdggs)
     rHEALPix DGGS:
@@ -346,17 +351,18 @@ Orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand::
             b = 6356752.314245179
             e = 0.08181919084262149
             f = 0.0033528106647474805
-            lat_0 = -37
-            lon_0 = 174
+            lat_0 = 0
+            lon_0 = 129
             radians = False
             sphere = False
     >>> print(rdggs.cell_from_point(1, p, plane=False))
-    Q3
+    Q7
 
 References
 ----------
 .. [Gibb2016] Robert Gibb, `The rHEALPix discrete global grid system <https://doi.org/10.1088/1755-1315/34/1/012012>`__, IOP Conference Series: Earth and Environmental Science 34, 012012, 2016.
 .. [GRS2013] Robert Gibb, Alexander Raichev, Michael Speth, `The rHEALPix discrete global grid system <https://github.com/manaakiwhenua/rhealpixdggs-2013-gibb-raichev-speth/blob/master/rhealpix_dggs_preprint.pdf>`__, preprint, 2013. Gives the full mathematical detail of the system this package implements.
+.. [BS2018] David Bowater, Emmanuel Stefanakis, `The rHEALPix Discrete Global Grid System: considerations for Canada <https://doi.org/10.1139/geomat-2018-0008>`__, Geomatica 72(1), 27-37, 2018. Discusses cell shape and orientation in the polar region and how to choose ``lon_0`` and the polar squares for a region of interest.
 
 Related reading:
 
