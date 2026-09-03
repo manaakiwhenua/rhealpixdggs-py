@@ -69,7 +69,7 @@ furo = ">=2024.8"
 optional = true
 
 [tool.poetry.group.figures.dependencies]
-matplotlib = ">=3.8"
+matplotlib = "3.11.1"
 
 [tool.poetry]
 # Ship the tests and docs sources in the sdist (they are not included in
