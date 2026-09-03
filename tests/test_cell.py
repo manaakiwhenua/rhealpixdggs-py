@@ -2,6 +2,7 @@ import unittest
 from itertools import pairwise, product
 from math import pi
 
+import numpy as np
 from scipy.spatial.distance import euclidean, norm
 
 from rhealpixdggs.cell import CELLS0, Cell
@@ -509,8 +510,9 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         self.assertTrue(all(0 < step < 90 for step in steps), steps)
         self.assertTrue(all(-180 <= p[0] < 180 for p in north_edge))
 
-        # Only the corners and the west and north edges are projected, and
-        # every returned coordinate is one of the projection's outputs.
+        # Only the north and west edges are projected (2n - 1 points in one
+        # call), and every returned coordinate is one of the projection's
+        # outputs.
         outputs = []
         rdggs = WGS84_003
         inner = rdggs.rhealpix
@@ -524,10 +526,13 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             b = rdggs.cell((P, 4)).boundary(n=10, plane=False)
         finally:
             del rdggs.__dict__["rhealpix"]
-        self.assertEqual(len(outputs), 2 * 10)
-        lons = {p[0] for p in outputs}
-        lats = {p[1] for p in outputs}
+        self.assertEqual(len(outputs), 1)
+        lons = set(np.atleast_1d(outputs[0][0]).tolist())
+        lats = set(np.atleast_1d(outputs[0][1]).tolist())
+        self.assertEqual(len(lons) + len(lats), 2 * 10 - 1 + 1)  # x_west repeats
+        self.assertEqual(np.size(outputs[0][0]), 2 * 10 - 1)
         self.assertTrue(all(p[0] in lons and p[1] in lats for p in b))
+        self.assertTrue(all(isinstance(v, np.float64) for p in b for v in p))
 
     def test_boundary_quad_neighbors_share_points(self):
         # Adjacent quad cells' copies of their shared edge points are
