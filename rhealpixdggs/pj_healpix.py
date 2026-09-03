@@ -19,12 +19,55 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
-from collections.abc import Callable
+from typing import cast
 
+import numpy as np
 from numpy import arcsin, array, deg2rad, floor, pi, rad2deg, sign, sin, sqrt
 
 # my_round is doctest-only: the doctests use it from the module globals.
-from rhealpixdggs.utils import auth_lat, auth_rad, my_round  # noqa: F401
+from rhealpixdggs.utils import (  # noqa: F401
+    FloatArray,
+    ProjectionFunction,
+    _auth_lat_array,
+    auth_lat,
+    auth_rad,
+    my_round,
+)
+
+_PHI0 = arcsin(2.0 / 3)
+_IMAGE_EPS = 1e-10
+
+
+def _as_float_arrays(u: object, v: object) -> tuple[FloatArray, FloatArray]:
+    """
+    Coerce `u` and `v` to float64 arrays broadcast to a common shape.
+    """
+    u_arr, v_arr = np.broadcast_arrays(
+        np.asarray(u, dtype=np.float64), np.asarray(v, dtype=np.float64)
+    )
+    return u_arr, v_arr
+
+
+def _raise_out_of_image(
+    x: FloatArray, y: FloatArray, ok: np.ndarray, projection: str
+) -> None:
+    bad = np.flatnonzero(~ok)
+    i = int(bad[0])
+    raise ValueError(
+        f"{bad.size} of {ok.size} points are not in the image of the "
+        f"{projection} projection of the unit sphere; first offending point "
+        f"at index {i}: ({x.ravel()[i]:.20f},{y.ravel()[i]:.20f})"
+    )
+
+
+def _cap_number(lam: FloatArray) -> FloatArray:
+    """
+    The polar cap (0-3) each longitude or planar x falls in, as
+    ``healpix_sphere`` and ``healpix_sphere_inverse`` compute it: floor,
+    clamped from above only.
+    """
+    cap = np.floor(2 * lam / pi + 2)
+    return np.asarray(np.where(cap >= 4, 3.0, cap), dtype=np.float64)
 
 
 def healpix_sphere(lam: float, phi: float) -> tuple[float, float]:
@@ -58,6 +101,27 @@ def healpix_sphere(lam: float, phi: float) -> tuple[float, float]:
         lamc = -3 * pi / 4 + (pi / 2) * cap_number
         x = lamc + (lam - lamc) * sigma
         y = sign(phi) * pi / 4 * (2 - sigma)
+    return x, y
+
+
+def _healpix_sphere_array(
+    lam: FloatArray, phi: FloatArray
+) -> tuple[FloatArray, FloatArray]:
+    """
+    ``healpix_sphere`` applied elementwise to arrays.
+    """
+    lam, phi = _as_float_arrays(lam, phi)
+    x = np.empty_like(lam)
+    y = np.empty_like(lam)
+    s = np.sin(phi)
+    equatorial = np.abs(phi) <= _PHI0
+    x[equatorial] = lam[equatorial]
+    y[equatorial] = 3 * pi / 8 * s[equatorial]
+    polar = ~equatorial
+    sigma = np.sqrt(3 * (1 - np.abs(s[polar])))
+    lamc = -3 * pi / 4 + (pi / 2) * _cap_number(lam[polar])
+    x[polar] = lamc + (lam[polar] - lamc) * sigma
+    y[polar] = np.sign(phi[polar]) * pi / 4 * (2 - sigma)
     return x, y
 
 
@@ -108,6 +172,34 @@ def healpix_sphere_inverse(x: float, y: float) -> tuple[float, float]:
     return lam, phi
 
 
+def _healpix_sphere_inverse_array(
+    x: FloatArray, y: FloatArray
+) -> tuple[FloatArray, FloatArray]:
+    """
+    ``healpix_sphere_inverse`` applied elementwise to arrays. Raises
+    ``ValueError`` if any point lies outside the image.
+    """
+    x, y = _as_float_arrays(x, y)
+    ok = _in_healpix_image_array(x, y)
+    if not ok.all():
+        _raise_out_of_image(x, y, ok, "HEALPix")
+    lam = np.empty_like(x)
+    phi = np.empty_like(x)
+    abs_y = np.abs(y)
+    equatorial = abs_y <= pi / 4
+    pole = abs_y >= pi / 2
+    polar = ~equatorial & ~pole
+    lam[equatorial] = x[equatorial]
+    phi[equatorial] = np.arcsin(8 * y[equatorial] / (3 * pi))
+    xc = -3 * pi / 4 + (pi / 2) * _cap_number(x[polar])
+    tau = 2 - 4 * abs_y[polar] / pi
+    lam[polar] = np.clip(xc + (x[polar] - xc) / tau, -pi, pi)
+    phi[polar] = np.sign(y[polar]) * np.arcsin(1 - np.float_power(tau, 2) / 3)
+    lam[pole] = -pi
+    phi[pole] = np.sign(y[pole]) * pi / 2
+    return lam, phi
+
+
 def healpix_ellipsoid(lam: float, phi: float, e: float = 0) -> tuple[float, float]:
     """
     Compute the signature functions of the HEALPix projection of an oblate
@@ -150,6 +242,27 @@ def healpix_ellipsoid_inverse(x: float, y: float, e: float = 0) -> tuple[float, 
     # no need to duplicate that check here.
     lam, beta = healpix_sphere_inverse(x, y)
     phi = auth_lat(beta, e, radians=True, inverse=True)
+    return lam, phi
+
+
+def _healpix_ellipsoid_array(
+    lam: FloatArray, phi: FloatArray, e: float = 0
+) -> tuple[FloatArray, FloatArray]:
+    """
+    ``healpix_ellipsoid`` applied elementwise to arrays.
+    """
+    beta = _auth_lat_array(np.asarray(phi, dtype=np.float64), e, radians=True)
+    return _healpix_sphere_array(lam, beta)
+
+
+def _healpix_ellipsoid_inverse_array(
+    x: FloatArray, y: FloatArray, e: float = 0
+) -> tuple[FloatArray, FloatArray]:
+    """
+    ``healpix_ellipsoid_inverse`` applied elementwise to arrays.
+    """
+    lam, beta = _healpix_sphere_inverse_array(x, y)
+    phi = _auth_lat_array(beta, e, radians=True, inverse=True)
     return lam, phi
 
 
@@ -208,9 +321,22 @@ def in_healpix_image(x: float, y: float) -> bool:
     return abs(x - x_c) + abs_y < pi / 2 + eps
 
 
-def healpix(
-    a: float = 1, e: float = 0
-) -> Callable[[float, float, bool, bool], tuple[float, float]]:
+def _in_healpix_image_array(x: FloatArray, y: FloatArray) -> np.ndarray:
+    """
+    ``in_healpix_image`` applied elementwise to arrays.
+    """
+    x, y = _as_float_arrays(x, y)
+    eps = _IMAGE_EPS
+    abs_y = np.abs(y)
+    band = (np.abs(x) < pi + eps) & (abs_y < pi / 2 + eps)
+    equatorial = abs_y < pi / 4 + eps
+    cap_number = np.clip(np.trunc(2 * x / pi + 2), 0, 3)
+    x_c = -3 * pi / 4 + (pi / 2) * cap_number
+    triangle = np.abs(x - x_c) + abs_y < pi / 2 + eps
+    return np.asarray(band & (equatorial | triangle))
+
+
+def healpix(a: float = 1, e: float = 0) -> ProjectionFunction:
     """
     Return a function object that wraps the HEALPix projection and its inverse
     of an ellipsoid with major radius `a` and eccentricity `e`.
@@ -231,12 +357,33 @@ def healpix(
     OUTPUT:
 
     - A function object of the form f(u, v, radians=False, inverse=False).
+      `u` and `v` may be floats or numpy arrays of a common shape; arrays
+      come back as a pair of float64 arrays.
     """
     R_A = auth_rad(a, e)
 
+    def f_array(
+        u: float | FloatArray, v: float | FloatArray, radians: bool, inverse: bool
+    ) -> tuple[FloatArray, FloatArray]:
+        u, v = _as_float_arrays(u, v)
+        if not inverse:
+            if not radians:
+                u, v = deg2rad(u), deg2rad(v)
+            x, y = _healpix_ellipsoid_array(u, v, e=e)
+            return R_A * x, R_A * y
+        lam, phi = _healpix_ellipsoid_inverse_array(u / R_A, v / R_A, e=e)
+        if not radians:
+            lam, phi = rad2deg(lam), rad2deg(phi)
+        return lam, phi
+
     def f(
-        u: float, v: float, radians: bool = False, inverse: bool = False
-    ) -> tuple[float, float]:
+        u: float | FloatArray,
+        v: float | FloatArray,
+        radians: bool = False,
+        inverse: bool = False,
+    ) -> tuple[float, float] | tuple[FloatArray, FloatArray]:
+        if isinstance(u, np.ndarray) or isinstance(v, np.ndarray):
+            return f_array(u, v, radians, inverse)
         if not inverse:
             lam, phi = u, v
             if not radians:
@@ -252,4 +399,4 @@ def healpix(
                 lam, phi = rad2deg([lam, phi])
             return lam, phi
 
-    return f
+    return cast(ProjectionFunction, f)
