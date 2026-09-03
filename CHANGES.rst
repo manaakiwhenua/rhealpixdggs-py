@@ -8,6 +8,13 @@ shares the west edge's latitudes and the south edge shares the north
 edge's longitudes. Every coordinate is still one the projection
 computed, and adjacent quad cells still share bit-identical points
 (issue #91).
+``RHEALPixDGGS.cell_boundaries`` exploits the same separability for
+every equatorial cell, so the projections needed for a block of
+equatorial cells grow with its perimeter rather than its area (a 9 × 9
+block at ``n=4`` takes 55 instead of 460). Every coordinate is still one
+the projection computed, and all points in a lattice column or row share
+one longitude or latitude value across the whole block, not only where
+cells touch.
 
 0.7.1
 ^^^^^
