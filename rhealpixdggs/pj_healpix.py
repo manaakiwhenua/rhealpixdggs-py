@@ -21,15 +21,10 @@ By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
 
 from collections.abc import Callable
 
-import shapely
 from numpy import arcsin, array, deg2rad, floor, pi, rad2deg, sign, sin, sqrt
-from shapely.geometry import Polygon
 
 # my_round is doctest-only: the doctests use it from the module globals.
 from rhealpixdggs.utils import auth_lat, auth_rad, my_round  # noqa: F401
-
-# Cache for in_healpix_image(); see the comment inside that function.
-_healpix_image_poly = None
 
 
 def healpix_sphere(lam: float, phi: float) -> tuple[float, float]:
@@ -161,7 +156,9 @@ def healpix_ellipsoid_inverse(x: float, y: float, e: float = 0) -> tuple[float, 
 def in_healpix_image(x: float, y: float) -> bool:
     """
     Return True if and only if `(x, y)` lies in the image of the HEALPix
-    projection of the unit sphere.
+    projection of the unit sphere, allowing a margin of about 1e-10 outside
+    it so that points computed to lie on the boundary are not rejected for
+    rounding error.
 
     EXAMPLES::
 
@@ -196,42 +193,19 @@ def in_healpix_image(x: float, y: float) -> bool:
         False
 
     """
-    global _healpix_image_poly
-    if _healpix_image_poly is None:
-        # Fuzz to slightly expand HEALPix image boundary so that
-        # points on the boundary count as lying in the image.
-        eps = 1e-10
-        vertices = [
-            (-pi - eps, pi / 4 + eps),
-            (-3 * pi / 4, pi / 2 + eps),
-            (-pi / 2, pi / 4 + eps),
-            (-pi / 4, pi / 2 + eps),
-            (0, pi / 4 + eps),
-            (pi / 4, pi / 2 + eps),
-            (pi / 2, pi / 4 + eps),
-            (3 * pi / 4, pi / 2 + eps),
-            (pi + eps, pi / 4 + eps),
-            (pi + eps, -pi / 4 - eps),
-            (3 * pi / 4, -pi / 2 - eps),
-            (pi / 2, -pi / 4 - eps),
-            (pi / 4, -pi / 2 - eps),
-            (0, -pi / 4 - eps),
-            (-pi / 4, -pi / 2 - eps),
-            (-pi / 2, -pi / 4 - eps),
-            (-3 * pi / 4, -pi / 2 - eps),
-            (-pi - eps, -pi / 4 - eps),
-        ]
-        # This polygon never varies (the function takes no parameters), so
-        # build it once and reuse it -- constructing it is not free, and
-        # this function may be called once per point projected.
-        _healpix_image_poly = Polygon(vertices)
-    # contains_xy (vectorized, coordinate-based) avoids constructing a Point
-    # object per call, unlike the equivalent poly.contains(Point(x, y)).
-    # It's a strict interior test (excludes the boundary), but the eps fuzz
-    # above already pushes genuine boundary points into the interior of
-    # this (slightly larger) polygon, so they still test True -- verified
-    # against every boundary case in this function's own doctest above.
-    return bool(shapely.contains_xy(_healpix_image_poly, x, y))
+    # Fuzz to slightly expand the image so that points on its boundary
+    # count as lying in it.
+    eps = 1e-10
+    abs_y = abs(y)
+    if not (abs(x) < pi + eps and abs_y < pi / 2 + eps):
+        return False
+    if abs_y < pi / 4 + eps:
+        return True
+    # Polar triangle with apex (x_c, +-pi/2) and base corners (x_c +- pi/4,
+    # +-pi/4): |x - x_c| + |y| <= pi/2.
+    cap_number = min(max(int(2 * x / pi + 2), 0), 3)
+    x_c = -3 * pi / 4 + (pi / 2) * cap_number
+    return abs(x - x_c) + abs_y < pi / 2 + eps
 
 
 def healpix(

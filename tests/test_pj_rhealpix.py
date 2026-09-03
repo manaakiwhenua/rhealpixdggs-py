@@ -52,6 +52,68 @@ inputs = [
 ]
 
 
+_ORACLE_POLYGONS = {}
+
+
+def shapely_in_rhealpix_image(x, y, north_square=0, south_square=0):
+    # The polygon-based implementation this function replaced (issue #116),
+    # kept as the oracle for the arithmetic one.
+    from shapely import contains_xy
+    from shapely.geometry import Polygon
+
+    if (north_square, south_square) in _ORACLE_POLYGONS:
+        return bool(contains_xy(_ORACLE_POLYGONS[(north_square, south_square)], x, y))
+    eps = 1e-15
+    poly = Polygon(
+        [
+            (-pi - eps, pi / 4 + eps),
+            (-pi + north_square * pi / 2 - eps, pi / 4 + eps),
+            (-pi + north_square * pi / 2 - eps, 3 * pi / 4 + eps),
+            (-pi + (north_square + 1) * pi / 2 + eps, 3 * pi / 4 + eps),
+            (-pi + (north_square + 1) * pi / 2 + eps, pi / 4 + eps),
+            (pi + eps, pi / 4 + eps),
+            (pi + eps, -pi / 4 - eps),
+            (-pi + (south_square + 1) * pi / 2 + eps, -pi / 4 - eps),
+            (-pi + (south_square + 1) * pi / 2 + eps, -3 * pi / 4 - eps),
+            (-pi + south_square * pi / 2 - eps, -3 * pi / 4 - eps),
+            (-pi + south_square * pi / 2 - eps, -pi / 4 - eps),
+            (-pi - eps, -pi / 4 - eps),
+        ]
+    )
+    _ORACLE_POLYGONS[(north_square, south_square)] = poly
+    return bool(contains_xy(poly, x, y))
+
+
+# Offsets from an edge, straddling both fuzz scales (1e-10 and 1e-15).
+EDGE_OFFSETS = [
+    0.0,
+    1e-16,
+    -1e-16,
+    5e-16,
+    -5e-16,
+    1e-15,
+    -1e-15,
+    2e-15,
+    -2e-15,
+    1e-12,
+    -1e-12,
+    5e-11,
+    -5e-11,
+    1e-10,
+    -1e-10,
+    2e-10,
+    -2e-10,
+    1e-9,
+    -1e-9,
+    1e-6,
+    -1e-6,
+    0.01,
+    -0.01,
+]
+# Offsets along an edge, paired with every EDGE_OFFSETS value across it.
+ALONG_OFFSETS = [0.0, 1e-15, -1e-15, 1e-10, -1e-10, 1e-3, -1e-3]
+
+
 class MyTestCase(unittest.TestCase):
     def test_triangle(self):
         # Create test points in the equatorial, north_square polar, and
@@ -331,22 +393,53 @@ class MyTestCase(unittest.TestCase):
             for i in range(len(expect)):
                 self.assertAlmostEqual(get[i], expect[i])
 
-    def test_in_rhealpix_image_poly_is_cached(self):
-        # Regression test: in_rhealpix_image() used to rebuild its polygon
-        # (originally a matplotlib Path, now a shapely Polygon) on every
-        # call even though it only depends on (north_square, south_square),
-        # which are fixed per DGGS instance. See issue #64.
-        pjr._rhealpix_image_polys.clear()
-        self.assertTrue(pjr.in_rhealpix_image(0, 0, north_square=1, south_square=2))
-        key = (1, 2)
-        self.assertIn(key, pjr._rhealpix_image_polys)
-        cached = pjr._rhealpix_image_polys[key]
-        self.assertTrue(pjr.in_rhealpix_image(0.1, 0.1, north_square=1, south_square=2))
-        self.assertIs(pjr._rhealpix_image_polys[key], cached)
-        # A different (north_square, south_square) pair gets its own entry.
-        self.assertTrue(pjr.in_rhealpix_image(0, 0, north_square=0, south_square=0))
-        self.assertIn((0, 0), pjr._rhealpix_image_polys)
-        self.assertIsNot(pjr._rhealpix_image_polys[(0, 0)], cached)
+    def test_in_rhealpix_image_matches_polygon_oracle(self):
+        # in_rhealpix_image() is arithmetic (issue #116). The image is a
+        # union of axis-aligned rectangles, so it must agree with the
+        # polygon it replaced at every point, including on the fuzz
+        # margin, for every (north_square, south_square) pair.
+        from math import inf, nan
+
+        from numpy import linspace
+
+        for north_square, south_square in product(range(4), repeat=2):
+            points = [
+                (x, y)
+                for x in linspace(-pi - 1e-3, pi + 1e-3, 51)
+                for y in linspace(-3 * pi / 4 - 1e-3, 3 * pi / 4 + 1e-3, 51)
+            ]
+            x_edges = [-pi, pi] + [
+                -pi + k * pi / 2
+                for k in (
+                    north_square,
+                    north_square + 1,
+                    south_square,
+                    south_square + 1,
+                )
+            ]
+            for x_e in x_edges:
+                for y in linspace(-3 * pi / 4, 3 * pi / 4, 7):
+                    for dx, dy in product(EDGE_OFFSETS, ALONG_OFFSETS):
+                        points.append((x_e + dx, y + dy))
+            for y_e in (-3 * pi / 4, -pi / 4, pi / 4, 3 * pi / 4):
+                for x in linspace(-pi, pi, 7):
+                    for dx, dy in product(ALONG_OFFSETS, EDGE_OFFSETS):
+                        points.append((x + dx, y_e + dy))
+            for x, y in points:
+                self.assertEqual(
+                    pjr.in_rhealpix_image(
+                        x, y, north_square=north_square, south_square=south_square
+                    ),
+                    shapely_in_rhealpix_image(x, y, north_square, south_square),
+                    (north_square, south_square, x, y),
+                )
+            for x, y in [(nan, 0.0), (-2.5, nan), (nan, nan), (inf, 0.0), (0.0, -inf)]:
+                self.assertFalse(
+                    pjr.in_rhealpix_image(
+                        x, y, north_square=north_square, south_square=south_square
+                    ),
+                    (x, y),
+                )
 
     def test_out_of_bounds_raises_value_error(self):
         # Regression test for issue #52: out-of-bounds coordinates used to

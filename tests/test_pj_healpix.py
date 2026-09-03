@@ -50,6 +50,84 @@ inputs = [
 ]
 
 
+_ORACLE_POLYGONS = {}
+
+
+def shapely_in_healpix_image(x, y):
+    # The polygon-based implementation this function replaced (issue #116),
+    # kept as the oracle for the arithmetic one.
+    from shapely import contains_xy
+    from shapely.geometry import Polygon
+
+    if () in _ORACLE_POLYGONS:
+        return bool(contains_xy(_ORACLE_POLYGONS[()], x, y))
+    eps = 1e-10
+    poly = Polygon(
+        [
+            (-pi - eps, pi / 4 + eps),
+            (-3 * pi / 4, pi / 2 + eps),
+            (-pi / 2, pi / 4 + eps),
+            (-pi / 4, pi / 2 + eps),
+            (0, pi / 4 + eps),
+            (pi / 4, pi / 2 + eps),
+            (pi / 2, pi / 4 + eps),
+            (3 * pi / 4, pi / 2 + eps),
+            (pi + eps, pi / 4 + eps),
+            (pi + eps, -pi / 4 - eps),
+            (3 * pi / 4, -pi / 2 - eps),
+            (pi / 2, -pi / 4 - eps),
+            (pi / 4, -pi / 2 - eps),
+            (0, -pi / 4 - eps),
+            (-pi / 4, -pi / 2 - eps),
+            (-pi / 2, -pi / 4 - eps),
+            (-3 * pi / 4, -pi / 2 - eps),
+            (-pi - eps, -pi / 4 - eps),
+        ]
+    )
+    _ORACLE_POLYGONS[()] = poly
+    return bool(contains_xy(poly, x, y))
+
+
+def outside_healpix_image(x, y):
+    # How far (x, y) lies outside the unfuzzed image, 0 if inside or on it.
+    abs_y = abs(y)
+    if abs(x) <= pi and abs_y <= pi / 4:
+        return 0.0
+    cap = min(max(int(2 * x / pi + 2), 0), 3)
+    x_c = -3 * pi / 4 + (pi / 2) * cap
+    return max(abs(x) - pi, abs(x - x_c) + abs_y - pi / 2, 0.0)
+
+
+# Offsets from an edge, straddling both fuzz scales (1e-10 and 1e-15).
+EDGE_OFFSETS = [
+    0.0,
+    1e-16,
+    -1e-16,
+    5e-16,
+    -5e-16,
+    1e-15,
+    -1e-15,
+    2e-15,
+    -2e-15,
+    1e-12,
+    -1e-12,
+    5e-11,
+    -5e-11,
+    1e-10,
+    -1e-10,
+    2e-10,
+    -2e-10,
+    1e-9,
+    -1e-9,
+    1e-6,
+    -1e-6,
+    0.01,
+    -0.01,
+]
+# Offsets along an edge, paired with every EDGE_OFFSETS value across it.
+ALONG_OFFSETS = [0.0, 1e-15, -1e-15, 1e-10, -1e-10, 1e-3, -1e-3]
+
+
 class MyTestCase(unittest.TestCase):
     def test_healpix_sphere(self):
         # Expected outputs of healpix_sphere() applied to inputs.
@@ -158,17 +236,45 @@ class MyTestCase(unittest.TestCase):
                 self.assertAlmostEqual(get[i], expect[i])
             # ------------------------------------------------------------------------------
 
-    def test_in_healpix_image_poly_is_cached(self):
-        # Regression test: in_healpix_image() used to rebuild its polygon
-        # (originally a matplotlib Path, now a shapely Polygon) on every
-        # call even though it takes no parameters (the polygon is always
-        # identical). See issue #64.
-        pjh._healpix_image_poly = None
-        self.assertTrue(pjh.in_healpix_image(0, 0))
-        cached = pjh._healpix_image_poly
-        self.assertIsNotNone(cached)
-        self.assertTrue(pjh.in_healpix_image(0.1, 0.1))
-        self.assertIs(pjh._healpix_image_poly, cached)
+    def test_in_healpix_image_matches_polygon_oracle(self):
+        # in_healpix_image() is arithmetic (issue #116). It must accept the
+        # whole image including its boundary, reject anything more than
+        # about 2e-10 outside, and agree with the polygon it replaced
+        # everywhere except within that fuzz margin, where the polygon's
+        # slightly rotated triangle edges differ from the exact ones.
+        from itertools import product
+        from math import inf, nan
+
+        from numpy import linspace
+
+        points = [
+            (x, y)
+            for x in linspace(-pi - 1e-3, pi + 1e-3, 101)
+            for y in linspace(-pi / 2 - 1e-3, pi / 2 + 1e-3, 101)
+        ]
+        for cap in range(4):
+            x_c = -3 * pi / 4 + (pi / 2) * cap
+            for t in linspace(0, pi / 4, 12):
+                for s, dx, dy in product((1, -1), ALONG_OFFSETS, EDGE_OFFSETS):
+                    points.append((x_c + t + dx, s * (pi / 2 - t) + dy))
+                    points.append((x_c - t + dx, s * (pi / 2 - t) + dy))
+        for y in linspace(-pi / 4, pi / 4, 10):
+            for dx, dy in product(EDGE_OFFSETS, ALONG_OFFSETS):
+                points.append((-pi + dx, y + dy))
+                points.append((pi + dx, y + dy))
+        for x, y in points:
+            got = pjh.in_healpix_image(x, y)
+            outside = outside_healpix_image(x, y)
+            if outside == 0.0:
+                self.assertTrue(got, (x, y))
+            elif outside > 2e-10:
+                self.assertFalse(got, (x, y))
+            else:
+                continue
+            self.assertEqual(got, shapely_in_healpix_image(x, y), (x, y))
+        for x, y in [(nan, 0.0), (0.0, nan), (nan, nan), (inf, 0.0), (0.0, -inf)]:
+            self.assertFalse(pjh.in_healpix_image(x, y), (x, y))
+            self.assertFalse(shapely_in_healpix_image(x, y), (x, y))
 
     def test_out_of_bounds_raises_value_error(self):
         # Regression test for issue #52: out-of-bounds coordinates used to
