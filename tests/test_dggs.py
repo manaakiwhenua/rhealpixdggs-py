@@ -362,19 +362,39 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
                 self.count += 1
                 return self.inner(*args, **kwargs)
 
-        block = [rdggs.cell((P, i, j)) for i in range(9) for j in range(9)]
-        counter = CountingProjection(rdggs.rhealpix)
-        rdggs.rhealpix = counter
-        try:
-            for c in block:
-                c.boundary(n=4, plane=False)
-            per_cell_calls = counter.count
-            counter.count = 0
-            rdggs.cell_boundaries(block, n=4, plane=False)
-            batched_calls = counter.count
-        finally:
-            del rdggs.__dict__["rhealpix"]
-        self.assertLess(batched_calls, 0.6 * per_cell_calls)
+        for face, ratio in ((N, 0.6), (P, 0.15)):
+            block = [rdggs.cell((face, i, j)) for i in range(9) for j in range(9)]
+            counter = CountingProjection(rdggs.rhealpix)
+            rdggs.rhealpix = counter
+            try:
+                for c in block:
+                    c.boundary(n=4, plane=False)
+                per_cell_calls = counter.count
+                counter.count = 0
+                boundaries = rdggs.cell_boundaries(block, n=4, plane=False)
+                batched_calls = counter.count
+            finally:
+                del rdggs.__dict__["rhealpix"]
+            self.assertLess(batched_calls, ratio * per_cell_calls, face)
+
+        # In the equatorial region the batch exploits the projection's
+        # separability: every point in one lattice column gets one
+        # identical longitude and every point in one row one identical
+        # latitude, for the whole block, not just where cells touch.
+        R = rdggs.ellipsoid.R_A
+        pitch = block[0].width(plane=True) / 3
+        by_col = {}
+        by_row = {}
+        for c in block:
+            for got, p in zip(boundaries[c], c.boundary(n=4, plane=True)):
+                col = round((p[0] + pi * R) / pitch)
+                row = round((p[1] + 3 * pi * R / 4) / pitch)
+                by_col.setdefault(col, set()).add(got[0])
+                by_row.setdefault(row, set()).add(got[1])
+        self.assertEqual(len(by_col), 28)
+        self.assertEqual(len(by_row), 28)
+        self.assertTrue(all(len(v) == 1 for v in by_col.values()))
+        self.assertTrue(all(len(v) == 1 for v in by_row.values()))
 
         # Planar mode is a plain convenience passthrough.
         cells = list(rdggs.cell((P, 0)).subcells())

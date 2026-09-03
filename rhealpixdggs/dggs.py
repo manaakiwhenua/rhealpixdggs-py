@@ -1457,6 +1457,16 @@ class RHEALPixDGGS:
         edges along those parallels are computed per region, exactly as
         ``boundary()`` computes them.
 
+        In the equatorial region the inverse projection is separable
+        (longitude depends only on `x`, latitude only on `y`), so there
+        each projected point also yields the longitude of every other
+        point in its column and the latitude of every other point in its
+        row. The number of projections for a block of equatorial cells
+        thus grows with the block's perimeter rather than its area, every
+        coordinate is still one the projection computed rather than an
+        interpolation, and all points in one lattice column (or row)
+        share one longitude (or latitude) value across the whole block.
+
         `cells` may mix resolutions; sharing happens per resolution.
         For `plane` = True there is no projection work to share and this
         is simply a convenience over calling ``boundary()`` per cell.
@@ -1476,7 +1486,9 @@ class RHEALPixDGGS:
         R = self.ellipsoid.R_A
         x_anchor = -pi * R
         y_anchor = -3 * pi * R / 4
-        cache = {}
+        cache: dict[tuple[int | None, str, int, int], tuple[float, float]] = {}
+        lons: dict[tuple[int | None, int], float] = {}
+        lats: dict[tuple[int | None, int], float] = {}
         result = {}
         for cell in cells:
             # The same planar points, in the same order, as
@@ -1495,12 +1507,20 @@ class RHEALPixDGGS:
             pitch = cell.width(plane=True) / (n - 1)
             points = []
             for p in planar:
-                key = (
-                    cell.resolution,
-                    region,
-                    round((p[0] - x_anchor) / pitch),
-                    round((p[1] - y_anchor) / pitch),
-                )
+                col = round((p[0] - x_anchor) / pitch)
+                row = round((p[1] - y_anchor) / pitch)
+                if region == "equatorial":
+                    lon_key = (cell.resolution, col)
+                    lat_key = (cell.resolution, row)
+                    if lon_key not in lons or lat_key not in lats:
+                        lon, lat = self.rhealpix(
+                            p[0], p[1], inverse=True, region=region
+                        )
+                        lons.setdefault(lon_key, lon)
+                        lats.setdefault(lat_key, lat)
+                    points.append((lons[lon_key], lats[lat_key]))
+                    continue
+                key = (cell.resolution, region, col, row)
                 if key not in cache:
                     cache[key] = self.rhealpix(p[0], p[1], inverse=True, region=region)
                 points.append(cache[key])

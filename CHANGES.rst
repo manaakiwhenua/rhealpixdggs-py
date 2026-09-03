@@ -1,3 +1,25 @@
+0.8.0
+^^^^^
+``Cell.boundary(plane=False)`` on quad cells now projects only the four
+corners and the interior points of the west and north edges (``2*n``
+inverse projections instead of ``4*n - 4``) and derives the remaining
+points from the equatorial projection's separability: the east edge
+shares the west edge's latitudes and the south edge shares the north
+edge's longitudes. Every coordinate is still one the projection
+computed, and adjacent quad cells still share bit-identical points
+(issue #91).
+``RHEALPixDGGS.cell_boundaries`` exploits the same separability for
+every equatorial cell, so the projections needed for a block of
+equatorial cells grow with its perimeter rather than its area (a 9 × 9
+block at ``n=4`` takes 55 instead of 460). Every coordinate is still one
+the projection computed, and all points in a lattice column or row share
+one longitude or latitude value across the whole block, not only where
+cells touch. ``Cell.boundary(n=2, plane=False, interior=True)`` on quad
+and cap cells now honours ``interior``; since 0.6.0 those two shapes had
+returned the plain vertices for that call. Planar boundary points are
+built with float arithmetic instead of a two-element numpy array per
+point, and are returned as Python floats; the values are unchanged.
+
 0.7.1
 ^^^^^
 Adopted mypy (issue #109, first three stages): every function in the
