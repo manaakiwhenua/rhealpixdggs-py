@@ -13,9 +13,12 @@ Keep adding tests!
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
+import os
 import unittest
-from math import asin, pi, sin
+from math import asin, pi, sin, sqrt
 
+import numpy as np
+from numpy.testing import assert_allclose, assert_array_equal
 from scipy.integrate import quad
 
 import rhealpixdggs.utils as ut
@@ -43,6 +46,166 @@ def auth_lat_by_defining_integral(phi: float, e: float) -> float:
     q, _ = quad(integrand, 0, sin(phi), epsabs=1e-13, epsrel=1e-13)
     q_pole, _ = quad(integrand, 0, 1, epsabs=1e-13, epsrel=1e-13)
     return asin(q / q_pole)
+
+
+def auth_lat_series_before_refactor(phi: float, e: float, inverse: bool) -> float:
+    """
+    The power-series expressions exactly as ``auth_lat`` wrote them before
+    the coefficients were extracted into ``_auth_lat_coefficients``; `phi`
+    in radians. Kept verbatim so the refactor can be shown bit-identical.
+    """
+    n = (1 - sqrt(1 - e**2)) / (1 + sqrt(1 - e**2))
+    if not inverse:
+        authalic_lat = phi + (
+            n
+            * (
+                -4 / 3
+                + n
+                * (
+                    -4 / 45
+                    + n
+                    * (
+                        88 / 315
+                        + n
+                        * (538 / 4725 + n * (20824 / 467775 + n * (-44732 / 2837835)))
+                    )
+                )
+            )
+            * sin(2 * phi)
+            + n
+            * (
+                n
+                * (
+                    34 / 45
+                    + n
+                    * (
+                        8 / 105
+                        + n
+                        * (
+                            -2482 / 14175
+                            + n * (-37192 / 467775 + n * (-12467764 / 212837625))
+                        )
+                    )
+                )
+            )
+            * sin(4 * phi)
+            + n
+            * (
+                n
+                * (
+                    n
+                    * (
+                        -1532 / 2835
+                        + n
+                        * (
+                            -898 / 14175
+                            + n * (54968 / 467775 + n * 100320856 / 1915538625)
+                        )
+                    )
+                )
+            )
+            * sin(6 * phi)
+            + n
+            * (
+                n
+                * (
+                    n
+                    * (
+                        n
+                        * (
+                            6007 / 14175
+                            + n * (24496 / 467775 + n * (-5884124 / 70945875))
+                        )
+                    )
+                )
+            )
+            * sin(8 * phi)
+            + n
+            * (n * (n * (n * (n * (-23356 / 66825 + n * (-839792 / 19348875))))))
+            * sin(10 * phi)
+            + n * (n * (n * (n * (n * (n * 570284222 / 1915538625))))) * sin(12 * phi)
+        )
+        return authalic_lat
+    common_lat = phi + (
+        n
+        * (
+            4 / 3
+            + n
+            * (
+                4 / 45
+                + n
+                * (
+                    -16 / 35
+                    + n
+                    * (-2582 / 14175 + n * (60136 / 467775 + n * 28112932 / 212837625))
+                )
+            )
+        )
+        * sin(2 * phi)
+        + n
+        * (
+            n
+            * (
+                46 / 45
+                + n
+                * (
+                    152 / 945
+                    + n
+                    * (
+                        -11966 / 14175
+                        + n * (-21016 / 51975 + n * 251310128 / 638512875)
+                    )
+                )
+            )
+        )
+        * sin(4 * phi)
+        + n
+        * (
+            n
+            * (
+                n
+                * (
+                    3044 / 2835
+                    + n
+                    * (3802 / 14175 + n * (-94388 / 66825 + n * (-8797648 / 10945935)))
+                )
+            )
+        )
+        * sin(6 * phi)
+        + n
+        * (
+            n
+            * (
+                n
+                * (
+                    n
+                    * (
+                        6059 / 4725
+                        + n * (41072 / 93555 + n * (-1472637812 / 638512875))
+                    )
+                )
+            )
+        )
+        * sin(8 * phi)
+        + n
+        * (n * (n * (n * (n * (768272 / 467775 + n * 455935736 / 638512875)))))
+        * sin(10 * phi)
+        + n * (n * (n * (n * (n * (n * 4210684958 / 1915538625))))) * sin(12 * phi)
+    )
+    return common_lat
+
+
+# RHP_STRICT_BITS=1 asserts the array helpers reproduce the scalar ones to
+# the last bit; the default tolerates the ulp-level differences that
+# platforms with SIMD transcendental kernels can show.
+STRICT_BITS = os.environ.get("RHP_STRICT_BITS") == "1"
+
+
+def assert_continuous(got, want, atol):
+    if STRICT_BITS:
+        assert_array_equal(got, want)
+    else:
+        assert_allclose(got, want, rtol=0, atol=atol)
 
 
 class UtilsTestCase(unittest.TestCase):
@@ -218,6 +381,101 @@ class UtilsTestCase(unittest.TestCase):
                 ut.auth_lat(phi, e, radians=True), e, radians=True, inverse=True
             )
             self.assertAlmostEqual(round_trip, phi, places=12)
+
+    def test_auth_lat_coefficient_refactor_is_bit_identical(self):
+        # The series coefficients come from _auth_lat_coefficients (issue
+        # #88); each is the `n * (...)` factor the original expression
+        # evaluated before multiplying by the sine, so results must match
+        # that expression to the bit.
+        phis = [-pi / 2 + k * pi / 4000 for k in range(4001)]
+        for e in (WGS84_E, 1e-3, 0.02, 0.1155, 0.8):
+            for inverse in (False, True):
+                if not inverse and 1 - sqrt(1 - e**2) > 1 / 150:
+                    continue  # the direct formula, not the series
+                for phi in phis:
+                    self.assertEqual(
+                        ut.auth_lat(phi, e, inverse=inverse, radians=True),
+                        auth_lat_series_before_refactor(phi, e, inverse),
+                        (e, inverse, phi),
+                    )
+
+    def test_auth_lat_array_matches_scalar(self):
+        rng = np.random.default_rng(20260811)
+        phis = np.concatenate(
+            [
+                rng.uniform(-pi / 2, pi / 2, 20000),
+                np.linspace(-pi / 2, pi / 2, 2001),
+                [0.0, -0.0, pi / 2, -pi / 2, pi / 2 - 1e-9, -pi / 2 + 1e-9],
+                pi / 2 - np.logspace(-15, -3, 25),
+            ]
+        )
+        near_pole = np.abs(np.abs(phis) - pi / 2) < 1e-6
+        for e in (0.0, WGS84_E, 0.1155, 0.8):
+            for inverse in (False, True):
+                for radians in (True, False):
+                    x = phis if radians else phis * 180 / pi
+                    scale = 1 if radians else 180 / pi
+                    got = ut._auth_lat_array(x, e, inverse=inverse, radians=radians)
+                    want = np.array(
+                        [
+                            ut.auth_lat(float(v), e, inverse=inverse, radians=radians)
+                            for v in x
+                        ]
+                    )
+                    self.assertEqual(got.dtype, np.float64)
+                    assert_continuous(got[~near_pole], want[~near_pole], 1e-12 * scale)
+                    assert_continuous(got[near_pole], want[near_pole], 1e-9 * scale)
+
+    def test_auth_lat_array_matches_defining_integral(self):
+        lat_degs = np.array([-89, -80, -60, -45, -30, -10, 0, 10, 30, 45, 60, 80, 89])
+        phis = lat_degs * pi / 180
+        for e in (0.8, 0.1155, WGS84_E):
+            expected = [auth_lat_by_defining_integral(float(p), e) for p in phis]
+            got_rad = ut._auth_lat_array(phis, e, radians=True)
+            got_deg = ut._auth_lat_array(lat_degs, e, radians=False)
+            for i, want in enumerate(expected):
+                self.assertAlmostEqual(got_rad[i], want, places=12)
+                self.assertAlmostEqual(got_deg[i], want * 180 / pi, places=10)
+
+    def test_auth_lat_array_shapes(self):
+        phi = np.array([[0.1, 0.2], [0.3, 0.4]])
+        original = phi.copy()
+        out = ut._auth_lat_array(phi, WGS84_E, radians=True)
+        self.assertEqual(out.shape, (2, 2))
+        assert_array_equal(phi, original)
+        # A sphere returns a copy, not the input.
+        out = ut._auth_lat_array(phi, 0.0, radians=True)
+        assert_array_equal(out, phi)
+        self.assertIsNot(out, phi)
+        self.assertFalse(np.shares_memory(out, phi))
+        # 0-d and integer inputs come back as float64 arrays.
+        out = ut._auth_lat_array(np.asarray(45), WGS84_E, radians=False)
+        self.assertEqual(out.shape, ())
+        self.assertEqual(out.dtype, np.float64)
+        self.assertAlmostEqual(float(out), ut.auth_lat(45, WGS84_E, radians=False))
+
+    def test_wrap_arrays_are_bit_identical_to_scalars(self):
+        rng = np.random.default_rng(20260811)
+        exact = [0.0, -0.0, 1.0, -1.0, 2.0, -2.0, 3.0, -3.0, 0.5, -0.5, 1.5, -1.5]
+        for radians in (True, False):
+            half = pi if radians else 180
+            values = np.concatenate(
+                [
+                    rng.uniform(-3 * half, 3 * half, 20000),
+                    np.array(exact) * half,
+                    np.array(exact) * half + 1e-12,
+                    np.array(exact) * half - 1e-12,
+                ]
+            )
+            for array_fn, scalar_fn in (
+                (ut._wrap_longitude_array, ut.wrap_longitude),
+                (ut._wrap_latitude_array, ut.wrap_latitude),
+            ):
+                got = array_fn(values, radians=radians)
+                want = np.array([scalar_fn(float(v), radians=radians) for v in values])
+                assert_array_equal(got, want)
+                self.assertEqual(got.dtype, np.float64)
+            self.assertEqual(ut._wrap_longitude_array(np.asarray(190.0)).shape, ())
 
 
 # ------------------------------------------------------------------------------

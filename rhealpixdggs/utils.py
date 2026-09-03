@@ -17,7 +17,30 @@ unless indicated otherwise.
 # *****************************************************************************
 
 from math import asin, copysign, log, pi, sin, sqrt
-from typing import Any
+from typing import Any, Protocol, overload
+
+import numpy as np
+from numpy.typing import NDArray
+
+FloatArray = NDArray[np.float64]
+
+
+class ProjectionFunction(Protocol):
+    """
+    The callable a homemade projection factory returns: ``f(u, v,
+    radians=False, inverse=False)`` mapping a pair of floats to a pair of
+    floats, or a pair of equal-shape float arrays to a pair of arrays.
+    """
+
+    @overload
+    def __call__(
+        self, u: float, v: float, radians: bool = ..., inverse: bool = ...
+    ) -> tuple[float, float]: ...
+
+    @overload
+    def __call__(
+        self, u: FloatArray, v: FloatArray, radians: bool = ..., inverse: bool = ...
+    ) -> tuple[FloatArray, FloatArray]: ...
 
 
 def my_round(x: Any, digits: int = 0) -> Any:
@@ -112,6 +135,164 @@ def wrap_latitude(phi: float, radians: bool = False) -> float:
     return result
 
 
+def _wrap_longitude_array(lam: FloatArray, radians: bool = False) -> FloatArray:
+    """
+    ``wrap_longitude`` applied elementwise to an array.
+    """
+    lam = np.asarray(lam, dtype=np.float64)
+    half_range = pi if radians else 180
+    wrapped = lam % (2 * half_range)
+    wrapped = np.where(wrapped >= half_range, wrapped - 2 * half_range, wrapped)
+    out_of_range = (lam < -half_range) | (lam >= half_range)
+    return np.asarray(np.where(out_of_range, wrapped, lam), dtype=np.float64)
+
+
+def _wrap_latitude_array(phi: FloatArray, radians: bool = False) -> FloatArray:
+    """
+    ``wrap_latitude`` applied elementwise to an array.
+    """
+    phi = _wrap_longitude_array(phi, radians=radians)
+    half_range = pi if radians else 180
+    reflected = phi - np.copysign(half_range, phi)
+    return np.asarray(
+        np.where(np.abs(phi) <= half_range / 2, phi, reflected), dtype=np.float64
+    )
+
+
+def _auth_lat_coefficients(
+    n: float, inverse: bool
+) -> tuple[float, float, float, float, float, float]:
+    """
+    The power-series coefficients of sin(2 phi), ..., sin(12 phi) used by
+    ``auth_lat`` for third flattening `n`: equation A19 (forward) or A20
+    (inverse) of https://doi.org/10.48550/arXiv.2212.05818.
+    """
+    if not inverse:
+        return (
+            n
+            * (
+                -4 / 3
+                + n
+                * (
+                    -4 / 45
+                    + n
+                    * (
+                        88 / 315
+                        + n
+                        * (538 / 4725 + n * (20824 / 467775 + n * (-44732 / 2837835)))
+                    )
+                )
+            ),
+            n
+            * (
+                n
+                * (
+                    34 / 45
+                    + n
+                    * (
+                        8 / 105
+                        + n
+                        * (
+                            -2482 / 14175
+                            + n * (-37192 / 467775 + n * (-12467764 / 212837625))
+                        )
+                    )
+                )
+            ),
+            n
+            * (
+                n
+                * (
+                    n
+                    * (
+                        -1532 / 2835
+                        + n
+                        * (
+                            -898 / 14175
+                            + n * (54968 / 467775 + n * 100320856 / 1915538625)
+                        )
+                    )
+                )
+            ),
+            n
+            * (
+                n
+                * (
+                    n
+                    * (
+                        n
+                        * (
+                            6007 / 14175
+                            + n * (24496 / 467775 + n * (-5884124 / 70945875))
+                        )
+                    )
+                )
+            ),
+            n * (n * (n * (n * (n * (-23356 / 66825 + n * (-839792 / 19348875)))))),
+            n * (n * (n * (n * (n * (n * 570284222 / 1915538625))))),
+        )
+    return (
+        n
+        * (
+            4 / 3
+            + n
+            * (
+                4 / 45
+                + n
+                * (
+                    -16 / 35
+                    + n
+                    * (-2582 / 14175 + n * (60136 / 467775 + n * 28112932 / 212837625))
+                )
+            )
+        ),
+        n
+        * (
+            n
+            * (
+                46 / 45
+                + n
+                * (
+                    152 / 945
+                    + n
+                    * (
+                        -11966 / 14175
+                        + n * (-21016 / 51975 + n * 251310128 / 638512875)
+                    )
+                )
+            )
+        ),
+        n
+        * (
+            n
+            * (
+                n
+                * (
+                    3044 / 2835
+                    + n
+                    * (3802 / 14175 + n * (-94388 / 66825 + n * (-8797648 / 10945935)))
+                )
+            )
+        ),
+        n
+        * (
+            n
+            * (
+                n
+                * (
+                    n
+                    * (
+                        6059 / 4725
+                        + n * (41072 / 93555 + n * (-1472637812 / 638512875))
+                    )
+                )
+            )
+        ),
+        n * (n * (n * (n * (n * (768272 / 467775 + n * 455935736 / 638512875))))),
+        n * (n * (n * (n * (n * (n * 4210684958 / 1915538625))))),
+    )
+
+
 def auth_lat(
     phi: float, e: float, inverse: bool = False, radians: bool = False
 ) -> float:
@@ -178,79 +359,14 @@ def auth_lat(
             if not radians:
                 phi = phi * pi / 180
 
+            c2, c4, c6, c8, c10, c12 = _auth_lat_coefficients(n, inverse=False)
             authalic_lat = phi + (
-                n
-                * (
-                    -4 / 3
-                    + n
-                    * (
-                        -4 / 45
-                        + n
-                        * (
-                            88 / 315
-                            + n
-                            * (
-                                538 / 4725
-                                + n * (20824 / 467775 + n * (-44732 / 2837835))
-                            )
-                        )
-                    )
-                )
-                * sin(2 * phi)
-                + n
-                * (
-                    n
-                    * (
-                        34 / 45
-                        + n
-                        * (
-                            8 / 105
-                            + n
-                            * (
-                                -2482 / 14175
-                                + n * (-37192 / 467775 + n * (-12467764 / 212837625))
-                            )
-                        )
-                    )
-                )
-                * sin(4 * phi)
-                + n
-                * (
-                    n
-                    * (
-                        n
-                        * (
-                            -1532 / 2835
-                            + n
-                            * (
-                                -898 / 14175
-                                + n * (54968 / 467775 + n * 100320856 / 1915538625)
-                            )
-                        )
-                    )
-                )
-                * sin(6 * phi)
-                + n
-                * (
-                    n
-                    * (
-                        n
-                        * (
-                            n
-                            * (
-                                6007 / 14175
-                                + n * (24496 / 467775 + n * (-5884124 / 70945875))
-                            )
-                        )
-                    )
-                )
-                * sin(8 * phi)
-                + n
-                * (n * (n * (n * (n * (-23356 / 66825 + n * (-839792 / 19348875))))))
-                * sin(10 * phi)
-                + n
-                * (n * (n * (n * (n * (n * 570284222 / 1915538625)))))
-                * sin(12 * phi)
+                c2 * sin(2 * phi)
+                + c4 * sin(4 * phi)
+                + c6 * sin(6 * phi)
+                + c8 * sin(8 * phi)
+                + c10 * sin(10 * phi)
+                + c12 * sin(12 * phi)
             )
 
             if not radians:
@@ -263,83 +379,59 @@ def auth_lat(
         if not radians:
             phi = phi * pi / 180
 
+        c2, c4, c6, c8, c10, c12 = _auth_lat_coefficients(n, inverse=True)
         common_lat = phi + (
-            n
-            * (
-                4 / 3
-                + n
-                * (
-                    4 / 45
-                    + n
-                    * (
-                        -16 / 35
-                        + n
-                        * (
-                            -2582 / 14175
-                            + n * (60136 / 467775 + n * 28112932 / 212837625)
-                        )
-                    )
-                )
-            )
-            * sin(2 * phi)
-            + n
-            * (
-                n
-                * (
-                    46 / 45
-                    + n
-                    * (
-                        152 / 945
-                        + n
-                        * (
-                            -11966 / 14175
-                            + n * (-21016 / 51975 + n * 251310128 / 638512875)
-                        )
-                    )
-                )
-            )
-            * sin(4 * phi)
-            + n
-            * (
-                n
-                * (
-                    n
-                    * (
-                        3044 / 2835
-                        + n
-                        * (
-                            3802 / 14175
-                            + n * (-94388 / 66825 + n * (-8797648 / 10945935))
-                        )
-                    )
-                )
-            )
-            * sin(6 * phi)
-            + n
-            * (
-                n
-                * (
-                    n
-                    * (
-                        n
-                        * (
-                            6059 / 4725
-                            + n * (41072 / 93555 + n * (-1472637812 / 638512875))
-                        )
-                    )
-                )
-            )
-            * sin(8 * phi)
-            + n
-            * (n * (n * (n * (n * (768272 / 467775 + n * 455935736 / 638512875)))))
-            * sin(10 * phi)
-            + n * (n * (n * (n * (n * (n * 4210684958 / 1915538625))))) * sin(12 * phi)
+            c2 * sin(2 * phi)
+            + c4 * sin(4 * phi)
+            + c6 * sin(6 * phi)
+            + c8 * sin(8 * phi)
+            + c10 * sin(10 * phi)
+            + c12 * sin(12 * phi)
         )
 
         if not radians:
             common_lat = common_lat * 180 / pi
 
         return common_lat
+
+
+def _auth_lat_array(
+    phi: FloatArray, e: float, inverse: bool = False, radians: bool = False
+) -> FloatArray:
+    """
+    ``auth_lat`` applied elementwise to an array. Every expression mirrors
+    the scalar function's form so the two agree to the last bit wherever
+    the platform's array and scalar transcendental kernels do.
+    """
+    phi = np.asarray(phi, dtype=np.float64)
+    if e == 0:
+        return phi.copy()
+    f = 1 - sqrt(1 - e**2)
+    n = (1 - sqrt(1 - e**2)) / (1 + sqrt(1 - e**2))
+    if not radians:
+        phi = phi * pi / 180
+    if not inverse and abs(f) > 1 / 150:
+        s = np.sin(phi)
+        q = ((1 - e**2) * s) / (1 - np.float_power(e * s, 2)) - (1 - e**2) / (
+            2.0 * e
+        ) * np.log((1 - e * s) / (1 + e * s))
+        qp = 1 - (1 - e**2) / (2.0 * e) * log((1.0 - e) / (1.0 + e))
+        ratio = q / qp
+        ratio = np.where(np.abs(ratio) > 1, np.copysign(1, ratio), ratio)
+        result = np.arcsin(ratio)
+    else:
+        c2, c4, c6, c8, c10, c12 = _auth_lat_coefficients(n, inverse)
+        result = phi + (
+            c2 * np.sin(2 * phi)
+            + c4 * np.sin(4 * phi)
+            + c6 * np.sin(6 * phi)
+            + c8 * np.sin(8 * phi)
+            + c10 * np.sin(10 * phi)
+            + c12 * np.sin(12 * phi)
+        )
+    if not radians:
+        result = result * 180 / pi
+    return np.asarray(result, dtype=np.float64)
 
 
 def auth_rad(a: float, e: float, inverse: bool = False) -> float:
