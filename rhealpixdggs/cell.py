@@ -2,8 +2,9 @@
 
 from collections.abc import Iterator
 from colorsys import hsv_to_rgb
-from functools import cached_property, total_ordering
+from functools import cache, cached_property, total_ordering
 from itertools import product
+from math import fsum
 from random import uniform
 from typing import TYPE_CHECKING, ClassVar, Literal, cast, overload
 
@@ -19,6 +20,23 @@ from rhealpixdggs.utils import wrap_longitude
 
 # Level 0 cell IDs, which are anomalous.
 CELLS0 = ["N", "O", "P", "Q", "R", "S"]
+
+# Points per axis of the Gauss-Legendre product rule that integrates the
+# centroid of a dart or skew quad cell over its planar square (issue #120).
+# The integrand is smooth within one polar triangle, so the rule converges
+# exponentially: 20 points agree with 40 to about 1e-14 degrees, the
+# projection's own floating-point floor.
+_CENTROID_QUADRATURE_ORDER = 20
+
+
+@cache
+def _gauss_legendre_unit(n: int) -> tuple[np.ndarray, np.ndarray]:
+    """
+    The `n`-point Gauss-Legendre nodes and weights on [0, 1]; the weights
+    sum to 1, so a weighted sum of function values is the mean over [0, 1].
+    """
+    nodes, weights = np.polynomial.legendre.leggauss(n)
+    return (nodes + 1) / 2, weights / 2
 
 
 @total_ordering
@@ -1219,13 +1237,6 @@ class Cell:
         x2 = max([v[0] for v in planar_vertices])
         y1 = min([v[1] for v in planar_vertices])
         y2 = max([v[1] for v in planar_vertices])
-        area = (x2 - x1) ** 2
-
-        def lam(x: float, y: float) -> float:
-            return self.rdggs.rhealpix(x, y, inverse=True)[0]
-
-        def phi(x: float, y: float) -> float:
-            return self.rdggs.rhealpix(x, y, inverse=True)[1]
 
         if shape == "quad":
             # A quad cell is symmetric about its nucleus meridian, and its
@@ -1256,22 +1267,63 @@ class Cell:
                 (1 / (y2 - y1)) * integrate.fixed_quad(phi_of_y, y1, y2, n=20)[0]
             )
             return lam_bar, phi_bar
+        # Dart or skew quad: the mean latitude (and, for a skew quad, the
+        # mean longitude) is an area-weighted integral over the planar
+        # square, evaluated by a fixed Gauss-Legendre product rule on one
+        # batch of projected points.
+        xs, ys, weights = self._centroid_quadrature(x1, x2, y1, y2)
+        lons, lats = self.rdggs.rhealpix(xs, ys, inverse=True, region=self.region())
+        # fsum is exactly rounded, so the result is the same on every
+        # platform regardless of summation order.
+        phi_bar = fsum(weights * lats)
         if shape == "dart":
-            lam_bar = float(nucleus[0])
-            phi_bar = (1 / area) * integrate.dblquad(
-                phi, y1, y2, lambda x: x1, lambda x: x2
-            )[0]
-            return lam_bar, phi_bar
-        # Now shape == 'skew_quad'.
-        # phi_bar formula same as dart case.
-        phi_bar = (1 / area) * integrate.dblquad(
-            phi, y1, y2, lambda x: x1, lambda x: x2
-        )[0]
-        # lam_bar formula changes; compute by numerical integration.
-        lam_bar = (1 / area) * integrate.dblquad(
-            lam, y1, y2, lambda x: x1, lambda x: x2
-        )[0]
-        return lam_bar, phi_bar
+            # A dart is symmetric about its nucleus meridian.
+            return float(nucleus[0]), phi_bar
+        return fsum(weights * lons), phi_bar
+
+    def _centroid_quadrature(
+        self, x1: float, x2: float, y1: float, y2: float
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Planar sample points and weights (summing to 1) whose weighted sum
+        of a function's values is its mean over this dart or skew quad
+        cell's planar square [x1, x2] x [y1, y2].
+
+        A skew quad lies within one polar triangle, where the inverse
+        projection is smooth, so a plain product rule over the square
+        serves. A dart straddles a diagonal of its polar square, along
+        which the projection has a kink; its square is split along that
+        diagonal (which passes through the dart's nucleus and so runs
+        corner to corner of the square) into two triangles, each mapped
+        from the unit square by the Duffy transform (u, v) -> (u, u*v),
+        whose Jacobian u folds into the weights.
+        """
+        t, w = _gauss_legendre_unit(_CENTROID_QUADRATURE_ORDER)
+        u, v = np.meshgrid(t, t, indexing="ij")
+        if self.ellipsoidal_shape == "skew_quad":
+            s, r = u.ravel(), v.ravel()
+            weights = np.outer(w, w).ravel()
+        else:
+            # Which diagonal: the nucleus's offset from the polar square's
+            # centre has equal-sign components on the rising (slope +1)
+            # diagonal and opposite-sign components on the falling one.
+            cx, cy = self.rdggs.cell([self.suid[0]]).nucleus(plane=True)
+            nx, ny = self.nucleus(plane=True)
+            rising = (nx - cx) * (ny - cy) > 0
+            # In unit-square coordinates (s, r) the rising diagonal is
+            # r = s; the triangle below it is the Duffy image (u, u*v) and
+            # the one above is its transpose (u*v, u).
+            a, b = u.ravel(), (u * v).ravel()
+            s = np.concatenate([a, b])
+            r = np.concatenate([b, a])
+            if not rising:
+                # The falling diagonal r = 1 - s is the mirror image.
+                s = 1 - s
+            triangle_weights = (np.outer(w, w) * t[:, None]).ravel()
+            weights = np.concatenate([triangle_weights, triangle_weights])
+        xs = x1 + (x2 - x1) * s
+        ys = y1 + (y2 - y1) * r
+        return xs, ys, weights
 
     def rotate_entry(self, x: str | int, quarter_turns: int) -> str | int:
         """

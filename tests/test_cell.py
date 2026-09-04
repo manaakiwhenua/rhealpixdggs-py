@@ -1113,6 +1113,85 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         self.assertLess(abs(wrap_longitude(lon - mc_lon, radians=False)), 6 * se_lon)
         self.assertLess(abs(lat - mc_lat), 6 * se_lat)
 
+    def test_centroid_polar_against_adaptive_quadrature(self):
+        # centroid() integrates dart and skew quad cells with a fixed
+        # Gauss-Legendre product rule. Deterministic ground truth: adaptive
+        # quadrature of the same integrals over the same planar square,
+        # which is smooth within one polar triangle. A skew quad lies in
+        # one triangle, so its square integrates directly; a dart straddles
+        # a diagonal of its polar square, where the projection has a kink,
+        # so its square is integrated as the two triangles on either side
+        # (a different split from centroid()'s Duffy map).
+        rdggs = WGS84_003
+        for suid in [(N, 7), (N, 1, 5), (S, 3, 3, 3), (N, 6), (N, 0, 0), (S, 2, 4)]:
+            self._check_polar_centroid(rdggs.cell(suid))
+
+    def _check_polar_centroid(self, X):
+        from unittest.mock import patch
+
+        from scipy import integrate
+
+        import rhealpixdggs.cell as cell_module
+        from rhealpixdggs.cell import _CENTROID_QUADRATURE_ORDER
+
+        rdggs = X.rdggs
+        shape = X.ellipsoidal_shape
+        self.assertIn(shape, ("dart", "skew_quad"), str(X))
+        pv = X.vertices(plane=True)
+        x1, x2 = min(v[0] for v in pv), max(v[0] for v in pv)
+        y1, y2 = min(v[1] for v in pv), max(v[1] for v in pv)
+        area = (x2 - x1) * (y2 - y1)
+
+        def bottom(x):
+            return y1
+
+        def top(x):
+            return y2
+
+        if shape == "skew_quad":
+            pieces = [(bottom, top)]
+        else:
+            cx, cy = rdggs.cell([X.suid[0]]).nucleus(plane=True)
+            nx, ny = X.nucleus(plane=True)
+            rising = (nx - cx) * (ny - cy) > 0
+
+            def diagonal(x):
+                return y1 + (x - x1) if rising else y1 + (x2 - x)
+
+            pieces = [(bottom, diagonal), (diagonal, top)]
+
+        def mean_of(i):
+            def f(y, x):
+                return rdggs.rhealpix(x, y, inverse=True)[i]
+
+            total = 0.0
+            for lower, upper in pieces:
+                total += integrate.dblquad(
+                    f, x1, x2, lower, upper, epsabs=1e-11, epsrel=1e-11
+                )[0]
+            return total / area
+
+        lon, lat = X.centroid(plane=False)
+        self.assertAlmostEqual(lat, mean_of(1), places=9, msg=str(X))
+        if shape == "skew_quad":
+            self.assertAlmostEqual(lon, mean_of(0), places=9, msg=str(X))
+        else:
+            self.assertEqual(lon, X.nucleus(plane=False)[0], str(X))
+
+        # The rule's own convergence: doubling the order moves the result
+        # by no more than the projection's floating-point floor.
+        xs, _, weights = X._centroid_quadrature(x1, x2, y1, y2)
+        self.assertAlmostEqual(float(weights.sum()), 1.0, places=14)
+        with patch.object(
+            cell_module, "_CENTROID_QUADRATURE_ORDER", 2 * _CENTROID_QUADRATURE_ORDER
+        ):
+            xs2, ys2, weights2 = X._centroid_quadrature(x1, x2, y1, y2)
+        self.assertEqual(len(xs2), 4 * len(xs))
+        lons2, lats2 = rdggs.rhealpix(xs2, ys2, inverse=True)
+        self.assertAlmostEqual(float(weights2 @ lats2), lat, places=12, msg=str(X))
+        if shape == "skew_quad":
+            self.assertAlmostEqual(float(weights2 @ lons2), lon, places=12, msg=str(X))
+
     def test_random_point(self):
         # Output should lie in the cell at least.
         for E in [WGS84_ASPHERE_RADIANS, WGS84_ELLIPSOID]:

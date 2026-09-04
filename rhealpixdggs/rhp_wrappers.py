@@ -82,9 +82,9 @@ def rhp_to_geo(
     EXAMPLES::
 
         >>> rhp_to_geo('S001450634', True, False)
-        (-176.2606635452476, -43.73654505358369)
+        (-176.2606635452476, -43.7365450535837)
         >>> rhp_to_geo('S001450635', True, False)
-        (-176.25592420875037, -43.73654505358369)
+        (-176.25592420875034, -43.7365450535837)
         >>> rhp_to_geo('NotACellId', True, False)
     """
     # Stop early if the cell index is invalid

@@ -9,6 +9,18 @@ longitude one ulp below ``-pi``; the inverse could only reach the case
 through the ``1e-10`` image margin, where the trailing longitude clamp
 already hid it. ``in_healpix_image`` was clamping both ends all along, so
 the projection functions now agree with it (issue #119).
+``Cell.centroid(plane=False)`` on dart and skew quad cells integrates with
+a fixed 20-point Gauss-Legendre product rule on one batch of projected
+points, splitting a dart's square along the polar-square diagonal where the
+projection has a kink, instead of adaptive ``scipy.integrate.dblquad``
+probing the scalar projection point by point. A dart centroid drops from
+about 70 ms and 20,000 projections to under 1 ms and 800; a skew quad from
+10 ms to under 1 ms. Skew quad results agree with tight-tolerance adaptive
+quadrature to about 1e-14 degrees, the projection's floating-point floor.
+Dart latitudes move by up to a few times 1e-7 degrees: the previous
+whole-square adaptive integration could not converge across the kink and
+delivered only its default tolerance, and the new values agree with
+adaptive integration of the two smooth halves to 1e-9 (issue #120).
 
 0.8.0
 ^^^^^
