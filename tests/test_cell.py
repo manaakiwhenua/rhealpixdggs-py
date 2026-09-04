@@ -1192,6 +1192,55 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         if shape == "skew_quad":
             self.assertAlmostEqual(float(weights2 @ lons2), lon, places=12, msg=str(X))
 
+    def test_nw_vertex_dart_matches_projected_choice(self):
+        # nw_vertex() picks a dart's polewards vertex in the plane, as the
+        # vertex with the smallest Chebyshev distance to the polar square's
+        # centre (issue #122). Gate it against the definition: project the
+        # four planar vertices and take the one of greatest absolute
+        # latitude (then, in the south, one step clockwise), for every
+        # dart to resolution 4 in all sixteen polar-square placements and
+        # to resolution 5 in the default one, and for N_side = 2, whose
+        # darts are not centred on their base. The polewards vertex must
+        # also be strictly nearest: no tie for the planar test to break.
+        import itertools
+
+        def projected_choice(cell):
+            v = cell.vertices(plane=True)
+            ev = [cell.rdggs.rhealpix(*vv, inverse=True) for vv in v]
+            i = max((abs(ev[j][1]), j) for j in range(4))[1]
+            return v[i] if cell.region() == "north_polar" else v[(i + 1) % 4]
+
+        def check(cell):
+            self.assertEqual(cell.ellipsoidal_shape, "dart", str(cell))
+            v = cell.vertices(plane=True)
+            cx, cy = cell.rdggs.cell([cell.suid[0]]).nucleus(plane=True)
+            d = sorted(max(abs(x - cx), abs(y - cy)) for x, y in v)
+            self.assertLess(d[0], d[1], str(cell))
+            self.assertEqual(
+                cell.nw_vertex(plane=True), projected_choice(cell), str(cell)
+            )
+
+        # N_side = 3: a dart's digits are all in {0, 4, 8} or all in
+        # {2, 4, 6} (it lies on a diagonal of the polar square), excluding
+        # the all-4s cap.
+        for ns, ss in itertools.product(range(4), repeat=2):
+            rdggs = RHEALPixDGGS(WGS84_ELLIPSOID, north_square=ns, south_square=ss)
+            top = 5 if (ns, ss) == (0, 0) else 4
+            for face, digits, res in itertools.product(
+                (N, S), ("048", "246"), range(1, top + 1)
+            ):
+                for tail in itertools.product(digits, repeat=res):
+                    if set(tail) != {"4"}:
+                        check(rdggs.cell([face] + [int(t) for t in tail]))
+
+        # N_side = 2: every polar cell to resolution 3, filtered by shape.
+        rdggs = WGS84_122
+        for face, res in itertools.product((N, S), range(1, 4)):
+            for tail in itertools.product(range(4), repeat=res):
+                cell = rdggs.cell([face] + list(tail))
+                if cell.ellipsoidal_shape == "dart":
+                    check(cell)
+
     def test_random_point(self):
         # Output should lie in the cell at least.
         for E in [WGS84_ASPHERE_RADIANS, WGS84_ELLIPSOID]:

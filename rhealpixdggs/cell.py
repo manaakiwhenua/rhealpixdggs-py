@@ -667,10 +667,14 @@ class Cell:
                 i = (triangle - ss) % 4
                 result = v[i]
         else:
-            # shape == 'dart':
-            # Map cell to ellipsoid and get the polewards vertex.
-            ev = [self.rdggs.rhealpix(*vv, inverse=True) for vv in v]
-            i = max((abs(ev[j][1]), j) for j in range(4))[1]
+            # shape == 'dart': find the polewards vertex in the plane.
+            # Parallels in a polar square are concentric squares about its
+            # centre, the pole, so the vertex nearest the pole is the one
+            # with the smallest Chebyshev distance to that centre. It is
+            # unique: only the dart's two base vertices, farthest from the
+            # pole, are equidistant.
+            cx, cy = self.rdggs.cell([self.suid[0]]).nucleus(plane=True)
+            i = min(range(4), key=lambda j: max(abs(v[j][0] - cx), abs(v[j][1] - cy)))
             if self.region() == "north_polar":
                 # Northwest vertex is the polewards vertex.
                 result = v[i]

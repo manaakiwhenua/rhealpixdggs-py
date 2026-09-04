@@ -21,6 +21,13 @@ Dart latitudes move by up to a few times 1e-7 degrees: the previous
 whole-square adaptive integration could not converge across the kink and
 delivered only its default tolerance, and the new values agree with
 adaptive integration of the two smooth halves to 1e-9 (issue #120).
+``Cell.nw_vertex`` on dart cells finds the polewards vertex in the plane,
+as the vertex nearest the polar square's centre in Chebyshev distance,
+instead of projecting all four vertices to compare latitudes: 5 µs
+instead of 47 µs, about a quarter of a dart's ``boundary(plane=False)``
+call. The choice is identical for every dart to resolution 4 in all
+polar-square placements, to resolution 5 in the default, and for
+``N_side = 2`` (issue #122).
 
 0.8.0
 ^^^^^
