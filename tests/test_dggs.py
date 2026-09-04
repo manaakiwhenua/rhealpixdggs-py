@@ -400,11 +400,10 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             finally:
                 del rdggs.__dict__["rhealpix"]
             self.assertLess(batched_calls, ratio * per_cell_calls, face)
-            # One resolution and one region: a single array call, plus the
-            # four scalar projections nw_vertex makes per dart cell while
-            # the planar boundaries are gathered (issue #122).
-            darts = sum(c.ellipsoidal_shape == "dart" for c in block)
-            self.assertEqual(batched_invocations, 1 + 4 * darts, face)
+            # One resolution and one region: a single array call. Gathering
+            # the planar boundaries projects nothing, since nw_vertex picks a
+            # dart's polewards vertex in the plane (issue #122).
+            self.assertEqual(batched_invocations, 1, face)
 
         # In the equatorial region the batch exploits the projection's
         # separability: every point in one lattice column gets one
