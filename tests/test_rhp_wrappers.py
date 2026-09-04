@@ -13,7 +13,6 @@ Keep adding tests!
 
 import unittest
 
-import numpy as np
 import shapely as sh
 
 import rhealpixdggs.dggs as gs
@@ -58,11 +57,11 @@ class RhpWrappersTestCase(unittest.TestCase):
 
         # Dart cell without geojson
         centroid = rhpw.rhp_to_geo("N0", geo_json=False, plane=False)
-        self.assertEqual(centroid, (np.float64(53.00810765458496), np.float64(90.0)))
+        self.assertEqual(centroid, (53.00810744904724, 90.0))
 
         # Dart cell with geojson
         centroid = rhpw.rhp_to_geo("N0", plane=False)
-        self.assertEqual(centroid, (90.0, 53.00810765458496))
+        self.assertEqual(centroid, (90.0, 53.00810744904724))
 
         # Equatorial cell without geojson. Q is symmetric about the
         # equator, so its centroid latitude is 0 -- up to the floating-
