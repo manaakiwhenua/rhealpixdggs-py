@@ -28,6 +28,19 @@ instead of 47 µs, about a quarter of a dart's ``boundary(plane=False)``
 call. The choice is identical for every dart to resolution 4 in all
 polar-square placements, to resolution 5 in the default, and for
 ``N_side = 2`` (issue #122).
+``RHEALPixDGGS.cells_from_line`` locates every cell-edge crossing of the
+segment in lockstep: each smooth piece's 65-point monotonicity scan is one
+array projection, and all crossings are then solved together, one array
+projection per solver iteration, with the ITP root finder (superlinear on
+these smooth monotone pieces, never slower than bisection) in place of
+one scalar bisection of about 50 projections per crossing. The traced
+cells are unchanged; a 1330-cell polar trace at resolution 6 drops from
+about 700 ms and 68,000 scalar projections to a few tens of milliseconds
+and under 100 array calls. The search that pins a coordinate reversal
+within a piece is golden-section to 1e-8 of the piece's parameter range
+(where the coordinate is already flat to the floating-point floor)
+instead of ternary to 1e-14, about 35 scalar projections instead of 140
+(issue #121).
 
 0.8.0
 ^^^^^

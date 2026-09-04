@@ -315,6 +315,64 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         )
         self.assertIn("N241", [str(c) for c in cells])
 
+        # Pinned traces from the scalar bisection implementation this
+        # replaced (issue #121): the lockstep ITP solver must find the same
+        # crossings to machine precision and hence the same cells.
+        import hashlib
+
+        R = rdggs.ellipsoid.R_A
+        pinned = [
+            (5, (10, 10), (60, 30), False, 195, "d5791b5939d5"),
+            (6, (-170, -80), (170, -60), False, 1330, "4925d794e30f"),
+            (
+                6,
+                (165.50972831262268, 26.027432190353828),
+                (-12.994806100831056, 60.11220272134576),
+                False,
+                1572,
+                "d2092a18595b",
+            ),
+            (6, (-45, 88), (135, 88), False, 65, "4de4729f9639"),
+            (5, (166.8, -46.4), (178.0, -38.2), False, 59, "7b7180e067d3"),
+            (
+                4,
+                (-11.399091685979357, 64.59420811683768),
+                (-57.31373531501049, 87.0761010527302),
+                False,
+                37,
+                "2b6f1e7cf944",
+            ),
+            (3, (0.9 * R, 0.6 * R), (-0.4 * R, -0.7 * R), True, 45, "b4d9ce28f687"),
+        ]
+        for res, a, b, plane, count, digest in pinned:
+            cells = rdggs.cells_from_line(res, a, b, plane=plane)
+            self.assertEqual(len(cells), count, (res, a, b))
+            joined = ",".join(str(c) for c in cells).encode()
+            self.assertEqual(hashlib.sha1(joined).hexdigest()[:12], digest, (res, a, b))
+
+        # Projection calls are one per inter-crossing interval (the cell
+        # lookup) plus a few dozen array calls: one per piece for the scan
+        # and one per solver iteration for all crossings together. The
+        # scalar bisection this replaced made about 50 per crossing (some
+        # 68,000 for this segment).
+        class CountingProjection:
+            def __init__(self, inner):
+                self.inner = inner
+                self.calls = 0
+
+            def __call__(self, *args, **kwargs):
+                self.calls += 1
+                return self.inner(*args, **kwargs)
+
+        counter = CountingProjection(rdggs.rhealpix)
+        rdggs.rhealpix = counter
+        try:
+            cells = rdggs.cells_from_line(6, (-170, -80), (170, -60), plane=False)
+        finally:
+            del rdggs.__dict__["rhealpix"]
+        self.assertEqual(len(cells), 1330)
+        self.assertLess(counter.calls, 2 * len(cells))
+
         # On a grid rotated about the polar axis (lon_0 != 0) the face
         # edges sit on lon_0 + k*90 and the equatorial/polar seam stays
         # at +/-41.9 degrees; segments crossing each must still trace a
