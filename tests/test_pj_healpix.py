@@ -276,6 +276,37 @@ class MyTestCase(unittest.TestCase):
             self.assertFalse(pjh.in_healpix_image(x, y), (x, y))
             self.assertFalse(shapely_in_healpix_image(x, y), (x, y))
 
+    def test_cap_number_clamped_at_minus_pi(self):
+        # Issue #119: the polar cap number is clamped to [0, 3] at both
+        # ends. Before, a longitude or planar x a hair below -pi fell in
+        # cap -1, and the forward function jumped by a whole
+        # (pi/2)(1 - sigma) between lam = -pi and lam = -pi - 1e-15.
+        for phi in (0.8, 1.4, -1.0):
+            x0, y0 = pjh.healpix_sphere(-pi, phi)
+            for d in (1e-16, 1e-12, 1e-10):
+                x, y = pjh.healpix_sphere(-pi - d, phi)
+                self.assertAlmostEqual(x, x0, delta=1e-9, msg=(phi, d))
+                self.assertEqual(y, y0)
+                xa, ya = pjh._healpix_sphere_array(array([-pi - d]), array([phi]))
+                self.assertAlmostEqual(xa[0], x, places=12, msg=(phi, d))
+                self.assertEqual(ya[0], y)
+        # Inverse: the fuzzed (-pi, +/-pi/4) corners, admitted by the
+        # 1e-10 image margin (offsetting both coordinates by d puts the
+        # point 2d outside the triangle edge, so d stays at or below
+        # 5e-11), lie in cap 0, land on lam = -pi exactly and take the
+        # cap-0 latitude, in the scalar and array paths alike.
+        for s in (1, -1):
+            for d in (1e-16, 2e-11, 5e-11):
+                x, y = -pi - d, s * (pi / 4 + d)
+                self.assertTrue(pjh.in_healpix_image(x, y), (x, y))
+                lam, phi = pjh.healpix_sphere_inverse(x, y)
+                self.assertEqual(lam, -pi, (x, y))
+                tau = 2 - 4 * abs(y) / pi
+                self.assertEqual(phi, s * arcsin(1 - tau**2 / 3), (x, y))
+                la, pa = pjh._healpix_sphere_inverse_array(array([x]), array([y]))
+                self.assertEqual(la[0], lam, (x, y))
+                self.assertAlmostEqual(pa[0], phi, places=14, msg=(x, y))
+
     def test_out_of_bounds_raises_value_error(self):
         # Regression test for issue #52: out-of-bounds coordinates used to
         # print an error message and return a sentinel (float("inf"), or

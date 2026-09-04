@@ -64,10 +64,11 @@ def _cap_number(lam: FloatArray) -> FloatArray:
     """
     The polar cap (0-3) each longitude or planar x falls in, as
     ``healpix_sphere`` and ``healpix_sphere_inverse`` compute it: floor,
-    clamped from above only.
+    clamped to [0, 3] so that rounding just past -pi or pi stays in the
+    outermost cap rather than jumping a whole cap west or east.
     """
     cap = np.floor(2 * lam / pi + 2)
-    return np.asarray(np.where(cap >= 4, 3.0, cap), dtype=np.float64)
+    return np.asarray(np.clip(cap, 0.0, 3.0), dtype=np.float64)
 
 
 def healpix_sphere(lam: float, phi: float) -> tuple[float, float]:
@@ -94,10 +95,8 @@ def healpix_sphere(lam: float, phi: float) -> tuple[float, float]:
     # Polar region.
     else:
         sigma = sqrt(3 * (1 - abs(sin(phi))))
-        cap_number = floor(2 * lam / pi + 2)
-        if cap_number >= 4:
-            # Rounding error
-            cap_number = 3
+        # Rounding error just past -pi or pi: stay in the outermost cap.
+        cap_number = min(max(floor(2 * lam / pi + 2), 0), 3)
         lamc = -3 * pi / 4 + (pi / 2) * cap_number
         x = lamc + (lam - lamc) * sigma
         y = sign(phi) * pi / 4 * (2 - sigma)
@@ -152,10 +151,9 @@ def healpix_sphere_inverse(x: float, y: float) -> tuple[float, float]:
         phi = arcsin(8 * y / (3 * pi))
     # Polar region but not the poles.
     elif abs(y) < pi / 2:
-        cap_number = floor(2 * x / pi + 2)
-        if cap_number >= 4:
-            # Rounding error.
-            cap_number = 3
+        # Rounding error just past -pi or pi (the image check admits a
+        # 1e-10 margin): stay in the outermost cap.
+        cap_number = min(max(floor(2 * x / pi + 2), 0), 3)
         xc = -3 * pi / 4 + (pi / 2) * cap_number
         tau = 2 - 4 * abs(y) / pi
         lam = xc + (x - xc) / tau
