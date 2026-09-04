@@ -359,21 +359,55 @@ def rst_to_markdown(text: str) -> str:
     """
     Convert the small slice of reStructuredText this changelog actually uses.
 
-    Handles ``literals`` and the -- em dashes; **bold**, *emphasis*, bullet
-    lists and #123 issue references already mean the same thing in both, and
-    GitHub turns the issue references into links by itself. Anything more
-    elaborate would need a real converter, so keep the changelog to this
-    subset or check the rendering before publishing.
+    Handles ``literals`` and the -- em dashes, and unwraps the hard-wrapped
+    paragraphs, because GitHub renders every newline in release notes as a
+    line break: lines separated by a single newline are joined with a
+    space, blank lines stay paragraph breaks, and list items and indented
+    (literal) lines are kept on lines of their own. So each changelog entry
+    must be its own paragraph, separated from the next by a blank line.
+    **bold**, *emphasis*, bullet lists and #123 issue references already
+    mean the same thing in both, and GitHub turns the issue references into
+    links by itself. Anything more elaborate would need a real converter,
+    so keep the changelog to this subset or check the rendering before
+    publishing.
     """
     spans: list[str] = []
 
     def stash(match: re.Match) -> str:
-        spans.append(match.group(1))
+        # A literal wrapped across lines is one code span once unwrapped.
+        spans.append(re.sub(r"\s+", " ", match.group(1)))
         return f"\x00{len(spans) - 1}\x00"
 
     text = re.sub(r"``(.+?)``", stash, text, flags=re.DOTALL)
     text = re.sub(r"(?<=\s)--(?=\s)", "—", text)
+    text = unwrap_paragraphs(text)
     return re.sub(r"\x00(\d+)\x00", lambda m: f"`{spans[int(m.group(1))]}`", text)
+
+
+def unwrap_paragraphs(text: str) -> str:
+    """
+    Join each hard-wrapped paragraph of `text` onto one line. A blank line
+    ends a paragraph; a line starting a list item (``- ``, ``* ``, ``1. ``)
+    or an indented line starts a new line rather than continuing the
+    previous one, and an indented line's own wrapping is left alone.
+    """
+    out: list[str] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        starts_item = re.match(r"(-|\*|\d+\.)\s", stripped) is not None
+        indented = line[:1].isspace()
+        if (
+            stripped
+            and out
+            and out[-1]
+            and not starts_item
+            and not indented
+            and not out[-1][:1].isspace()
+        ):
+            out[-1] = f"{out[-1]} {stripped}"
+        else:
+            out.append(line.rstrip() if indented else stripped)
+    return "\n".join(out)
 
 
 def check_copyright_year() -> None:

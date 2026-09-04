@@ -38,8 +38,12 @@ The script checks everything it can, but two things are yours to write:
 
 - [ ] **Release notes in `CHANGES.rst`**, under a section header for the new
       version, with explicit **Breaking change:** callouts where applicable.
-      `check` fails if the section is missing or empty, but it cannot tell
-      you whether the notes are any good.
+      Write one paragraph per entry and separate entries with a blank line:
+      `announce` unwraps each paragraph onto a single line for the GitHub
+      release, where every newline renders as a line break, so entries that
+      are not separated by a blank line run together. `check` fails if the
+      section is missing or empty, but it cannot tell you whether the notes
+      are any good.
 - [ ] **The copyright year range in `LICENSE` and `LICENSE-MIT`**, if the
       year has rolled over. `check` fails if the range ends before the
       current year. (The docs' copyright line computes its end year at build
@@ -104,8 +108,11 @@ publicly visible until you run `finalize`.
 The body is the version's `CHANGES.rst` section, followed by GitHub's
 auto-generated notes (the "What's Changed" PR list, new contributors, and
 the full-changelog link). The changelog part is converted from
-reStructuredText to Markdown on the way — ``literals`` become backticks and
-`--` becomes an em dash; **bold**, bullet lists and `#123` issue references
+reStructuredText to Markdown on the way — ``literals`` become backticks,
+`--` becomes an em dash, and each hard-wrapped paragraph is unwrapped onto
+one line, because GitHub renders every newline in release notes as a line
+break (blank lines stay paragraph breaks; bullet items and indented lines
+keep their own lines); **bold**, bullet lists and `#123` issue references
 already mean the same thing in both, and GitHub links the issue references
 itself. Only that subset is handled, so if you reach for anything more
 elaborate in the changelog, check the rendering.

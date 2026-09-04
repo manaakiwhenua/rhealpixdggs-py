@@ -9,6 +9,7 @@ longitude one ulp below ``-pi``; the inverse could only reach the case
 through the ``1e-10`` image margin, where the trailing longitude clamp
 already hid it. ``in_healpix_image`` was clamping both ends all along, so
 the projection functions now agree with it (issue #119).
+
 ``Cell.centroid(plane=False)`` on dart and skew quad cells integrates with
 a fixed 20-point Gauss-Legendre product rule on one batch of projected
 points, splitting a dart's square along the polar-square diagonal where the
@@ -21,6 +22,7 @@ Dart latitudes move by up to a few times 1e-7 degrees: the previous
 whole-square adaptive integration could not converge across the kink and
 delivered only its default tolerance, and the new values agree with
 adaptive integration of the two smooth halves to 1e-9 (issue #120).
+
 ``Cell.nw_vertex`` on dart cells finds the polewards vertex in the plane,
 as the vertex nearest the polar square's centre in Chebyshev distance,
 instead of projecting all four vertices to compare latitudes: 5 µs
@@ -28,6 +30,7 @@ instead of 47 µs, about a quarter of a dart's ``boundary(plane=False)``
 call. The choice is identical for every dart to resolution 4 in all
 polar-square placements, to resolution 5 in the default, and for
 ``N_side = 2`` (issue #122).
+
 ``RHEALPixDGGS.cells_from_line`` locates every cell-edge crossing of the
 segment in lockstep: each smooth piece's 65-point monotonicity scan is one
 array projection, and all crossings are then solved together, one array
@@ -53,6 +56,7 @@ poles to one planar point, and lost the equal-area property everywhere
 reported value). Reorienting a grid is longitude-only (``lon_0``, a true
 rotation about the polar axis) plus the choice of ``north_square`` and
 ``south_square`` (issue #93).
+
 ``Cell.boundary(plane=False)`` on quad cells now projects only the four
 corners and the interior points of the west and north edges (``2*n``
 inverse projections instead of ``4*n - 4``) and derives the remaining
@@ -61,6 +65,7 @@ shares the west edge's latitudes and the south edge shares the north
 edge's longitudes. Every coordinate is still one the projection
 computed, and adjacent quad cells still share bit-identical points
 (issue #91).
+
 ``RHEALPixDGGS.cell_boundaries`` exploits the same separability for
 every equatorial cell, so the projections needed for a block of
 equatorial cells grow with its perimeter rather than its area (a 9 × 9
@@ -72,12 +77,14 @@ and cap cells now honours ``interior``; since 0.6.0 those two shapes had
 returned the plain vertices for that call. Planar boundary points are
 built with float arithmetic instead of a two-element numpy array per
 point, and are returned as Python floats; the values are unchanged.
+
 ``pj_healpix.in_healpix_image`` and ``pj_rhealpix.in_rhealpix_image``
 test their rectangles and triangles with arithmetic instead of a shapely
 point-in-polygon query, cutting the two checks that every inverse
 projection performs from about 40% of its cost to almost nothing (issue
 #116). The accepted region is unchanged for rHEALPix and differs for
 HEALPix only within the 1e-10 fuzz margin outside the image.
+
 ``RHEALPixDGGS.rhealpix``, ``RHEALPixDGGS.healpix``,
 ``projection_wrapper.Projection.__call__`` and the callables returned by
 ``pj_healpix.healpix`` and ``pj_rhealpix.rhealpix`` accept numpy arrays
@@ -146,7 +153,6 @@ hashable (consistent with its equality: cells with equal addresses from
 the same DGGS hash alike), so cells can be dictionary keys and set
 members.
 
-
 **Breaking change:** rewrote ``RHEALPixDGGS.cells_from_line`` (the engine
 behind ``rhp_wrappers.linetrace``) to be exact for every cell shape,
 replacing an edge-walking algorithm that modelled each cell as a
@@ -192,7 +198,6 @@ of a cell that sampling misses. Consequences:
   ``RHEALPixDGGS.antimeridian_check_and_flip``, which existed solely to
   patch cell edges for the old algorithm's shapely intersection tests.
 
-
 Adopted the organisation's repository-standards check
 (``manaakiwhenua-standards``) as a GitHub Actions workflow, with its
 status badge in the README (issue #84). The check requires a non-empty
@@ -236,7 +241,6 @@ and ``run_doctests.sh`` are now ``scripts/run_unittests.sh`` and
 ``scripts/run_doctests.sh``, leaving the repository root to project
 metadata, and both now work from any directory rather than only from the
 repository root.
-
 
 Documentation fixes (issue #57): the Sphinx manual now includes pages for
 the ``cell``, ``conversion``, and ``rhp_wrappers`` modules, which were
