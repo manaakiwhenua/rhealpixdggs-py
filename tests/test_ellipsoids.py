@@ -31,6 +31,17 @@ class MyTestCase(unittest.TestCase):
                 self.assertTrue(p[0] >= lam_min and p[0] < lam_max)
                 self.assertTrue(p[1] >= phi_min and p[0] < phi_max)
 
+    def test_rejects_nonzero_lat_0(self):
+        # Recentring in latitude is not a rotation of the ellipsoid and
+        # yields a grid that is neither equal-area nor coherent at the
+        # poles (issue #93), so the constructor refuses it in both angle
+        # modes; lon_0 recentring and an explicit lat_0=0 are fine.
+        for lat_0, radians in [(-37, False), (0.5, False), (0.1, True), (-0.3, True)]:
+            with self.assertRaises(ValueError):
+                ell.Ellipsoid(lon_0=0, lat_0=lat_0, radians=radians)
+        E = ell.Ellipsoid(lon_0=174, lat_0=0, radians=False)
+        self.assertEqual((E.lon_0, E.lat_0), (174, 0))
+
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":

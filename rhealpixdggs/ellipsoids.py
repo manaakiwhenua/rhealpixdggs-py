@@ -50,8 +50,15 @@ class Ellipsoid:
     - `e` - Eccentricity of the ellipsoid.
     - `f` - Flattening of the ellipsoid.
     - `R_A` - Authalic radius of the ellipsoid in meters.
-    - `lon_0` - Central meridian.
-    - `lat_0` - Latitude of origin.
+    - `lon_0` - Central meridian. Projections and grids built on the
+      ellipsoid are rotated about the polar axis so that this meridian
+      becomes the planar x = 0 line.
+    - `lat_0` - Latitude of origin. Must be 0. Shifting latitude is not a
+      rotation of an ellipsoid of revolution: a grid built on a shifted
+      latitude is neither equal-area nor geographically coherent near the
+      poles (issue #93). The attribute is kept so that the names match
+      PROJ's; reorient a grid with `lon_0` and the DGGS's `north_square`
+      and `south_square` instead.
     - `radians` - If True, use angles measured in radians for all calculations.
       Use degrees otherwise.
     - `phi_0` - The latitude separating the equatorial region and
@@ -72,6 +79,14 @@ class Ellipsoid:
         lat_0: float = 0,
         radians: bool = False,
     ) -> None:
+        if lat_0 != 0:
+            raise ValueError(
+                f"lat_0 must be 0, got {lat_0!r}: shifting latitude is not a "
+                "rotation of the ellipsoid, so a grid built on it is neither "
+                "equal-area nor geographically coherent near the poles. "
+                "Reorient the grid with lon_0 and the DGGS's "
+                "north_square/south_square instead."
+            )
         self.lon_0 = lon_0
         self.lat_0 = lat_0
         self.radians = radians

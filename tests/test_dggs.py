@@ -181,21 +181,21 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         expect = rdggs.cell((P, 8))
         self.assertEqual(get, expect)
 
-        # Test with origin translation.
-        p = (0.1, 0.7)
-        E = Ellipsoid(lon_0=p[0], lat_0=p[1])
-        rdggs = RHEALPixDGGS(E)
-        get = rdggs.cell_from_point(1, p, plane=False)
-        expect = rdggs.cell_from_point(1, (0, 0))
-        self.assertEqual(get, expect)
-
-        # Test with origin translation and degrees mode.
-        p = (-50, 20)
-        E = Ellipsoid(lon_0=p[0], lat_0=p[1], radians=False)
-        rdggs = RHEALPixDGGS(E)
-        get = rdggs.cell_from_point(1, p, plane=False)
-        expect = rdggs.cell_from_point(1, (0, 0))
-        self.assertEqual(get, expect)
+        # Test with the central meridian rotated: a point on the meridian
+        # lon_0 lands where the same latitude on the prime meridian lands
+        # in the standard grid. (Only longitude recentring exists; see
+        # test_ellipsoid_rejects_nonzero_lat_0.)
+        for lon_0, lat, radians in [(0.1, 0.7, True), (-50, 20, False)]:
+            E = Ellipsoid(lon_0=lon_0, radians=radians)
+            rdggs = RHEALPixDGGS(E)
+            standard = RHEALPixDGGS(Ellipsoid(radians=radians))
+            get = rdggs.cell_from_point(1, (lon_0, lat), plane=False)
+            expect = standard.cell_from_point(1, (0, lat), plane=False)
+            self.assertEqual(get, expect)
+            # And the rotated grid's planar origin is (lon_0, 0).
+            get = rdggs.cell_from_point(1, (lon_0, 0), plane=False)
+            expect = rdggs.cell_from_point(1, (0, 0))
+            self.assertEqual(get, expect)
 
         # Test extreme value (point outside the planar DGGS)
         p = (11500249, 56898969)
@@ -314,6 +314,24 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             plane=False,
         )
         self.assertIn("N241", [str(c) for c in cells])
+
+        # On a grid rotated about the polar axis (lon_0 != 0) the face
+        # edges sit on lon_0 + k*90 and the equatorial/polar seam stays
+        # at +/-41.9 degrees; segments crossing each must still trace a
+        # chain of touching cells that starts and ends where
+        # cell_from_point says.
+        rotated = RHEALPixDGGS(Ellipsoid(lon_0=129, radians=False))
+        for res, a, b in [
+            (2, (172, -35), (172, -47)),  # across the southern seam near NZ
+            (2, (120, 10), (140, 10)),  # across the face edge at lon_0
+            (1, (-30, -30), (-160, 80)),  # face edge at -51, seam, N cap
+        ]:
+            cells = rotated.cells_from_line(res, a, b, plane=False)
+            self.assertEqual(cells[0], rotated.cell_from_point(res, a, plane=False))
+            self.assertEqual(cells[-1], rotated.cell_from_point(res, b, plane=False))
+            for c0, c1 in itertools.pairwise(cells):
+                self.assertTrue(c0.touches(c1), msg=f"{c0} !~ {c1} on {a}->{b}")
+                self.assertNotEqual(c0, c1)
 
     def test_cell_boundaries(self):
         from numpy import allclose

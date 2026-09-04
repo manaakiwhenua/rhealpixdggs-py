@@ -115,11 +115,17 @@ Compute the ellipsoidal nuclei of these cells ::
 
 Create a (0, 0)-rHEALPix DGGS with N_side = 3 based on the WGS84 ellipsoid.
 Use degrees instead of the default radians for angular measurements and
-orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
+rotate the DGGS about the polar axis so that New Zealand sits in the middle
+of an equatorial face. The face edges and the polar dart cells lie on the
+meridians ``lon_0 + k * 90``, so choosing ``lon_0`` 45 degrees west of
+Auckland's meridian keeps them clear of the country. (Recentring in
+latitude is not supported: ``Ellipsoid`` rejects a nonzero ``lat_0``,
+because shifting latitude is not a rotation of the ellipsoid and would
+destroy the equal-area property.) ::
 
     >>> p = (174, -37)  # Approximate Auckland lon-lat coordinates
     >>> from rhealpixdggs.ellipsoids import *
-    >>> E = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=p[0], lat_0=p[1])
+    >>> E = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=p[0] - 45)
     >>> rdggs = RHEALPixDGGS(E, N_side=3, north_square=0, south_square=0)
     >>> print(rdggs)
     rHEALPix DGGS:
@@ -134,13 +140,13 @@ orient the DGGS so that the planar origin (0, 0) is on Auckland, New Zealand ::
             b = 6356752.314245179
             e = 0.08181919084262149
             f = 0.0033528106647474805
-            lat_0 = -37
-            lon_0 = 174
+            lat_0 = 0
+            lon_0 = 129
             radians = False
             sphere = False
 
     >>> print(rdggs.cell_from_point(1, p, plane=False))
-    Q3
+    Q7
 
 """
 

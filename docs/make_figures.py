@@ -1173,16 +1173,17 @@ print("polar squares figure written")
 
 
 # --------------------------------------------------------------- figure 11
-# Recentring the DGGS on the Auckland meridian. Recentring in longitude
-# only: it rotates the whole grid about the polar axis, an isometry of
-# the ellipsoid, so the recentred grid is congruent to the standard one.
-# (Recentring in latitude via lat_0 is a planar translation, not an
-# ellipsoid isometry, and produces geographically incoherent polar
-# cells, so it makes a poor showcase.)
+# Rotating the DGGS about the polar axis so that New Zealand sits in the
+# middle of an equatorial face. Face edges and polar dart meridians lie on
+# lon_0 + k*90, so lon_0 45 degrees west of Auckland keeps them clear of
+# the country. Rotation is an isometry of the ellipsoid, so the rotated
+# grid is congruent to the standard one. (Latitude recentring does not
+# exist; Ellipsoid rejects a nonzero lat_0, see issue #93 and dggs.rst.)
 from rhealpixdggs.ellipsoids import WGS84_A, WGS84_F, Ellipsoid
 
 AKL = (174.0, -37.0)
-E_AKL = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=AKL[0])
+LON_0_NZ = AKL[0] - 45.0  # 129
+E_AKL = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=LON_0_NZ)
 rd_akl = RHEALPixDGGS(E_AKL, N_side=3, north_square=0, south_square=0)
 fig, ax = plt.subplots(figsize=(9, 4.8))
 draw_coastlines_lonlat(ax, linewidth=0.5)
@@ -1197,12 +1198,13 @@ for face in CELLS0:
 akl_cell = rd_akl.cell_from_point(1, AKL, plane=False)
 pts = akl_cell.boundary(n=40, plane=False)
 pts = pts + [pts[0]]
-for seg in split_chart_discontinuities(pts):
-    if len(seg) > 1:
-        ax.fill(*zip(*seg), color=FACE_COLORS[str(akl_cell)[0]], alpha=0.4, zorder=3)
+# The cell straddles the antimeridian, so fill it through the wrap.
+fill_lonlat_polygon(
+    ax, pts, color=FACE_COLORS[str(akl_cell)[0]], alpha=0.4, linewidth=0, zorder=3
+)
 ax.plot([AKL[0]], [AKL[1]], marker="*", color="#222222", markersize=12, zorder=4)
 ax.annotate(
-    f"Auckland maps to planar x = 0,\n" f"on the P|Q face edge: cell {akl_cell}",
+    f"Auckland, 45° east of lon_0 = {LON_0_NZ:.0f}:\n" f"mid-face, in cell {akl_cell}",
     xy=AKL,
     xytext=(AKL[0] - 120, AKL[1] - 30),
     fontsize=9,
@@ -1216,7 +1218,8 @@ ax.set_yticks(range(-90, 91, 30))
 ax.set_xlabel("longitude (degrees)")
 ax.set_ylabel("latitude (degrees)")
 ax.set_title(
-    "Resolution 1 cells of a DGGS recentred on the Auckland meridian (lon_0=174)"
+    f"Resolution 1 cells of a DGGS rotated to put New Zealand mid-face "
+    f"(lon_0={LON_0_NZ:.0f})"
 )
 ax.grid(True, linewidth=0.3, alpha=0.5)
 fig.tight_layout()
@@ -1224,6 +1227,164 @@ fig.savefig(OUT / "recentred.svg", bbox_inches="tight")
 fig.savefig(OUT / "recentred.pdf", bbox_inches="tight")
 plt.close(fig)
 print("recentred figure written")
+
+
+# -------------------------------------------------------------- figure 11b
+# Zoomed comparisons of the standard grid with a rotated one, cells
+# coloured by ellipsoidal shape, so the effect of lon_0 on which shapes a
+# region gets -- and which way its skew quads lean -- is visible. The
+# equatorial/polar seam at +/-phi_0 cannot be moved by any rotation.
+from matplotlib.patches import Patch
+
+SHAPE_COLORS = {
+    "quad": "#79bf6f",
+    "skew_quad": "#7c8fe0",
+    "dart": "#e5735c",
+    "cap": "#e8c34f",
+}
+PHI_0 = rdggs.ellipsoid.phi_0  # degrees; the equatorial/polar seam
+
+
+def cells_in_window(dggs, resolution, lon_range, lat_range, step):
+    """Every resolution `resolution` cell of `dggs` that contains a point
+    of the lon-lat lattice with spacing `step` over the window, in SUID
+    order. `step` must be well under a cell width so no cell is missed."""
+    cells = {}
+    lons = np.arange(lon_range[0], lon_range[1] + step / 2, step)
+    lats = np.arange(lat_range[0], lat_range[1] + step / 2, step)
+    for lon in lons:
+        lon = ((float(lon) + 180.0) % 360.0) - 180.0  # the window may pass 180
+        for lat in lats:
+            c = dggs.cell_from_point(resolution, (lon, float(lat)), plane=False)
+            cells[str(c)] = c
+    return [cells[k] for k in sorted(cells)]
+
+
+def draw_cells_by_shape(ax, cells, lon_range, n=10):
+    """Fill and outline each cell by its ellipsoidal shape. Longitudes are
+    unwrapped into one continuous ring and the ring is drawn at whichever
+    360-degree offsets meet the window, so a window that passes the
+    antimeridian shows the cells on its far side whole."""
+    for cell in cells:
+        pts = cell.boundary(n=n, plane=False)
+        pts = pts + [pts[0]]
+        lons = [pts[0][0]]
+        for prev, cur in itertools.pairwise(pts):
+            d = cur[0] - prev[0]
+            if d > 180:
+                d -= 360
+            elif d < -180:
+                d += 360
+            lons.append(lons[-1] + d)
+        lats = [p[1] for p in pts]
+        color = SHAPE_COLORS[cell.ellipsoidal_shape]
+        for off in (-360.0, 0.0, 360.0):
+            shifted = [lon + off for lon in lons]
+            if max(shifted) < lon_range[0] or min(shifted) > lon_range[1]:
+                continue
+            ax.fill(shifted, lats, color=color, alpha=0.35, linewidth=0, zorder=2)
+            ax.plot(shifted, lats, color=color, linewidth=0.7, zorder=3)
+
+
+def draw_dart_meridians(ax, lon_0, lon_range):
+    """Dashed verticals on the meridians lon_0 + k*90 inside the window:
+    the polar dart meridians, which are also the equatorial face edges."""
+    k0 = int(np.floor((lon_range[0] - lon_0) / 90))
+    k1 = int(np.ceil((lon_range[1] - lon_0) / 90))
+    for k in range(k0, k1 + 1):
+        lon = lon_0 + 90 * k
+        if lon_range[0] <= lon <= lon_range[1]:
+            ax.axvline(lon, color="#e5735c", linestyle="--", linewidth=1.0, zorder=4)
+
+
+def shape_legend(ax, shapes, loc):
+    handles = [Patch(facecolor=SHAPE_COLORS[s], alpha=0.5, label=s) for s in shapes]
+    handles.append(
+        plt.Line2D(
+            [], [], color="#444444", linestyle=":", label="equatorial/polar seam"
+        )
+    )
+    handles.append(
+        plt.Line2D([], [], color="#e5735c", linestyle="--", label="dart meridian")
+    )
+    ax.legend(handles=handles, loc=loc, fontsize=8, framealpha=0.9)
+
+
+def rotated_comparison(
+    lon_0, resolution, lon_range, lat_range, step, aspect, title, legend_loc
+):
+    dggs_rot = RHEALPixDGGS(
+        Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=lon_0),
+        N_side=3,
+        north_square=0,
+        south_square=0,
+    )
+    fig, axes = plt.subplots(1, 2, figsize=(11, 5.6), sharey=True)
+    shapes_seen = set()
+    for ax, (dggs_i, label) in zip(
+        axes,
+        [
+            (rdggs, "standard grid (lon_0=0)"),
+            (dggs_rot, f"rotated grid (lon_0={lon_0:g})"),
+        ],
+    ):
+        draw_coastlines_lonlat(ax, linewidth=0.7)
+        cells = cells_in_window(dggs_i, resolution, lon_range, lat_range, step)
+        shapes_seen.update(c.ellipsoidal_shape for c in cells)
+        draw_cells_by_shape(ax, cells, lon_range)
+        seam = PHI_0 if lat_range[0] >= 0 else -PHI_0
+        ax.axhline(seam, color="#444444", linestyle=":", linewidth=1.0, zorder=4)
+        draw_dart_meridians(ax, dggs_i.ellipsoid.lon_0, lon_range)
+        ax.set_xlim(*lon_range)
+        ax.set_ylim(*lat_range)
+        ax.set_aspect(aspect)
+        ax.grid(True, linewidth=0.3, alpha=0.5)
+        ax.set_xlabel("longitude (degrees)")
+        ax.set_title(f"{label}, resolution {resolution}", fontsize=11)
+    axes[0].set_ylabel("latitude (degrees)")
+    shape_legend(axes[1], [s for s in SHAPE_COLORS if s in shapes_seen], legend_loc)
+    fig.suptitle(title, fontsize=12)
+    fig.tight_layout()
+    return fig
+
+
+# New Zealand: the standard grid's dart meridian at 180 runs just east of
+# the country and its face edge at 180 too; lon_0=129 moves both 45
+# degrees away so NZ sits midway between dart meridians.
+fig = rotated_comparison(
+    LON_0_NZ,
+    resolution=4,
+    lon_range=(163, 181),
+    lat_range=(-49, -32),
+    step=0.25,
+    aspect="equal",
+    title="Cell shapes over New Zealand: standard grid vs rotated grid",
+    legend_loc="upper right",
+)
+fig.savefig(OUT / "recentred_nz.svg", bbox_inches="tight")
+fig.savefig(OUT / "recentred_nz.pdf", bbox_inches="tight")
+plt.close(fig)
+print("recentred NZ comparison written")
+
+# Canada, after Bowater & Stefanakis (2018, section 4.2): the standard
+# grid's dart meridian at 90 W runs through the middle of the country;
+# lon_0=-50 moves the dart meridians to 50 W and 140 W, at its edges.
+# Plate carree stretches longitude at these latitudes, so shorten the
+# longitude axis to roughly restore local shape (cos 60 = 0.5).
+fig = rotated_comparison(
+    -50.0,
+    resolution=3,
+    lon_range=(-145, -50),
+    lat_range=(40, 85),
+    step=0.5,
+    aspect=2.0,
+    title="Cell shapes over Canada: standard grid vs rotated grid",
+    legend_loc="lower left",
+)
+fig.savefig(OUT / "recentred_canada.svg", bbox_inches="tight")
+fig.savefig(OUT / "recentred_canada.pdf", bbox_inches="tight")
+plt.close(fig)
+print("recentred Canada comparison written")
 
 # --------------------------------------------------------------- figure 12
 # cell_ring: rings by distance, and the 7-cell ring at a cube corner.

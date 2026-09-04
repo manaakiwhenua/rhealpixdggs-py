@@ -1,5 +1,14 @@
 0.8.0
 ^^^^^
+``Ellipsoid`` raises ``ValueError`` for a nonzero ``lat_0``. The parameter
+was applied as a plain latitude shift before projecting, which is not a
+rotation of an ellipsoid of revolution: a grid built on it folded the
+polar cap beyond ``90 - |lat_0|`` onto the far hemisphere, projected both
+poles to one planar point, and lost the equal-area property everywhere
+(for ``lat_0 = -37``, true cell areas ranged from 0.68 to 1.24 of the
+reported value). Reorienting a grid is longitude-only (``lon_0``, a true
+rotation about the polar axis) plus the choice of ``north_square`` and
+``south_square`` (issue #93).
 ``Cell.boundary(plane=False)`` on quad cells now projects only the four
 corners and the interior points of the west and north edges (``2*n``
 inverse projections instead of ``4*n - 4``) and derives the remaining
