@@ -1,3 +1,15 @@
+0.8.1
+^^^^^
+``pj_healpix.healpix_sphere``, ``healpix_sphere_inverse`` and their array
+twins clamp the polar cap number to ``[0, 3]`` at both ends; previously only
+the upper end was clamped, so an input a hair west of ``-pi`` was assigned
+cap ``-1`` and a cap centre one cap too far west. The forward function
+then jumped by ``(pi/2)(1 - sigma)`` (1.24 radians at latitude 1.4) for a
+longitude one ulp below ``-pi``; the inverse could only reach the case
+through the ``1e-10`` image margin, where the trailing longitude clamp
+already hid it. ``in_healpix_image`` was clamping both ends all along, so
+the projection functions now agree with it (issue #119).
+
 0.8.0
 ^^^^^
 ``Ellipsoid`` raises ``ValueError`` for a nonzero ``lat_0``. The parameter

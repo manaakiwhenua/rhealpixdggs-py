@@ -224,10 +224,13 @@ class HealpixArrayTestCase(unittest.TestCase):
         self.assertFalse(pjh._in_healpix_image_array(*HEALPIX_OUTSIDE).any())
 
     def test_cap_number_matches_scalar(self):
-        for values in (LONLAT[0], HEALPIX_PLANAR[0], HEALPIX_OUTSIDE[0]):
-            want = np.floor(2 * values / pi + 2)
-            want = np.where(want >= 4, 3.0, want)
+        # Clamped to [0, 3] at both ends (issue #119): inputs a hair past
+        # -pi or pi stay in the outermost cap.
+        past_ends = np.array([-pi - 1e-16, -pi - 1e-10, -4.0, pi + 1e-16, 4.0])
+        for values in (LONLAT[0], HEALPIX_PLANAR[0], HEALPIX_OUTSIDE[0], past_ends):
+            want = np.clip(np.floor(2 * values / pi + 2), 0.0, 3.0)
             assert_array_equal(pjh._cap_number(values), want)
+        assert_array_equal(pjh._cap_number(past_ends), [0.0, 0.0, 0.0, 3.0, 3.0])
 
     def test_healpix_sphere_array_matches_scalar(self):
         got = pjh._healpix_sphere_array(*LONLAT)
