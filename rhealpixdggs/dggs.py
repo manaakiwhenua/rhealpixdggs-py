@@ -158,11 +158,11 @@ destroy the equal-area property.) ::
 # *****************************************************************************
 from collections.abc import Callable, Iterable, Iterator
 from itertools import pairwise, product
-from math import asin, copysign, floor
+from math import asin, copysign, floor, pi
 from random import randint
 from typing import Literal, cast, overload
 
-from numpy import array, base_repr, ceil, log, pi
+import numpy as np
 
 # assert_allclose is doctest-only: the doctests use it from the module globals.
 from numpy.testing import assert_allclose  # noqa: F401
@@ -237,9 +237,9 @@ class RHEALPixDGGS:
         # Find the maximum grid resolution needed to have ellipsoidal
         # cells of area at most max_areal_resolution.
         self.max_resolution = int(
-            ceil(
-                log(ellipsoid.R_A**2 * (2 * pi / 3) / max_areal_resolution)
-                / (2 * log(N_side))
+            np.ceil(
+                np.log(ellipsoid.R_A**2 * (2 * pi / 3) / max_areal_resolution)
+                / (2 * np.log(N_side))
             )
         )
 
@@ -285,7 +285,7 @@ class RHEALPixDGGS:
         # Scale up ul_vertex by authalic radius of ellipsoid.
         self.ul_vertex = {}
         for k in list(ul_vertex.keys()):
-            self.ul_vertex[k] = tuple(self.ellipsoid.R_A * array(ul_vertex[k]))
+            self.ul_vertex[k] = tuple(self.ellipsoid.R_A * np.array(ul_vertex[k]))
 
         # Initialize atomic neighbor relationships among cells.
         # Dictionary of up, right, down, and left neighbors of
@@ -414,7 +414,7 @@ class RHEALPixDGGS:
             >>> rdggs = UNIT_003_RADIANS
             >>> print(tuple(x.tolist() for x in my_round(rdggs.healpix(-pi, pi/2), 14)))
             (-2.35619449019234, 1.5707963267949)
-            >>> x, y = rdggs.healpix(array([-pi, 0.0]), array([pi/2, 0.0]))
+            >>> x, y = rdggs.healpix(np.array([-pi, 0.0]), np.array([pi/2, 0.0]))
             >>> print(x.round(14).tolist(), y.round(14).tolist())
             [-2.35619449019234, 0.0] [1.5707963267949, 0.0]
 
@@ -460,7 +460,7 @@ class RHEALPixDGGS:
             >>> rdggs = UNIT_003_RADIANS
             >>> print(tuple(x.tolist() for x in my_round(rdggs.rhealpix(0, pi/3), 14)))
             (-1.858272006684, 2.06871881030324)
-            >>> x, y = rdggs.rhealpix(array([0.0, 0.0]), array([pi/3, 0.0]))
+            >>> x, y = rdggs.rhealpix(np.array([0.0, 0.0]), np.array([pi/3, 0.0]))
             >>> print(x.round(14).tolist(), y.round(14).tolist())
             [-1.858272006684, 0.0] [2.06871881030324, 0.0]
 
@@ -503,14 +503,14 @@ class RHEALPixDGGS:
         ns = self.north_square
         ss = self.south_square
         # Scale down.
-        u, v = array((u, v)) / R_A
+        u, v = np.array((u, v)) / R_A
         # Combine triangles.
         if region != "equatorial":
             u, v = pjr.combine_triangles(
                 u, v, inverse=inverse, north_square=ns, south_square=ss
             )
         # Scale up.
-        return tuple(R_A * array((u, v)))
+        return tuple(R_A * np.array((u, v)))
 
     def triangle(
         self, x: float, y: float, inverse: bool = True
@@ -560,7 +560,7 @@ class RHEALPixDGGS:
         ns = self.north_square
         ss = self.south_square
         # Scale down.
-        x, y = array((x, y)) / R_A
+        x, y = np.array((x, y)) / R_A
         # Get triangle.
         return pjr.triangle(x, y, inverse=inverse, north_square=ns, south_square=ss)
 
@@ -612,7 +612,7 @@ class RHEALPixDGGS:
         south = self.south_square
         # Shift rHEALPix projection (with (x, y) in it) so that cell O
         # has downleft corner (0, 0).
-        x, y = array((x, y)) + array((2 * w, w / 2))
+        x, y = np.array((x, y)) + np.array((2 * w, w / 2))
         q: tuple[float, float, float]
         # Fold projection.
         if y < 0:
@@ -653,7 +653,7 @@ class RHEALPixDGGS:
             x += -3 * w
             q = (0, y, x - w)
         # Translate the cube's center to (0, 0).
-        centered = array(q) + (w / 2) * array((-1, -1, 1))
+        centered = np.array(q) + (w / 2) * np.array((-1, -1, 1))
         return tuple(centered)
 
     def cell(
@@ -957,8 +957,8 @@ class RHEALPixDGGS:
         # Compute the base N expansions of dx and dy and truncate them
         # at index resolution to get the row and column SUIDs of
         # the resolution resolution cell c containing (x,y).
-        suid_row = base_repr(int(float(str(dy * N**resolution))), N)
-        suid_col = base_repr(int(float(str(dx * N**resolution))), N)
+        suid_row = np.base_repr(int(float(str(dy * N**resolution))), N)
+        suid_col = np.base_repr(int(float(str(dx * N**resolution))), N)
         # Using int(float(str(.))) instead of the straightforward int(.),
         # because the latter gave me rounding errors.
         # Prefix with the appropriate amount of zeros.
@@ -1135,7 +1135,7 @@ class RHEALPixDGGS:
         # Start y above y_min.
         if y <= y_min:
             dy = y_min - y
-            y = max(y + int(ceil(dy / w)) * w, y + w)
+            y = max(y + int(np.ceil(dy / w)) * w, y + w)
         # Collect the ys.
         result = []
         while y < y_max:
@@ -1324,13 +1324,23 @@ class RHEALPixDGGS:
                 lstart[1] + t * (lend[1] - lstart[1]),
             )
 
+        def points_at(ts: FloatArray) -> tuple[FloatArray, FloatArray]:
+            return (
+                lstart[0] + ts * (lend[0] - lstart[0]),
+                lstart[1] + ts * (lend[1] - lstart[1]),
+            )
+
         if plane:
             q = point_at
+            q_array = points_at
         else:
             proj = self.rhealpix
 
             def q(t: float) -> tuple[float, float]:
                 return proj(*point_at(t))
+
+            def q_array(ts: FloatArray) -> tuple[FloatArray, FloatArray]:
+                return proj(*points_at(ts))
 
         # Piece boundaries: parameter values where the planar image of
         # the segment may kink or jump. For a planar segment there are
@@ -1372,7 +1382,7 @@ class RHEALPixDGGS:
             )
             lo = min(lstart[0], lend[0]) - ell.lon_0
             hi = max(lstart[0], lend[0]) - ell.lon_0
-            k0, k1 = floor(lo / quarter), int(ceil(hi / quarter))
+            k0, k1 = floor(lo / quarter), int(np.ceil(hi / quarter))
             add_linear_crossings(
                 lstart[0],
                 lend[0],
@@ -1391,77 +1401,86 @@ class RHEALPixDGGS:
             i1 = floor((hi - anchor) / w)
             return [anchor + i * w for i in range(i0, i1 + 1)]
 
-        def root(f: Callable[[float], float], ta: float, tb: float, fa: float) -> float:
-            # Bisection to machine precision on a bracketed sign change.
-            for _ in range(120):
-                tm = 0.5 * (ta + tb)
-                if tm == ta or tm == tb:
-                    return tm
-                fm = float(f(tm))
-                if fm == 0:
-                    return tm
-                if (fa < 0) != (fm < 0):
-                    tb = tm
-                else:
-                    ta, fa = tm, fm
-            return 0.5 * (ta + tb)
-
-        def monotone_runs(axis: int, ta: float, tb: float) -> list[tuple[float, float]]:
-            # Split [ta, tb] into runs on which q(t)[axis] is monotone:
-            # scan for direction flips, then pin each extremum by ternary
-            # search. Within one smooth piece each planar coordinate has
-            # the form c + l(t)*sigma(t) with l linear and sigma monotone,
-            # so it has at most one interior extremum, which a 64-point
-            # scan brackets comfortably.
-            N = 64
-            ts = [ta + (tb - ta) * i / N for i in range(N + 1)]
-            vs = [float(q(t)[axis]) for t in ts]
-            cuts = [ta]
+        def monotone_cuts(
+            axis: int, scan_ts: list[float], scan_vs: list[float]
+        ) -> list[tuple[float, float]]:
+            # Split the scanned piece into runs on which q(t)[axis] is
+            # monotone, returning the run boundaries as (t, q(t)[axis]):
+            # scan for direction flips, then pin each extremum by
+            # golden-section search. Within one smooth piece each planar
+            # coordinate has the form c + l(t)*sigma(t) with l linear and
+            # sigma monotone, so it has at most one interior extremum,
+            # which the 64-point scan brackets comfortably. The extremum
+            # only needs locating to 1e-8 of the piece's parameter range:
+            # the coordinate is flat there, varying with the square of the
+            # offset, so its value at the cut is already exact to the
+            # floating-point floor whatever the piece's length.
+            inv_phi = (5**0.5 - 1) / 2
+            tol = 1e-8 * (scan_ts[-1] - scan_ts[0])
+            cuts = [(scan_ts[0], scan_vs[0])]
             direction = 0
-            for i in range(1, N + 1):
-                d = (vs[i] > vs[i - 1]) - (vs[i] < vs[i - 1])
+            for i in range(1, len(scan_ts)):
+                d = (scan_vs[i] > scan_vs[i - 1]) - (scan_vs[i] < scan_vs[i - 1])
                 if d == 0:
                     continue
                 if direction == 0:
                     direction = d
                 elif d != direction:
-                    lo, hi = ts[max(i - 2, 0)], ts[i]
-                    for _ in range(200):
-                        if hi - lo < 1e-14:
-                            break
-                        m1 = lo + (hi - lo) / 3
-                        m2 = hi - (hi - lo) / 3
-                        if direction * float(q(m1)[axis] - q(m2)[axis]) < 0:
-                            lo = m1
+                    # Maximise direction * q(t)[axis] on [lo, hi].
+                    lo, hi = scan_ts[max(i - 2, 0)], scan_ts[i]
+                    m1 = hi - inv_phi * (hi - lo)
+                    m2 = lo + inv_phi * (hi - lo)
+                    g1 = direction * float(q(m1)[axis])
+                    g2 = direction * float(q(m2)[axis])
+                    while hi - lo > tol:
+                        if g1 < g2:
+                            lo, m1, g1 = m1, m2, g2
+                            m2 = lo + inv_phi * (hi - lo)
+                            g2 = direction * float(q(m2)[axis])
                         else:
-                            hi = m2
-                    cuts.append(0.5 * (lo + hi))
+                            hi, m2, g2 = m2, m1, g1
+                            m1 = hi - inv_phi * (hi - lo)
+                            g1 = direction * float(q(m1)[axis])
+                    tc = 0.5 * (lo + hi)
+                    cuts.append((tc, float(q(tc)[axis])))
                     direction = d
-            cuts.append(tb)
-            return list(pairwise(cuts))
+            cuts.append((scan_ts[-1], scan_vs[-1]))
+            return cuts
 
-        crossings = set()
+        # Sweep the pieces, projecting each piece's 65-point scan as one
+        # array, and gather every lattice-line crossing as a bracket
+        # (ta, tb, f(ta), f(tb), axis, line) with f(t) = q(t)[axis] - line
+        # changing sign on [ta, tb]. The brackets are then solved together.
+        crossings: set[float] = set()
+        brackets: list[tuple[float, float, float, float, int, float]] = []
+        N_SCAN = 64
         for pa, pb in zip(sorted(breakpoints), sorted(breakpoints)[1:]):
             if pb - pa < 1e-14:
                 continue
             # Evaluate strictly inside the piece, clear of its kinks.
             eps = (pb - pa) * 1e-12
             ta, tb = pa + eps, pb - eps
-            for axis in (0, 1):
+            scan_ts = [ta + (tb - ta) * i / N_SCAN for i in range(N_SCAN + 1)]
+            scan_x, scan_y = q_array(np.array(scan_ts, dtype=np.float64))
+            for axis, scan_vs in ((0, scan_x.tolist()), (1, scan_y.tolist())):
                 anchor = x_anchor if axis == 0 else y_anchor
-                for ra, rb in monotone_runs(axis, ta, tb):
-                    va = float(q(ra)[axis])
-                    vb = float(q(rb)[axis])
+                cuts = monotone_cuts(axis, scan_ts, scan_vs)
+                for (ra, va), (rb, vb) in pairwise(cuts):
                     for line in lattice_lines_between(va, vb, anchor):
-
-                        def f(t: float, line: float = line, axis: int = axis) -> float:
-                            return q(t)[axis] - line
-
-                        crossings.add(root(f, ra, rb, va - line))
+                        fa, fb = va - line, vb - line
+                        if fa == 0:
+                            crossings.add(ra)
+                        elif fb == 0:
+                            crossings.add(rb)
+                        else:
+                            brackets.append((ra, rb, fa, fb, axis, line))
             if pb < 1.0:
                 # The piece boundary itself may be a cell change (a face
                 # jump, or a kink lying exactly on a cell edge).
                 crossings.add(pb)
+
+        if brackets:
+            crossings.update(self._solve_brackets(brackets, q_array))
 
         ts = [0.0] + sorted(crossings) + [1.0]
         line_cells = [start]
@@ -1472,6 +1491,68 @@ class RHEALPixDGGS:
         if line_cells[-1] != end:
             line_cells.append(end)
         return line_cells
+
+    @staticmethod
+    def _solve_brackets(
+        brackets: list[tuple[float, float, float, float, int, float]],
+        q_array: Callable[[FloatArray], tuple[FloatArray, FloatArray]],
+    ) -> list[float]:
+        """
+        Solve every bracket ``(ta, tb, fa, fb, axis, line)`` -- a sign
+        change of ``f(t) = q(t)[axis] - line`` on ``[ta, tb]`` -- to
+        machine precision, all in lockstep: each iteration projects the
+        current trial point of every unsolved bracket in one call to
+        `q_array`.
+
+        The root finder is ITP (Oliveira & Takahashi 2020): a regula falsi
+        estimate, truncated towards the midpoint and projected into a
+        window that shrinks like bisection's, so it converges superlinearly
+        on the smooth monotone pieces met here while never needing more
+        iterations than bisection to the same precision.
+        """
+        a = np.array([b[0] for b in brackets], dtype=np.float64)
+        b_ = np.array([b[1] for b in brackets], dtype=np.float64)
+        fa = np.array([b[2] for b in brackets], dtype=np.float64)
+        fb = np.array([b[3] for b in brackets], dtype=np.float64)
+        axis = np.array([b[4] for b in brackets])
+        line = np.array([b[5] for b in brackets], dtype=np.float64)
+        # Orient each bracket so that g(a) < 0 < g(b).
+        sgn = np.where(fb > fa, 1.0, -1.0)
+        ga, gb = fa * sgn, fb * sgn
+        # ITP parameters: the target half-width eps is the spacing of
+        # doubles near 1 (t lies in [0, 1]); k1 scales the truncation to the
+        # bracket, k2 = 2 and n0 = 1 are the paper's defaults.
+        eps = 2.0**-53
+        k1 = 0.2 / (b_ - a)
+        n_half = np.ceil(np.log2((b_ - a) / (2 * eps)))
+        n_max = n_half + 1
+        active = (b_ - a) > 2 * eps
+        for j in range(120):
+            idx = np.flatnonzero(active)
+            if idx.size == 0:
+                break
+            aa, bb, gaa, gbb = a[idx], b_[idx], ga[idx], gb[idx]
+            x_half = 0.5 * (aa + bb)
+            r = np.maximum(eps * 2.0 ** (n_max[idx] - j) - 0.5 * (bb - aa), 0.0)
+            delta = k1[idx] * (bb - aa) ** 2
+            x_f = (bb * gaa - aa * gbb) / (gaa - gbb)
+            sigma = np.where(x_half >= x_f, 1.0, -1.0)
+            x_t = np.where(delta <= np.abs(x_half - x_f), x_f + sigma * delta, x_half)
+            x = np.where(np.abs(x_t - x_half) <= r, x_t, x_half - sigma * r)
+            # A trial point that rounds onto an end means the bracket can
+            # shrink no further: it is solved.
+            stuck = (x <= aa) | (x >= bb)
+            xs, ys = q_array(x)
+            g = (np.where(axis[idx] == 0, xs, ys) - line[idx]) * sgn[idx]
+            below = (g < 0) & ~stuck
+            above = (g > 0) & ~stuck
+            exact = (g == 0) & ~stuck
+            a[idx[below]], ga[idx[below]] = x[below], g[below]
+            b_[idx[above]], gb[idx[above]] = x[above], g[above]
+            a[idx[exact]] = b_[idx[exact]] = x[exact]
+            active[idx[stuck]] = False
+            active &= (b_ - a) > 2 * eps
+        return (0.5 * (a + b_)).tolist()
 
     def cell_boundaries(
         self, cells: Iterable[Cell], n: int = 2, plane: bool = True
@@ -1575,8 +1656,8 @@ class RHEALPixDGGS:
             row_keys = [k for k in eq_rows if k[0] == resolution]
             points = [eq_cols[k] for k in col_keys] + [eq_rows[k] for k in row_keys]
             lons, lats = self.rhealpix(
-                array([p[0] for p in points]),
-                array([p[1] for p in points]),
+                np.array([p[0] for p in points]),
+                np.array([p[1] for p in points]),
                 inverse=True,
                 region="equatorial",
             )
@@ -1586,8 +1667,8 @@ class RHEALPixDGGS:
         for resolution, region in {k[:2] for k in polar}:
             keys_in_group = [k for k in polar if k[:2] == (resolution, region)]
             lons, lats = self.rhealpix(
-                array([polar[k][0] for k in keys_in_group]),
-                array([polar[k][1] for k in keys_in_group]),
+                np.array([polar[k][0] for k in keys_in_group]),
+                np.array([polar[k][1] for k in keys_in_group]),
                 inverse=True,
                 region=region,
             )
@@ -1651,8 +1732,8 @@ class RHEALPixDGGS:
 
             >>> rdggs = WGS84_003_RADIANS
             >>> R_A = rdggs.ellipsoid.R_A
-            >>> ul = R_A*array((-0.1, pi/4))
-            >>> dr = R_A*array((0.1, -pi/4))  # Rectangle
+            >>> ul = R_A*np.array((-0.1, pi/4))
+            >>> dr = R_A*np.array((0.1, -pi/4))  # Rectangle
             >>> M = rdggs.cells_from_region(1, ul, dr)
             >>> for row in M:
             ...     print([str(cell) for cell in row])
