@@ -1,3 +1,9 @@
+0.8.2
+^^^^^
+``tests/test_release.py`` skips instead of failing when ``scripts/release.py``
+is absent, as it is in the sdist: the release script is repository tooling,
+not part of the package, and downstream packagers run the sdist's tests.
+
 0.8.1
 ^^^^^
 ``pj_healpix.healpix_sphere``, ``healpix_sphere_inverse`` and their array
