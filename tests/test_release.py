@@ -6,14 +6,17 @@ import importlib.util
 import pathlib
 import unittest
 
-_SPEC = importlib.util.spec_from_file_location(
-    "release", pathlib.Path(__file__).resolve().parents[1] / "scripts" / "release.py"
-)
-assert _SPEC is not None and _SPEC.loader is not None
-release = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(release)
+# The release script lives outside the package and is not shipped in the
+# sdist, whose tests downstream packagers run; skip rather than fail there.
+_SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "release.py"
+if _SCRIPT.exists():
+    _SPEC = importlib.util.spec_from_file_location("release", _SCRIPT)
+    assert _SPEC is not None and _SPEC.loader is not None
+    release = importlib.util.module_from_spec(_SPEC)
+    _SPEC.loader.exec_module(release)
 
 
+@unittest.skipUnless(_SCRIPT.exists(), "scripts/release.py is not in this tree")
 class RstToMarkdownTestCase(unittest.TestCase):
     def test_unwraps_paragraphs_and_keeps_paragraph_breaks(self):
         # GitHub renders every newline in release notes as a line break, so

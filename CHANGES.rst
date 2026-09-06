@@ -1,3 +1,12 @@
+0.8.2
+^^^^^
+``tests/test_release.py`` skips instead of failing when ``scripts/release.py``
+is absent, as it is in the sdist: the release script is repository tooling,
+not part of the package, and downstream packagers run the sdist's tests.
+The ``Projection`` docstring's PROJ-backed example is rounded to
+micrometres, so it no longer depends on the last bits of the PROJ build
+pyproj bundles (pyproj 3.8.0 changed them).
+
 0.8.1
 ^^^^^
 ``pj_healpix.healpix_sphere``, ``healpix_sphere_inverse`` and their array

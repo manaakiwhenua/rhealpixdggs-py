@@ -63,9 +63,9 @@ class Projection:
         >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='rhealpix', north_square=1, south_square=0)
         >>> print(tuple(x.tolist() for x in my_round(f(0, 30), 15)))
         (0.0, 3740232.8933662786)
-        >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='cea')
-        >>> print(my_round(f(0, 30), 15))
-        (0.0, 3171259.315518537)
+        >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='cea')  # computed by PROJ
+        >>> print(my_round(f(0, 30), 6))
+        (0.0, 3171259.315519)
 
     NOTES:
 
