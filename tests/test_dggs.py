@@ -488,6 +488,70 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         for c in cells:
             self.assertEqual(boundaries[c], c.boundary(n=3, plane=True))
 
+    def test_boundary_array(self):
+        import shapely
+        from numpy.testing import assert_allclose, assert_array_equal
+
+        rdggs = WGS84_003
+        cell_sets = [
+            list(rdggs.cell((P, 0)).subcells()),  # quads
+            list(rdggs.cell((N, 4)).subcells()),  # cap + darts + skew quads
+            [rdggs.cell((Q, i)) for i in (0, 1, 2)]
+            + [rdggs.cell((N, i)) for i in (6, 7, 8)],  # region-crossing
+            [rdggs.cell((P, 0))] + list(rdggs.cell((P, 0)).subcells()),  # mixed
+            [rdggs.cell((S, 4)), rdggs.cell((S, 4)), rdggs.cell((O, 1))],  # repeats
+        ]
+        for cells in cell_sets:
+            indices = [str(c) for c in cells]
+            for n in (2, 3, 7):
+                # Shape, dtype, order: row k is cells[k].boundary(n) in order.
+                b = rdggs.boundary_array(indices, n=n, plane=False)
+                self.assertEqual(b.shape, (len(cells), 4 * n - 4, 2))
+                self.assertEqual(b.dtype, np.float64)
+                for row, c in zip(b, cells):
+                    assert_allclose(
+                        row, c.boundary(n=n, plane=False), rtol=0, atol=1e-9
+                    )
+                # Planar mode is the same arithmetic as Cell.boundary(plane=True).
+                bp = rdggs.boundary_array(indices, n=n, plane=True)
+                for row, c in zip(bp, cells):
+                    assert_array_equal(row, np.array(c.boundary(n=n, plane=True)))
+                # cell_boundaries is this array as a dictionary of point lists.
+                d = rdggs.cell_boundaries(cells, n=n, plane=False)
+                for row, c in zip(b, cells):
+                    assert_array_equal(row, np.array(d[c]))
+        # n below 2 clamps to 2, like boundary(); empty input gives an empty array.
+        first = [str(c) for c in cell_sets[0]]
+        self.assertEqual(rdggs.boundary_array(first, n=1).shape, (9, 4, 2))
+        self.assertEqual(rdggs.boundary_array([], n=3).shape, (0, 8, 2))
+        # Invalid indices give NaN rows in place, valid ones are unaffected.
+        b = rdggs.boundary_array(["P0", "", "X1", "P9", "P0", "N44"], n=2)
+        self.assertEqual(b.shape, (6, 4, 2))
+        self.assertTrue(np.isnan(b[[1, 2, 3]]).all())
+        assert_array_equal(b[0], b[4])
+        assert_allclose(
+            b[5], rdggs.cell((N, 4, 4)).boundary(plane=False), rtol=0, atol=1e-9
+        )
+        # The rings build valid polygons in one shapely call, except where a
+        # ring straddles the antimeridian (or is the cap, which spans every
+        # longitude); splitting those is the caller's concern.
+        for face in (P, N):
+            block = [rdggs.cell((face, i, j)) for i in range(9) for j in range(9)]
+            b = rdggs.boundary_array([str(c) for c in block], n=4)
+            polygons = shapely.polygons(b)
+            self.assertEqual(len(polygons), 81)
+            lon_span = b[:, :, 0].max(axis=1) - b[:, :, 0].min(axis=1)
+            unwrapped = lon_span < 180
+            self.assertTrue(shapely.is_valid(polygons[unwrapped]).all())
+            self.assertTrue((shapely.area(polygons[unwrapped]) > 0).all())
+            if face == P:
+                self.assertTrue(unwrapped.all())
+            else:
+                self.assertIn(
+                    rdggs.cell((N, 4, 4)),
+                    [c for c, u in zip(block, unwrapped) if not u],
+                )
+
     def test_cell_from_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
             # For any planar cell X with nucleus c and width w,
