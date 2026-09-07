@@ -168,6 +168,8 @@ import numpy as np
 from numpy.testing import assert_allclose  # noqa: F401
 
 import rhealpixdggs.pj_rhealpix as pjr
+
+_REGION_CODES = {"equatorial": 0, "north_polar": 1, "south_polar": -1}
 import rhealpixdggs.projection_wrapper as pw
 from rhealpixdggs.cell import CELLS0, Cell
 from rhealpixdggs.ellipsoids import (
@@ -1554,6 +1556,160 @@ class RHEALPixDGGS:
             active &= (b_ - a) > 2 * eps
         return (0.5 * (a + b_)).tolist()
 
+    def _cell_from_index(self, index: str) -> Cell | None:
+        """
+        The cell with index string `index` (its ``str()``), or None if the
+        string is not a valid index in this DGGS.
+        """
+        if not index or index[0] not in CELLS0:
+            return None
+        digits = index[1:]
+        if not all(d.isdigit() and int(d) < self.N_side**2 for d in digits):
+            return None
+        return self.cell([index[0]] + [int(d) for d in digits])
+
+    def boundary_array(
+        self, indices: Iterable[str], n: int = 2, plane: bool = False
+    ) -> FloatArray:
+        """
+        Return the boundaries of the cells with index strings `indices` as one
+        float64 array of shape ``(len(indices), 4*n - 4, 2)``: row `k` holds
+        the points of ``cell.boundary(n=n, plane=plane)`` for the cell whose
+        ``str()`` is ``indices[k]``, in that method's order (clockwise from
+        the upper-left corner when `plane` = True, from the north-west vertex
+        when `plane` = False), with `x` and `y` (or longitude and latitude)
+        along the last axis. The rings are not closed; ``shapely.polygons``
+        closes them itself. An invalid index gives a row of NaN.
+
+        When `plane` = False every distinct planar point is projected once,
+        in one array call per resolution and region, so adjacent cells'
+        copies of a shared point are identical floats. In the equatorial
+        region the inverse projection is separable (longitude depends only on
+        `x`, latitude only on `y`), so that call holds one point per distinct
+        lattice column and one per distinct row: the number of projected
+        points for a block of equatorial cells grows with the block's
+        perimeter rather than its area, every coordinate is still one the
+        projection computed rather than an interpolation, and all points in
+        one lattice column (or row) share one longitude (or latitude) value
+        across the whole block.
+
+        A cell straddling the antimeridian yields a ring whose longitudes
+        jump between -180 and 180; splitting such rings is the caller's
+        concern.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> indices = [str(c) for c in rdggs.cell(('P', 0)).subcells()]
+            >>> b = rdggs.boundary_array(indices, n=3)
+            >>> b.shape
+            (9, 8, 2)
+            >>> import shapely
+            >>> polygons = shapely.polygons(b)
+            >>> bool(shapely.is_valid(polygons).all())
+            True
+            >>> bool(np.isnan(rdggs.boundary_array(['P0', 'X9'])[1]).all())
+            True
+
+        """
+        cells = [self._cell_from_index(index) for index in indices]
+        valid = [cell for cell in cells if cell is not None]
+        n = max(n, 2)
+        m = 4 * n - 4
+        result = np.full((len(cells), m, 2), np.nan)
+        if valid:
+            is_valid = np.array([cell is not None for cell in cells])
+            result[is_valid] = self._boundary_array(valid, n, plane)
+        return result
+
+    def _boundary_array(self, cell_list: list[Cell], n: int, plane: bool) -> FloatArray:
+        """
+        ``boundary_array`` for a non-empty list of cells; see it.
+        """
+        m = 4 * n - 4
+        count = len(cell_list)
+        ul_x = np.empty(count)
+        ul_y = np.empty(count)
+        width = np.empty(count)
+        shift = np.empty(count, dtype=np.intp)
+        region_code = np.empty(count, dtype=np.int8)
+        resolution = np.empty(count, dtype=np.int64)
+        for k, cell in enumerate(cell_list):
+            ul_x[k], ul_y[k] = cell.ul_vertex(plane=True)
+            width[k] = cell.width(plane=True)
+            shift[k] = cell.vertices(plane=True).index(cell.nw_vertex(plane=True))
+            region_code[k] = _REGION_CODES[cell.region()]
+            assert cell.resolution is not None
+            resolution[k] = cell.resolution
+        # The planar boundary of every cell, clockwise from the upper-left
+        # corner, with the same arithmetic as Cell.boundary(plane=True) so
+        # the coordinates are identical to it: the north edge, then the east,
+        # south and west edges from the previous corner.
+        delta = width / (n - 1)
+        steps = np.arange(1, n) * delta[:, None]
+        x0, y0 = ul_x[:, None], ul_y[:, None]
+        x_north = x0 + steps
+        x_east = x_north[:, -1:]
+        y_east = y0 - steps
+        y_south = y_east[:, -1:]
+        x_south = x_east - steps
+        x_west = x_south[:, -1:]
+        y_west = y_south + steps[:, :-1]
+        ones = np.ones((1, n - 1))
+        x = np.concatenate(
+            [x0, x_north, x_east * ones, x_south, x_west * ones[:, 1:]], 1
+        )
+        y = np.concatenate([y0, y0 * ones, y_east, y_south * ones, y_west], 1)
+        if plane:
+            return np.stack([x, y], axis=-1)
+        # Rotate each ring to start at the north-west vertex, as
+        # Cell.boundary(plane=False) does.
+        order = (np.arange(m) + (shift * (n - 1))[:, None]) % m
+        x = np.take_along_axis(x, order, axis=1)
+        y = np.take_along_axis(y, order, axis=1)
+        # All boundary points lie on the fine lattice of pitch w/(n - 1)
+        # anchored at the planar image's corner, shared with every
+        # same-resolution neighbour's points, so integer lattice keys
+        # identify coincident points robustly.
+        R = self.ellipsoid.R_A
+        cols = np.rint((x + pi * R) / delta[:, None]).astype(np.int64)
+        rows = np.rint((y + 3 * pi * R / 4) / delta[:, None]).astype(np.int64)
+        lon = np.empty((count, m))
+        lat = np.empty((count, m))
+        for res in np.unique(resolution):
+            equatorial = (resolution == res) & (region_code == 0)
+            if equatorial.any():
+                xs, ys = x[equatorial].ravel(), y[equatorial].ravel()
+                col_ids, col_first, col_inv = np.unique(
+                    cols[equatorial].ravel(), return_index=True, return_inverse=True
+                )
+                _, row_first, row_inv = np.unique(
+                    rows[equatorial].ravel(), return_index=True, return_inverse=True
+                )
+                lons, lats = self.rhealpix(
+                    np.concatenate([xs[col_first], xs[row_first]]),
+                    np.concatenate([ys[col_first], ys[row_first]]),
+                    inverse=True,
+                    region="equatorial",
+                )
+                lon[equatorial] = lons[: len(col_ids)][col_inv].reshape(-1, m)
+                lat[equatorial] = lats[len(col_ids) :][row_inv].reshape(-1, m)
+            for code, region in ((1, "north_polar"), (-1, "south_polar")):
+                polar = (resolution == res) & (region_code == code)
+                if not polar.any():
+                    continue
+                xs, ys = x[polar].ravel(), y[polar].ravel()
+                keys = cols[polar].ravel() * (1 << 32) + rows[polar].ravel()
+                _, first, inverse = np.unique(
+                    keys, return_index=True, return_inverse=True
+                )
+                lons, lats = self.rhealpix(
+                    xs[first], ys[first], inverse=True, region=region
+                )
+                lon[polar] = lons[inverse].reshape(-1, m)
+                lat[polar] = lats[inverse].reshape(-1, m)
+        return np.stack([lon, lat], axis=-1)
+
     def cell_boundaries(
         self, cells: Iterable[Cell], n: int = 2, plane: bool = True
     ) -> dict[Cell, list[tuple[float, float]]]:
@@ -1582,16 +1738,8 @@ class RHEALPixDGGS:
         edges along those parallels are computed per region, exactly as
         ``boundary()`` computes them.
 
-        The distinct points of all the cells are projected in one array
-        call per resolution and region. In the equatorial region the
-        inverse projection is separable (longitude depends only on `x`,
-        latitude only on `y`), so that call holds one point per distinct
-        lattice column and one per distinct row: the number of projected
-        points for a block of equatorial cells grows with the block's
-        perimeter rather than its area, every coordinate is still one the
-        projection computed rather than an interpolation, and all points in
-        one lattice column (or row) share one longitude (or latitude) value
-        across the whole block.
+        This is ``boundary_array`` repackaged as a dictionary of point
+        lists; see it for how the points are shared and projected.
 
         `cells` may mix resolutions; sharing happens per resolution.
         For `plane` = True there is no projection work to share and this
@@ -1608,84 +1756,14 @@ class RHEALPixDGGS:
         """
         if plane:
             return {cell: cell.boundary(n=n, plane=True) for cell in cells}
-        n = max(n, 2)
-        R = self.ellipsoid.R_A
-        x_anchor = -pi * R
-        y_anchor = -3 * pi * R / 4
-        # Pass 1: gather every cell's lattice keys, keeping the first planar
-        # coordinates seen for each distinct key.
-        gathered: list[tuple[Cell, str, int | None, list[tuple[int, int]]]] = []
-        eq_cols: dict[tuple[int | None, int], tuple[float, float]] = {}
-        eq_rows: dict[tuple[int | None, int], tuple[float, float]] = {}
-        polar: dict[tuple[int | None, str, int, int], tuple[float, float]] = {}
-        for cell in cells:
-            # The same planar points, in the same order, as
-            # cell.boundary(n=n, plane=False) computes: the planar
-            # boundary, reordered to start at the northwest vertex.
-            planar = cell.boundary(n=n, plane=True)
-            v = cell.vertices(plane=True)
-            nw = cell.nw_vertex(plane=True)
-            i = (n - 1) * v.index(nw)
-            planar = planar[i:] + planar[:i]
-            region = cell.region()
-            resolution = cell.resolution
-            # All of this cell's boundary points lie on the fine lattice
-            # of pitch w/(n - 1) anchored at the planar image's corner,
-            # shared with every same-resolution neighbor's points, so an
-            # integer lattice key identifies coincident points robustly.
-            pitch = cell.width(plane=True) / (n - 1)
-            keys = []
-            for p in planar:
-                col = round((p[0] - x_anchor) / pitch)
-                row = round((p[1] - y_anchor) / pitch)
-                keys.append((col, row))
-                if region == "equatorial":
-                    eq_cols.setdefault((resolution, col), p)
-                    eq_rows.setdefault((resolution, row), p)
-                else:
-                    polar.setdefault((resolution, region, col, row), p)
-            gathered.append((cell, region, resolution, keys))
-        # Pass 2: one projection call per resolution and region. In the
-        # equatorial region longitude depends only on x and latitude only
-        # on y, so one point per distinct column and one per distinct row
-        # suffice.
-        lon_of: dict[tuple[int | None, int], float] = {}
-        lat_of: dict[tuple[int | None, int], float] = {}
-        for resolution in {k[0] for k in eq_cols}:
-            col_keys = [k for k in eq_cols if k[0] == resolution]
-            row_keys = [k for k in eq_rows if k[0] == resolution]
-            points = [eq_cols[k] for k in col_keys] + [eq_rows[k] for k in row_keys]
-            lons, lats = self.rhealpix(
-                np.array([p[0] for p in points]),
-                np.array([p[1] for p in points]),
-                inverse=True,
-                region="equatorial",
-            )
-            lon_of.update(zip(col_keys, lons[: len(col_keys)]))
-            lat_of.update(zip(row_keys, lats[len(col_keys) :]))
-        polar_of: dict[tuple[int | None, str, int, int], tuple[float, float]] = {}
-        for resolution, region in {k[:2] for k in polar}:
-            keys_in_group = [k for k in polar if k[:2] == (resolution, region)]
-            lons, lats = self.rhealpix(
-                np.array([polar[k][0] for k in keys_in_group]),
-                np.array([polar[k][1] for k in keys_in_group]),
-                inverse=True,
-                region=region,
-            )
-            polar_of.update(zip(keys_in_group, zip(lons, lats)))
-        # Pass 3: assemble each cell's boundary from the shared values.
-        result = {}
-        for cell, region, resolution, keys in gathered:
-            if region == "equatorial":
-                result[cell] = [
-                    (lon_of[(resolution, col)], lat_of[(resolution, row)])
-                    for col, row in keys
-                ]
-            else:
-                result[cell] = [
-                    polar_of[(resolution, region, col, row)] for col, row in keys
-                ]
-        return result
+        cell_list = list(cells)
+        if not cell_list:
+            return {}
+        boundaries = self._boundary_array(cell_list, max(n, 2), False)
+        return {
+            cell: list(zip(row[:, 0], row[:, 1]))
+            for cell, row in zip(cell_list, boundaries)
+        }
 
     def cells_from_region(
         self,
