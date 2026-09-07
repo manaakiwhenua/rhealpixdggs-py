@@ -977,6 +977,99 @@ class RHEALPixDGGS:
             suid.append(cast(int, digit))
         return Cell(self, suid)
 
+    def cells_from_points(
+        self,
+        u: FloatArray,
+        v: FloatArray,
+        resolution: int,
+        plane: bool = True,
+    ) -> np.ndarray:
+        """
+        Return the index strings of the resolution `resolution` cells
+        containing the points ``(u[k], v[k])``, as a numpy string array in
+        input order: the ``str()`` of ``cell_from_point(resolution, (u[k],
+        v[k]), plane=plane)`` for each point, or an empty string where that
+        would be None (the point lies outside the planar image). `u` and `v`
+        are planar `x` and `y` if `plane` = True, else longitude and
+        latitude. The decisions are those of ``cell_from_point``, made for
+        every point at once.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> lon, lat = np.array([0.0, 174.8]), np.array([0.0, -41.3])
+            >>> rdggs.cells_from_points(lon, lat, 3, plane=False).tolist()
+            ['Q333', 'R887']
+            >>> x, y = np.array([0.0, 1e8]), np.array([0.0, 0.0])
+            >>> rdggs.cells_from_points(x, y, 2, plane=True).tolist()
+            ['Q33', '']
+
+        """
+        x_in, y_in = np.broadcast_arrays(
+            np.asarray(u, dtype=np.float64), np.asarray(v, dtype=np.float64)
+        )
+        if not plane:
+            x, y = self.rhealpix(x_in, y_in)
+        else:
+            x, y = x_in, y_in
+        count = x.size
+        x, y = x.ravel(), y.ravel()
+        ns, ss = self.north_square, self.south_square
+        R = self.ellipsoid.R_A
+        # The resolution 0 cell of each point, by cell_from_point's tests in
+        # its order (strict at the polar squares' edges, half-open along the
+        # equatorial band); -1 where none matches.
+        band = (y >= -R * pi / 4) & (y <= R * pi / 4)
+        tests = [
+            (y > R * pi / 4)
+            & (y < R * 3 * pi / 4)
+            & (x > R * (-pi + ns * (pi / 2)))
+            & (x < R * (-pi / 2 + ns * (pi / 2))),
+            (y > -R * 3 * pi / 4)
+            & (y < -R * pi / 4)
+            & (x > R * (-pi + ss * (pi / 2)))
+            & (x < R * (-pi / 2 + ss * (pi / 2))),
+            band & (x >= -R * pi) & (x < -R * pi / 2),
+            band & (x >= -R * pi / 2) & (x < 0),
+            band & (x >= 0) & (x < R * pi / 2),
+            band & (x >= R * pi / 2) & (x < R * pi),
+        ]
+        codes = [0, 5, 1, 2, 3, 4]
+        face = np.full(count, -1, dtype=np.int64)
+        for test, code in zip(reversed(tests), reversed(codes)):
+            face[test] = code
+        valid = face >= 0
+        # Offsets from the base cell's corner as fractions of its width,
+        # nudged off exactly 1, then truncated to base-N digits; a fraction
+        # that rounds up to N**resolution keeps only its leading digits, as
+        # the string slicing in cell_from_point does.
+        letters = np.array(list("".join(CELLS0)), dtype=str)
+        out = np.full(count, "", dtype=f"<U{resolution + 1}")
+        if valid.any() and resolution == 0:
+            out[valid] = letters[face[valid]]
+        elif valid.any():
+            N = self.N_side
+            w = self.cell_width(0)
+            corners = np.array([self.ul_vertex[letter] for letter in CELLS0])
+            dx = np.abs(x[valid] - corners[face[valid], 0]) / w
+            dy = np.abs(y[valid] - corners[face[valid], 1]) / w
+            smidgen = 0.5 * self.cell_width(self.max_resolution) / w
+            dx = np.where(dx == 1, dx - smidgen, dx)
+            dy = np.where(dy == 1, dy - smidgen, dy)
+            col_index = (dx * N**resolution).astype(np.int64)
+            row_index = (dy * N**resolution).astype(np.int64)
+            col_index = np.where(col_index >= N**resolution, col_index // N, col_index)
+            row_index = np.where(row_index >= N**resolution, row_index // N, row_index)
+            powers = N ** np.arange(resolution - 1, -1, -1)
+            col = (col_index[:, None] // powers) % N
+            row = (row_index[:, None] // powers) % N
+            digits = row * N + col
+            chars = np.empty((int(valid.sum()), resolution + 1), dtype=np.uint32)
+            chars[:, 0] = np.array([ord(c) for c in CELLS0])[face[valid]]
+            chars[:, 1:] = digits + ord("0")
+            out[valid] = chars.view(f"<U{resolution + 1}").ravel()
+        return out.reshape(x_in.shape)
+
     def cell_from_region(
         self, ul: tuple[float, float], dr: tuple[float, float], plane: bool = True
     ) -> Cell | None:

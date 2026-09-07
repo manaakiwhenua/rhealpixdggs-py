@@ -14,6 +14,10 @@ the nuclei of many cells the same way, as a ``(len(indices), 2)`` array,
 and ``RHEALPixDGGS.centroids(indices, plane)`` their centroids,
 evaluating ``Cell.centroid``'s quadrature rules for all cells of each
 shape in one projection call (issue #140).
+``RHEALPixDGGS.cells_from_points(u, v, resolution, plane)`` is the array
+form of ``cell_from_point``: it returns the index strings of the cells
+containing many points, an empty string where no cell does, making
+exactly the decisions ``cell_from_point`` makes (issue #139).
 Building geometries from the array is where the time goes: for a
 resolution-4 grid ``shapely.polygons`` takes 35 ms against ~840 ms for a
 Python loop constructing one ``Polygon`` per cell.
