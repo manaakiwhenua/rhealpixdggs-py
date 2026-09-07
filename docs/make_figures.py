@@ -2,7 +2,8 @@
 Regenerate the static figures in docs/source/images/ (each written as
 SVG for the HTML docs and PDF for the LaTeX/PDF docs; the figure
 directives reference them with a wildcard so each Sphinx builder picks
-the format it can use).
+the format it can use). A PNG of each is written alongside for viewing
+and pasting; those are gitignored and excluded from the sdist.
 
 Run manually from the repository root whenever the figures need to change:
 
@@ -61,6 +62,17 @@ import svg_shrink
 from rhealpixdggs.dggs import CELLS0, WGS84_003
 
 OUT = pathlib.Path(__file__).parent / "source" / "images"
+
+
+def save(fig, name):
+    """
+    Write `fig` as SVG and PDF (committed; the docs use them) and PNG (for
+    viewing and pasting; gitignored and excluded from the sdist).
+    """
+    fig.savefig(OUT / f"{name}.svg", bbox_inches="tight")
+    fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight")
+    fig.savefig(OUT / f"{name}.png", bbox_inches="tight", dpi=150)
+
 
 rdggs = WGS84_003
 R = rdggs.ellipsoid.R_A
@@ -213,8 +225,7 @@ ax.set_xlabel("x / authalic radius")
 ax.set_ylabel("y / authalic radius")
 ax.set_title("(0, 0)-rHEALPix planar grid: resolution 0 cells, resolution 1 sub-grid")
 fig.tight_layout()
-fig.savefig(OUT / "planar_grid.svg", bbox_inches="tight")
-fig.savefig(OUT / "planar_grid.pdf", bbox_inches="tight")
+save(fig, "planar_grid")
 plt.close(fig)
 
 # ---------------------------------------------------------------- figure 2
@@ -296,8 +307,7 @@ ax.set_ylabel("latitude (degrees)")
 ax.set_title("Resolution 1 ellipsoidal cells of the (0, 0)-rHEALPix DGGS (WGS84)")
 ax.grid(True, linewidth=0.3, alpha=0.5)
 fig.tight_layout()
-fig.savefig(OUT / "ellipsoidal_cells.svg", bbox_inches="tight")
-fig.savefig(OUT / "ellipsoidal_cells.pdf", bbox_inches="tight")
+save(fig, "ellipsoidal_cells")
 plt.close(fig)
 print("figures written")
 
@@ -387,8 +397,7 @@ draw_globe(axes[0], -45, 20, "P face (equatorial view)")
 draw_globe(axes[1], 0, 90, "North polar view (cap cell N4)")
 draw_globe(axes[2], 100, -35, "Oblique southern view")
 fig.tight_layout()
-fig.savefig(OUT / "globe_views.svg", bbox_inches="tight")
-fig.savefig(OUT / "globe_views.pdf", bbox_inches="tight")
+save(fig, "globe_views")
 print("globe views written")
 
 
@@ -459,8 +468,7 @@ axes[1].plot(*zip(*LINE), color="#222222", linewidth=1.6)
 axes[1].set_title(f"linetrace(line, res={RESOLUTION}, plane=False)")
 
 fig.tight_layout()
-fig.savefig(OUT / "wrappers_nz.svg", bbox_inches="tight")
-fig.savefig(OUT / "wrappers_nz.pdf", bbox_inches="tight")
+save(fig, "wrappers_nz")
 plt.close(fig)
 print("wrapper examples written")
 
@@ -595,8 +603,7 @@ ax.set_title(
     fontsize=10,
 )
 fig.tight_layout()
-fig.savefig(OUT / "wrappers_cap_trace.svg", bbox_inches="tight")
-fig.savefig(OUT / "wrappers_cap_trace.pdf", bbox_inches="tight")
+save(fig, "wrappers_cap_trace")
 plt.close(fig)
 print("cap trace figure written")
 
@@ -671,8 +678,7 @@ ax.set_title(
     "and an address prefix is an ancestor (N contains N4 contains N44 ...)"
 )
 fig.tight_layout()
-fig.savefig(OUT / "hierarchy.svg", bbox_inches="tight")
-fig.savefig(OUT / "hierarchy.pdf", bbox_inches="tight")
+save(fig, "hierarchy")
 plt.close(fig)
 print("hierarchy figure written")
 
@@ -733,8 +739,7 @@ for ax, (shape, suid) in zip(axes, SHAPE_EXAMPLES):
     ax.axis("off")
     ax.set_title(f"{shape}\n({cell})", fontsize=10)
 fig.tight_layout()
-fig.savefig(OUT / "cell_shapes.svg", bbox_inches="tight")
-fig.savefig(OUT / "cell_shapes.pdf", bbox_inches="tight")
+save(fig, "cell_shapes")
 plt.close(fig)
 print("cell shapes figure written")
 
@@ -815,8 +820,7 @@ for ax, (title, highlight) in zip(axes, cases):
         )
     ax.set_title(title, fontsize=11)
 fig.tight_layout()
-fig.savefig(OUT / "predicates.svg", bbox_inches="tight")
-fig.savefig(OUT / "predicates.pdf", bbox_inches="tight")
+save(fig, "predicates")
 plt.close(fig)
 print("predicates figure written")
 
@@ -924,8 +928,7 @@ for ax, (title, highlight, context, view, radius, mark, label_at) in zip(
     ax.set_ylim(-radius, radius)
     ax.set_title(title, fontsize=10)
 fig.tight_layout()
-fig.savefig(OUT / "predicates_polar.svg", bbox_inches="tight")
-fig.savefig(OUT / "predicates_polar.pdf", bbox_inches="tight")
+save(fig, "predicates_polar")
 plt.close(fig)
 print("polar predicates figure written")
 
@@ -1000,8 +1003,7 @@ ax.set_aspect("equal")
 ax.axis("off")
 ax.set_title("Three cells, not four, meet at a corner of the cube", fontsize=11)
 fig.tight_layout()
-fig.savefig(OUT / "cube_corner.svg", bbox_inches="tight")
-fig.savefig(OUT / "cube_corner.pdf", bbox_inches="tight")
+save(fig, "cube_corner")
 plt.close(fig)
 print("cube corner figure written")
 
@@ -1093,8 +1095,7 @@ ax.set_aspect("equal")
 ax.axis("off")
 ax.set_title("The same corner on the cube: faces N, Q and R", fontsize=11)
 fig.tight_layout()
-fig.savefig(OUT / "cube_corner_cube.svg", bbox_inches="tight")
-fig.savefig(OUT / "cube_corner_cube.pdf", bbox_inches="tight")
+save(fig, "cube_corner_cube")
 plt.close(fig)
 print("cube corner (cube view) figure written")
 
@@ -1166,8 +1167,7 @@ for ax, (ns, ss) in zip(axes, [(0, 0), (1, 2)]):
     ax.set_yticks([])
     ax.set_title(f"north_square={ns}, south_square={ss}", fontsize=11)
 fig.tight_layout()
-fig.savefig(OUT / "polar_squares.svg", bbox_inches="tight")
-fig.savefig(OUT / "polar_squares.pdf", bbox_inches="tight")
+save(fig, "polar_squares")
 plt.close(fig)
 print("polar squares figure written")
 
@@ -1223,8 +1223,7 @@ ax.set_title(
 )
 ax.grid(True, linewidth=0.3, alpha=0.5)
 fig.tight_layout()
-fig.savefig(OUT / "recentred.svg", bbox_inches="tight")
-fig.savefig(OUT / "recentred.pdf", bbox_inches="tight")
+save(fig, "recentred")
 plt.close(fig)
 print("recentred figure written")
 
@@ -1361,8 +1360,7 @@ fig = rotated_comparison(
     title="Cell shapes over New Zealand: standard grid vs rotated grid",
     legend_loc="upper right",
 )
-fig.savefig(OUT / "recentred_nz.svg", bbox_inches="tight")
-fig.savefig(OUT / "recentred_nz.pdf", bbox_inches="tight")
+save(fig, "recentred_nz")
 plt.close(fig)
 print("recentred NZ comparison written")
 
@@ -1381,8 +1379,7 @@ fig = rotated_comparison(
     title="Cell shapes over Canada: standard grid vs rotated grid",
     legend_loc="lower left",
 )
-fig.savefig(OUT / "recentred_canada.svg", bbox_inches="tight")
-fig.savefig(OUT / "recentred_canada.pdf", bbox_inches="tight")
+save(fig, "recentred_canada")
 plt.close(fig)
 print("recentred Canada comparison written")
 
@@ -1498,8 +1495,7 @@ ax.set_aspect("equal")
 ax.axis("off")
 ax.set_title("around a cube corner ('N00'): the k=1 ring has 7 cells", fontsize=11)
 fig.tight_layout()
-fig.savefig(OUT / "rings.svg", bbox_inches="tight")
-fig.savefig(OUT / "rings.pdf", bbox_inches="tight")
+save(fig, "rings")
 plt.close(fig)
 print("rings figure written")
 
@@ -1548,8 +1544,7 @@ for ax, wrap in zip(axes, (False, True)):
     )
 axes[1].set_xlabel("longitude (degrees)")
 fig.tight_layout()
-fig.savefig(OUT / "wrap_antimeridian.svg", bbox_inches="tight")
-fig.savefig(OUT / "wrap_antimeridian.pdf", bbox_inches="tight")
+save(fig, "wrap_antimeridian")
 plt.close(fig)
 print("wrap flag figure written")
 
@@ -1595,8 +1590,7 @@ for ax, cells, title in (
     ax.set_title(title, fontsize=11)
 axes[0].set_ylabel("latitude (degrees)")
 fig.tight_layout()
-fig.savefig(OUT / "compaction.svg", bbox_inches="tight")
-fig.savefig(OUT / "compaction.pdf", bbox_inches="tight")
+save(fig, "compaction")
 plt.close(fig)
 print("compaction figure written")
 

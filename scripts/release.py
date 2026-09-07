@@ -60,7 +60,15 @@ COPYRIGHT_FILES = ("LICENSE", "LICENSE-MIT")
 # gitignore, so build leftovers under docs/ can stow away. See the note in
 # pyproject.toml's [tool.poetry] section.
 SDIST_MUST_INCLUDE = ("tests/", "docs/source/")
-SDIST_MUST_NOT_INCLUDE = (".doctrees", "_build/", ".cache/", ".aux", ".idx", ".toc")
+SDIST_MUST_NOT_INCLUDE = (
+    ".doctrees",
+    "_build/",
+    ".cache/",
+    ".aux",
+    ".idx",
+    ".toc",
+    ".png",
+)
 
 VERSION_RE = re.compile(r"^\d+\.\d+(\.\d+)?((a|b|rc)\d+)?$")
 
