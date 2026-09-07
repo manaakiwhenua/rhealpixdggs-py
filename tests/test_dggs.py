@@ -552,6 +552,31 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         self.assertTrue(np.isnan(nuclei[~valid]).all())
         self.assertFalse(np.isnan(nuclei[valid]).any())
 
+    def test_centroids_match_cell_centroid(self):
+        # centroids() evaluates Cell.centroid's quadrature rules for all
+        # cells of each shape at once; only the summation differs (array
+        # sums instead of fsum), so agreement is to rounding.
+        from numpy.testing import assert_allclose, assert_array_equal
+
+        for rdggs in (WGS84_003, WGS84_003_RADIANS, WGS84_123, WGS84_122):
+            angle = 1.0 if rdggs.ellipsoid.radians else 180 / pi
+            cells = [c for res in range(3) for c in rdggs.grid(res)]
+            cells += list(rdggs.cell((N, 0, 3)).subcells())
+            cells += list(rdggs.cell((S, 3, 1)).subcells())
+            indices = [str(c) for c in cells]
+            got = rdggs.centroids(indices, plane=False)
+            want = np.array([c.centroid(plane=False) for c in cells])
+            assert_allclose(got, want, rtol=0, atol=1e-12 * angle)
+            assert_array_equal(
+                rdggs.centroids(indices, plane=True),
+                np.array([c.centroid(plane=True) for c in cells]),
+            )
+            shapes = {c.ellipsoidal_shape for c in cells}
+            self.assertEqual(shapes, {"quad", "cap", "dart", "skew_quad"})
+        c = WGS84_003.centroids(["P44", "", "N4"])
+        self.assertTrue(np.isnan(c[1]).all())
+        self.assertFalse(np.isnan(c[[0, 2]]).any())
+
     def test_boundary_array(self):
         import shapely
         from numpy.testing import assert_allclose, assert_array_equal
