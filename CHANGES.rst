@@ -1,3 +1,11 @@
+0.8.4
+^^^^^
+``RHEALPixDGGS.centroids`` projects the quadrature points of dart and skew
+quad cells in chunks of about a million, so its memory use no longer
+grows with the number of cells: 100,000 resolution-6 cells took 22 s
+through paging in 0.8.3 and take under 5 s now, linear in the cell count.
+Results are unchanged.
+
 0.8.3
 ^^^^^
 ``RHEALPixDGGS.boundary_array(indices, n, plane)`` takes cell index
