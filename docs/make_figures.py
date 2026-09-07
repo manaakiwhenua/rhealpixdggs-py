@@ -2,8 +2,7 @@
 Regenerate the static figures in docs/source/images/ (each written as
 SVG for the HTML docs and PDF for the LaTeX/PDF docs; the figure
 directives reference them with a wildcard so each Sphinx builder picks
-the format it can use). A PNG of each is written alongside for viewing
-and pasting; those are gitignored and excluded from the sdist.
+the format it can use).
 
 Run manually from the repository root whenever the figures need to change:
 
@@ -66,12 +65,10 @@ OUT = pathlib.Path(__file__).parent / "source" / "images"
 
 def save(fig, name):
     """
-    Write `fig` as SVG and PDF (committed; the docs use them) and PNG (for
-    viewing and pasting; gitignored and excluded from the sdist).
+    Write `fig` as SVG (for the HTML docs) and PDF (for the LaTeX docs).
     """
     fig.savefig(OUT / f"{name}.svg", bbox_inches="tight")
     fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight")
-    fig.savefig(OUT / f"{name}.png", bbox_inches="tight", dpi=150)
 
 
 rdggs = WGS84_003

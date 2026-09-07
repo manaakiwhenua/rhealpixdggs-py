@@ -71,9 +71,6 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# PNG renders written by docs/make_figures.py alongside the committed SVG/PDF
-docs/source/images/*.png
-
 # Cached downloads for docs/make_figures.py
 .cache/
 
