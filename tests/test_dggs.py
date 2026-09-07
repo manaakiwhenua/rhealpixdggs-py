@@ -488,6 +488,95 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         for c in cells:
             self.assertEqual(boundaries[c], c.boundary(n=3, plane=True))
 
+    def test_index_arrays_match_cell_methods(self):
+        # The parsing and geometry layer behind boundary_array and nuclei
+        # reproduces Cell.ul_vertex, width, region, the north-west corner
+        # choice and nucleus exactly, for every shape, several resolutions
+        # and every DGGS configuration that changes the rules.
+        from random import Random
+
+        from numpy.testing import assert_array_equal
+
+        from rhealpixdggs.rhp_wrappers import rhp_is_valid
+
+        rng = Random(20260811)
+        code = {"equatorial": 0, "north_polar": 1, "south_polar": -1}
+        for rdggs in (WGS84_003, WGS84_003_RADIANS, WGS84_123, WGS84_122):
+            cells = [c for res in range(3) for c in rdggs.grid(res)]
+            for _ in range(300):
+                face = rng.choice(["N", "S", "N", "S", "P", "Q"])
+                depth = rng.randint(3, 9)
+                digits = [rng.randrange(rdggs.N_side**2) for _ in range(depth)]
+                cells.append(rdggs.cell([face] + digits))
+            indices = [str(c) for c in cells]
+            valid, face, digits, resolution = rdggs._parse_indices(indices)
+            self.assertTrue(valid.all())
+            assert_array_equal(face, [CELLS0.index(i[0]) for i in indices])
+            assert_array_equal(resolution, [len(i) - 1 for i in indices])
+            x, y, width, region = rdggs._index_geometry(face, digits, resolution)
+            ul = np.array([c.ul_vertex(plane=True) for c in cells])
+            assert_array_equal(x, ul[:, 0])
+            assert_array_equal(y, ul[:, 1])
+            assert_array_equal(width, [c.width() for c in cells])
+            assert_array_equal(region, [code[c.region()] for c in cells])
+            shift = rdggs._nw_corner(face, digits, resolution, x, y, width)
+            want = [
+                c.vertices(plane=True).index(c.nw_vertex(plane=True)) for c in cells
+            ]
+            assert_array_equal(shift, want)
+            nuclei = rdggs.nuclei(indices, plane=False)
+            want_nuclei = np.array([c.nucleus(plane=False) for c in cells])
+            self.assertTrue(np.allclose(nuclei, want_nuclei, rtol=0, atol=1e-12))
+            assert_array_equal(
+                rdggs.nuclei(indices, plane=True),
+                np.array([c.nucleus(plane=True) for c in cells]),
+            )
+        # Validity follows rhp_is_valid; invalid indices give NaN nuclei.
+        odd = [
+            "N",
+            "S8",
+            "P44",
+            "X1",
+            "",
+            "N9",
+            "Na",
+            "P4 ",
+            "P-1",
+            "n4",
+            "N45x",
+            "Q" + "0" * 12,
+        ]
+        valid = WGS84_003._parse_indices(odd)[0]
+        self.assertEqual(list(valid), [rhp_is_valid(i, WGS84_003) for i in odd])
+        nuclei = WGS84_003.nuclei(odd)
+        self.assertTrue(np.isnan(nuclei[~valid]).all())
+        self.assertFalse(np.isnan(nuclei[valid]).any())
+
+    def test_centroids_match_cell_centroid(self):
+        # centroids() evaluates Cell.centroid's quadrature rules for all
+        # cells of each shape at once; only the summation differs (array
+        # sums instead of fsum), so agreement is to rounding.
+        from numpy.testing import assert_allclose, assert_array_equal
+
+        for rdggs in (WGS84_003, WGS84_003_RADIANS, WGS84_123, WGS84_122):
+            angle = 1.0 if rdggs.ellipsoid.radians else 180 / pi
+            cells = [c for res in range(3) for c in rdggs.grid(res)]
+            cells += list(rdggs.cell((N, 0, 3)).subcells())
+            cells += list(rdggs.cell((S, 3, 1)).subcells())
+            indices = [str(c) for c in cells]
+            got = rdggs.centroids(indices, plane=False)
+            want = np.array([c.centroid(plane=False) for c in cells])
+            assert_allclose(got, want, rtol=0, atol=1e-12 * angle)
+            assert_array_equal(
+                rdggs.centroids(indices, plane=True),
+                np.array([c.centroid(plane=True) for c in cells]),
+            )
+            shapes = {c.ellipsoidal_shape for c in cells}
+            self.assertEqual(shapes, {"quad", "cap", "dart", "skew_quad"})
+        c = WGS84_003.centroids(["P44", "", "N4"])
+        self.assertTrue(np.isnan(c[1]).all())
+        self.assertFalse(np.isnan(c[[0, 2]]).any())
+
     def test_boundary_array(self):
         import shapely
         from numpy.testing import assert_allclose, assert_array_equal

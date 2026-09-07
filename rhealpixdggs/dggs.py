@@ -166,12 +166,16 @@ import numpy as np
 
 # assert_allclose is doctest-only: the doctests use it from the module globals.
 from numpy.testing import assert_allclose  # noqa: F401
+from scipy.special import roots_legendre
 
 import rhealpixdggs.pj_rhealpix as pjr
-
-_REGION_CODES = {"equatorial": 0, "north_polar": 1, "south_polar": -1}
 import rhealpixdggs.projection_wrapper as pw
-from rhealpixdggs.cell import CELLS0, Cell
+from rhealpixdggs.cell import (
+    _CENTROID_QUADRATURE_ORDER,
+    CELLS0,
+    Cell,
+    _gauss_legendre_unit,
+)
 from rhealpixdggs.ellipsoids import (
     UNIT_SPHERE,
     UNIT_SPHERE_RADIANS,
@@ -1556,17 +1560,118 @@ class RHEALPixDGGS:
             active &= (b_ - a) > 2 * eps
         return (0.5 * (a + b_)).tolist()
 
-    def _cell_from_index(self, index: str) -> Cell | None:
+    def _parse_indices(
+        self, indices: Iterable[str]
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
-        The cell with index string `index` (its ``str()``), or None if the
-        string is not a valid index in this DGGS.
+        Parse cell index strings into arrays: a validity mask, the base cell
+        as a code 0-5 (the position in ``CELLS0``), the digits as an
+        ``(len(indices), max_resolution)`` int64 array (zero beyond a cell's
+        resolution) and each index's resolution. Invalid indices -- empty,
+        unknown base cell, or a character that is not a digit below
+        ``N_side ** 2`` -- get resolution 0, base cell code -1 and zero digits.
         """
-        if not index or index[0] not in CELLS0:
-            return None
-        digits = index[1:]
-        if not all(d.isdigit() and int(d) < self.N_side**2 for d in digits):
-            return None
-        return self.cell([index[0]] + [int(d) for d in digits])
+        strings = np.array(list(indices), dtype=str)
+        count = len(strings)
+        chars = max(strings.dtype.itemsize // 4, 2)
+        codes = np.zeros((count, chars), dtype=np.uint32)
+        if count:
+            codes[:, : strings.dtype.itemsize // 4] = strings.view(np.uint32).reshape(
+                count, -1
+            )
+        length = (codes != 0).sum(axis=1)
+        face = np.full(count, -1, dtype=np.int64)
+        for k, letter in enumerate(CELLS0):
+            face[codes[:, 0] == ord(letter)] = k
+        digits = codes[:, 1:].astype(np.int64) - ord("0")
+        levels = np.arange(1, chars)
+        active = levels[None, :] < length[:, None]
+        digit_ok = ~active | ((digits >= 0) & (digits < self.N_side**2))
+        valid = (length > 0) & (face >= 0) & digit_ok.all(axis=1)
+        digits = np.where(active & valid[:, None], digits, 0)
+        resolution = np.where(valid, length - 1, 0)
+        face = np.where(valid, face, -1)
+        return valid, face, digits, resolution
+
+    def _index_geometry(
+        self, face: np.ndarray, digits: np.ndarray, resolution: np.ndarray
+    ) -> tuple[FloatArray, FloatArray, FloatArray, np.ndarray]:
+        """
+        The planar upper-left corner, width and region code (0 equatorial,
+        1 north polar, -1 south polar) of the cells parsed by
+        ``_parse_indices``, computed as ``Cell.ul_vertex`` and
+        ``Cell.width`` compute them.
+        """
+        N = self.N_side
+        levels = np.arange(1, digits.shape[1] + 1)
+        active = levels[None, :] <= resolution[:, None]
+        power = N ** np.where(active, resolution[:, None] - levels[None, :], 0)
+        row = digits // N
+        col = digits % N
+        scale = np.power(float(N), -resolution.astype(np.float64))
+        dx = np.where(active, col * power, 0).sum(axis=1) * scale
+        dy = np.where(active, row * power, 0).sum(axis=1) * scale
+        corners = np.array([self.ul_vertex[letter] for letter in CELLS0])
+        safe_face = np.where(face >= 0, face, 0)
+        w0 = self.cell_width(0)
+        x = corners[safe_face, 0] + w0 * dx
+        y = corners[safe_face, 1] - w0 * dy
+        width = self.ellipsoid.R_A * (pi / 2) * scale
+        region = np.where(face == 0, 1, np.where(face == 5, -1, 0)).astype(np.int8)
+        return x, y, width, region
+
+    def _nw_corner(
+        self,
+        face: np.ndarray,
+        digits: np.ndarray,
+        resolution: np.ndarray,
+        x: FloatArray,
+        y: FloatArray,
+        width: FloatArray,
+    ) -> np.ndarray:
+        """
+        For each cell, which of its planar corners (0 upper-left, 1 upper-
+        right, 2 lower-right, 3 lower-left) is the ellipsoidal north-west
+        vertex: the choice ``Cell.nw_vertex`` makes, by the same rules.
+        """
+        shape = self._shape_code(face, digits, resolution)
+        dart = shape == 2
+        skew = shape == 3
+        shift = np.zeros(len(face), dtype=np.int64)
+        if skew.any():
+            R = self.ellipsoid.R_A
+            nucleus_x = (x[skew] + width[skew] / 2) / R
+            nucleus_y = (y[skew] - width[skew] / 2) / R
+            triangle, _ = pjr._triangle_array(
+                nucleus_x,
+                nucleus_y,
+                north_square=self.north_square,
+                south_square=self.south_square,
+                inverse=True,
+            )
+            north = face[skew] == 0
+            i = np.where(
+                north,
+                (triangle - self.north_square) % 4,
+                (triangle - self.south_square) % 4,
+            )
+            shift[skew] = np.where(north, (-i) % 4, i)
+        if dart.any():
+            # The polewards vertex is the corner nearest the polar square's
+            # centre in Chebyshev distance.
+            centres = np.array(
+                [self.cell([letter]).nucleus(plane=True) for letter in CELLS0]
+            )
+            cx, cy = centres[face[dart], 0], centres[face[dart], 1]
+            xd, yd, wd = x[dart], y[dart], width[dart]
+            corner_x = np.stack([xd, xd + wd, xd + wd, xd], axis=1)
+            corner_y = np.stack([yd, yd, yd - wd, yd - wd], axis=1)
+            distance = np.maximum(
+                np.abs(corner_x - cx[:, None]), np.abs(corner_y - cy[:, None])
+            )
+            i = distance.argmin(axis=1)
+            shift[dart] = np.where(face[dart] == 0, i, (i + 1) % 4)
+        return shift
 
     def boundary_array(
         self, indices: Iterable[str], n: int = 2, plane: bool = False
@@ -1612,35 +1717,180 @@ class RHEALPixDGGS:
             True
 
         """
-        cells = [self._cell_from_index(index) for index in indices]
-        valid = [cell for cell in cells if cell is not None]
+        valid, face, digits, resolution = self._parse_indices(indices)
         n = max(n, 2)
         m = 4 * n - 4
-        result = np.full((len(cells), m, 2), np.nan)
-        if valid:
-            is_valid = np.array([cell is not None for cell in cells])
-            result[is_valid] = self._boundary_array(valid, n, plane)
+        result = np.full((len(valid), m, 2), np.nan)
+        if valid.any():
+            result[valid] = self._boundary_array(
+                face[valid], digits[valid], resolution[valid], n, plane
+            )
         return result
 
-    def _boundary_array(self, cell_list: list[Cell], n: int, plane: bool) -> FloatArray:
+    def nuclei(self, indices: Iterable[str], plane: bool = False) -> FloatArray:
         """
-        ``boundary_array`` for a non-empty list of cells; see it.
+        Return the nuclei of the cells with index strings `indices` as one
+        float64 array of shape ``(len(indices), 2)``: row `k` is
+        ``cell.nucleus(plane=plane)`` for the cell whose ``str()`` is
+        ``indices[k]``, as `x`, `y` or longitude, latitude. An invalid index
+        gives a row of NaN.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> rdggs.nuclei(['N4', 'P44', 'bad']).round(9).tolist()
+            [[-180.0, 90.0], [-45.0, 0.0], [nan, nan]]
+
+        """
+        valid, face, digits, resolution = self._parse_indices(indices)
+        result = np.full((len(valid), 2), np.nan)
+        if valid.any():
+            x, y, width, _ = self._index_geometry(
+                face[valid], digits[valid], resolution[valid]
+            )
+            x, y = x + width / 2, y - width / 2
+            if not plane:
+                x, y = self.rhealpix(x, y, inverse=True)
+            result[valid, 0] = x
+            result[valid, 1] = y
+        return result
+
+    def centroids(self, indices: Iterable[str], plane: bool = False) -> FloatArray:
+        """
+        Return the centroids of the cells with index strings `indices` as one
+        float64 array of shape ``(len(indices), 2)``: row `k` is
+        ``cell.centroid(plane=plane)`` for the cell whose ``str()`` is
+        ``indices[k]``, as `x`, `y` or longitude, latitude. An invalid index
+        gives a row of NaN.
+
+        The ellipsoidal centroids use the quadrature rules ``Cell.centroid``
+        uses, evaluated for all cells of each shape in one projection call;
+        the weighted sums are ordinary array sums rather than ``fsum``, so
+        the two can differ in the last bits.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> c = rdggs.centroids(['P44', 'N4', 'N0'])
+            >>> c.round(9).tolist()
+            [[-45.0, 0.0], [-180.0, 90.0], [90.0, 53.008107449]]
+            >>> lat = rdggs.cell(['N', 0]).centroid(plane=False)[1]
+            >>> bool(abs(lat - c[2, 1]) < 1e-9)
+            True
+
+        """
+        valid, face, digits, resolution = self._parse_indices(indices)
+        result = np.full((len(valid), 2), np.nan)
+        if not valid.any():
+            return result
+        face, digits, resolution = face[valid], digits[valid], resolution[valid]
+        x, y, width, region = self._index_geometry(face, digits, resolution)
+        nucleus_x, nucleus_y = x + width / 2, y - width / 2
+        if plane:
+            result[valid, 0] = nucleus_x
+            result[valid, 1] = nucleus_y
+            return result
+        lon, lat = self.rhealpix(nucleus_x, nucleus_y, inverse=True)
+        out_lon, out_lat = lon.copy(), lat.copy()
+        shape = self._shape_code(face, digits, resolution)
+        # Quads: mean latitude along the nucleus meridian by 20-point
+        # Gauss-Legendre quadrature over the planar y range, as fixed_quad
+        # evaluates it; the mean longitude is the nucleus longitude.
+        quad = shape == 0
+        if quad.any():
+            nodes, weights = roots_legendre(20)
+            y1 = (y[quad] - width[quad])[:, None]
+            y2 = y[quad][:, None]
+            ys = (y2 - y1) * (nodes + 1) / 2.0 + y1
+            xs = np.broadcast_to(nucleus_x[quad][:, None], ys.shape)
+            phis = self.rhealpix(xs.ravel(), ys.ravel(), inverse=True)[1].reshape(
+                ys.shape
+            )
+            integral = (y2 - y1)[:, 0] / 2.0 * np.sum(weights * phis, axis=1)
+            out_lat[quad] = (1 / (y2 - y1)[:, 0]) * integral
+        # Darts and skew quads: area-weighted means over the planar square by
+        # the fixed product rules of Cell._centroid_quadrature.
+        t, w = _gauss_legendre_unit(_CENTROID_QUADRATURE_ORDER)
+        u, v = np.meshgrid(t, t, indexing="ij")
+        rules = {}
+        rules["skew"] = (u.ravel(), v.ravel(), np.outer(w, w).ravel())
+        a, b = u.ravel(), (u * v).ravel()
+        tri_w = (np.outer(w, w) * t[:, None]).ravel()
+        s_r, r_r = np.concatenate([a, b]), np.concatenate([b, a])
+        rules["rising"] = (s_r, r_r, np.concatenate([tri_w, tri_w]))
+        rules["falling"] = (1 - s_r, r_r, np.concatenate([tri_w, tri_w]))
+        centres = np.array(
+            [self.cell([letter]).nucleus(plane=True) for letter in CELLS0]
+        )
+        safe = np.where(face >= 0, face, 0)
+        rising = (nucleus_x - centres[safe, 0]) * (nucleus_y - centres[safe, 1]) > 0
+        kinds = {
+            "skew": shape == 3,
+            "rising": (shape == 2) & rising,
+            "falling": (shape == 2) & ~rising,
+        }
+        for kind, members in kinds.items():
+            for code, region_name in ((1, "north_polar"), (-1, "south_polar")):
+                group = members & (region == code)
+                if not group.any():
+                    continue
+                s_u, r_u, weights_u = rules[kind]
+                x1 = x[group][:, None]
+                y1 = (y[group] - width[group])[:, None]
+                wg = width[group][:, None]
+                xs = x1 + wg * s_u
+                ys = y1 + wg * r_u
+                lons, lats = self.rhealpix(
+                    xs.ravel(), ys.ravel(), inverse=True, region=region_name
+                )
+                lons, lats = lons.reshape(xs.shape), lats.reshape(xs.shape)
+                out_lat[group] = np.sum(weights_u * lats, axis=1)
+                if kind == "skew":
+                    out_lon[group] = np.sum(weights_u * lons, axis=1)
+        result[valid, 0] = out_lon
+        result[valid, 1] = out_lat
+        return result
+
+    def _shape_code(
+        self, face: np.ndarray, digits: np.ndarray, resolution: np.ndarray
+    ) -> np.ndarray:
+        """
+        ``Cell.ellipsoidal_shape`` as a code: 0 quad, 1 cap, 2 dart, 3 skew
+        quad, for the cells parsed by ``_parse_indices``.
+        """
+        N = self.N_side
+        levels = np.arange(1, digits.shape[1] + 1)
+        active = levels[None, :] <= resolution[:, None]
+        polar = (face == 0) | (face == 5)
+        centre = (N**2 - 1) // 2
+        cap = polar & (
+            (resolution == 0)
+            | ((N % 2 == 1) & (~active | (digits == centre)).all(axis=1))
+        )
+        diagonal = np.isin(digits, [i * (N + 1) for i in range(N)])
+        anti = np.isin(digits, [(i + 1) * (N - 1) for i in range(N)])
+        dart = (
+            polar
+            & ~cap
+            & ((~active | diagonal).all(axis=1) | (~active | anti).all(axis=1))
+        )
+        return np.where(~polar, 0, np.where(cap, 1, np.where(dart, 2, 3)))
+
+    def _boundary_array(
+        self,
+        face: np.ndarray,
+        digits: np.ndarray,
+        resolution: np.ndarray,
+        n: int,
+        plane: bool,
+    ) -> FloatArray:
+        """
+        ``boundary_array`` for the valid cells parsed by ``_parse_indices``.
         """
         m = 4 * n - 4
-        count = len(cell_list)
-        ul_x = np.empty(count)
-        ul_y = np.empty(count)
-        width = np.empty(count)
-        shift = np.empty(count, dtype=np.intp)
-        region_code = np.empty(count, dtype=np.int8)
-        resolution = np.empty(count, dtype=np.int64)
-        for k, cell in enumerate(cell_list):
-            ul_x[k], ul_y[k] = cell.ul_vertex(plane=True)
-            width[k] = cell.width(plane=True)
-            shift[k] = cell.vertices(plane=True).index(cell.nw_vertex(plane=True))
-            region_code[k] = _REGION_CODES[cell.region()]
-            assert cell.resolution is not None
-            resolution[k] = cell.resolution
+        count = len(face)
+        ul_x, ul_y, width, region_code = self._index_geometry(face, digits, resolution)
+        shift = self._nw_corner(face, digits, resolution, ul_x, ul_y, width)
         # The planar boundary of every cell, clockwise from the upper-left
         # corner, with the same arithmetic as Cell.boundary(plane=True) so
         # the coordinates are identical to it: the north edge, then the east,
@@ -1757,9 +2007,7 @@ class RHEALPixDGGS:
         if plane:
             return {cell: cell.boundary(n=n, plane=True) for cell in cells}
         cell_list = list(cells)
-        if not cell_list:
-            return {}
-        boundaries = self._boundary_array(cell_list, max(n, 2), False)
+        boundaries = self.boundary_array([str(cell) for cell in cell_list], n=n)
         return {
             cell: list(zip(row[:, 0], row[:, 1]))
             for cell, row in zip(cell_list, boundaries)
