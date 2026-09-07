@@ -1922,24 +1922,28 @@ class RHEALPixDGGS:
             "rising": (shape == 2) & rising,
             "falling": (shape == 2) & ~rising,
         }
+        # Project each group in chunks of about a million points, so the
+        # working set stays a few tens of megabytes however many cells there
+        # are (each dart or skew quad needs several hundred points).
         for kind, members in kinds.items():
+            s_u, r_u, weights_u = rules[kind]
+            chunk = max(1, 1_000_000 // len(s_u))
             for code, region_name in ((1, "north_polar"), (-1, "south_polar")):
-                group = members & (region == code)
-                if not group.any():
-                    continue
-                s_u, r_u, weights_u = rules[kind]
-                x1 = x[group][:, None]
-                y1 = (y[group] - width[group])[:, None]
-                wg = width[group][:, None]
-                xs = x1 + wg * s_u
-                ys = y1 + wg * r_u
-                lons, lats = self.rhealpix(
-                    xs.ravel(), ys.ravel(), inverse=True, region=region_name
-                )
-                lons, lats = lons.reshape(xs.shape), lats.reshape(xs.shape)
-                out_lat[group] = np.sum(weights_u * lats, axis=1)
-                if kind == "skew":
-                    out_lon[group] = np.sum(weights_u * lons, axis=1)
+                group = np.flatnonzero(members & (region == code))
+                for start in range(0, len(group), chunk):
+                    rows = group[start : start + chunk]
+                    x1 = x[rows][:, None]
+                    y1 = (y[rows] - width[rows])[:, None]
+                    wg = width[rows][:, None]
+                    xs = x1 + wg * s_u
+                    ys = y1 + wg * r_u
+                    lons, lats = self.rhealpix(
+                        xs.ravel(), ys.ravel(), inverse=True, region=region_name
+                    )
+                    lons, lats = lons.reshape(xs.shape), lats.reshape(xs.shape)
+                    out_lat[rows] = np.sum(weights_u * lats, axis=1)
+                    if kind == "skew":
+                        out_lon[rows] = np.sum(weights_u * lons, axis=1)
         result[valid, 0] = out_lon
         result[valid, 1] = out_lat
         return result
