@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "rHEALPixDGGS"
-version = "0.8.3"
+version = "0.8.4"
 description = "An implementation of the rHEALPix discrete global grid system"
 authors = [
     { name = "Alexander Raichev", email = "alex@raichev.net" },
@@ -77,7 +77,6 @@ matplotlib = "3.11.1"
 # transient may live under docs/ -- e.g. make_figures.py keeps its
 # downloaded-data cache at the repository root, not in docs/.
 include = ["tests/", "docs/"]
-exclude = ["docs/source/images/*.png"]
 [tool.mypy]
 files = ["rhealpixdggs"]
 check_untyped_defs = true
