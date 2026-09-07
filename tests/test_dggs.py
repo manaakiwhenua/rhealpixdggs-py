@@ -577,6 +577,67 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         self.assertTrue(np.isnan(c[1]).all())
         self.assertFalse(np.isnan(c[[0, 2]]).any())
 
+    def test_cells_from_points_matches_cell_from_point(self):
+        # cells_from_points makes cell_from_point's decisions for every
+        # point at once: index strings must agree exactly, including at
+        # lattice edges (nudged by one ulp either way), outside the image
+        # (empty string for None) and for NaN input.
+        from numpy.testing import assert_array_equal
+
+        rng = np.random.default_rng(20260811)
+
+        def scalar(rdggs, res, xs, ys, plane):
+            cells = [
+                rdggs.cell_from_point(res, (float(a), float(b)), plane=plane)
+                for a, b in zip(xs, ys)
+            ]
+            return np.array(["" if c is None else str(c) for c in cells])
+
+        for rdggs in (WGS84_003, WGS84_003_RADIANS, WGS84_123, WGS84_122):
+            R = rdggs.ellipsoid.R_A
+            angle = 1.0 if rdggs.ellipsoid.radians else 180 / pi
+            lon = rng.uniform(-pi, pi, 400) * angle
+            lat = np.arcsin(rng.uniform(-1, 1, 400)) * angle
+            w = rdggs.cell_width(2)
+            gx = -pi * R + w * np.arange(0, 4 * rdggs.N_side**2 + 1, 3)
+            gy = -3 * pi * R / 4 + w * np.arange(0, 6 * rdggs.N_side**2 + 1, 4)
+            ex, ey = (a.ravel() for a in np.meshgrid(gx, gy))
+            px = np.concatenate(
+                [
+                    rng.uniform(-pi * R - 1, pi * R + 1, 400),
+                    ex,
+                    np.nextafter(ex, np.inf),
+                    np.nextafter(ex, -np.inf),
+                    [np.nan, 0.0],
+                ]
+            )
+            py = np.concatenate(
+                [
+                    rng.uniform(-3 * pi * R / 4 - 1, 3 * pi * R / 4 + 1, 400),
+                    ey,
+                    ey,
+                    np.nextafter(ey, -np.inf),
+                    [0.0, np.nan],
+                ]
+            )
+            for res in (0, 1, 2, 4, 7):
+                assert_array_equal(
+                    rdggs.cells_from_points(lon, lat, res, plane=False),
+                    scalar(rdggs, res, lon, lat, False),
+                )
+                assert_array_equal(
+                    rdggs.cells_from_points(px, py, res, plane=True),
+                    scalar(rdggs, res, px, py, True),
+                )
+        # Shape is preserved and the result is a string array.
+        out = WGS84_003.cells_from_points(
+            np.zeros((2, 3)), np.full((2, 3), 10.0), 2, plane=False
+        )
+        self.assertEqual(out.shape, (2, 3))
+        self.assertTrue(out.dtype.kind == "U")
+        expected = str(WGS84_003.cell_from_point(2, (0.0, 10.0), plane=False))
+        self.assertTrue((out == expected).all())
+
     def test_boundary_array(self):
         import shapely
         from numpy.testing import assert_allclose, assert_array_equal
