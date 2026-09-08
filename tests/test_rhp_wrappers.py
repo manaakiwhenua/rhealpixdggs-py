@@ -860,6 +860,147 @@ class RhpWrappersTestCase(unittest.TestCase):
                     rhpw.polyfill(nz, 5, plane=False, containment=mode), cells, mode
                 )
 
+    def test_polyfill_array(self):
+        # polyfill_array returns the cells polyfill returns, as a sorted numpy
+        # string array without duplicates, and None where polyfill does.
+        import numpy as np
+
+        nz = sh.Polygon(
+            [
+                (166.0, -46.8),
+                (169.5, -47.5),
+                (174.5, -42.0),
+                (178.8, -37.8),
+                (177.0, -35.5),
+                (173.5, -34.0),
+                (171.5, -36.5),
+                (166.5, -43.5),
+            ]
+        )
+        holed = sh.Polygon(
+            [(-10, -10), (50, -10), (50, 40), (-10, 40)],
+            holes=[[(-5, 5), (25, 20), (45, 5)], [(-5, 25), (25, 30), (45, 25)]],
+        )
+        multi = sh.MultiPolygon(
+            [holed, sh.Polygon([(0, 75), (-30, 42), (0, 42), (30, 42)])]
+        )
+        R = gs.WGS84_003.ellipsoid.R_A
+        planar = sh.Polygon(
+            [(0.1 * R, 0.1 * R), (0.9 * R, 0.2 * R), (0.5 * R, 0.7 * R)]
+        )
+        cases = [(nz, 4, False), (nz, 5, False), (multi, 3, False), (planar, 3, True)]
+        for geom, res, plane in cases:
+            for mode in ("center", "full", "overlapping"):
+                arr = rhpw.polyfill_array(geom, res, plane=plane, containment=mode)
+                want = rhpw.polyfill(geom, res, plane=plane, containment=mode)
+                self.assertIsInstance(arr, np.ndarray)
+                self.assertEqual(arr.dtype.kind, "U")
+                self.assertEqual(set(arr.tolist()), want, (res, plane, mode))
+                self.assertEqual(len(arr), len(want), (res, plane, mode))
+                self.assertEqual(arr.tolist(), sorted(arr.tolist()), (res, plane, mode))
+        # N_side = 2, and the order is the order of Cell objects. (Index
+        # strings are single-character digits, so N_side 2 and 3 only.)
+        dggs = gs.WGS84_002
+        arr = rhpw.polyfill_array(nz, 3, plane=False, dggs=dggs)
+        want = rhpw.polyfill(nz, 3, plane=False, dggs=dggs)
+        self.assertEqual(set(arr.tolist()), want)
+        self.assertEqual(len(arr), len(want))
+        cells = [dggs.cell([c[0]] + [int(d) for d in c[1:]]) for c in arr]
+        self.assertEqual(cells, sorted(cells))
+        # compress: the same compacted cells, sorted as strings.
+        square = sh.Polygon(((0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0)))
+        arr = rhpw.polyfill_array(square, 6, plane=False, compress=True)
+        self.assertEqual(
+            arr.tolist(), sorted(rhpw.polyfill(square, 6, plane=False, compress=True))
+        )
+        # Nothing qualifies: an empty array. Malformed: None.
+        self.assertEqual(rhpw.polyfill_array(square, 2, plane=False).size, 0)
+        self.assertIsNone(rhpw.polyfill_array(sh.Polygon(), 2))
+        self.assertIsNone(rhpw.polyfill_array(sh.Point(1, 1), 2))
+
+    def test_polyfill_cover(self):
+        # compress=True returns the hierarchical cover: no cell coarser than
+        # min_res, no complete sibling group left unmerged, every cell with
+        # exactly one ancestor at min_res, and expanding every cell to the
+        # target resolution gives exactly the flat fill.
+        from itertools import product
+
+        from rhealpixdggs.conversion import compact_cells
+
+        nz = sh.Polygon(
+            [
+                (166.0, -46.8),
+                (169.5, -47.5),
+                (174.5, -42.0),
+                (178.8, -37.8),
+                (177.0, -35.5),
+                (173.5, -34.0),
+                (171.5, -36.5),
+                (166.5, -43.5),
+            ]
+        )
+        holed = sh.Polygon(
+            [(-10, -10), (50, -10), (50, 40), (-10, 40)],
+            holes=[[(-5, 5), (25, 20), (45, 5)], [(-5, 25), (25, 30), (45, 25)]],
+        )
+
+        def expand(index, res):
+            depth = res - (len(index) - 1)
+            return [index + "".join(t) for t in product("012345678", repeat=depth)]
+
+        for geom, res in ((nz, 6), (holed, 5)):
+            for mode in ("center", "full", "overlapping"):
+                flat = rhpw.polyfill(geom, res, plane=False, containment=mode)
+                for min_res in (0, 2, 4, res):
+                    cover = rhpw.polyfill(
+                        geom,
+                        res,
+                        plane=False,
+                        compress=True,
+                        containment=mode,
+                        min_res=min_res,
+                    )
+                    resolutions = {len(c) - 1 for c in cover}
+                    self.assertTrue(min(resolutions) >= min_res, (mode, min_res))
+                    self.assertTrue(max(resolutions) <= res, (mode, min_res))
+                    expanded = [x for c in cover for x in expand(c, res)]
+                    self.assertEqual(len(expanded), len(set(expanded)), (mode, min_res))
+                    self.assertEqual(set(expanded), flat, (mode, min_res))
+                    # Fully compact above min_res: no complete sibling group.
+                    if min_res < res:
+                        recompacted = compact_cells(
+                            {c for c in cover if len(c) - 1 == res}, N_side=3
+                        ) | {c for c in cover if len(c) - 1 < res}
+                        self.assertEqual(recompacted, cover, (mode, min_res))
+                    # The array form is the same cells in hierarchical order.
+                    arr = rhpw.polyfill_array(
+                        geom,
+                        res,
+                        plane=False,
+                        compress=True,
+                        containment=mode,
+                        min_res=min_res,
+                    )
+                    self.assertEqual(set(arr.tolist()), cover)
+                    self.assertEqual(arr.tolist(), sorted(arr.tolist()))
+                    if min_res == res:
+                        self.assertEqual(cover, flat)
+                # For full containment the cover is exactly the compaction of
+                # the flat fill: a parent is wholly inside iff all its children
+                # are.
+                if mode == "full":
+                    self.assertEqual(
+                        rhpw.polyfill(
+                            geom, res, plane=False, compress=True, containment=mode
+                        ),
+                        compact_cells(flat, N_side=3),
+                    )
+
+        with self.assertRaises(ValueError):
+            rhpw.polyfill(nz, 3, plane=False, compress=True, min_res=4)
+        with self.assertRaises(ValueError):
+            rhpw.polyfill(nz, 3, plane=False, min_res=-1)
+
     def test_linetrace(self):
         # Test data
         p_ls = sh.LineString(

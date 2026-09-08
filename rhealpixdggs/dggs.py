@@ -1097,7 +1097,10 @@ class RHEALPixDGGS:
         """
         chars = np.empty((len(face), resolution + 1), dtype=np.uint32)
         chars[:, 0] = np.array([ord(c) for c in CELLS0])[face]
-        chars[:, 1:] = digits[:, :resolution] + ord("0")
+        # Column by column: a whole-array temporary would be int64 and, for
+        # millions of cells, the largest allocation of the caller.
+        for k in range(resolution):
+            chars[:, k + 1] = digits[:, k] + ord("0")
         return chars.view(f"<U{resolution + 1}").ravel()
 
     def cells_in_box(
@@ -2154,12 +2157,14 @@ class RHEALPixDGGS:
             "rising": (shape == 2) & rising,
             "falling": (shape == 2) & ~rising,
         }
-        # Project each group in chunks of about a million points, so the
+        # Project each group in chunks of about 200,000 points, so the
         # working set stays a few tens of megabytes however many cells there
-        # are (each dart or skew quad needs several hundred points).
+        # are (each dart or skew quad needs several hundred points, and the
+        # array projection holds a dozen or so temporaries the size of its
+        # input).
         for kind, members in kinds.items():
             s_u, r_u, weights_u = rules[kind]
-            chunk = max(1, 1_000_000 // len(s_u))
+            chunk = max(1, 200_000 // len(s_u))
             for code, region_name in ((1, "north_polar"), (-1, "south_polar")):
                 group = np.flatnonzero(members & (region == code))
                 for start in range(0, len(group), chunk):

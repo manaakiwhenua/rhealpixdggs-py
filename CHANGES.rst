@@ -9,31 +9,59 @@ equatorial cells, a 6-point-per-edge approximation for the curved edges of
 polar cells; cap cells and antimeridian-straddling cells are handled
 apart.
 
-``polyfill`` is also vectorised end to end: the candidate cells of the
-geometry's bounding box come from the new
-``RHEALPixDGGS.cells_in_box(resolution, ul, dr, plane)`` (the index strings
-of every cell meeting the box's planar image, a superset of
-``cells_from_region`` computed without ``Cell`` objects), their centroids
-from ``RHEALPixDGGS.centroids`` and their boundaries from
-``RHEALPixDGGS.boundary_array``, and shapely's vectorised predicates decide
-all candidates at once. In the default mode a cell's centroid, the mean
-of longitude and latitude over the cell, lies within the cell's
-longitude-latitude bounding box, so cells whose box is wholly inside or
-wholly outside the geometry are decided from four corner points and only
-the cells along the geometry's boundary have their centroid integrated.
-Candidates are carried as arrays from the lattice to the geometry code,
-not round-tripped through index strings, and are processed in chunks of
-250,000, so the working set is bounded whatever the resolution: a
-378,000-cell resolution-8 fill of New Zealand peaks at about 200 MB.
-Default results are unchanged: a 42,000-cell resolution-7 fill of New
-Zealand drops from 25.5 s to 0.3 s, a 60,000-cell resolution-6
-equatorial box from 11.2 s to 0.14 s, a 1,700-cell resolution-5 polar box
-from 0.77 s to 0.02 s. One behaviour differs: a planar geometry reaching
-outside the planar image used to yield no cells at all (``cells_from_region``
-found no cell at a bounding-box corner); the cells inside the image are
-now found. ``RHEALPixDGGS.centroids`` integrates the mean latitude of
-equatorial quads once per planar row rather than once per cell, as
-latitude is independent of x there.
+``polyfill`` is rebuilt as a hierarchical fill on arrays. It descends from
+resolution ``min_res`` (a new parameter, default 0): a cell wholly inside
+the geometry is kept whole, a cell missing it is dropped, and only the
+cells the boundary passes through are split, down to ``res``, where the
+remaining cells are decided by ``containment``. So the work grows with the
+length of the boundary rather than the area. With ``compress=False`` the
+kept coarse cells are expanded into their resolution-``res`` descendants,
+giving exactly the cells a cell-by-cell test at ``res`` gives (the cells
+themselves are unchanged from earlier releases, with one exception below).
+With ``compress=True`` the coarse cells are returned as they are: a
+mixed-resolution cover with no cell coarser than ``min_res`` and no complete
+sibling group left unmerged, so that every cell of the result has exactly
+one ancestor at resolution ``min_res``, which suits partitioning by that
+resolution. This changes what ``compress=True`` returns in the default
+``center`` mode along the boundary only: compaction merged nine siblings
+whose centroids were all inside even when the boundary clipped their
+parent's corner; the cover splits such a parent, since it is not wholly
+inside. In ``full`` mode the two agree exactly. "Wholly inside" is judged
+by the cell's boundary polygon for ``full`` and ``overlapping``, and for
+``center`` by the cell's longitude-latitude bounding box, within which
+every descendant's centroid lies, so the centroid rule is kept exactly;
+above the leaves a cell is accepted or rejected only when clear of the
+geometry's boundary by about a centimetre, so an edge coinciding with a
+cell edge is left to the exact test at the leaves.
+
+Underneath, the new ``RHEALPixDGGS.cells_in_box(resolution, ul, dr, plane)``
+enumerates the cells meeting a box's planar image without ``Cell``
+objects (a superset of ``cells_from_region``), centroids come from
+``RHEALPixDGGS.centroids`` and boundaries from
+``RHEALPixDGGS.boundary_array``, shapely's vectorised predicates decide a
+whole frontier at once, cells are carried as arrays and held as one integer
+key each, and every frontier and expansion is processed in chunks of
+250,000 cells, so the working set is bounded whatever the resolution. The
+new ``rhp_wrappers.polyfill_array`` takes ``polyfill``'s arguments and
+returns the cells as a sorted numpy string array instead of a set, at about
+40 bytes per cell against some 100 for a set entry. ``RHEALPixDGGS.centroids``
+integrates the mean latitude of equatorial quads once per planar row, as
+latitude is independent of x there, and projects polar quadrature points in
+batches of 200,000 rather than a million, which bounds its peak memory.
+
+Measured on the New Zealand polygon (WGS84_003, ``plane=False``), against
+0.8.4: a 42,000-cell resolution-7 fill drops from 24.5 s to 0.33 s; the
+compressed fill at resolution 7 from 24.5 s to 0.32 s; a 60,000-cell
+resolution-6 equatorial box from 11.4 s to 0.02 s; a 1,700-cell
+resolution-5 polar box from 0.96 s to 0.05 s. Beyond 0.8.4's reach: the 3.4
+million cells of resolution 9 take 3.1 s (the result set is then the memory
+floor, about 490 MB as a set, 250 MB as an array); the resolution-9 cover
+of 18,000 cells takes 2.4 s and 70 MB, against 35 s and 660 MB by
+compaction of the flat fill; the resolution-10 cover of 55,000 cells takes
+6.4 s, or 1.9 s with ``min_res=5``. One behaviour differs from 0.8.4
+besides ``compress``: a planar geometry reaching outside the planar image
+used to yield no cells at all (``cells_from_region`` found no cell at a
+bounding-box corner); the cells inside the image are now found.
 
 0.8.4
 ^^^^^
