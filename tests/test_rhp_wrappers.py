@@ -629,6 +629,237 @@ class RhpWrappersTestCase(unittest.TestCase):
         self.assertEqual(rhpw.polyfill(plane_poly, 1), set())
         self.assertEqual(rhpw.polyfill(geom_res_mismatch, 0, False), set())
 
+    @staticmethod
+    def _polyfill_by_cells(geom, res, plane, dggs):
+        # The algorithm polyfill used before it was vectorised: the cells of
+        # the bounding box from cells_from_region, one Cell.centroid and one
+        # shapely point test each. Kept here as the oracle for the default
+        # "center" mode.
+        geoms = [geom] if isinstance(geom, sh.Polygon) else list(geom.geoms)
+        out = set()
+        for g in geoms:
+            b = g.bounds
+            for row in dggs.cells_from_region(res, (b[0], b[3]), (b[2], b[1]), plane):
+                for cell in row:
+                    if g.contains(sh.Point(cell.centroid(plane))):
+                        out.add(str(cell))
+        return out
+
+    def test_polyfill_matches_cell_by_cell_algorithm(self):
+        from rhealpixdggs.ellipsoids import WGS84_A, WGS84_F, Ellipsoid
+
+        nz = sh.Polygon(
+            [
+                (166.0, -46.8),
+                (169.5, -47.5),
+                (174.5, -42.0),
+                (178.8, -37.8),
+                (177.0, -35.5),
+                (173.5, -34.0),
+                (171.5, -36.5),
+                (166.5, -43.5),
+            ]
+        )
+        holed = sh.Polygon(
+            [(-10, -10), (50, -10), (50, 40), (-10, 40)],
+            holes=[[(-5, 5), (25, 20), (45, 5)], [(-5, 25), (25, 30), (45, 25)]],
+        )
+        polar = sh.box(-30, 70, 30, 85)
+        near_pole = sh.Polygon([(-170, 80), (170, 80), (170, 89.9), (-170, 89.9)])
+        south = sh.Polygon(
+            [(30, -42), (0, -75), (90, -75), (60, -42)],
+            holes=[[(10, -70), (20, -65), (10, -65)]],
+        )
+        multi = sh.MultiPolygon(
+            [holed, sh.Polygon([(0, 75), (-30, 42), (0, 42), (30, 42)])]
+        )
+        to_antimeridian = sh.box(150, -30, 180, 10)
+        rotated = gs.RHEALPixDGGS(
+            Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=129),
+            north_square=0,
+            south_square=0,
+        )
+        R = gs.WGS84_003.ellipsoid.R_A
+        planar = sh.Polygon(
+            [(0.1 * R, 0.1 * R), (0.9 * R, 0.2 * R), (0.5 * R, 0.7 * R)]
+        )
+        cases = [
+            (nz, gs.WGS84_003, False),
+            (holed, gs.WGS84_003, False),
+            (polar, gs.WGS84_003, False),
+            (near_pole, gs.WGS84_003, False),
+            (south, gs.WGS84_003, False),
+            (multi, gs.WGS84_003, False),
+            (to_antimeridian, gs.WGS84_003, False),
+            (nz, rotated, False),
+            (holed, rotated, False),
+            (nz, gs.WGS84_002, False),
+            (planar, gs.WGS84_003, True),
+        ]
+        for geom, dggs, plane in cases:
+            for res in (2, 3, 4):
+                self.assertEqual(
+                    rhpw.polyfill(geom, res, plane=plane, dggs=dggs),
+                    self._polyfill_by_cells(geom, res, plane, dggs),
+                    (geom.bounds, dggs.ellipsoid.lon_0, plane, res),
+                )
+
+        # A planar geometry reaching outside the image: cells_from_region
+        # gave up (a bounding-box corner had no cell) and polyfill returned
+        # nothing; the vectorised fill finds the cells that are inside.
+        R = gs.WGS84_003.ellipsoid.R_A
+        outside = sh.Polygon(
+            [(0.1 * R, 0.1 * R), (0.9 * R, 0.2 * R), (0.5 * R, 0.9 * R)]
+        )
+        got = rhpw.polyfill(outside, 2, plane=True)
+        want = {
+            str(c)
+            for c in gs.WGS84_003.grid(2)
+            if outside.contains(sh.Point(c.nucleus(plane=True)))
+        }
+        self.assertTrue(want)
+        self.assertEqual(got, want)
+
+    def test_polyfill_containment_modes(self):
+        from rhealpixdggs.ellipsoids import WGS84_A, WGS84_F, Ellipsoid
+
+        dggs = gs.WGS84_003
+        nz = sh.Polygon(
+            [
+                (166.0, -46.8),
+                (169.5, -47.5),
+                (174.5, -42.0),
+                (178.8, -37.8),
+                (177.0, -35.5),
+                (173.5, -34.0),
+                (171.5, -36.5),
+                (166.5, -43.5),
+            ]
+        )
+        holed = sh.Polygon(
+            [(-10, -10), (50, -10), (50, 40), (-10, 40)],
+            holes=[[(-5, 5), (25, 20), (45, 5)], [(-5, 25), (25, 30), (45, 25)]],
+        )
+        for geom, res in ((nz, 4), (nz, 5), (holed, 3)):
+            center = rhpw.polyfill(geom, res, plane=False, containment="center")
+            full = rhpw.polyfill(geom, res, plane=False, containment="full")
+            over = rhpw.polyfill(geom, res, plane=False, containment="overlapping")
+            self.assertEqual(center, rhpw.polyfill(geom, res, plane=False))
+            self.assertTrue(full <= center <= over, res)
+            self.assertLess(len(full), len(over))
+            # Every candidate is decided by its (6-point-per-edge) boundary
+            # polygon: within the geometry for full, meeting it for
+            # overlapping, and no other candidate meets it.
+            b = geom.bounds
+            candidates = dggs.cells_in_box(res, (b[0], b[3]), (b[2], b[1]), plane=False)
+            rings = dggs.boundary_array(candidates, n=6, plane=False)
+            for index, ring in zip(candidates, rings):
+                # A cell whose east edge is the antimeridian reads back at
+                # longitude -180; unwrap it as polyfill does.
+                lons = ring[:, 0]
+                if lons.max() - lons.min() > 180:
+                    ring = ring.copy()
+                    ring[:, 0] = [lon + 360 if lon < 0 else lon for lon in lons]
+                poly = sh.Polygon(ring)
+                self.assertTrue(poly.is_valid, index)
+                self.assertEqual(index in full, geom.contains(poly), index)
+                self.assertEqual(index in over, geom.intersects(poly), index)
+
+        # In the plane: a cell's nine children are fully inside its square
+        # and have their centroids inside it; grown by a millionth of a
+        # child's width, the square also overlaps the sixteen cells around
+        # them (a square exactly on the lattice touches its neighbours only
+        # up to the last bit of two independently computed coordinates, so
+        # that case is bounded rather than pinned).
+        cell = dggs.cell(("N", 2, 1, 6, 0, 5, 5, 6, 1, 1))
+        square = sh.Polygon(cell.vertices(plane=True))
+        eps = 1e-6 * dggs.cell_width(10)
+        minx, miny, maxx, maxy = square.bounds
+        grown = sh.box(minx - eps, miny - eps, maxx + eps, maxy + eps)
+        children = {str(c) for c in cell.subcells()}
+        for geom in (square, grown):
+            self.assertEqual(rhpw.polyfill(geom, 10, containment="full"), children)
+            self.assertEqual(rhpw.polyfill(geom, 10, containment="center"), children)
+        over = rhpw.polyfill(grown, 10, containment="overlapping")
+        self.assertTrue(children <= over)
+        self.assertEqual(len(over), 25)
+        exact = rhpw.polyfill(square, 10, containment="overlapping")
+        self.assertTrue(children <= exact <= over)
+        self.assertEqual(rhpw.polyfill(grown, 9, containment="full"), {str(cell)})
+
+        # Cap cells: the resolution 1 north cap N4 is bounded by one parallel.
+        cap = dggs.cell(("N", 4))
+        cap_lat = cap.boundary(n=2, plane=False)[0][1]
+        band = sh.Polygon(
+            [(-180, cap_lat - 1), (180, cap_lat - 1), (180, 90), (-180, 90)]
+        )
+        thin = sh.Polygon([(-180, 88), (180, 88), (180, 90), (-180, 90)])
+        self.assertIn("N4", rhpw.polyfill(band, 1, plane=False, containment="full"))
+        self.assertIn(
+            "N4", rhpw.polyfill(band, 1, plane=False, containment="overlapping")
+        )
+        self.assertNotIn("N4", rhpw.polyfill(thin, 1, plane=False, containment="full"))
+        self.assertIn(
+            "N4", rhpw.polyfill(thin, 1, plane=False, containment="overlapping")
+        )
+        # A polygon that stops short of the cap does not overlap it.
+        short = sh.Polygon(
+            [(-30, 42), (30, 42), (30, cap_lat - 0.5), (-30, cap_lat - 0.5)]
+        )
+        self.assertNotIn(
+            "N4", rhpw.polyfill(short, 1, plane=False, containment="overlapping")
+        )
+
+        # Antimeridian: on a grid rotated to lon_0 = 129 some cells straddle
+        # longitude 180. A box up to 180 overlaps them; none is fully inside.
+        rotated = gs.RHEALPixDGGS(
+            Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=129),
+            north_square=0,
+            south_square=0,
+        )
+        geom = sh.box(170, -10, 180, 10)
+        over = rhpw.polyfill(
+            geom, 3, plane=False, dggs=rotated, containment="overlapping"
+        )
+        full = rhpw.polyfill(geom, 3, plane=False, dggs=rotated, containment="full")
+        rings = rotated.boundary_array(sorted(over), n=2, plane=False)
+        span = rings[:, :, 0].max(axis=1) - rings[:, :, 0].min(axis=1)
+        self.assertTrue((span > 180).any())
+        self.assertTrue(full <= over)
+        for index, s in zip(sorted(over), span):
+            self.assertFalse(s > 180 and index in full, index)
+
+        with self.assertRaises(ValueError):
+            rhpw.polyfill(nz, 3, plane=False, containment="inside")
+
+    def test_polyfill_is_independent_of_chunking(self):
+        # polyfill works through the candidate cells in chunks that bound
+        # its working set; the result must not depend on the chunk size.
+        from unittest.mock import patch
+
+        nz = sh.Polygon(
+            [
+                (166.0, -46.8),
+                (169.5, -47.5),
+                (174.5, -42.0),
+                (178.8, -37.8),
+                (177.0, -35.5),
+                (173.5, -34.0),
+                (171.5, -36.5),
+                (166.5, -43.5),
+            ]
+        )
+        expected = {
+            mode: rhpw.polyfill(nz, 5, plane=False, containment=mode)
+            for mode in ("center", "full", "overlapping")
+        }
+        self.assertGreater(len(expected["center"]), 500)
+        with patch.object(gs, "_LATTICE_CHUNK", 97):
+            for mode, cells in expected.items():
+                self.assertEqual(
+                    rhpw.polyfill(nz, 5, plane=False, containment=mode), cells, mode
+                )
+
     def test_linetrace(self):
         # Test data
         p_ls = sh.LineString(

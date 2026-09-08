@@ -166,6 +166,11 @@ import numpy as np
 
 # assert_allclose is doctest-only: the doctests use it from the module globals.
 from numpy.testing import assert_allclose  # noqa: F401
+
+# Cells per chunk when enumerating the lattice cells of a planar box
+# (``RHEALPixDGGS._lattice_cells``), bounding the working set of callers such
+# as ``rhp_wrappers.polyfill`` however many cells a box holds.
+_LATTICE_CHUNK = 250_000
 from scipy.special import roots_legendre
 
 import rhealpixdggs.pj_rhealpix as pjr
@@ -1012,8 +1017,26 @@ class RHEALPixDGGS:
             x, y = self.rhealpix(x_in, y_in)
         else:
             x, y = x_in, y_in
+        valid, face, digits = self._parse_planar_points(
+            x.ravel(), y.ravel(), resolution
+        )
+        out = np.full(x.size, "", dtype=f"<U{resolution + 1}")
+        if valid.any():
+            out[valid] = self._format_indices(face[valid], digits[valid], resolution)
+        return out.reshape(x_in.shape)
+
+    def _parse_planar_points(
+        self, x: FloatArray, y: FloatArray, resolution: int
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        The resolution `resolution` cells containing the planar points
+        ``(x[k], y[k])``, in the form ``_parse_indices`` produces: a validity
+        mask (False where no cell contains the point), the base cell as a
+        code 0-5 (-1 where invalid) and the digits as an int64 array of
+        ``max(resolution, 1)`` columns (zero beyond the resolution and where
+        invalid).
+        """
         count = x.size
-        x, y = x.ravel(), y.ravel()
         ns, ss = self.north_square, self.south_square
         R = self.ellipsoid.R_A
         # The resolution 0 cell of each point, by cell_from_point's tests in
@@ -1039,15 +1062,12 @@ class RHEALPixDGGS:
         for test, code in zip(reversed(tests), reversed(codes)):
             face[test] = code
         valid = face >= 0
+        digits = np.zeros((count, max(resolution, 1)), dtype=np.int64)
         # Offsets from the base cell's corner as fractions of its width,
         # nudged off exactly 1, then truncated to base-N digits; a fraction
         # that rounds up to N**resolution keeps only its leading digits, as
         # the string slicing in cell_from_point does.
-        letters = np.array(list("".join(CELLS0)), dtype=str)
-        out = np.full(count, "", dtype=f"<U{resolution + 1}")
-        if valid.any() and resolution == 0:
-            out[valid] = letters[face[valid]]
-        elif valid.any():
+        if valid.any() and resolution > 0:
             N = self.N_side
             w = self.cell_width(0)
             corners = np.array([self.ul_vertex[letter] for letter in CELLS0])
@@ -1063,12 +1083,199 @@ class RHEALPixDGGS:
             powers = N ** np.arange(resolution - 1, -1, -1)
             col = (col_index[:, None] // powers) % N
             row = (row_index[:, None] // powers) % N
-            digits = row * N + col
-            chars = np.empty((int(valid.sum()), resolution + 1), dtype=np.uint32)
-            chars[:, 0] = np.array([ord(c) for c in CELLS0])[face[valid]]
-            chars[:, 1:] = digits + ord("0")
-            out[valid] = chars.view(f"<U{resolution + 1}").ravel()
-        return out.reshape(x_in.shape)
+            digits[valid] = row * N + col
+        return valid, face, digits
+
+    @staticmethod
+    def _format_indices(
+        face: np.ndarray, digits: np.ndarray, resolution: int
+    ) -> np.ndarray:
+        """
+        The index strings of valid cells given as base cell codes and digit
+        rows, all of resolution `resolution` (digit columns beyond it are
+        ignored: ``_parse_planar_points`` always yields at least one).
+        """
+        chars = np.empty((len(face), resolution + 1), dtype=np.uint32)
+        chars[:, 0] = np.array([ord(c) for c in CELLS0])[face]
+        chars[:, 1:] = digits[:, :resolution] + ord("0")
+        return chars.view(f"<U{resolution + 1}").ravel()
+
+    def cells_in_box(
+        self,
+        resolution: int,
+        ul: tuple[float, float],
+        dr: tuple[float, float],
+        plane: bool = True,
+    ) -> np.ndarray:
+        """
+        Return the index strings, as a numpy string array in no particular
+        order, of every resolution `resolution` cell whose planar square
+        meets the planar image of the axis-aligned box with upper-left
+        vertex `ul` and lower-right vertex `dr` -- a planar rectangle if
+        `plane` = True, else a longitude-latitude quadrangle -- plus a
+        one-cell margin around that image. The set is a superset of the
+        cells ``cells_from_region`` returns for the same box, computed
+        without constructing ``Cell`` objects, and is meant as the candidate
+        set for tests such as ``rhp_wrappers.polyfill``'s.
+
+        The image of a longitude-latitude box is bounded by the images of
+        its edges: parallels map to horizontal lines in the equatorial
+        region and to segments of concentric squares in the polar regions,
+        meridians to vertical lines or to straight rays to the pole. The
+        box is therefore split at the region boundaries ``+/-phi_0`` and, in
+        the equatorial band, at the meridian opposite ``lon_0`` where the
+        planar image wraps; each part's planar bounding box is that of its
+        projected corners and of the points where the polar squares'
+        diagonal meridians cross its latitude edges. A part reaching a pole
+        or spanning all longitudes is the whole polar square.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> found = set(rdggs.cells_in_box(1, (0, 60), (90, 0), plane=False))
+            >>> rows = rdggs.cells_from_region(1, (0, 60), (90, 0), plane=False)
+            >>> set(str(c) for row in rows for c in row) <= found
+            True
+            >>> sorted(rdggs.cells_in_box(0, (0, 60), (90, 0), plane=False).tolist())
+            ['N', 'O', 'P', 'Q', 'R']
+
+        """
+        boxes = self._candidate_boxes(ul, dr, plane)
+        found = [
+            self._format_indices(face, digits, resolution)
+            for face, digits in self._lattice_cells(boxes, resolution)
+        ]
+        if not found:
+            return np.array([], dtype="<U1")
+        return np.unique(np.concatenate(found))
+
+    def _candidate_boxes(
+        self, ul: tuple[float, float], dr: tuple[float, float], plane: bool
+    ) -> list[tuple[float, float, float, float]]:
+        """
+        Planar boxes ``(x1, x2, y1, y2)`` whose union contains the planar
+        image of the box with upper-left vertex `ul` and lower-right vertex
+        `dr` (a planar rectangle if `plane`, else a longitude-latitude
+        quadrangle), as ``cells_in_box`` describes.
+        """
+        R = self.ellipsoid.R_A
+        boxes: list[tuple[float, float, float, float]] = []
+        if plane:
+            boxes.append((ul[0], dr[0], dr[1], ul[1]))
+        else:
+            half = self.ellipsoid.pi()
+            quarter = half / 2
+            lon_0 = self.ellipsoid.lon_0
+            phi_0 = self.ellipsoid.phi_0
+            lon_lo, lon_hi = ul[0], dr[0]
+            lat_lo, lat_hi = dr[1], ul[1]
+            whole = lon_hi - lon_lo >= 2 * half
+            # Meridians whose images are the polar squares' diagonals, and
+            # the wrap meridian, as longitudes in the box's range.
+            diagonals = [lon_0 + k * quarter for k in range(-8, 9)]
+            wrap_meridians = [lon_0 + (2 * k + 1) * half for k in range(-2, 3)]
+
+            def polar(square: str, lo: float, hi: float) -> None:
+                if (
+                    whole
+                    or lo <= -half / 2
+                    and square == "S"
+                    or hi >= half / 2
+                    and square == "N"
+                ):
+                    x, y = self.ul_vertex[square]
+                    boxes.append((x, x + self.cell_width(0), y - self.cell_width(0), y))
+                    return
+                # Sample strictly inside the polar region: at exactly +/-phi_0
+                # the projection uses the equatorial formula, whose image of
+                # that parallel is the band's edge, a cut for most longitudes
+                # rather than the polar square's perimeter. The margin below
+                # covers the nudge.
+                nudge = half * 1e-12
+                if square == "N":
+                    lo = max(lo, phi_0 + nudge)
+                else:
+                    hi = min(hi, -phi_0 - nudge)
+                lons = [lon_lo, lon_hi] + [m for m in diagonals if lon_lo < m < lon_hi]
+                pts_lon = np.repeat(np.array(lons, dtype=np.float64), 2)
+                pts_lat = np.tile(np.array([lo, hi], dtype=np.float64), len(lons))
+                x, y = self.rhealpix(pts_lon, pts_lat)
+                boxes.append((x.min(), x.max(), y.min(), y.max()))
+
+            def equatorial(lo: float, hi: float) -> None:
+                cuts = (
+                    [lon_lo]
+                    + [m for m in wrap_meridians if lon_lo < m < lon_hi]
+                    + [lon_hi]
+                )
+                if whole:
+                    cuts = [lon_0 - half, lon_0 + half]
+                y = self.rhealpix(np.array([lon_lo, lon_lo]), np.array([lo, hi]))[1]
+                at_wrap = [m for m in wrap_meridians if abs(m - lon_hi) <= half * 1e-12]
+                if at_wrap:
+                    cuts[-1] = at_wrap[0]
+                for a, b in pairwise(cuts):
+                    # x is longitude relative to lon_0, wrapped into
+                    # [-pi, pi) and scaled; a piece ending at the wrap
+                    # meridian runs to the image's right edge.
+                    xa = self.rhealpix(np.array([a]), np.array([lo]))[0][0]
+                    xb = (
+                        pi * R
+                        if b in wrap_meridians
+                        else self.rhealpix(np.array([b]), np.array([lo]))[0][0]
+                    )
+                    boxes.append((xa, xb, y.min(), y.max()))
+                if at_wrap:
+                    # The wrap meridian itself projects to the image's left
+                    # edge, so a box reaching it also meets the first column.
+                    boxes.append((-pi * R, -pi * R, y.min(), y.max()))
+
+            if lat_hi > phi_0:
+                polar("N", max(lat_lo, phi_0), lat_hi)
+            if lat_lo < -phi_0:
+                polar("S", lat_lo, min(lat_hi, -phi_0))
+            if lat_lo <= phi_0 and lat_hi >= -phi_0:
+                equatorial(max(lat_lo, -phi_0), min(lat_hi, phi_0))
+        return boxes
+
+    def _lattice_cells(
+        self,
+        boxes: list[tuple[float, float, float, float]],
+        resolution: int,
+        chunk: int | None = None,
+    ) -> Iterator[tuple[np.ndarray, np.ndarray]]:
+        """
+        Yield the resolution `resolution` cells whose planar squares meet
+        the planar boxes ``(x1, x2, y1, y2)``, each widened by one cell and
+        clipped to the image, as ``(face, digits)`` arrays in the form of
+        ``_parse_indices`` (valid cells only), in chunks of at most about
+        `chunk` cells so that the working set stays bounded however large
+        the boxes are. A cell met by two boxes is yielded twice.
+        """
+        if chunk is None:
+            chunk = _LATTICE_CHUNK
+        R = self.ellipsoid.R_A
+        w = self.cell_width(resolution)
+        x_anchor, y_anchor = -pi * R, -3 * pi * R / 4
+        for x1, x2, y1, y2 in boxes:
+            x1, x2 = max(x1 - w, -pi * R), min(x2 + w, pi * R)
+            y1, y2 = max(y1 - w, -3 * pi * R / 4), min(y2 + w, 3 * pi * R / 4)
+            if x2 < x1 or y2 < y1:
+                continue
+            i0, i1 = floor((x1 - x_anchor) / w), floor((x2 - x_anchor) / w)
+            j0, j1 = floor((y1 - y_anchor) / w), floor((y2 - y_anchor) / w)
+            xs = x_anchor + (np.arange(i0, i1 + 1) + 0.5) * w
+            rows_per_chunk = max(1, chunk // len(xs))
+            for j in range(j0, j1 + 1, rows_per_chunk):
+                ys = (
+                    y_anchor + (np.arange(j, min(j + rows_per_chunk, j1 + 1)) + 0.5) * w
+                )
+                gx, gy = np.meshgrid(xs, ys, indexing="ij")
+                valid, face, digits = self._parse_planar_points(
+                    gx.ravel(), gy.ravel(), resolution
+                )
+                if valid.any():
+                    yield face[valid], digits[valid]
 
     def cell_from_region(
         self, ul: tuple[float, float], dr: tuple[float, float], plane: bool = True
@@ -1874,14 +2081,29 @@ class RHEALPixDGGS:
         """
         valid, face, digits, resolution = self._parse_indices(indices)
         result = np.full((len(valid), 2), np.nan)
-        if not valid.any():
-            return result
-        face, digits, resolution = face[valid], digits[valid], resolution[valid]
+        if valid.any():
+            result[valid] = self._centroids(
+                face[valid], digits[valid], resolution[valid], plane
+            )
+        return result
+
+    def _centroids(
+        self,
+        face: np.ndarray,
+        digits: np.ndarray,
+        resolution: np.ndarray,
+        plane: bool,
+    ) -> FloatArray:
+        """
+        ``centroids`` for the valid cells parsed by ``_parse_indices``, as a
+        ``(len(face), 2)`` array.
+        """
+        result = np.empty((len(face), 2))
         x, y, width, region = self._index_geometry(face, digits, resolution)
         nucleus_x, nucleus_y = x + width / 2, y - width / 2
         if plane:
-            result[valid, 0] = nucleus_x
-            result[valid, 1] = nucleus_y
+            result[:, 0] = nucleus_x
+            result[:, 1] = nucleus_y
             return result
         lon, lat = self.rhealpix(nucleus_x, nucleus_y, inverse=True)
         out_lon, out_lat = lon.copy(), lat.copy()
@@ -1891,16 +2113,26 @@ class RHEALPixDGGS:
         # evaluates it; the mean longitude is the nucleus longitude.
         quad = shape == 0
         if quad.any():
+            # Latitude is independent of x in the equatorial region, so
+            # quads in one planar row (same y and width) share their mean
+            # latitude: integrate once per distinct row and broadcast.
+            rows, inverse = np.unique(
+                np.column_stack([y[quad], width[quad], nucleus_x[quad] * 0]),
+                axis=0,
+                return_inverse=True,
+            )
             nodes, weights = roots_legendre(20)
-            y1 = (y[quad] - width[quad])[:, None]
-            y2 = y[quad][:, None]
+            y1 = (rows[:, 0] - rows[:, 1])[:, None]
+            y2 = rows[:, 0][:, None]
             ys = (y2 - y1) * (nodes + 1) / 2.0 + y1
-            xs = np.broadcast_to(nucleus_x[quad][:, None], ys.shape)
+            x_rep = np.zeros(len(rows))
+            np.put(x_rep, inverse, nucleus_x[quad])
+            xs = np.broadcast_to(x_rep[:, None], ys.shape)
             phis = self.rhealpix(xs.ravel(), ys.ravel(), inverse=True)[1].reshape(
                 ys.shape
             )
             integral = (y2 - y1)[:, 0] / 2.0 * np.sum(weights * phis, axis=1)
-            out_lat[quad] = (1 / (y2 - y1)[:, 0]) * integral
+            out_lat[quad] = ((1 / (y2 - y1)[:, 0]) * integral)[inverse.ravel()]
         # Darts and skew quads: area-weighted means over the planar square by
         # the fixed product rules of Cell._centroid_quadrature.
         t, w = _gauss_legendre_unit(_CENTROID_QUADRATURE_ORDER)
@@ -1944,8 +2176,8 @@ class RHEALPixDGGS:
                     out_lat[rows] = np.sum(weights_u * lats, axis=1)
                     if kind == "skew":
                         out_lon[rows] = np.sum(weights_u * lons, axis=1)
-        result[valid, 0] = out_lon
-        result[valid, 1] = out_lat
+        result[:, 0] = out_lon
+        result[:, 1] = out_lat
         return result
 
     def _shape_code(

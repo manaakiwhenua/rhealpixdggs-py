@@ -1,8 +1,11 @@
 from typing import Literal
 from warnings import warn
 
+import numpy as np
+import shapely
 from shapely import is_valid_reason
-from shapely.geometry import LineString, MultiLineString, MultiPolygon, Point, Polygon
+from shapely.affinity import translate
+from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon, box
 
 # List of resolution 0 cell addresses (i.e. cube faces)
 from rhealpixdggs.cell import CELLS0, Cell
@@ -440,11 +443,34 @@ def polyfill(
     compress: bool = False,
     verbose: bool = False,
     dggs: RHEALPixDGGS = WGS84_003,
+    containment: Literal["center", "full", "overlapping"] = "center",
 ) -> set[str] | None:
     """
     Turns the area contained in a shapely polygon or multipolygon into a set of cell
-    indices at the requested resolution. A cell index is included if its centroid is
-    inside the geometry defined by the boundaries and holes.
+    indices at the requested resolution. Which cells count is chosen by
+    `containment`, following H3's modes:
+
+    - ``"center"`` (default): a cell is included if its centroid is inside the
+      geometry defined by the boundaries and holes.
+    - ``"full"``: a cell is included if the whole cell lies within the geometry
+      (its boundary may touch the geometry's).
+    - ``"overlapping"``: a cell is included if any part of it meets the
+      geometry, so the result covers the geometry.
+
+    ``full`` and ``overlapping`` test the cell's boundary polygon. In the plane
+    that polygon is exact. On the ellipsoid, equatorial cells are
+    longitude-latitude aligned and exact too; polar cells have curved edges,
+    which are represented by ``6`` points per edge (``Cell.boundary(n=6)``), so
+    a decision there is made against that piecewise-linear approximation. A
+    cap cell, which spans every longitude, is fully inside only a geometry
+    that covers the whole latitude band from the cap's boundary to the pole,
+    and overlaps any geometry reaching that latitude.
+
+    The candidate cells are those of the geometry's bounding box
+    (``RHEALPixDGGS.cells_in_box``), and every test runs on all candidates
+    at once: centroids from ``RHEALPixDGGS.centroids``, boundaries from
+    ``RHEALPixDGGS.boundary_array``, predicates from shapely's vectorised
+    functions.
 
     Returns an empty set if no cell centroids fall within the input geometry.
 
@@ -512,6 +538,11 @@ def polyfill(
 
         return None
 
+    if containment not in ("center", "full", "overlapping"):
+        raise ValueError(
+            f"containment must be 'center', 'full' or 'overlapping', not {containment!r}"
+        )
+
     # Extract list of polygons from geometry: Polygon needs to be wrapped in
     # one, MultiPolygon has it stashed in a property
     if isinstance(geometry, Polygon):
@@ -520,32 +551,151 @@ def polyfill(
         geoms = list(geometry.geoms)
 
     # Collect cells in regions of interest
-    cells = set()
+    cells: set[str] = set()
     for geom in geoms:
-        # Region of interest is the bounding box around the geometry
-        bbox = geom.bounds
-
-        # rhealpixdggs wants nw and se corners of region of interest
-        nw = (bbox[0], bbox[3])
-        se = (bbox[2], bbox[1])
-
-        # Cells in bounding box at requested resolution
-        roi_cells = dggs.cells_from_region(res, nw, se, plane)
-
-        if roi_cells:
-            # Flatten list of lists of cells in bbox
-            flat_cells = [cell for nested_list in roi_cells for cell in nested_list]
-
-            # Check each cell against geometry, add to results if inside polygon
-            for cell in flat_cells:
-                if geom.contains(Point(cell.centroid(plane))):
-                    cells.add(str(cell))
+        # Candidates: every cell of the geometry's bounding box, as the
+        # arrays cells_in_box builds its index strings from, in chunks that
+        # bound the working set; only the kept cells are turned into strings.
+        minx, miny, maxx, maxy = geom.bounds
+        boxes = dggs._candidate_boxes((minx, maxy), (maxx, miny), plane)
+        shapely.prepare(geom)
+        for face, digits in dggs._lattice_cells(boxes, res):
+            resolution = np.full(len(face), res)
+            if containment == "center":
+                keep = _cells_with_centroid_inside(
+                    geom, dggs, plane, face, digits, resolution
+                )
+            else:
+                keep = _cells_within_or_overlapping(
+                    geom, dggs, plane, face, digits, resolution, containment == "full"
+                )
+            if keep.any():
+                cells.update(
+                    dggs._format_indices(face[keep], digits[keep], res).tolist()
+                )
 
     # Merge cells inside polygon into larger ones where possible
     if compress:
         cells = compact_cells(cells, N_side=dggs.N_side)
 
     return cells
+
+
+def _cells_with_centroid_inside(
+    geom: Polygon,
+    dggs: RHEALPixDGGS,
+    plane: bool,
+    face: np.ndarray,
+    digits: np.ndarray,
+    resolution: np.ndarray,
+) -> np.ndarray:
+    """
+    For each cell, given as the arrays ``RHEALPixDGGS._parse_indices``
+    produces, whether its centroid lies inside `geom`.
+
+    In the plane the centroid is the nucleus. On the ellipsoid the centroid
+    is the mean of longitude and latitude over the cell, so it lies within
+    the cell's longitude-latitude bounding box: a cell whose box is wholly
+    inside `geom` is in, one whose box is disjoint from it is out, and only
+    the cells whose box meets the boundary need their centroid computed.
+    Boxes spanning more than half a turn of longitude (cells straddling the
+    antimeridian) are not trusted and always get the exact test.
+    """
+    if plane:
+        x, y, width, _ = dggs._index_geometry(face, digits, resolution)
+        return shapely.contains_xy(geom, x + width / 2, y - width / 2)
+    corners = dggs._boundary_array(face, digits, resolution, 2, False)
+    lo = corners.min(axis=1)
+    hi = corners.max(axis=1)
+    trusted = hi[:, 0] - lo[:, 0] <= dggs.ellipsoid.pi()
+    keep = np.zeros(len(face), dtype=bool)
+    undecided = ~trusted
+    if trusted.any():
+        boxes = shapely.box(
+            lo[trusted, 0], lo[trusted, 1], hi[trusted, 0], hi[trusted, 1]
+        )
+        inside = shapely.contains(geom, boxes)
+        outside = shapely.disjoint(geom, boxes)
+        keep[np.flatnonzero(trusted)[inside]] = True
+        undecided[np.flatnonzero(trusted)[~inside & ~outside]] = True
+    if undecided.any():
+        centroids = dggs._centroids(
+            face[undecided], digits[undecided], resolution[undecided], False
+        )
+        keep[undecided] = shapely.contains_xy(geom, centroids[:, 0], centroids[:, 1])
+    return keep
+
+
+def _cells_within_or_overlapping(
+    geom: Polygon,
+    dggs: RHEALPixDGGS,
+    plane: bool,
+    face: np.ndarray,
+    digits: np.ndarray,
+    resolution: np.ndarray,
+    full: bool,
+) -> np.ndarray:
+    """
+    For each cell, given as the arrays ``RHEALPixDGGS._parse_indices``
+    produces, whether it lies fully within `geom` (`full` = True) or meets
+    it at all (`full` = False), tested on the cells' boundary polygons:
+    exact in the plane and for equatorial cells, a 6-point-per-edge
+    approximation of the curved edges of polar cells. Cap cells and cells
+    crossing the antimeridian are handled apart, as their rings are not
+    polygons in longitude-latitude coordinates.
+    """
+    polar = (face == 0) | (face == 5)
+    n = 6 if (not plane and polar.any()) else 2
+    rings = dggs._boundary_array(face, digits, resolution, n, plane)
+    if plane:
+        polys = shapely.polygons(rings)
+        return np.asarray(
+            shapely.contains(geom, polys) if full else shapely.intersects(geom, polys)
+        )
+
+    keep = np.zeros(len(face), dtype=bool)
+    cap = dggs._shape_code(face, digits, resolution) == 1
+    half = dggs.ellipsoid.pi()
+    # A ring whose longitudes jump between -180 and 180 is unwrapped
+    # eastwards past 180. A cell whose east edge lies exactly on the
+    # antimeridian then reads as an ordinary polygon within [-180, 180];
+    # one that genuinely crosses it reaches beyond 180.
+    lon = rings[:, :, 0]
+    wraps = ~cap & (lon.max(axis=1) - lon.min(axis=1) > half)
+    rings[wraps, :, 0] = np.where(lon[wraps] < 0, lon[wraps] + 2 * half, lon[wraps])
+    crosses = wraps & (rings[:, :, 0].max(axis=1) > half * (1 + 1e-12))
+    plain = ~cap & ~crosses
+
+    if plain.any():
+        polys = shapely.polygons(rings[plain])
+        keep[plain] = (
+            shapely.contains(geom, polys) if full else shapely.intersects(geom, polys)
+        )
+    if crosses.any() and not full:
+        # A crossing cell can only be fully inside a geometry that itself
+        # crosses, which callers must have split, so it is never `full`; it
+        # overlaps the geometry if its unwrapped ring meets the geometry or
+        # the geometry shifted one turn east.
+        polys = shapely.polygons(rings[crosses])
+        shifted = translate(geom, xoff=2 * half)
+        keep[crosses] = shapely.intersects(geom, polys) | shapely.intersects(
+            shifted, polys
+        )
+    if cap.any():
+        _, miny, _, maxy = geom.bounds
+        for k in np.flatnonzero(cap):
+            lat_c = rings[k, 0, 1]
+            north = face[k] == 0
+            band = (
+                box(-half, lat_c, half, half / 2)
+                if north
+                else box(-half, -half / 2, half, lat_c)
+            )
+            if full:
+                keep[k] = geom.covers(band)
+            else:
+                keep[k] = maxy >= lat_c if north else miny <= lat_c
+    return keep
 
 
 def linetrace(
