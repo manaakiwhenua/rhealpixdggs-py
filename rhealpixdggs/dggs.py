@@ -1097,7 +1097,10 @@ class RHEALPixDGGS:
         """
         chars = np.empty((len(face), resolution + 1), dtype=np.uint32)
         chars[:, 0] = np.array([ord(c) for c in CELLS0])[face]
-        chars[:, 1:] = digits[:, :resolution] + ord("0")
+        # Column by column: a whole-array temporary would be int64 and, for
+        # millions of cells, the largest allocation of the caller.
+        for k in range(resolution):
+            chars[:, k + 1] = digits[:, k] + ord("0")
         return chars.view(f"<U{resolution + 1}").ravel()
 
     def cells_in_box(
@@ -2154,12 +2157,14 @@ class RHEALPixDGGS:
             "rising": (shape == 2) & rising,
             "falling": (shape == 2) & ~rising,
         }
-        # Project each group in chunks of about a million points, so the
+        # Project each group in chunks of about 200,000 points, so the
         # working set stays a few tens of megabytes however many cells there
-        # are (each dart or skew quad needs several hundred points).
+        # are (each dart or skew quad needs several hundred points, and the
+        # array projection holds a dozen or so temporaries the size of its
+        # input).
         for kind, members in kinds.items():
             s_u, r_u, weights_u = rules[kind]
-            chunk = max(1, 1_000_000 // len(s_u))
+            chunk = max(1, 200_000 // len(s_u))
             for code, region_name in ((1, "north_polar"), (-1, "south_polar")):
                 group = np.flatnonzero(members & (region == code))
                 for start in range(0, len(group), chunk):
@@ -2249,41 +2254,61 @@ class RHEALPixDGGS:
         # All boundary points lie on the fine lattice of pitch w/(n - 1)
         # anchored at the planar image's corner, shared with every
         # same-resolution neighbour's points, so integer lattice keys
-        # identify coincident points robustly.
+        # identify coincident points robustly. Each point is projected once,
+        # from the planar coordinates its key denotes rather than from any
+        # one cell's arithmetic for it (which differs from a neighbour's in
+        # the last bit), so a cell's boundary is the same whatever cells it
+        # is computed with, and a shared edge gets one set of coordinates.
         R = self.ellipsoid.R_A
-        cols = np.rint((x + pi * R) / delta[:, None]).astype(np.int64)
-        rows = np.rint((y + 3 * pi * R / 4) / delta[:, None]).astype(np.int64)
+        x_anchor, y_anchor = -pi * R, -3 * pi * R / 4
+        cols = np.rint((x - x_anchor) / delta[:, None]).astype(np.int64)
+        rows = np.rint((y - y_anchor) / delta[:, None]).astype(np.int64)
+
+        # The planar point a lattice key denotes, kept within the image,
+        # which the rounding can overshoot by a bit at its edges.
+        def lattice_x(col: np.ndarray, pitch: float) -> FloatArray:
+            return np.minimum(x_anchor + col * pitch, -x_anchor)
+
+        def lattice_y(row: np.ndarray, pitch: float) -> FloatArray:
+            return np.minimum(y_anchor + row * pitch, -y_anchor)
+
         lon = np.empty((count, m))
         lat = np.empty((count, m))
         for res in np.unique(resolution):
-            equatorial = (resolution == res) & (region_code == 0)
+            at = resolution == res
+            pitch = delta[at][0]
+            equatorial = at & (region_code == 0)
             if equatorial.any():
+                # Longitude depends on x alone here and latitude on y alone,
+                # so each column and each row is projected once.
                 xs, ys = x[equatorial].ravel(), y[equatorial].ravel()
                 col_ids, col_first, col_inv = np.unique(
                     cols[equatorial].ravel(), return_index=True, return_inverse=True
                 )
-                _, row_first, row_inv = np.unique(
+                row_ids, row_first, row_inv = np.unique(
                     rows[equatorial].ravel(), return_index=True, return_inverse=True
                 )
                 lons, lats = self.rhealpix(
-                    np.concatenate([xs[col_first], xs[row_first]]),
-                    np.concatenate([ys[col_first], ys[row_first]]),
+                    np.concatenate([lattice_x(col_ids, pitch), xs[row_first]]),
+                    np.concatenate([ys[col_first], lattice_y(row_ids, pitch)]),
                     inverse=True,
                     region="equatorial",
                 )
                 lon[equatorial] = lons[: len(col_ids)][col_inv].reshape(-1, m)
                 lat[equatorial] = lats[len(col_ids) :][row_inv].reshape(-1, m)
             for code, region in ((1, "north_polar"), (-1, "south_polar")):
-                polar = (resolution == res) & (region_code == code)
+                polar = at & (region_code == code)
                 if not polar.any():
                     continue
-                xs, ys = x[polar].ravel(), y[polar].ravel()
-                keys = cols[polar].ravel() * (1 << 32) + rows[polar].ravel()
+                c, r = cols[polar].ravel(), rows[polar].ravel()
                 _, first, inverse = np.unique(
-                    keys, return_index=True, return_inverse=True
+                    c * (1 << 32) + r, return_index=True, return_inverse=True
                 )
                 lons, lats = self.rhealpix(
-                    xs[first], ys[first], inverse=True, region=region
+                    lattice_x(c[first], pitch),
+                    lattice_y(r[first], pitch),
+                    inverse=True,
+                    region=region,
                 )
                 lon[polar] = lons[inverse].reshape(-1, m)
                 lat[polar] = lats[inverse].reshape(-1, m)

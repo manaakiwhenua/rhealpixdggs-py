@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal
 from warnings import warn
 
 import numpy as np
@@ -7,16 +7,16 @@ from shapely import is_valid_reason
 from shapely.affinity import translate
 from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon, box
 
-# List of resolution 0 cell addresses (i.e. cube faces)
-from rhealpixdggs.cell import CELLS0, Cell
-from rhealpixdggs.conversion import compact_cells
-
 # ======== Messages and constants ======== #
 # Pre-defined DGGS with WGS84 ellipsoid, coordinates in degrees, n == 3 to subdivide
 # cell sides, and both N and S polar cube face attached to O equatorial cube face:
 # N
 # O P Q R
 # S
+import rhealpixdggs.dggs as rhp_dggs
+
+# List of resolution 0 cell addresses (i.e. cube faces)
+from rhealpixdggs.cell import CELLS0, Cell
 from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
 
 # Warnings
@@ -444,6 +444,7 @@ def polyfill(
     verbose: bool = False,
     dggs: RHEALPixDGGS = WGS84_003,
     containment: Literal["center", "full", "overlapping"] = "center",
+    min_res: int = 0,
 ) -> set[str] | None:
     """
     Turns the area contained in a shapely polygon or multipolygon into a set of cell
@@ -491,6 +492,28 @@ def polyfill(
     antimeridian by the caller first, as is standard for planar GIS
     geometry.
 
+    The fill descends the hierarchy from resolution `min_res`: a cell wholly
+    inside the geometry is kept whole, a cell missing it is dropped, and only
+    the cells the boundary passes through are split, down to resolution
+    `res`, where the remaining cells are decided by `containment`. So the
+    work grows with the length of the boundary, not the area. With
+    `compress` = False every kept coarse cell is expanded into its
+    resolution-`res` descendants, giving exactly the cells a cell-by-cell
+    test at `res` would give. With `compress` = True the coarse cells are
+    returned as they are, a mixed-resolution cover with no cell coarser than
+    `min_res` and no complete group of siblings left unmerged; so every cell
+    of the result has exactly one ancestor at resolution `min_res`, which
+    suits partitioning by that resolution. "Wholly inside" is judged by the
+    cell's boundary polygon for ``full`` and ``overlapping`` where that is
+    exact (the plane, equatorial cells), and otherwise by the cell's
+    longitude-latitude bounding box, which contains the cell: for polar
+    cells, whose 6-point polygon is only approximate, and for ``center``,
+    where the box also contains every descendant's centroid, so the centroid
+    rule is kept exactly.
+
+    ``polyfill_array`` returns the same cells as a sorted numpy string array,
+    which costs less than half the memory per cell for large fills.
+
     EXAMPLES::
         >>> from shapely import Polygon
         >>> coords = ((0., 0.), (0., 1.), (1., 1.), (1., 0.), (0., 0.))
@@ -527,6 +550,98 @@ def polyfill(
         >>> 'Q3330600' not in result7  # original res-7 cell absorbed
         True
     """
+    found = _polyfill_arrays(
+        geometry, res, plane, verbose, dggs, containment, compress, min_res
+    )
+    if found is None:
+        return None
+    return set(_index_strings(dggs, *found).tolist())
+
+
+def polyfill_array(
+    geometry: Polygon | MultiPolygon,
+    res: int,
+    plane: bool = True,
+    compress: bool = False,
+    verbose: bool = False,
+    dggs: RHEALPixDGGS = WGS84_003,
+    containment: Literal["center", "full", "overlapping"] = "center",
+    min_res: int = 0,
+) -> np.ndarray | None:
+    """
+    ``polyfill`` returning the cell indices as a numpy string array instead of
+    a set: the same cells for the same arguments, sorted (by base cell, then
+    digit by digit, the order ``Cell`` objects sort in; with `compress` a
+    coarse cell comes where its descendants would) and without duplicates,
+    or ``None`` where ``polyfill`` returns ``None``. An empty array means no
+    cell qualified.
+
+    The array costs about ``4 * (res + 2)`` bytes per cell against roughly a
+    hundred for a set entry, and feeds array-based callers such as
+    ``RHEALPixDGGS.boundary_array``, ``RHEALPixDGGS.centroids`` or a data
+    frame column directly. Like the rest of the index-string API, this is
+    for DGGSs with single-character digits, ``N_side`` 2 or 3.
+
+    EXAMPLES::
+        >>> from shapely import Polygon
+        >>> polygon = Polygon(((0., 0.), (0., 1.), (1., 1.), (1., 0.), (0., 0.)))
+        >>> polyfill_array(polygon, res=5, plane=False).tolist()
+        ['Q33303', 'Q33304', 'Q33305', 'Q33306', 'Q33307', 'Q33308', 'Q33330', 'Q33331', 'Q33332']
+        >>> polyfill_array(polygon, res=2, plane=False).size
+        0
+        >>> polyfill_array(Polygon(), res=2, plane=False) is None
+        True
+    """
+    found = _polyfill_arrays(
+        geometry, res, plane, verbose, dggs, containment, compress, min_res
+    )
+    if found is None:
+        return None
+    return _index_strings(dggs, *found)
+
+
+def _index_strings(
+    dggs: RHEALPixDGGS, face: np.ndarray, digits: np.ndarray, resolution: np.ndarray
+) -> np.ndarray:
+    """
+    The index strings of cells given as base cell codes, digit rows and
+    per-cell resolutions, in input order, as one array wide enough for the
+    deepest.
+    """
+    width = int(resolution.max()) + 1 if len(resolution) else 1
+    out = np.empty(len(face), dtype=f"<U{width}")
+    for r in np.unique(resolution):
+        rows = resolution == r
+        out[rows] = dggs._format_indices(face[rows], digits[rows], int(r))
+    return out
+
+
+def _polyfill_arrays(
+    geometry: Polygon | MultiPolygon,
+    res: int,
+    plane: bool,
+    verbose: bool,
+    dggs: RHEALPixDGGS,
+    containment: str,
+    compress: bool,
+    min_res: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
+    """
+    The cells ``polyfill`` selects, as ``(face, digits, resolution)`` arrays
+    in the form of ``RHEALPixDGGS._parse_indices`` (digits zero-padded to
+    `res` columns), sorted by base cell and then digit by digit and without
+    duplicates; ``None`` for a malformed geometry.
+
+    The fill descends from resolution `min_res`. At each level a cell wholly
+    inside the geometry is accepted, a cell disjoint from it dropped, and the
+    rest split into their children, until `res`, where the leaves are decided
+    by `containment`. Accepted cells are kept as they are when `compress`,
+    else expanded to their descendants at `res`. Every cell is held as one
+    int64 key: its base cell followed by its digits as a base N**2 number,
+    zero-padded to `res` digits, so that the keys' numeric order is the order
+    of base cell then digit by digit and a cover, having no cell that is an
+    ancestor of another, has no ties.
+    """
     # Stop early if the geometry is malformed
     if _malformed_geometry(geometry):
         if verbose:
@@ -542,6 +657,11 @@ def polyfill(
         raise ValueError(
             f"containment must be 'center', 'full' or 'overlapping', not {containment!r}"
         )
+    if not 0 <= min_res <= res:
+        raise ValueError(f"min_res must be between 0 and res={res}, not {min_res!r}")
+    N2 = dggs.N_side**2
+    if 6 * N2**res >= 2**62:
+        raise ValueError(f"resolution {res} is too deep for N_side={dggs.N_side}")
 
     # Extract list of polygons from geometry: Polygon needs to be wrapped in
     # one, MultiPolygon has it stashed in a property
@@ -550,35 +670,206 @@ def polyfill(
     else:
         geoms = list(geometry.geoms)
 
-    # Collect cells in regions of interest
-    cells: set[str] = set()
+    chunk = rhp_dggs._LATTICE_CHUNK
+    keys_out: list[np.ndarray] = []
+    res_out: list[np.ndarray] = []
+
+    def emit(keys: np.ndarray, level: int) -> None:
+        keys_out.append(keys)
+        res_out.append(np.full(len(keys), level, dtype=np.int8))
+
+    # Above the leaves a cell is accepted or rejected only when it is clear
+    # of the geometry's boundary by this margin (about a centimetre), so
+    # that a cell edge coinciding with a polygon edge, whose coordinates
+    # differ by an ulp between a parent and its children, is left to the
+    # exact test at the leaves.
+    margin = 1e-9 * (dggs.cell_width(0) if plane else dggs.ellipsoid.pi() / 2)
     for geom in geoms:
-        # Candidates: every cell of the geometry's bounding box, as the
-        # arrays cells_in_box builds its index strings from, in chunks that
-        # bound the working set; only the kept cells are turned into strings.
+        shapely.prepare(geom)
         minx, miny, maxx, maxy = geom.bounds
         boxes = dggs._candidate_boxes((minx, maxy), (maxx, miny), plane)
-        shapely.prepare(geom)
-        for face, digits in dggs._lattice_cells(boxes, res):
-            resolution = np.full(len(face), res)
-            if containment == "center":
-                keep = _cells_with_centroid_inside(
-                    geom, dggs, plane, face, digits, resolution
+        # The frontier at min_res: the lattice cells of the bounding box.
+        frontier = [
+            (face, digits[:, :min_res])
+            for face, digits in dggs._lattice_cells(boxes, min_res)
+        ]
+        for level in range(min_res, res + 1):
+            if not frontier:
+                break
+            face = np.concatenate([f for f, _ in frontier])
+            digits = np.concatenate([d for _, d in frontier])
+            frontier = []
+            scale = N2 ** (res - level)  # descendants at res per cell here
+            # A cell accepted for the flat fill is expanded into `scale`
+            # keys; below a chunk per cell that is done here, above it the
+            # cell is split instead, so no expansion exceeds a chunk.
+            expand_here = compress or scale <= chunk
+            for start in range(0, len(face), chunk):
+                f = face[start : start + chunk]
+                d = digits[start : start + chunk]
+                resolution = np.full(len(f), level)
+                if level == res:
+                    if containment == "center":
+                        keep = _cells_with_centroid_inside(
+                            geom, dggs, plane, f, d, resolution
+                        )
+                    else:
+                        keep = _cells_within_or_overlapping(
+                            geom, dggs, plane, f, d, resolution, containment == "full"
+                        )
+                    if keep.any():
+                        emit(_keys(f[keep], d[keep], level, res, N2), res)
+                    continue
+                accept, reject = _classify(
+                    geom, dggs, plane, f, d, resolution, containment, margin
                 )
-            else:
-                keep = _cells_within_or_overlapping(
-                    geom, dggs, plane, face, digits, resolution, containment == "full"
-                )
-            if keep.any():
-                cells.update(
-                    dggs._format_indices(face[keep], digits[keep], res).tolist()
-                )
+                if not expand_here:
+                    accept = np.zeros_like(accept)
+                if accept.any():
+                    base = _keys(f[accept], d[accept], level, res, N2)
+                    if compress:
+                        emit(base, level)
+                    else:
+                        # Expand in groups whose total stays within a chunk.
+                        per_group = max(1, chunk // scale)
+                        for g0 in range(0, len(base), per_group):
+                            group = base[g0 : g0 + per_group]
+                            emit(
+                                (
+                                    group[:, None] + np.arange(scale, dtype=np.int64)
+                                ).ravel(),
+                                res,
+                            )
+                split = ~accept & ~reject
+                if split.any():
+                    frontier.append(_children(f[split], d[split], N2))
 
-    # Merge cells inside polygon into larger ones where possible
+    width = max(res, 1)
+    if not keys_out:
+        empty = np.empty(0, dtype=np.int64)
+        return empty, np.empty((0, width), dtype=np.int16), empty.astype(np.int8)
+    keys = np.concatenate(keys_out)
+    levels = np.concatenate(res_out)
     if compress:
-        cells = compact_cells(cells, N_side=dggs.N_side)
+        keys, levels = _merge_sibling_groups(keys, levels, res, min_res, N2)
+    else:
+        keys = np.unique(keys)  # a cell met by two parts appears twice
+        levels = np.full(len(keys), res, dtype=np.int8)
+    return _decode(keys, levels, res, N2)
 
-    return cells
+
+def _keys(
+    face: np.ndarray, digits: np.ndarray, level: int, res: int, N2: int
+) -> np.ndarray:
+    """The res-padded int64 keys of resolution-`level` cells."""
+    weights = N2 ** np.arange(res - 1, res - 1 - level, -1, dtype=np.int64)
+    return face.astype(np.int64) * N2**res + (
+        digits[:, :level].astype(np.int64) * weights
+    ).sum(axis=1)
+
+
+def _children(
+    face: np.ndarray, digits: np.ndarray, N2: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """The N2 children of each cell: a digit column appended, cells repeated."""
+    n = len(face)
+    child = np.tile(np.arange(N2, dtype=digits.dtype), n)
+    face = np.repeat(face, N2)
+    digits = np.column_stack([np.repeat(digits, N2, axis=0), child])
+    return face, digits
+
+
+def _classify(
+    geom: Polygon,
+    dggs: RHEALPixDGGS,
+    plane: bool,
+    face: np.ndarray,
+    digits: np.ndarray,
+    resolution: np.ndarray,
+    containment: str,
+    margin: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    For cells above the leaf resolution: `accept` marks cells wholly inside
+    `geom` and clear of its boundary by `margin`, so that every descendant
+    qualifies under `containment`, and `reject` cells farther than `margin`
+    from it, so that none does. For ``center`` the test is on the cell's
+    longitude-latitude bounding box (planar square in the plane), which
+    contains every descendant's centroid; for ``full`` and ``overlapping`` on
+    the cell's boundary polygon where that is exact (the plane, equatorial
+    cells) and otherwise on its longitude-latitude bounding box, which
+    contains the cell, so that no decision here contradicts the leaf test.
+    Cells whose box cannot be trusted (spanning more than half a turn) are
+    neither.
+    """
+    if containment == "center":
+        if plane:
+            x, y, width, _ = dggs._index_geometry(face, digits, resolution)
+            boxes = shapely.box(x, y - width, x + width, y)
+            trusted = np.ones(len(face), dtype=bool)
+        else:
+            corners = dggs._boundary_array(face, digits, resolution, 2, False)
+            lo = corners.min(axis=1)
+            hi = corners.max(axis=1)
+            trusted = hi[:, 0] - lo[:, 0] <= dggs.ellipsoid.pi()
+            boxes = shapely.box(lo[:, 0], lo[:, 1], hi[:, 0], hi[:, 1])
+        boundary = geom.boundary
+        shapely.prepare(boundary)
+        inside = np.asarray(shapely.contains(geom, boxes))
+        near = np.asarray(shapely.dwithin(boundary, boxes, margin))
+        close = np.asarray(shapely.dwithin(geom, boxes, margin))
+        return inside & ~near & trusted, ~close & trusted
+    accept = _cells_within_or_overlapping(
+        geom, dggs, plane, face, digits, resolution, True, margin
+    )
+    meets = _cells_within_or_overlapping(
+        geom, dggs, plane, face, digits, resolution, False, margin
+    )
+    return accept, ~meets
+
+
+def _merge_sibling_groups(
+    keys: np.ndarray, levels: np.ndarray, res: int, min_res: int, N2: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Deduplicate a cover and merge every complete group of N2 siblings into
+    its parent, repeatedly, never above `min_res`; return the keys sorted.
+    """
+    pairs = np.unique(np.column_stack([keys, levels.astype(np.int64)]), axis=0)
+    keys, levels = pairs[:, 0], pairs[:, 1]
+    for level in range(res, min_res, -1):
+        at = levels == level
+        if not at.any():
+            continue
+        stride = N2 ** (res - level + 1)
+        parents = (keys[at] // stride) * stride
+        unique_parents, counts = np.unique(parents, return_counts=True)
+        complete = counts == N2
+        if not complete.any():
+            continue
+        merged = np.isin(parents, unique_parents[complete])
+        keep = np.ones(len(keys), dtype=bool)
+        keep[np.flatnonzero(at)[merged]] = False
+        keys = np.concatenate([keys[keep], unique_parents[complete]])
+        levels = np.concatenate(
+            [levels[keep], np.full(int(complete.sum()), level - 1, dtype=np.int64)]
+        )
+    order = np.argsort(keys, kind="stable")
+    return keys[order], levels[order].astype(np.int8)
+
+
+def _decode(
+    keys: np.ndarray, levels: np.ndarray, res: int, N2: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Base cell codes and zero-padded int16 digit rows from res-padded keys."""
+    width = max(res, 1)
+    face = keys // N2**res
+    digits = np.zeros((len(keys), width), dtype=np.int16)
+    # One digit column at a time, so that no intermediate is wider than the
+    # keys themselves.
+    for k in range(res):
+        digits[:, k] = (keys // N2 ** (res - 1 - k)) % N2
+    return face, digits, levels.astype(np.int8)
 
 
 def _cells_with_centroid_inside(
@@ -634,6 +925,7 @@ def _cells_within_or_overlapping(
     digits: np.ndarray,
     resolution: np.ndarray,
     full: bool,
+    margin: float = 0.0,
 ) -> np.ndarray:
     """
     For each cell, given as the arrays ``RHEALPixDGGS._parse_indices``
@@ -643,15 +935,44 @@ def _cells_within_or_overlapping(
     approximation of the curved edges of polar cells. Cap cells and cells
     crossing the antimeridian are handled apart, as their rings are not
     polygons in longitude-latitude coordinates.
+
+    With a positive `margin` the tests are those the hierarchical descent
+    needs: "fully within" also requires the cell to be clear of `geom`'s
+    boundary by `margin`, and "meets" becomes "within `margin` of `geom`";
+    cap cells then count as neither fully within nor clear of it, and polar
+    cells are judged by their longitude-latitude bounding box rather than
+    their 6-point polygon. The box contains the whole cell, as a polar
+    cell's curved edges are monotone in longitude and latitude, whereas the
+    polygon of a coarse cell can miss the true edge by a degree, so a
+    decision on it could drop or accept descendants the leaf test would
+    decide the other way.
     """
     polar = (face == 0) | (face == 5)
-    n = 6 if (not plane and polar.any()) else 2
+    # Always 6 points per edge on the ellipsoid, not only when the batch
+    # has polar cells: the lattice the points are projected from has pitch
+    # width / (n - 1), so a cell's coordinates depend on n in the last bit,
+    # and a decision about a cell must not depend on which cells it is
+    # tested with.
+    n = 2 if plane else 6
     rings = dggs._boundary_array(face, digits, resolution, n, plane)
+    boundary = geom.boundary if margin > 0 else None
+    if boundary is not None:
+        shapely.prepare(boundary)
+
+    def within(polys: Any) -> np.ndarray:
+        inside = np.asarray(shapely.contains(geom, polys))
+        if boundary is None:
+            return inside
+        return inside & ~np.asarray(shapely.dwithin(boundary, polys, margin))
+
+    def meets(g: Polygon, polys: Any) -> np.ndarray:
+        if boundary is None:
+            return np.asarray(shapely.intersects(g, polys))
+        return np.asarray(shapely.dwithin(g, polys, margin))
+
     if plane:
         polys = shapely.polygons(rings)
-        return np.asarray(
-            shapely.contains(geom, polys) if full else shapely.intersects(geom, polys)
-        )
+        return within(polys) if full else meets(geom, polys)
 
     keep = np.zeros(len(face), dtype=bool)
     cap = dggs._shape_code(face, digits, resolution) == 1
@@ -666,24 +987,33 @@ def _cells_within_or_overlapping(
     crosses = wraps & (rings[:, :, 0].max(axis=1) > half * (1 + 1e-12))
     plain = ~cap & ~crosses
 
+    def cells(mask: np.ndarray) -> Any:
+        polys = shapely.polygons(rings[mask])
+        if boundary is not None and (polar & mask).any():
+            # Above the leaves, a polar cell is its bounding box.
+            box_rows = polar[mask]
+            polys[box_rows] = shapely.envelope(polys[box_rows])
+        return polys
+
     if plain.any():
-        polys = shapely.polygons(rings[plain])
-        keep[plain] = (
-            shapely.contains(geom, polys) if full else shapely.intersects(geom, polys)
-        )
+        polys = cells(plain)
+        keep[plain] = within(polys) if full else meets(geom, polys)
     if crosses.any() and not full:
         # A crossing cell can only be fully inside a geometry that itself
         # crosses, which callers must have split, so it is never `full`; it
         # overlaps the geometry if its unwrapped ring meets the geometry or
         # the geometry shifted one turn east.
-        polys = shapely.polygons(rings[crosses])
+        polys = cells(crosses)
         shifted = translate(geom, xoff=2 * half)
-        keep[crosses] = shapely.intersects(geom, polys) | shapely.intersects(
-            shifted, polys
-        )
+        keep[crosses] = meets(geom, polys) | meets(shifted, polys)
     if cap.any():
         _, miny, _, maxy = geom.bounds
         for k in np.flatnonzero(cap):
+            if boundary is not None:
+                # Neither clear of the boundary nor clear of the geometry:
+                # a cap is only ever decided at the leaves.
+                keep[k] = not full
+                continue
             lat_c = rings[k, 0, 1]
             north = face[k] == 0
             band = (
