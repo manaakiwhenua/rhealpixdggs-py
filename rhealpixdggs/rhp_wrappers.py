@@ -504,9 +504,12 @@ def polyfill(
     `min_res` and no complete group of siblings left unmerged; so every cell
     of the result has exactly one ancestor at resolution `min_res`, which
     suits partitioning by that resolution. "Wholly inside" is judged by the
-    cell's boundary polygon for ``full`` and ``overlapping`` and, for
-    ``center``, by the cell's longitude-latitude bounding box, which every
-    descendant's centroid lies within, so the centroid rule is kept exactly.
+    cell's boundary polygon for ``full`` and ``overlapping`` where that is
+    exact (the plane, equatorial cells), and otherwise by the cell's
+    longitude-latitude bounding box, which contains the cell: for polar
+    cells, whose 6-point polygon is only approximate, and for ``center``,
+    where the box also contains every descendant's centroid, so the centroid
+    rule is kept exactly.
 
     ``polyfill_array`` returns the same cells as a sorted numpy string array,
     which costs less than half the memory per cell for large fills.
@@ -793,8 +796,11 @@ def _classify(
     from it, so that none does. For ``center`` the test is on the cell's
     longitude-latitude bounding box (planar square in the plane), which
     contains every descendant's centroid; for ``full`` and ``overlapping`` on
-    the cell's boundary polygon, as the leaf test is. Cells whose box cannot
-    be trusted (spanning more than half a turn) are neither.
+    the cell's boundary polygon where that is exact (the plane, equatorial
+    cells) and otherwise on its longitude-latitude bounding box, which
+    contains the cell, so that no decision here contradicts the leaf test.
+    Cells whose box cannot be trusted (spanning more than half a turn) are
+    neither.
     """
     if containment == "center":
         if plane:
@@ -933,10 +939,21 @@ def _cells_within_or_overlapping(
     With a positive `margin` the tests are those the hierarchical descent
     needs: "fully within" also requires the cell to be clear of `geom`'s
     boundary by `margin`, and "meets" becomes "within `margin` of `geom`";
-    cap cells then count as neither fully within nor clear of it.
+    cap cells then count as neither fully within nor clear of it, and polar
+    cells are judged by their longitude-latitude bounding box rather than
+    their 6-point polygon. The box contains the whole cell, as a polar
+    cell's curved edges are monotone in longitude and latitude, whereas the
+    polygon of a coarse cell can miss the true edge by a degree, so a
+    decision on it could drop or accept descendants the leaf test would
+    decide the other way.
     """
     polar = (face == 0) | (face == 5)
-    n = 6 if (not plane and polar.any()) else 2
+    # Always 6 points per edge on the ellipsoid, not only when the batch
+    # has polar cells: the lattice the points are projected from has pitch
+    # width / (n - 1), so a cell's coordinates depend on n in the last bit,
+    # and a decision about a cell must not depend on which cells it is
+    # tested with.
+    n = 2 if plane else 6
     rings = dggs._boundary_array(face, digits, resolution, n, plane)
     boundary = geom.boundary if margin > 0 else None
     if boundary is not None:
@@ -970,15 +987,23 @@ def _cells_within_or_overlapping(
     crosses = wraps & (rings[:, :, 0].max(axis=1) > half * (1 + 1e-12))
     plain = ~cap & ~crosses
 
+    def cells(mask: np.ndarray) -> Any:
+        polys = shapely.polygons(rings[mask])
+        if boundary is not None and (polar & mask).any():
+            # Above the leaves, a polar cell is its bounding box.
+            box_rows = polar[mask]
+            polys[box_rows] = shapely.envelope(polys[box_rows])
+        return polys
+
     if plain.any():
-        polys = shapely.polygons(rings[plain])
+        polys = cells(plain)
         keep[plain] = within(polys) if full else meets(geom, polys)
     if crosses.any() and not full:
         # A crossing cell can only be fully inside a geometry that itself
         # crosses, which callers must have split, so it is never `full`; it
         # overlaps the geometry if its unwrapped ring meets the geometry or
         # the geometry shifted one turn east.
-        polys = shapely.polygons(rings[crosses])
+        polys = cells(crosses)
         shifted = translate(geom, xoff=2 * half)
         keep[crosses] = meets(geom, polys) | meets(shifted, polys)
     if cap.any():

@@ -1001,6 +1001,49 @@ class RhpWrappersTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             rhpw.polyfill(nz, 3, plane=False, min_res=-1)
 
+    def test_polyfill_descent_matches_leaf_test(self):
+        # Descending from resolution 0 gives the same cells as testing every
+        # cell at the target resolution (min_res=res). The coarse decisions
+        # must therefore contain the leaf ones: a coarse polar cell's
+        # 6-point polygon is not good enough (the resolution-1 dart N6's
+        # chord at 70N sits a degree inside its true edge), so polar cells
+        # above the leaves are judged by their bounding box instead.
+        bands = [
+            sh.box(-170, 69.9, 170, 70.1),
+            sh.box(-170, 70.1, 170, 70.3),
+            sh.box(100, 60.0, 179, 60.2),
+            sh.box(-179, -70.1, 179, -69.9),
+            sh.box(-90.6, 42, -89.4, 80),
+            sh.Polygon([(0, 45), (60, 45), (30, 88)]),
+            # Edges on cell edges (multiples of 10 degrees are resolution-2
+            # cell edges): whether a cell touching the geometry counts must
+            # not depend on which other cells it is tested alongside, which
+            # takes a boundary that is a function of the cell alone.
+            sh.box(10, 60, 40, 75),
+            sh.box(-60, -80, 60, -55),
+        ]
+        for geom in bands:
+            for res in (3, 4, 5):
+                for mode in ("center", "full", "overlapping"):
+                    leaf = rhpw.polyfill(
+                        geom, res, plane=False, containment=mode, min_res=res
+                    )
+                    self.assertEqual(
+                        rhpw.polyfill(geom, res, plane=False, containment=mode),
+                        leaf,
+                        (geom.bounds, res, mode),
+                    )
+                    self.assertEqual(
+                        rhpw.polyfill(
+                            geom, res, plane=False, containment=mode, min_res=1
+                        ),
+                        leaf,
+                        (geom.bounds, res, mode, 1),
+                    )
+        # The two cells the dart's chord lost.
+        band = rhpw.polyfill(bands[0], 4, plane=False, containment="overlapping")
+        self.assertTrue({"N6212", "N6252"} <= band)
+
     def test_linetrace(self):
         # Test data
         p_ls = sh.LineString(

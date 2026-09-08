@@ -717,6 +717,15 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
                     assert_array_equal(row, np.array(d[c]))
         # n below 2 clamps to 2, like boundary(); empty input gives an empty array.
         first = [str(c) for c in cell_sets[0]]
+        # A cell's boundary is a function of the cell alone: the same whether
+        # it is computed by itself, with its neighbours, or with cells of
+        # another resolution, and a shared edge has one set of coordinates.
+        block = [f"Q3{a}{b}" for a in range(9) for b in range(9)] + ["Q30", "N", "S8"]
+        for n in (2, 4):
+            together = rdggs.boundary_array(block, n=n, plane=False)
+            for k, index in enumerate(block):
+                alone = rdggs.boundary_array([index], n=n, plane=False)[0]
+                assert_array_equal(together[k], alone, index)
         self.assertEqual(rdggs.boundary_array(first, n=1).shape, (9, 4, 2))
         self.assertEqual(rdggs.boundary_array([], n=3).shape, (0, 8, 2))
         # Invalid indices give NaN rows in place, valid ones are unaffected.

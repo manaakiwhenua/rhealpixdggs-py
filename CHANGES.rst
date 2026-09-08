@@ -27,12 +27,27 @@ resolution. This changes what ``compress=True`` returns in the default
 whose centroids were all inside even when the boundary clipped their
 parent's corner; the cover splits such a parent, since it is not wholly
 inside. In ``full`` mode the two agree exactly. "Wholly inside" is judged
-by the cell's boundary polygon for ``full`` and ``overlapping``, and for
-``center`` by the cell's longitude-latitude bounding box, within which
-every descendant's centroid lies, so the centroid rule is kept exactly;
-above the leaves a cell is accepted or rejected only when clear of the
-geometry's boundary by about a centimetre, so an edge coinciding with a
-cell edge is left to the exact test at the leaves.
+by the cell's boundary polygon for ``full`` and ``overlapping`` where that
+is exact (the plane, equatorial cells), and otherwise by the cell's
+longitude-latitude bounding box, which contains the cell: for polar cells,
+whose 6-point polygon can lie a degree off the true edge of a coarse cell,
+and for ``center``, where the box also contains every descendant's
+centroid, so the centroid rule is kept exactly; above the leaves a cell is
+accepted or rejected only when clear of the geometry's boundary by about a
+centimetre, so an edge coinciding with a cell edge is left to the exact
+test at the leaves.
+
+``RHEALPixDGGS.boundary_array`` (and so ``cell_boundaries``) projects each
+boundary point from the planar coordinates its lattice key denotes, rather
+than from whichever cell of the batch first produced it, so a cell's
+longitude-latitude boundary is the same whether it is computed alone or
+with any other cells; the coordinates of a point shared with a neighbour
+can move by a last bit. ``polyfill``'s ``full`` and ``overlapping`` tests
+sample 6 points per edge for every cell on the ellipsoid, not only when the
+batch holds polar cells, for the same reason: a geometry edge lying exactly
+on a cell edge, as a box drawn at whole degrees does, previously counted or
+not depending on which cells were tested together, so the fill could differ
+between ``min_res`` values or chunk sizes by such cells.
 
 Underneath, the new ``RHEALPixDGGS.cells_in_box(resolution, ul, dr, plane)``
 enumerates the cells meeting a box's planar image without ``Cell``
