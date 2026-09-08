@@ -223,6 +223,51 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         c2 = rdggs.cell_from_point(1, p2, plane=False)
         self.assertEqual(c1, c2)
 
+    def test_cells_in_box(self):
+        # cells_in_box enumerates candidate cells with array arithmetic; it
+        # must contain every cell cells_from_region returns for the same box,
+        # in all three regions, across the wrap meridian of a rotated grid,
+        # and for boxes touching the poles or longitude 180.
+        from random import Random
+
+        rotated = RHEALPixDGGS(
+            Ellipsoid(lon_0=129, radians=False), north_square=0, south_square=0
+        )
+        rng = Random(20260908)
+        for rdggs in (WGS84_003, rotated):
+            for _ in range(60):
+                lon1 = rng.uniform(-180, 170)
+                lon2 = min(180, lon1 + rng.uniform(0.5, 60))
+                lat1 = rng.uniform(-90, 85)
+                lat2 = min(90, lat1 + rng.uniform(0.5, 40))
+                res = rng.randint(1, 3)
+                rows = rdggs.cells_from_region(
+                    res, (lon1, lat2), (lon2, lat1), plane=False
+                )
+                want = {str(c) for row in rows for c in row}
+                have = set(
+                    rdggs.cells_in_box(res, (lon1, lat2), (lon2, lat1), plane=False)
+                )
+                self.assertTrue(
+                    want <= have, (lon1, lat2, lon2, lat1, res, want - have)
+                )
+        # Whole-globe box: every cell.
+        self.assertEqual(
+            len(WGS84_003.cells_in_box(2, (-180, 90), (180, -90), plane=False)), 6 * 81
+        )
+        # Planar box inside one face, and one reaching outside the image.
+        R = WGS84_003.ellipsoid.R_A
+        inside = set(WGS84_003.cells_in_box(1, (0.1 * R, 0.5 * R), (0.6 * R, 0.1 * R)))
+        rows = WGS84_003.cells_from_region(1, (0.1 * R, 0.5 * R), (0.6 * R, 0.1 * R))
+        self.assertTrue({str(c) for row in rows for c in row} <= inside)
+        # Reaching above the band, where cells_from_region finds no corner
+        # cell: the cells of the in-image part are still enumerated, with
+        # the one-cell margin reaching into face P but not into a polar
+        # square.
+        beyond = set(WGS84_003.cells_in_box(1, (0.1 * R, 3 * R), (0.6 * R, 0.1 * R)))
+        self.assertTrue(inside <= beyond)
+        self.assertEqual({index[0] for index in beyond}, {"P", "Q"})
+
     def test_cells_from_line(self):
         rdggs = WGS84_003
 

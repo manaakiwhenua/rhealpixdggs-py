@@ -1,3 +1,40 @@
+0.8.5
+^^^^^
+``rhp_wrappers.polyfill`` gains a ``containment`` parameter with H3's three
+modes: ``"center"`` (the default, and the previous behaviour: cells whose
+centroid is inside the geometry), ``"full"`` (cells lying wholly within it)
+and ``"overlapping"`` (cells meeting it at all). ``full`` and
+``overlapping`` test cell boundary polygons, exact in the plane and for
+equatorial cells, a 6-point-per-edge approximation for the curved edges of
+polar cells; cap cells and antimeridian-straddling cells are handled
+apart.
+
+``polyfill`` is also vectorised end to end: the candidate cells of the
+geometry's bounding box come from the new
+``RHEALPixDGGS.cells_in_box(resolution, ul, dr, plane)`` (the index strings
+of every cell meeting the box's planar image, a superset of
+``cells_from_region`` computed without ``Cell`` objects), their centroids
+from ``RHEALPixDGGS.centroids`` and their boundaries from
+``RHEALPixDGGS.boundary_array``, and shapely's vectorised predicates decide
+all candidates at once. In the default mode a cell's centroid, the mean
+of longitude and latitude over the cell, lies within the cell's
+longitude-latitude bounding box, so cells whose box is wholly inside or
+wholly outside the geometry are decided from four corner points and only
+the cells along the geometry's boundary have their centroid integrated.
+Candidates are carried as arrays from the lattice to the geometry code,
+not round-tripped through index strings, and are processed in chunks of
+250,000, so the working set is bounded whatever the resolution: a
+378,000-cell resolution-8 fill of New Zealand peaks at about 200 MB.
+Default results are unchanged: a 42,000-cell resolution-7 fill of New
+Zealand drops from 25.5 s to 0.3 s, a 60,000-cell resolution-6
+equatorial box from 11.2 s to 0.14 s, a 1,700-cell resolution-5 polar box
+from 0.77 s to 0.02 s. One behaviour differs: a planar geometry reaching
+outside the planar image used to yield no cells at all (``cells_from_region``
+found no cell at a bounding-box corner); the cells inside the image are
+now found. ``RHEALPixDGGS.centroids`` integrates the mean latitude of
+equatorial quads once per planar row rather than once per cell, as
+latitude is independent of x there.
+
 0.8.4
 ^^^^^
 ``RHEALPixDGGS.centroids`` projects the quadrature points of dart and skew
