@@ -2058,6 +2058,45 @@ class RHEALPixDGGS:
             result[valid, 1] = y
         return result
 
+    def rings(self, indices: Iterable[str]) -> np.ndarray:
+        """
+        Return the isolatitude ring of each cell with index strings `indices`
+        as one int64 array: entry `k` is ``cell.ring()`` for the cell whose
+        ``str()`` is ``indices[k]``, or -1 for an invalid index. Ring numbers
+        are only comparable within one resolution, so the valid indices must
+        all share one resolution; otherwise raise a ValueError.
+
+        EXAMPLES::
+
+            >>> WGS84_003.rings(['N4', 'N0', 'P4', 'S8', 'bad']).tolist()
+            [0, 1, 3, 5, -1]
+
+        """
+        valid, face, digits, resolution = self._parse_indices(indices)
+        result = np.full(len(valid), -1, dtype=np.int64)
+        if not valid.any():
+            return result
+        resolutions = np.unique(resolution[valid])
+        if len(resolutions) > 1:
+            raise ValueError(
+                f"indices span resolutions {resolutions.tolist()}; "
+                "ring numbers are only comparable within one resolution"
+            )
+        N = self.N_side
+        k = int(resolutions[0])
+        n = N**k
+        q = -(-n // 2)
+        d = digits[valid][:, :k]
+        power = N ** np.arange(k - 1, -1, -1)
+        row = ((d // N) * power).sum(axis=1)
+        col = ((d % N) * power).sum(axis=1)
+        m = np.maximum(np.abs(2 * row - (n - 1)), np.abs(2 * col - (n - 1))) // 2
+        f = face[valid]
+        result[valid] = np.where(
+            f == 0, m, np.where(f == 5, q + n + (q - 1 - m), q + row)
+        )
+        return result
+
     def centroids(self, indices: Iterable[str], plane: bool = False) -> FloatArray:
         """
         Return the centroids of the cells with index strings `indices` as one

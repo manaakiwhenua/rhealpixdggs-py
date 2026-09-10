@@ -1,3 +1,12 @@
+0.8.6
+^^^^^
+``Cell.ring()`` returns the isolatitude ring of a cell's nucleus, numbered
+0 at the north pole; every cell on a ring, in any base cell, has the same
+nucleus latitude. ``RHEALPixDGGS.rings(indices)`` is its array form over
+index strings, giving -1 for an invalid index and rejecting mixed
+resolutions, since ring numbers only compare within one resolution. Both
+are integer arithmetic on the index digits (issue #149).
+
 0.8.5
 ^^^^^
 ``rhp_wrappers.polyfill`` gains a ``containment`` parameter with H3's three

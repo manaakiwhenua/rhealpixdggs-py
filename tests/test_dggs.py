@@ -597,6 +597,23 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         self.assertTrue(np.isnan(nuclei[~valid]).all())
         self.assertFalse(np.isnan(nuclei[valid]).any())
 
+    def test_rings_match_cell_ring(self):
+        # rings() reads the ring number off the index digits for all cells
+        # at once, agreeing with Cell.ring. Invalid indices give -1, and
+        # mixed resolutions are rejected because ring numbers only compare
+        # within one resolution.
+        from numpy.testing import assert_array_equal
+
+        for rdggs in (WGS84_003, WGS84_003_RADIANS, WGS84_123, WGS84_122):
+            for resolution in range(3):
+                cells = list(rdggs.grid(resolution))
+                got = rdggs.rings([str(c) for c in cells])
+                self.assertEqual(got.dtype.kind, "i")
+                assert_array_equal(got, [c.ring() for c in cells])
+        assert_array_equal(WGS84_003.rings(["N4", "bad", "P4"]), [0, -1, 3])
+        with self.assertRaises(ValueError):
+            WGS84_003.rings(["N4", "P"])
+
     def test_centroids_match_cell_centroid(self):
         # centroids() evaluates Cell.centroid's quadrature rules for all
         # cells of each shape at once; only the summation differs (array
