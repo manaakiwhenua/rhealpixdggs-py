@@ -130,6 +130,40 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             Cell(rdggs, suid=(P, rdggs.N_side**2))
 
+    def test_ring_groups_cells_by_nucleus_latitude(self):
+        # ring() numbers the isolatitude rings 0 from the north pole. Cells
+        # on a ring share their nucleus latitude, latitudes fall with the
+        # ring number, and populations follow the cap/belt pattern for odd
+        # and even n.
+        grids = [
+            (WGS84_003, 0),
+            (WGS84_003_RADIANS, 1),
+            (WGS84_003, 2),
+            (WGS84_123, 2),
+            (WGS84_122, 3),
+        ]
+        for rdggs, resolution in grids:
+            n = rdggs.N_side**resolution
+            q = -(-n // 2)
+            latitudes: dict[int, set[float]] = {}
+            counts: dict[int, int] = {}
+            for cell in rdggs.grid(resolution):
+                ring = cell.ring()
+                lat = round(cell.nucleus(plane=False)[1], 9)
+                latitudes.setdefault(ring, set()).add(lat)
+                counts[ring] = counts.get(ring, 0) + 1
+            self.assertEqual(sorted(latitudes), list(range(n + 2 * q)))
+            self.assertTrue(all(len(s) == 1 for s in latitudes.values()))
+            ordered = [latitudes[i].pop() for i in range(n + 2 * q)]
+            self.assertEqual(ordered, sorted(ordered, reverse=True))
+            if n % 2:
+                cap = [1] + [8 * m for m in range(1, q)]
+            else:
+                cap = [8 * m + 4 for m in range(q)]
+            self.assertEqual(
+                [counts[i] for i in range(n + 2 * q)], cap + [4 * n] * n + cap[::-1]
+            )
+
     def test_suid_rowcol(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             # Should work for resolution 0 cells.

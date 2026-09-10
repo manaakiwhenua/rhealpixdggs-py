@@ -332,6 +332,38 @@ class Cell:
             suid_col.append(col)
         return tuple(suid_row), tuple(suid_col)
 
+    def ring(self) -> int:
+        """
+        Return the isolatitude ring of this cell's nucleus. Rings are
+        numbered 0 at the north pole through ``n + 2 * q - 1`` at the south
+        pole, where ``n = N_side ** resolution`` cells span a base cell's
+        side and ``q = ceil(n / 2)`` rings fill each polar cap. Every cell on
+        a ring, in any base cell, has the same nucleus latitude. Ring numbers
+        are only comparable within one resolution.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> suids = [['N', 4], ['N', 0], ['P', 4], ['S', 8]]
+            >>> [Cell(WGS84_003, s).ring() for s in suids]
+            [0, 1, 3, 5]
+
+        """
+        N = self.rdggs.N_side
+        n = N ** (len(self.suid) - 1)
+        q = -(-n // 2)
+        row = col = 0
+        for digit in self.suid[1:]:
+            r, c = cast("tuple[int, int]", self.rdggs.child_order[int(digit)])
+            row = row * N + r
+            col = col * N + c
+        if self.suid[0] not in (CELLS0[0], CELLS0[5]):
+            return q + row
+        m = max(abs(2 * row - (n - 1)), abs(2 * col - (n - 1))) // 2
+        if self.suid[0] == CELLS0[0]:
+            return m
+        return q + n + (q - 1 - m)
+
     @overload
     def width(self, plane: Literal[True] = ...) -> float: ...
 
