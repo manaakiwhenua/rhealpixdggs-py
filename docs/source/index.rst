@@ -68,6 +68,7 @@ Table of contents
    ellipsoids
    projection_wrapper
    dggs
+   isolatitude
    cell
    conversion
    rhp_wrappers

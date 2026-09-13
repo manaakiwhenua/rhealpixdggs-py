@@ -13,6 +13,10 @@ authalic sphere, and the longitude of its first nucleus and the constant
 step between nuclei. ``RHEALPixDGGS.cells_on_ring(resolution, ring)``
 returns a ring's index strings in longitude order. Together they lay out a
 per-ring loop, as a spherical harmonic transform needs (issue #150).
+A new documentation page, Isolatitude Rings, illustrates the property,
+tabulates the ring structure for odd and even ``N_side``, walks through
+the ring API, and says what the rings do and do not give a spherical
+harmonic transform (issue #151).
 
 0.8.5
 ^^^^^

@@ -339,7 +339,7 @@ class Cell:
         pole, where ``n = N_side ** resolution`` cells span a base cell's
         side and ``q = ceil(n / 2)`` rings fill each polar cap. Every cell on
         a ring, in any base cell, has the same nucleus latitude. Ring numbers
-        are only comparable within one resolution.
+        are only comparable within one resolution. See :doc:`isolatitude`.
 
         EXAMPLES::
 
@@ -729,6 +729,8 @@ class Cell:
         nucleus of a planar cell is its centroid, the nucleus
         of an ellipsoidal cell is not its centroid.
         To compute the centroid of a cell, use centroid() below.
+        The nuclei of a resolution lie on rings of constant latitude, one
+        per ``ring()`` number; see :doc:`isolatitude`.
 
         EXAMPLES::
 

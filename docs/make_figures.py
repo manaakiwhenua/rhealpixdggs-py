@@ -1591,6 +1591,377 @@ save(fig, "compaction")
 plt.close(fig)
 print("compaction figure written")
 
+# --------------------------------------------------------------- figure 15
+# The isolatitude property: every nucleus lies on one of the rings of
+# constant latitude that ring_table describes. In the plane the rings are
+# rows across the equatorial faces and concentric squares in the polar
+# faces; on the ellipsoid, parallels and circles about the poles.
+ISO_RES = 2
+iso_table = rdggs.ring_table(ISO_RES)
+iso_rings = len(iso_table.population)
+RING_LINE = "#7c8fe0"
+NUCLEUS = "#222222"
+
+fig = plt.figure(figsize=(11.5, 8.6))
+grid = fig.add_gridspec(2, 2, width_ratios=[1.5, 1], height_ratios=[1, 1.05])
+ax_plane = fig.add_subplot(grid[0, 0])
+ax_pole = fig.add_subplot(grid[0, 1])
+ax_map = fig.add_subplot(grid[1, :])
+
+# Unfolded cube: face outlines, faint resolution ISO_RES squares, the
+# nuclei, and each ring drawn through them.
+for face in CELLS0:
+    c0 = rdggs.cell([face])
+    x, y = c0.ul_vertex()
+    w = c0.width()
+    ax_plane.add_patch(
+        Rectangle(
+            (x / R, (y - w) / R),
+            w / R,
+            w / R,
+            facecolor=FACE_COLORS[face],
+            alpha=0.12,
+            edgecolor="black",
+            linewidth=1.2,
+        )
+    )
+    ax_plane.text(
+        (x + 0.5 * w) / R,
+        (y - 0.5 * w) / R,
+        face,
+        ha="center",
+        va="center",
+        fontsize=22,
+        fontweight="bold",
+        color="#333333",
+        alpha=0.25,
+    )
+for cell in rdggs.grid(ISO_RES):
+    cx, cy = cell.ul_vertex()
+    cw = cell.width()
+    ax_plane.add_patch(
+        Rectangle(
+            (cx / R, (cy - cw) / R),
+            cw / R,
+            cw / R,
+            facecolor="none",
+            edgecolor="#cccccc",
+            linewidth=0.3,
+        )
+    )
+for i in range(iso_rings):
+    ids = rdggs.cells_on_ring(ISO_RES, i)
+    x, y = rdggs.nuclei(ids, plane=True).T / R
+    if len(ids) == 1:
+        pass
+    elif ids[0][0] in ("N", "S"):
+        centre_x, centre_y = np.array(rdggs.cell([ids[0][0]]).nucleus()) / R
+        half = np.abs(x - centre_x).max()
+        ax_plane.add_patch(
+            Rectangle(
+                (centre_x - half, centre_y - half),
+                2 * half,
+                2 * half,
+                facecolor="none",
+                edgecolor=RING_LINE,
+                linewidth=0.6,
+                alpha=0.8,
+                zorder=1,
+            )
+        )
+    else:
+        ax_plane.axhline(y[0], color=RING_LINE, linewidth=0.6, alpha=0.8, zorder=1)
+    ax_plane.scatter(x, y, s=5, color=NUCLEUS, zorder=3, linewidths=0)
+ax_plane.set_xlim(-3.25, 3.25)
+ax_plane.set_ylim(-2.45, 2.45)
+ax_plane.set_aspect("equal")
+ax_plane.set_xlabel("x / authalic radius")
+ax_plane.set_ylabel("y / authalic radius")
+ax_plane.set_title(
+    "In the plane: rows across the belt, squares in the caps", fontsize=11
+)
+
+# North polar view: the cap rings are circles of latitude, and the belt
+# rows beyond them are the same. Cells whose nucleus is north of the
+# equator are drawn.
+t_circle = np.linspace(0, 2 * np.pi, 400)
+ax_pole.plot(np.cos(t_circle), np.sin(t_circle), color="#555555", linewidth=1.2)
+for seg in COASTLINES:
+    x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], 0, 90)
+    ax_pole.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color=COAST_COLOR,
+        linewidth=0.4,
+        zorder=1,
+    )
+for i in range(iso_rings):
+    if iso_table.latitude[i] <= 0:
+        break
+    ids = rdggs.cells_on_ring(ISO_RES, i)
+    for address in ids:
+        pts = cell_from_address(address).boundary(n=10, plane=False)
+        pts = pts + [pts[0]]
+        x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], 0, 90)
+        ax_pole.plot(
+            np.where(vis, x, np.nan),
+            np.where(vis, y, np.nan),
+            color="#cccccc",
+            linewidth=0.3,
+            zorder=0,
+        )
+    radius = np.cos(np.radians(iso_table.latitude[i]))
+    ax_pole.plot(
+        radius * np.cos(t_circle),
+        radius * np.sin(t_circle),
+        color=RING_LINE,
+        linewidth=0.6,
+        alpha=0.8,
+        zorder=1,
+    )
+    lon, lat = rdggs.nuclei(ids).T
+    x, y, _ = ortho(lon, lat, 0, 90)
+    ax_pole.scatter(x, y, s=7, color=NUCLEUS, zorder=3, linewidths=0)
+ax_pole.set_xlim(-1.05, 1.05)
+ax_pole.set_ylim(-1.05, 1.05)
+ax_pole.set_aspect("equal")
+ax_pole.axis("off")
+ax_pole.set_title("From above the north pole: rings 0 to 8", fontsize=11)
+
+# Longitude-latitude: every ring is a parallel.
+draw_coastlines_lonlat(ax_map, linewidth=0.4)
+for cell in rdggs.grid(ISO_RES):
+    pts = cell.boundary(n=10, plane=False)
+    pts = pts + [pts[0]]
+    for seg in split_chart_discontinuities(pts):
+        if len(seg) > 1:
+            ax_map.plot(*zip(*seg), color="#dddddd", linewidth=0.3, zorder=0)
+for i in range(iso_rings):
+    ids = rdggs.cells_on_ring(ISO_RES, i)
+    lon, lat = rdggs.nuclei(ids).T
+    ax_map.axhline(
+        iso_table.latitude[i], color=RING_LINE, linewidth=0.6, alpha=0.8, zorder=1
+    )
+    ax_map.scatter(lon, lat, s=7, color=NUCLEUS, zorder=3, linewidths=0)
+ax_map.set_xlim(-180, 180)
+ax_map.set_ylim(-90, 90)
+ax_map.set_xticks(range(-180, 181, 60))
+ax_map.set_yticks(range(-90, 91, 30))
+ax_map.set_xlabel("longitude (degrees)")
+ax_map.set_ylabel("latitude (degrees)")
+ring_axis = ax_map.secondary_yaxis("right")
+ring_axis.set_yticks(iso_table.latitude)
+ring_axis.set_yticklabels([str(i) for i in range(iso_rings)], fontsize=6)
+ring_axis.set_ylabel("ring")
+ax_map.set_title(
+    f"On the ellipsoid: the {6 * 9**ISO_RES} resolution {ISO_RES} nuclei on "
+    f"{iso_rings} parallels",
+    fontsize=11,
+)
+fig.tight_layout()
+save(fig, "isolatitude")
+plt.close(fig)
+print("isolatitude figure written")
+
+# --------------------------------------------------------------- figure 16
+# The ring table as a picture, for odd and even n: cells per ring, and the
+# sine of the authalic nucleus latitude, against ring number.
+from rhealpixdggs.dggs import RHEALPixDGGS
+
+PROFILES = [
+    (rdggs, 2, "N_side = 3, resolution 2 (n = 9)", "#e5735c"),
+    (RHEALPixDGGS(N_side=2), 3, "N_side = 2, resolution 3 (n = 8)", "#7c8fe0"),
+]
+fig, (ax_pop, ax_sin) = plt.subplots(1, 2, figsize=(11, 3.9))
+for grid_, res, label, color in PROFILES:
+    table = grid_.ring_table(res)
+    ring = np.arange(len(table.population))
+    ax_pop.plot(
+        ring, table.population, marker="o", markersize=4, color=color, label=label
+    )
+    ax_sin.plot(
+        ring,
+        np.sin(np.radians(table.authalic_latitude)),
+        marker="o",
+        markersize=4,
+        color=color,
+        label=label,
+    )
+    n = grid_.N_side**res
+    q = -(-n // 2)
+    for ax in (ax_pop, ax_sin):
+        ax.axvspan(q - 0.5, q + n - 0.5, color=color, alpha=0.06, linewidth=0)
+ax_pop.set_ylabel("cells on ring")
+ax_pop.set_yticks(range(0, 37, 4))
+ax_pop.set_title(
+    "Population: 8m (odd n) or 8m + 4 (even n) in the caps, 4n in the belt", fontsize=10
+)
+ax_sin.set_ylabel("sin(authalic nucleus latitude)")
+ax_sin.set_title("Equal-area rows: sin β is linear in the belt", fontsize=10)
+ax_sin.axhline(2 / 3, color="#999999", linewidth=0.5, linestyle="--")
+ax_sin.axhline(-2 / 3, color="#999999", linewidth=0.5, linestyle="--")
+ax_sin.text(
+    0.3, 2 / 3 + 0.03, "sin β = 2/3: the cap/belt boundary", fontsize=7, color="#666666"
+)
+max_rings = max(len(g.ring_table(r).population) for g, r, _, _ in PROFILES)
+for ax in (ax_pop, ax_sin):
+    ax.set_xlabel("ring (0 at the north pole)")
+    ax.set_xticks(range(max_rings))
+    ax.tick_params(axis="x", labelsize=8)
+    ax.grid(True, linewidth=0.3, alpha=0.5)
+    ax.legend(fontsize=8, loc="lower center" if ax is ax_pop else "upper right")
+fig.tight_layout()
+save(fig, "ring_profile")
+plt.close(fig)
+print("ring profile figure written")
+
+
+# --------------------------------------------------------------- figure 17
+# The order cells_on_ring returns a ring in, at resolution 1: each cell of
+# rings 1, 2 and 5 is labelled with its position, and a line through the
+# nuclei follows the order.
+ORDER_RES = 1
+fig, ax = plt.subplots(figsize=(8.5, 6.2))
+for face in CELLS0:
+    c0 = rdggs.cell([face])
+    x, y = c0.ul_vertex()
+    w = c0.width()
+    ax.add_patch(
+        Rectangle(
+            (x / R, (y - w) / R),
+            w / R,
+            w / R,
+            facecolor=FACE_COLORS[face],
+            alpha=0.12,
+            edgecolor="black",
+            linewidth=1.2,
+        )
+    )
+for cell in rdggs.grid(ORDER_RES):
+    cx, cy = cell.ul_vertex()
+    cw = cell.width()
+    ax.add_patch(
+        Rectangle(
+            (cx / R, (cy - cw) / R),
+            cw / R,
+            cw / R,
+            facecolor="none",
+            edgecolor="#999999",
+            linewidth=0.4,
+        )
+    )
+    ax.text(
+        (cx + 0.12 * cw) / R,
+        (cy - 0.14 * cw) / R,
+        str(cell),
+        ha="left",
+        va="top",
+        fontsize=7,
+        color="#777777",
+    )
+for ring, color in ((1, "#e5735c"), (2, "#3a9a3a"), (5, "#d97cc0")):
+    ids = rdggs.cells_on_ring(ORDER_RES, ring)
+    x, y = rdggs.nuclei(ids, plane=True).T / R
+    ax.plot(x, y, color=color, linewidth=1.0, alpha=0.7, zorder=2)
+    ax.annotate(
+        "",
+        xy=(x[-1], y[-1]),
+        xytext=(x[-2], y[-2]),
+        arrowprops={"arrowstyle": "-|>", "color": color, "lw": 1.0},
+        zorder=2,
+    )
+    for k, (px, py) in enumerate(zip(x, y)):
+        ax.text(
+            px,
+            py,
+            str(k),
+            ha="center",
+            va="center",
+            fontsize=10,
+            fontweight="bold",
+            color=color,
+            zorder=3,
+            bbox={"boxstyle": "circle,pad=0.15", "fc": "white", "ec": color, "lw": 0.6},
+        )
+    caption = (
+        f"ring {ring}: {len(ids)} cells, from longitude "
+        f"{rdggs.ring_table(ORDER_RES).first_longitude[ring]:.0f}°"
+    )
+    if ring == 2:
+        ax.text(0.0, 0.88, caption, ha="center", va="bottom", fontsize=8.5, color=color)
+    else:
+        ax.text(
+            -1.5,
+            y.mean(),
+            caption,
+            ha="left",
+            va="center",
+            fontsize=8.5,
+            color=color,
+        )
+ax.set_xlim(-3.25, 3.25)
+ax.set_ylim(-2.45, 2.45)
+ax.set_aspect("equal")
+ax.set_xlabel("x / authalic radius")
+ax.set_ylabel("y / authalic radius")
+ax.set_title(
+    "cells_on_ring(1, ring): position of each cell in the returned order",
+    fontsize=11,
+)
+fig.tight_layout()
+save(fig, "ring_order")
+plt.close(fig)
+print("ring order figure written")
+
+
+# --------------------------------------------------------------- figure 18
+# The Fourier transform along each ring of the field cos(lat) cos(lon)
+# sampled at the resolution 2 nuclei: one nonzero wavenumber per ring.
+SPEC_RES = 2
+spec_table = rdggs.ring_table(SPEC_RES)
+WAVENUMBERS = 7
+spectrum = np.full((len(spec_table.population), WAVENUMBERS), np.nan)
+for i in range(len(spec_table.population)):
+    lon, lat = np.radians(rdggs.nuclei(rdggs.cells_on_ring(SPEC_RES, i))).T
+    coef = np.abs(np.fft.rfft(np.cos(lat) * np.cos(lon))) / len(lon)
+    k = min(len(coef), WAVENUMBERS)
+    spectrum[i, :k] = coef[:k]
+fig, (ax_field, ax_spec) = plt.subplots(
+    1, 2, figsize=(11, 4.4), gridspec_kw={"width_ratios": [1.6, 1]}
+)
+all_ids = np.concatenate(
+    [rdggs.cells_on_ring(SPEC_RES, i) for i in range(len(spec_table.population))]
+)
+lon, lat = rdggs.nuclei(all_ids).T
+values = np.cos(np.radians(lat)) * np.cos(np.radians(lon))
+draw_coastlines_lonlat(ax_field, linewidth=0.4)
+sc = ax_field.scatter(
+    lon, lat, c=values, cmap="RdBu_r", vmin=-1, vmax=1, s=16, linewidths=0
+)
+fig.colorbar(sc, ax=ax_field, fraction=0.03, pad=0.02, label="cos φ cos λ")
+ax_field.set_xlim(-180, 180)
+ax_field.set_ylim(-90, 90)
+ax_field.set_xticks(range(-180, 181, 60))
+ax_field.set_yticks(range(-90, 91, 30))
+ax_field.set_xlabel("longitude (degrees)")
+ax_field.set_ylabel("latitude (degrees)")
+ax_field.set_title("The field sampled at the resolution 2 nuclei", fontsize=11)
+masked = np.ma.masked_invalid(spectrum)
+cmap = plt.get_cmap("Greys").copy()
+cmap.set_bad("#f3e9d6")
+im = ax_spec.imshow(masked, cmap=cmap, aspect="auto", vmin=0, vmax=0.5)
+fig.colorbar(im, ax=ax_spec, fraction=0.05, pad=0.03, label="|coefficient|")
+ax_spec.set_xticks(range(WAVENUMBERS))
+ax_spec.set_xlabel("wavenumber along the ring")
+ax_spec.set_yticks(range(len(spec_table.population)))
+ax_spec.set_yticklabels([str(i) for i in range(len(spec_table.population))], fontsize=7)
+ax_spec.set_ylabel("ring")
+ax_spec.set_title("FFT of each ring: only wavenumber 1 is nonzero", fontsize=11)
+fig.tight_layout()
+save(fig, "ring_spectrum")
+plt.close(fig)
+print("ring spectrum figure written")
+
 # Drop matplotlib's six decimal places of coordinate precision, which is
 # around a nanometre on the page and about a third of every SVG's bytes.
 # Committed figures are stored shrunk, so this keeps regeneration diff-free.
