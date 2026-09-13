@@ -614,6 +614,71 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             WGS84_003.rings(["N4", "P"])
 
+    def test_ring_table_matches_nuclei(self):
+        # ring_table describes each isolatitude ring from the closed forms
+        # alone, and cells_on_ring lists a ring's cells in longitude order.
+        # Together they must reproduce the nuclei: one latitude per ring,
+        # uniformly spaced longitudes from first_longitude, every cell of
+        # the grid on exactly one ring.
+        from numpy.testing import assert_allclose, assert_array_equal
+
+        from rhealpixdggs.ellipsoids import WGS84_ASPHERE
+        from rhealpixdggs.utils import auth_lat
+
+        grids = [
+            (WGS84_003, 0),
+            (WGS84_003, 1),
+            (WGS84_003, 2),
+            (WGS84_003_RADIANS, 2),
+            (WGS84_123, 2),
+            (WGS84_122, 3),
+            (RHEALPixDGGS(ellipsoid=WGS84_ASPHERE, N_side=3), 2),
+        ]
+        for rdggs, resolution in grids:
+            angle = 1.0 if rdggs.ellipsoid.radians else 180 / pi
+            n = rdggs.N_side**resolution
+            q = -(-n // 2)
+            table = rdggs.ring_table(resolution)
+            self.assertEqual(len(table.population), n + 2 * q)
+            self.assertEqual(table.population.sum(), 6 * n**2)
+            self.assertTrue((np.diff(table.latitude) < 0).all())
+            seen = []
+            for i in range(n + 2 * q):
+                ids = rdggs.cells_on_ring(resolution, i)
+                self.assertEqual(len(ids), table.population[i])
+                assert_array_equal(rdggs.rings(ids), i)
+                lon, lat = rdggs.nuclei(ids).T
+                assert_allclose(lat, table.latitude[i], rtol=0, atol=1e-9 * angle)
+                if table.population[i] == 1:
+                    self.assertTrue(np.isnan(table.first_longitude[i]))
+                    self.assertTrue(np.isnan(table.longitude_spacing[i]))
+                else:
+                    want = (
+                        table.first_longitude[i]
+                        + np.arange(table.population[i]) * table.longitude_spacing[i]
+                    )
+                    assert_allclose(lon, want, rtol=0, atol=1e-9 * angle)
+                seen.extend(ids)
+            self.assertEqual(
+                sorted(seen), sorted(str(c) for c in rdggs.grid(resolution))
+            )
+            if rdggs.ellipsoid.e == 0:
+                assert_array_equal(table.authalic_latitude, table.latitude)
+            else:
+                authalic = [
+                    auth_lat(phi, rdggs.ellipsoid.e, radians=rdggs.ellipsoid.radians)
+                    for phi in table.latitude
+                ]
+                assert_allclose(
+                    table.authalic_latitude, authalic, rtol=0, atol=1e-9 * angle
+                )
+        with self.assertRaises(ValueError):
+            WGS84_003.cells_on_ring(1, 7)
+        with self.assertRaises(ValueError):
+            WGS84_003.cells_on_ring(1, -1)
+        with self.assertRaises(ValueError):
+            WGS84_003.ring_table(-1)
+
     def test_centroids_match_cell_centroid(self):
         # centroids() evaluates Cell.centroid's quadrature rules for all
         # cells of each shape at once; only the summation differs (array

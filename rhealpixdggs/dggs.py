@@ -160,7 +160,7 @@ from collections.abc import Callable, Iterable, Iterator
 from itertools import pairwise, product
 from math import asin, copysign, floor, pi
 from random import randint
-from typing import Literal, cast, overload
+from typing import Literal, NamedTuple, cast, overload
 
 import numpy as np
 
@@ -190,7 +190,37 @@ from rhealpixdggs.ellipsoids import (
 )
 
 # my_round is doctest-only: the doctests use it from the module globals.
-from rhealpixdggs.utils import FloatArray, auth_lat, my_round  # noqa: F401
+from rhealpixdggs.utils import (  # noqa: F401
+    FloatArray,
+    _auth_lat_array,
+    auth_lat,
+    my_round,
+)
+
+
+class RingTable(NamedTuple):
+    """
+    The isolatitude rings of one resolution, as returned by
+    ``RHEALPixDGGS.ring_table``: one entry per ring, numbered 0 at the north
+    pole. Angles are in the grid ellipsoid's unit (degrees or radians).
+
+    - `population` - cells on the ring.
+    - `latitude` - the (geodetic) nucleus latitude shared by every cell on
+      the ring, as ``Cell.nucleus(plane=False)`` reports it.
+    - `authalic_latitude` - the same latitude on the authalic sphere, which
+      is where a spherical harmonic transform should place the ring; equal
+      to `latitude` on a spherical grid.
+    - `first_longitude` - nucleus longitude of the first cell in
+      ``cells_on_ring`` order; NaN on a single-cell pole ring.
+    - `longitude_spacing` - the constant longitude step between consecutive
+      nuclei on the ring; NaN on a single-cell pole ring.
+    """
+
+    population: np.ndarray
+    latitude: FloatArray
+    authalic_latitude: FloatArray
+    first_longitude: FloatArray
+    longitude_spacing: FloatArray
 
 
 class RHEALPixDGGS:
@@ -2096,6 +2126,132 @@ class RHEALPixDGGS:
             f == 0, m, np.where(f == 5, q + n + (q - 1 - m), q + row)
         )
         return result
+
+    def _ring_layout(self, resolution: int) -> tuple[int, int]:
+        """
+        The cells per base-cell side `n` and rings per polar cap `q` of
+        resolution `resolution`; raise a ValueError for a negative resolution.
+        """
+        if resolution < 0:
+            raise ValueError(f"resolution must be nonnegative, not {resolution}")
+        n = self.N_side**resolution
+        return n, -(-n // 2)
+
+    def ring_table(self, resolution: int) -> RingTable:
+        """
+        Return the isolatitude rings of resolution `resolution` as a
+        ``RingTable``: for each ring, numbered 0 at the north pole through
+        ``n + 2 * q - 1`` at the south pole (``n = N_side ** resolution``
+        cells per base-cell side, ``q = ceil(n / 2)`` rings per polar cap),
+        the number of cells on it, the nucleus latitude they share, that
+        latitude on the authalic sphere, and the longitude of the first
+        nucleus and the constant step to the next, in ``cells_on_ring``
+        order. Nothing is projected: the table comes from the closed forms
+        of the rHEALPix projection, the latitudes converted from the
+        authalic sphere to the ellipsoid.
+
+        EXAMPLES::
+
+            >>> table = WGS84_003.ring_table(1)
+            >>> table.population.tolist()
+            [1, 8, 12, 12, 12, 8, 1]
+            >>> table.latitude.round(6).tolist()
+            [90.0, 58.528017, 26.490119, 0.0, -26.490119, -58.528017, -90.0]
+            >>> table.authalic_latitude.round(6).tolist()
+            [90.0, 58.413662, 26.3878, 0.0, -26.3878, -58.413662, -90.0]
+            >>> table.first_longitude.tolist()
+            [nan, -180.0, -165.0, -165.0, -165.0, -180.0, nan]
+            >>> table.longitude_spacing.tolist()
+            [nan, 45.0, 30.0, 30.0, 30.0, 45.0, nan]
+
+        """
+        n, q = self._ring_layout(resolution)
+        m = np.arange(q)
+        sigma = (2 * m + (n % 2 == 0)) / n
+        cap_sin = 1 - sigma**2 / 3
+        belt_sin = (2 / 3) * (1 - (2 * np.arange(n) + 1) / n)
+        sin_beta = np.concatenate([cap_sin, belt_sin, -cap_sin[::-1]])
+        beta = np.arcsin(np.clip(sin_beta, -1, 1))
+        phi = _auth_lat_array(beta, self.ellipsoid.e, radians=True, inverse=True)
+
+        cap_count = 8 * m + (4 if n % 2 == 0 else 0)
+        if n % 2:
+            cap_count[0] = 1
+        population = np.concatenate([cap_count, np.full(n, 4 * n), cap_count[::-1]])
+
+        quarter = pi / 2 if self.ellipsoid.radians else 90.0
+        with np.errstate(divide="ignore"):
+            cap_step = quarter / (2 * m + (n % 2 == 0))
+        cap_step = np.where(cap_count == 1, np.nan, cap_step)
+        step = np.concatenate([cap_step, np.full(n, quarter / n), cap_step[::-1]])
+        cap_first = np.where(cap_count == 1, np.nan, -2 * quarter)
+        first = np.concatenate(
+            [cap_first, np.full(n, -2 * quarter + quarter / (2 * n)), cap_first[::-1]]
+        )
+
+        scale = 1.0 if self.ellipsoid.radians else 180 / pi
+        return RingTable(
+            population=population,
+            latitude=phi * scale,
+            authalic_latitude=beta * scale,
+            first_longitude=first,
+            longitude_spacing=step,
+        )
+
+    def cells_on_ring(self, resolution: int, ring: int) -> np.ndarray:
+        """
+        Return the index strings, as a numpy string array, of the cells of
+        resolution `resolution` on isolatitude ring `ring` (numbered as in
+        ``ring_table``), in increasing nucleus longitude from the
+        ``first_longitude`` of the ring; raise a ValueError if there is no
+        such ring.
+
+        EXAMPLES::
+
+            >>> WGS84_003.cells_on_ring(1, 1).tolist()
+            ['N6', 'N7', 'N8', 'N5', 'N2', 'N1', 'N0', 'N3']
+            >>> WGS84_003.cells_on_ring(1, 3).tolist()
+            ['O3', 'O4', 'O5', 'P3', 'P4', 'P5', 'Q3', 'Q4', 'Q5', 'R3', 'R4', 'R5']
+
+        """
+        n, q = self._ring_layout(resolution)
+        if not 0 <= ring < n + 2 * q:
+            raise ValueError(
+                f"resolution {resolution} has rings 0 to {n + 2 * q - 1}, not {ring}"
+            )
+        if q <= ring < q + n:
+            rows = np.full(4 * n, ring - q)
+            cols = np.tile(np.arange(n), 4)
+            face = np.repeat(np.arange(1, 5), n)
+        else:
+            m = ring if ring < q else n + 2 * q - 1 - ring
+            # Chebyshev distance from the centre, in half cell widths.
+            d = 2 * m + (n % 2 == 0)
+            lo, hi = (n - 1 - d) // 2, (n - 1 + d) // 2
+            if d == 0:
+                rows = cols = np.array([lo])
+            else:
+                span = np.arange(lo, hi + 1)
+                inner = span[1:-1]
+                rows = np.concatenate(
+                    [np.full(len(span), lo), np.full(len(span), hi), inner, inner]
+                )
+                cols = np.concatenate(
+                    [span, span, np.full(len(inner), lo), np.full(len(inner), hi)]
+                )
+            face = np.full(len(rows), 0 if ring < q else 5)
+        N = self.N_side
+        power = N ** np.arange(resolution - 1, -1, -1)
+        digits = ((rows[:, None] // power) % N) * N + (cols[:, None] // power) % N
+        indices = self._format_indices(face, digits, resolution)
+        if len(indices) == 1:
+            return indices
+        longitude = self.nuclei(indices)[:, 0]
+        half_turn = pi if self.ellipsoid.radians else 180.0
+        longitude = np.where(
+            longitude >= half_turn, longitude - 2 * half_turn, longitude
+        )
+        return indices[np.argsort(longitude, kind="stable")]
 
     def centroids(self, indices: Iterable[str], plane: bool = False) -> FloatArray:
         """

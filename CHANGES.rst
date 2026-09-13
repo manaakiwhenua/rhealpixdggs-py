@@ -6,6 +6,13 @@ nucleus latitude. ``RHEALPixDGGS.rings(indices)`` is its array form over
 index strings, giving -1 for an invalid index and rejecting mixed
 resolutions, since ring numbers only compare within one resolution. Both
 are integer arithmetic on the index digits (issue #149).
+``RHEALPixDGGS.ring_table(resolution)`` describes every ring of a
+resolution from the projection's closed forms, without projecting anything:
+its population, the nucleus latitude its cells share, that latitude on the
+authalic sphere, and the longitude of its first nucleus and the constant
+step between nuclei. ``RHEALPixDGGS.cells_on_ring(resolution, ring)``
+returns a ring's index strings in longitude order. Together they lay out a
+per-ring loop, as a spherical harmonic transform needs (issue #150).
 
 0.8.5
 ^^^^^
