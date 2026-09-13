@@ -6,8 +6,11 @@ set -u
 cd "$(dirname "$0")/.."
 status=0
 
-# introduction is the only .rst file with unique doctest code
-python -m doctest docs/source/introduction.rst || status=1
+# the .rst files with their own doctest code
+for f in docs/source/introduction.rst docs/source/isolatitude.rst
+do
+  python -m doctest "$f" || status=1
+done
 
 # test the other python files
 for f in rhealpixdggs/*.py

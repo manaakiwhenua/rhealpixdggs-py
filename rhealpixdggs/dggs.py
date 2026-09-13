@@ -2095,6 +2095,7 @@ class RHEALPixDGGS:
         ``str()`` is ``indices[k]``, or -1 for an invalid index. Ring numbers
         are only comparable within one resolution, so the valid indices must
         all share one resolution; otherwise raise a ValueError.
+        See :doc:`isolatitude`.
 
         EXAMPLES::
 
@@ -2149,6 +2150,7 @@ class RHEALPixDGGS:
         order. Nothing is projected: the table comes from the closed forms
         of the rHEALPix projection, the latitudes converted from the
         authalic sphere to the ellipsoid.
+        See :doc:`isolatitude`.
 
         EXAMPLES::
 
@@ -2205,6 +2207,7 @@ class RHEALPixDGGS:
         ``ring_table``), in increasing nucleus longitude from the
         ``first_longitude`` of the ring; raise a ValueError if there is no
         such ring.
+        See :doc:`isolatitude`.
 
         EXAMPLES::
 

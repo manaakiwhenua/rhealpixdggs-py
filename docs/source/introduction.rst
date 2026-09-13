@@ -362,6 +362,7 @@ References
 ----------
 .. [Gibb2016] Robert Gibb, `The rHEALPix discrete global grid system <https://doi.org/10.1088/1755-1315/34/1/012012>`__, IOP Conference Series: Earth and Environmental Science 34, 012012, 2016.
 .. [GRS2013] Robert Gibb, Alexander Raichev, Michael Speth, `The rHEALPix discrete global grid system <https://github.com/manaakiwhenua/rhealpixdggs-2013-gibb-raichev-speth/blob/master/rhealpix_dggs_preprint.pdf>`__, preprint, 2013. Gives the full mathematical detail of the system this package implements.
+.. [Gorski2005] Krzysztof M. Górski, Eric Hivon, Anthony J. Banday, Benjamin D. Wandelt, Frode K. Hansen, Mstvos Reinecke, Matthias Bartelmann, `HEALPix: A Framework for High-Resolution Discretization and Fast Analysis of Data Distributed on the Sphere <https://doi.org/10.1086/427976>`__, The Astrophysical Journal 622(2), 759-771, 2005. Introduces the isolatitude ring structure that rHEALPix inherits and the spherical harmonic transform built on it.
 .. [BS2018] David Bowater, Emmanuel Stefanakis, `The rHEALPix Discrete Global Grid System: considerations for Canada <https://doi.org/10.1139/geomat-2018-0008>`__, Geomatica 72(1), 27-37, 2018. Discusses cell shape and orientation in the polar region and how to choose ``lon_0`` and the polar squares for a region of interest.
 
 Related reading:
