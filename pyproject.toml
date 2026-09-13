@@ -51,6 +51,7 @@ classifiers = [
  
 [project.urls]
 bug_reports = "https://github.com/manaakiwhenua/rhealpixdggs-py/issues"
+documentation = "https://manaakiwhenua.github.io/rhealpixdggs-py/"
 source = "https://github.com/manaakiwhenua/rhealpixdggs-py"
  
 [tool.poetry.group.dev.dependencies]

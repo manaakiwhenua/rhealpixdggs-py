@@ -17,6 +17,8 @@ A new documentation page, Isolatitude Rings, illustrates the property,
 tabulates the ring structure for odd and even ``N_side``, walks through
 the ring API, and says what the rings do and do not give a spherical
 harmonic transform (issue #151).
+The HTML manual is published at https://manaakiwhenua.github.io/rhealpixdggs-py/
+and redeployed on every push to ``master``.
 
 0.8.5
 ^^^^^

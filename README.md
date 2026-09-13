@@ -121,17 +121,18 @@ There are a couple of files in the main package directory that can be used to ru
 
 ### Documentation
 
-Documentation can be found at:
+The manual for the current `master` branch is published at
+<https://manaakiwhenua.github.io/rhealpixdggs-py/>. It is built with
+[Sphinx](https://www.sphinx-doc.org/) from `docs/source` and the package
+docstrings, and redeployed by the `Docs` workflow on every push to `master`.
 
-- [The rHEALPix Discrete Global Grid System](https://datastore.landcareresearch.co.nz/dataset/rhealpix-discrete-global-grid-system) - The rHEALPix Discrete Global Grid System
-- `docs/build/latex/rHEALPixDGGS.pdf` - The rHEALPixDGGS manual
-- `docs/build/html/index.html` - The rHEALPixDGGS manual in HTML format
+To build it yourself, with Sphinx and the furo theme installed (both are in
+the `dev` dependency group), run `make html` from the `docs` directory, or
+`make latexpdf` for the PDF manual, which also needs
+[LaTeX](https://www.latex-project.org/). The output lands in `docs/build`.
 
-The latter two documents are generated automatically from the source code of the `rhealpixdggs` package modules.
-To automatically build these yourself, install the Python package [Sphinx](http://sphinx-doc.org/) (but do not run `sphinx-quickstart`, because the make file `Makefile` and the configuration file `docs/source/conf.py` already exist) and then from the `docs` directory run the command `make latexpdf` to make the PDF documentation or `make html` to make the HTML documentation.
-For the PDF documentation, you might also need to install [LaTeX](http://www.latex-project.org/).
-
-The `source` and `build` directories contain all the Sphinx source and build files, respectively.
+The system itself is described in [The rHEALPix Discrete Global Grid
+System](https://datastore.landcareresearch.co.nz/dataset/rhealpix-discrete-global-grid-system).
 
 ### License
 
