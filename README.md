@@ -79,6 +79,11 @@ This package is available on PyPI, the Python Package Index from where it can be
 
     pip install rhealpixdggs
 
+Spherical harmonic transforms on the grid (`rhealpixdggs.harmonics`) need
+[ducc0](https://pypi.org/project/ducc0/), which the `harmonics` extra brings:
+
+    pip install "rhealpixdggs[harmonics]"
+
 rHEALPixDGGS is also available for download from the GitHub repository <https://github.com/manaakiwhenua/rhealpixdggs-py> from where the latest version can be cloned.
 
 You can install from source using Poetry in a virtual environment (MacOS and Linux, assuming Poetry is already installed on your system):
