@@ -19,6 +19,15 @@ the ring API, and says what the rings do and do not give a spherical
 harmonic transform (issue #151).
 The HTML manual is published at https://manaakiwhenua.github.io/rhealpixdggs-py/
 and redeployed on every push to ``master``.
+New module ``rhealpixdggs.harmonics``, needing the optional ``harmonics``
+extra (ducc0): spherical harmonic transforms on the nuclei of a grid.
+``synthesis`` evaluates a band-limited field at the nuclei and ``analysis``
+fits coefficients to nucleus values by least squares, both through ducc0's
+ring-based routines fed from ``ring_table``; ``to_ring_order`` and
+``from_ring_order`` move between values keyed by index string and the flat
+ring-ordered array the transforms use, and ``alm_index`` and ``alm_size``
+describe the healpy coefficient layout. A field band-limited below degree
+``2 * N_side ** resolution`` is recovered to rounding (issue #152).
 
 0.8.5
 ^^^^^

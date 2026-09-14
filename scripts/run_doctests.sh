@@ -6,15 +6,28 @@ set -u
 cd "$(dirname "$0")/.."
 status=0
 
-# the .rst files with their own doctest code
-for f in docs/source/introduction.rst docs/source/isolatitude.rst
+# the .rst files with their own doctest code; harmonics needs the optional
+# ducc0, as does the module of that name below
+have_ducc0=1
+python -c "import ducc0" 2>/dev/null || have_ducc0=0
+for f in docs/source/introduction.rst docs/source/isolatitude.rst docs/source/harmonics.rst
 do
+  if [ "$f" = docs/source/harmonics.rst ] && [ $have_ducc0 = 0 ]
+  then
+    echo "skipping $f: ducc0 is not installed"
+    continue
+  fi
   python -m doctest "$f" || status=1
 done
 
 # test the other python files
 for f in rhealpixdggs/*.py
 do
+  if [ "$f" = rhealpixdggs/harmonics.py ] && [ $have_ducc0 = 0 ]
+  then
+    echo "skipping $f: ducc0 is not installed"
+    continue
+  fi
   python -m doctest "$f" || status=1
 done
 

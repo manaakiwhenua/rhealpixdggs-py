@@ -69,6 +69,7 @@ Table of contents
    projection_wrapper
    dggs
    isolatitude
+   harmonics
    cell
    conversion
    rhp_wrappers

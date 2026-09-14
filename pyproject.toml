@@ -49,6 +49,9 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
  
+[project.optional-dependencies]
+harmonics = ["ducc0>=0.41"]
+
 [project.urls]
 bug_reports = "https://github.com/manaakiwhenua/rhealpixdggs-py/issues"
 documentation = "https://manaakiwhenua.github.io/rhealpixdggs-py/"
@@ -82,3 +85,7 @@ include = ["tests/", "docs/"]
 files = ["rhealpixdggs"]
 check_untyped_defs = true
 disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "ducc0.*"
+ignore_missing_imports = true

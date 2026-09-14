@@ -229,9 +229,9 @@ qualifications:
   wavenumbers up to ``2n``, so that is roughly the highest degree a
   resolution supports before aliasing.
 - **The rings are not a transform.** A transform combines the rings with
-  the associated Legendre functions and, for analysis, iterates; that is
-  work for a library built to accept an arbitrary ring layout, such as
-  ducc0, whose synthesis and pseudo-analysis routines take exactly the
-  columns of ``ring_table``. healpy's ``map2alm`` and ``alm2map`` are not
-  such a library: they assume HEALPix's ring populations and cannot be
-  used on rHEALPix nuclei.
+  the associated Legendre functions and, for analysis, iterates. That work
+  is borrowed from ducc0, whose ring-based routines take exactly the
+  columns of ``ring_table``: :doc:`harmonics` wraps them for the nuclei
+  of a grid, with the optional ``harmonics`` extra installed. healpy's
+  ``map2alm`` and ``alm2map`` cannot be used instead: they assume
+  HEALPix's ring populations.
