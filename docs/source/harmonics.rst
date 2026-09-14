@@ -108,13 +108,13 @@ iterations:
      - 9
      - 9 / 13 / 17 / 18
      - 1.0 / 1.4 / 1.9 / 2.0
-     - 6, 7, 20 iterations at :math:`10^{-10}` or better; degree 18 fails (error 0.8)
+     - 6, 7, 20 iterations at :math:`10^{-10}` or better; at degree 18 the solver reports convergence but the coefficients are wrong (error 0.8)
    * - 3
      - 4374
      - 27
      - 27 / 40 / 48 / 53 / 54
      - 1.0 / 1.5 / 1.8 / 2.0 / 2.0
-     - 5, 6, 12 iterations at :math:`10^{-10}`; 77 iterations at :math:`10^{-9}`; degree 54 fails
+     - 5, 6, 12 iterations at :math:`10^{-10}`; 77 iterations at :math:`10^{-9}`; at degree 54 the iteration limit is hit and the coefficients are wrong (error 0.3)
    * - 4
      - 39366
      - 81
@@ -122,10 +122,16 @@ iterations:
      - 1.0 / 1.5 / 1.8 / 1.9 / 1.9
      - 5, 5, 12 iterations at :math:`10^{-9}` or better; 93 iterations at :math:`10^{-8}`; degree 157 needs 666 iterations for :math:`10^{-7}`
 
-So a safe rule is degrees up to about :math:`1.8 n`, where a dozen
-iterations suffice; between there and :math:`2n`, raise ``maxiter`` and
-watch ``info.stop_reason`` (1 means converged, 7 means the iteration
-limit was hit) and ``info.residual``. These numbers are for exact
+At degree :math:`2n` several different sets of coefficients produce the
+same values at the nuclei, so the solver returns one of them, and it is
+not the one the field was made from: the values are reproduced, the
+residual is tiny, and the stop reason can still say converged. The
+output does not warn you, so the degree has to be chosen in advance. A
+safe rule is degrees up to about :math:`1.8 n`, where a dozen iterations
+suffice; between there and :math:`2n`, raise ``maxiter`` and watch
+``info.stop_reason`` (1 means converged, 7 means the iteration limit was
+hit) and ``info.residual``, knowing that a clean stop is necessary but
+not sufficient. These numbers are for exact
 band-limited input; a real field sampled at the nuclei has power above
 any chosen degree, and that power aliases into the fit, so choose the
 degree from the field's smoothness, not from this table alone.

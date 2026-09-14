@@ -19,8 +19,9 @@ The transforms work on the authalic sphere, where the cells are equal-area
 and the rings sit at the closed-form latitudes. With ``n`` cells per
 base-cell side, a field band-limited up to about degree ``1.8 n`` is
 recovered by ``analysis`` in a dozen iterations; towards degree ``2 n`` the
-fit is ill-conditioned and slow, and at ``2 n`` the short polar rings alias
-and it fails.
+fit is ill-conditioned and slow, and at ``2 n`` the short polar rings alias:
+the solver returns coefficients that reproduce the values but are not the
+ones the field was made from, and may still report convergence.
 
 Requires ducc0: ``pip install rhealpixdggs[harmonics]``.
 """
