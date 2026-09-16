@@ -1,3 +1,24 @@
+0.9.0
+^^^^^
+**Breaking change:** ``Cell.overlaps()`` has its DE-9IM meaning, the one
+OGC Topic 21 v2.0 mandates under that name: two geometries overlap when
+their interiors intersect and neither contains the other. Two cells of one
+rHEALPix hierarchy always nest, touch or are disjoint, so ``overlaps()`` is
+False for every pair of cells, and like the other predicates it raises
+``ValueError`` for cells of different grids or the empty cell. Before 0.9.0
+it answered containment in either direction (one index a prefix of the
+other); write ``a.contains_cell(b) or a.within(b)`` for that. Its parameter
+is now named ``other``, not ``other_cell``.
+``Cell.region_overlaps(region)`` likewise has the DE-9IM meaning for a cell
+against the union of a set of cells: True only when the set holds
+descendants of the cell that do not tile it completely and also at least
+one cell outside it. Before 0.9.0 it was True if any cell of the set
+contained, or was contained by, the cell; write
+``any(a.contains_cell(b) or a.within(b) for b in region)`` for that.
+``Cell.equals()`` now raises ``ValueError`` for cells of different grids or
+the empty cell, consistent with every other predicate; ``==`` still returns
+False across grids (issue #97).
+
 0.8.6
 ^^^^^
 ``Cell.ring()`` returns the isolatitude ring of a cell's nucleus, numbered

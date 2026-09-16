@@ -28,7 +28,10 @@ The cell Module
    children of cell P4: ``touches`` is true for neighbors that share an
    edge *and* for cells that meet at a corner only; ``within`` /
    ``contains_cell`` relate a cell to its ancestors and descendants;
-   ``disjoint`` is everything else.
+   ``disjoint`` is everything else. Those three relations exhaust the
+   possibilities for two cells of one hierarchy, so the DE-9IM
+   ``overlaps`` and ``crosses`` predicates never hold between cells, and
+   ``intersects`` is the negation of ``disjoint``.
 
 .. figure:: images/predicates_polar.*
    :alt: Four orthographic views. First three, centered on the north

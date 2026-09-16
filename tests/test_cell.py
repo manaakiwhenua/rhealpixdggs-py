@@ -827,31 +827,46 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             c.diagonal_neighbor("north")
 
     def test_overlaps(self):
+        # DE-9IM overlaps (interiors intersect, neither contains the other)
+        # never holds between two cells of one hierarchy: they nest, touch
+        # or are disjoint. The pre-0.9.0 meaning, containment either way,
+        # is tested under contains_cell/within.
         rdggs = WGS84_003
         a = rdggs.cell((P, 0))
         descendant = rdggs.cell((P, 0, 3))
-        sibling = rdggs.cell((P, 1))
-        self.assertTrue(a.overlaps(a))
-        self.assertTrue(a.overlaps(descendant))
-        self.assertTrue(descendant.overlaps(a))
-        self.assertFalse(a.overlaps(sibling))
+        self.assertFalse(a.overlaps(a))
+        self.assertFalse(a.overlaps(descendant))
+        self.assertFalse(descendant.overlaps(a))
+        self.assertFalse(a.overlaps(rdggs.cell((P, 1))))  # edge neighbours
+        self.assertFalse(a.overlaps(rdggs.cell((P, 4))))  # corner neighbours
+        self.assertFalse(a.overlaps(rdggs.cell((P, 8))))  # disjoint
         # Regression test for issue #54: this was a bare `assert`, which
         # python -O silently compiles out, and which raised
         # AssertionError rather than a conventional exception.
         empty = rdggs.cell()
         with self.assertRaises(ValueError):
             empty.overlaps(a)
+        with self.assertRaises(ValueError):
+            a.overlaps(empty)
+        other_rdggs = RHEALPixDGGS(N_side=4)
+        with self.assertRaises(ValueError):
+            a.overlaps(Cell(other_rdggs, (P, 0)))
 
     def test_equals(self):
         rdggs = WGS84_003
         a = rdggs.cell((P, 0))
         self.assertTrue(a.equals(rdggs.cell((P, 0))))
         self.assertFalse(a.equals(rdggs.cell((P, 1))))
-        # Different RHEALPixDGGS instances: never equal, even with the
-        # same suid, since __eq__ (which equals() delegates to) also
-        # compares rdggs.
+        # Like every other predicate, equals() raises for cells of
+        # different grids and for the empty cell; == keeps answering
+        # False across grids, since __eq__ also compares rdggs.
         other_rdggs = RHEALPixDGGS(N_side=4)  # A genuinely different RHEALPixDGGS.
-        self.assertFalse(a.equals(Cell(other_rdggs, (P, 0))))
+        foreign = Cell(other_rdggs, (P, 0))
+        with self.assertRaises(ValueError):
+            a.equals(foreign)
+        self.assertFalse(a == foreign)
+        with self.assertRaises(ValueError):
+            rdggs.cell().equals(a)
 
     def test_contains_cell_and_within(self):
         rdggs = WGS84_003
@@ -873,6 +888,16 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         # contains_cell()'s docstring for why.
         self.assertTrue(parent.covers(child))
         self.assertTrue(child.covered_by(parent))
+
+        # The pre-0.9.0 meaning of overlaps(), containment either way, is
+        # this composition (the migration given in CHANGES.rst).
+        for a, b, nested in (
+            (parent, child, True),
+            (child, parent, True),
+            (parent, parent, True),
+            (parent, sibling, False),
+        ):
+            self.assertEqual(a.contains_cell(b) or a.within(b), nested)
 
         empty = rdggs.cell()
         with self.assertRaises(ValueError):
@@ -966,18 +991,53 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         self.assertNotEqual(cells[7].color(saturation=0.2), cells[7].color(0.9))
 
     def test_region_overlaps(self):
+        # DE-9IM overlaps between a cell and the union of a set of cells:
+        # the set shares interior with the cell, does not cover it, and is
+        # not covered by it. Only a set that partially tiles the cell and
+        # also extends outside it qualifies.
         rdggs = WGS84_003
         a = rdggs.cell((P, 0))
         descendant = rdggs.cell((P, 0, 3))
         sibling = rdggs.cell((P, 1))
         far = rdggs.cell((S, 8))
+        children = list(a.subcells())
+        self.assertEqual(len(children), 9)
+
         self.assertTrue(a.region_overlaps([far, descendant]))
-        self.assertTrue(a.region_overlaps([a]))
+        self.assertTrue(a.region_overlaps([descendant, sibling]))
+        self.assertTrue(a.region_overlaps(children[:8] + [far]))
+        # Nested duplicates inside the cell still do not tile it.
+        self.assertTrue(a.region_overlaps([descendant, rdggs.cell((P, 0, 3, 1)), far]))
+
+        # The set covers the cell: within/equals, not overlaps.
+        self.assertFalse(a.region_overlaps([a]))
+        self.assertFalse(a.region_overlaps([a, far]))
+        self.assertFalse(a.region_overlaps([rdggs.cell((P,)), far]))
+        self.assertFalse(a.region_overlaps(children + [far]))
+        grandchildren = [g for c in children for g in c.subcells()]
+        self.assertEqual(len(grandchildren), 81)
+        self.assertFalse(a.region_overlaps(grandchildren + [far]))
+        # Mixed depths that tile: one child expanded into its children.
+        mixed = children[1:] + list(children[0].subcells()) + [far]
+        self.assertFalse(a.region_overlaps(mixed))
+        # Duplicates and nested duplicates of a tiling still tile.
+        self.assertFalse(a.region_overlaps(children + [descendant, far, far]))
+
+        # The cell covers the set: contains, not overlaps.
+        self.assertFalse(a.region_overlaps([descendant]))
+        self.assertFalse(a.region_overlaps(children[:8]))
+        # No shared interior: disjoint or touching.
         self.assertFalse(a.region_overlaps([sibling, far]))
         self.assertFalse(a.region_overlaps([]))
+
         empty = rdggs.cell()
         with self.assertRaises(ValueError):
             empty.region_overlaps([a])
+        with self.assertRaises(ValueError):
+            a.region_overlaps([far, empty])
+        other_rdggs = RHEALPixDGGS(N_side=4)
+        with self.assertRaises(ValueError):
+            a.region_overlaps([Cell(other_rdggs, (P, 0))])
 
     def test_region(self):
         for rdggs in [WGS84_003, WGS84_003_RADIANS]:
