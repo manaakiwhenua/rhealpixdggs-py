@@ -37,6 +37,15 @@ relations Before, After, Meets, MetBy, Overlaps, OverlappedBy, Starts,
 StartedBy, During, Contains, Finishes, FinishedBy and Equals, plus the
 groupings In and Disjoint); ``Cell.relate_position(other, relate)`` tests
 for one. The conformance page's A.17 row is now Met.
+The centroid is the published position of a cell, its direct position in
+the sense of OGC Topic 21 v2.0 requirement 27: ``Cell.centroid``,
+``RHEALPixDGGS.centroids`` and ``rhp_to_geo`` (which already reported it)
+are documented as such, the nucleus as the indexing point, and a test
+verifies the centroid lies inside its cell for every cell shape.
+``CellZoneFromPoly`` in ``conversion`` now admits a cell at its resolution
+limit when the cell's centroid, rather than its nucleus, is inside the
+geometry, as ``polyfill`` does; its output can change for cells on the
+boundary (issue #98).
 
 0.8.6
 ^^^^^
