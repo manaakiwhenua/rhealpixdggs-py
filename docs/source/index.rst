@@ -35,9 +35,9 @@ Key API entry points
      - A grid system on a chosen ellipsoid: cell lookup from points and
        regions, grid generation, cell areas and widths.
    * - :class:`rhealpixdggs.cell.Cell`
-     - A single cell: geometry (nucleus, vertices, boundary, centroid),
-       hierarchy (parents, children), neighbors, and topological
-       predicates.
+     - A single cell: geometry (the centroid as its position, the
+       nucleus that indexes it, vertices, boundary), hierarchy (parents,
+       children), neighbors, and topological predicates.
    * - :func:`rhealpixdggs.rhp_wrappers.geo_to_rhp` /
        :func:`~rhealpixdggs.rhp_wrappers.rhp_to_geo`
      - H3-style conversion between longitude-latitude points and cell
@@ -73,6 +73,8 @@ Table of contents
    cell
    conversion
    rhp_wrappers
+   export
+   zoneset
    conformance
 
 Indices and tables

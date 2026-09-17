@@ -679,6 +679,21 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             WGS84_003.ring_table(-1)
 
+    def test_shapes_match_ellipsoidal_shape(self):
+        # shapes() names each cell's ellipsoidal shape for many indices at
+        # once, '' for an invalid index.
+        from numpy.testing import assert_array_equal
+
+        for rdggs in (WGS84_003, WGS84_122):
+            cells = [c for res in range(3) for c in rdggs.grid(res)]
+            assert_array_equal(
+                rdggs.shapes([str(c) for c in cells]),
+                [c.ellipsoidal_shape for c in cells],
+            )
+        got = WGS84_003.shapes(["P0", "N", "N0", "N1", "bad", ""])
+        self.assertEqual(got.tolist(), ["quad", "cap", "dart", "skew_quad", "", ""])
+        self.assertEqual(WGS84_003.shapes([]).shape, (0,))
+
     def test_centroids_match_cell_centroid(self):
         # centroids() evaluates Cell.centroid's quadrature rules for all
         # cells of each shape at once; only the summation differs (array

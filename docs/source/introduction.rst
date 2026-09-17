@@ -293,7 +293,11 @@ Find all the level 1 cells intersecting the longitude-latitude aligned ellipsoid
     ['Q0', 'Q1', 'Q2', 'R0']
     ['Q3', 'Q4', 'Q5', 'R3']
 
-Compute the ellipsoidal shape and ellipsoidal nuclei of these cells ::
+Compute the ellipsoidal shape and ellipsoidal nuclei of these cells. The
+nucleus is the point under the centre of a cell's planar square, the point
+the grid indexes by; a cell's published position, its direct position in
+the sense of OGC Topic 21, is its area-weighted ``centroid``, which
+``rhp_to_geo`` reports ::
 
     >>> expected_results = [
     ...    [

@@ -69,11 +69,12 @@ Common Spatio-temporal Classes
        position.
      - Partial
      - Cell suids, :func:`~rhealpixdggs.rhp_wrappers.rhp_to_parent`,
-       :meth:`~rhealpixdggs.cell.Cell.subcells`,
-       :meth:`~rhealpixdggs.cell.Cell.nucleus`,
-       :meth:`~rhealpixdggs.cell.Cell.centroid`; a formal identifier
-       grammar (valid strings, canonical form) is to be published
-       (v1.0).
+       :meth:`~rhealpixdggs.cell.Cell.subcells`, the extent from
+       :meth:`~rhealpixdggs.cell.Cell.boundary`, and the representative
+       position :meth:`~rhealpixdggs.cell.Cell.centroid` (A.27; the
+       :meth:`~rhealpixdggs.cell.Cell.nucleus` is the indexing point); a
+       formal identifier grammar (valid strings, canonical form) is to be
+       published (v1.0).
 
 DGGS Core — reference system
 ----------------------------
@@ -129,8 +130,11 @@ DGGS Core — reference system
    * - A.12 direct position
      - Every zone is assigned a direct position inside its boundary.
      - Met
-     - :meth:`~rhealpixdggs.cell.Cell.nucleus` is interior by
-       construction (see also A.27 for the equal-area refinement).
+     - The direct position is the centroid (A.27),
+       :meth:`~rhealpixdggs.cell.Cell.centroid`, which lies inside its
+       cell for every cell shape (tested in ``tests/test_cell.py``); the
+       indexing point :meth:`~rhealpixdggs.cell.Cell.nucleus` is interior
+       by construction.
    * - A.13 address
      - Every zone has a globally unique identifier, structured on a
        recognized indexing method.
@@ -176,19 +180,51 @@ DGGS Core — functions
      - The full DE-9IM query interface between zones: contains,
        within, touches, disjoint, equals, intersects, overlaps,
        crosses, plus distance and relative position.
-     - Partial
-     - :meth:`~rhealpixdggs.cell.Cell.equals`,
+     - Met
+     - Every operation and attribute of Table 53 is implemented. The
+       DE-9IM and one-dimensional operations are methods of
+       :class:`~rhealpixdggs.cell.Cell`:
+       :meth:`~rhealpixdggs.cell.Cell.equals`,
        :meth:`~rhealpixdggs.cell.Cell.contains_cell`,
        :meth:`~rhealpixdggs.cell.Cell.within`,
        :meth:`~rhealpixdggs.cell.Cell.touches`,
-       :meth:`~rhealpixdggs.cell.Cell.disjoint` and
-       :meth:`~rhealpixdggs.cell.Cell.overlaps` have their DE-9IM
-       meanings (``overlaps`` since 0.9.0; between two cells of one
-       hierarchy it is always False, and
-       :meth:`~rhealpixdggs.cell.Cell.region_overlaps` gives the
-       cell-against-region form). Remaining (v0.9.0, issue #96):
-       intersects, crosses, distance, withinDistance, relativePosition,
-       relatePosition and relate.
+       :meth:`~rhealpixdggs.cell.Cell.disjoint`,
+       :meth:`~rhealpixdggs.cell.Cell.intersects`,
+       :meth:`~rhealpixdggs.cell.Cell.overlaps` and
+       :meth:`~rhealpixdggs.cell.Cell.crosses` (the last two are always
+       False between two cells of one hierarchy, which nest, touch or
+       are disjoint; :meth:`~rhealpixdggs.cell.Cell.region_overlaps`
+       is the cell-against-region form), the DE-9IM pattern test
+       :meth:`~rhealpixdggs.cell.Cell.relate`,
+       :meth:`~rhealpixdggs.cell.Cell.distance` (the infimum distance
+       between the cells: 0 when they intersect, otherwise the least
+       distance between their boundaries, Euclidean in the plane or
+       geodesic on the ellipsoid) with
+       :meth:`~rhealpixdggs.cell.Cell.within_distance`, and
+       :meth:`~rhealpixdggs.cell.Cell.relative_position` returning the
+       Table 54 enumeration :class:`~rhealpixdggs.cell.RelativePosition`
+       with :meth:`~rhealpixdggs.cell.Cell.relate_position`. The
+       ``projectTo`` vector of the spec selects a dimension; for this
+       two-dimensional grid ``relative_position`` takes its spatial part
+       as a planar ``direction``. The hierarchy predicates are
+       :meth:`~rhealpixdggs.cell.Cell.parent_of`,
+       :meth:`~rhealpixdggs.cell.Cell.child_of` and
+       :meth:`~rhealpixdggs.cell.Cell.sibling_of`, with the spec's
+       ``inheritID`` flag. The operations that return zone sets are
+       methods of :class:`~rhealpixdggs.zoneset.ZoneSet`, with
+       zone-to-zone delegates on ``Cell``: ``union``, ``intersection``,
+       ``difference`` and ``sym_difference`` by exact hierarchical
+       algebra under the ``rangeRefine`` resolution filter, ``buffer``
+       from ``distance``, and ``parent``, ``child`` and ``sibling`` with
+       ``levels`` and ``inheritID`` per clause 8.3.3, whose worked
+       examples are the tests. The query attributes ``boundary``,
+       ``convexHull`` and ``boundaryType`` are ``ZoneSet.boundary``,
+       ``ZoneSet.convex_hull`` and ``ZoneSet.boundary_type``, the last a
+       value of the EA_BoundaryType code list (Table 76,
+       :class:`~rhealpixdggs.zoneset.BoundaryType`); every rHEALPix edge
+       is a ``projectedLine``. Beyond the mandate, the DE-9IM predicates
+       are also defined between two zone sets read as regions. See
+       :doc:`zoneset`.
    * - A.18 interoperation query
      - Operations to read, interpret and execute external data
        queries.
@@ -202,10 +238,24 @@ DGGS Core — functions
    * - A.19 interoperation broadcast
      - Operations translating query results into standard data
        formats for delivery.
-     - Planned
-     - GeoJSON FeatureCollection export of zones and query results,
-       plus delimited-text export (v0.9.0); GML export with a
-       published application schema (v1.0).
+     - Met
+     - :mod:`rhealpixdggs.export` translates cells and query results
+       into the ``TranslationType`` codes ``toGeoJSON``
+       (:func:`~rhealpixdggs.export.to_geojson`, an RFC 7946
+       FeatureCollection: longitude-latitude order, counter-clockwise
+       rings, antimeridian-straddling cells split into MultiPolygons,
+       cap and pole-touching cells closed as section 3.1.9 recommends;
+       every feature valid and the features of a resolution tiling the
+       longitude-latitude rectangle, verified over whole resolutions in
+       ``tests/test_export.py``) and ``toASCII``
+       (:func:`~rhealpixdggs.export.to_csv`, delimited text with the
+       same attributes), publishing the centroid of A.27 as each cell's
+       position; :func:`~rhealpixdggs.export.geometries` gives the
+       shapely geometries for OGR-backed writers. ``toGML`` follows in
+       v1.0 with the application schema (#103); ``toHDF``,
+       ``toJSON-LD``, ``toNetCDF`` and ``toXML`` are not planned. The
+       ``broadcastResult`` operation of Table 60 (transport) is outside
+       the library's scope, per the note above.
 
 Equal-Area Earth Reference System
 ---------------------------------
@@ -264,12 +314,22 @@ Equal-Area Earth Reference System
    * - A.27 direct position is the centroid
      - Each cell's direct position is its centroid, the geodesic
        center of surface area.
-     - Partial
-     - :meth:`~rhealpixdggs.cell.Cell.centroid` computes area-true
-       centroids for all four cell shapes (integration is performed
-       in the equal-area plane); adopting it as the published
-       representative position, alongside the nucleus used for
-       indexing, is scheduled (v0.9.0).
+     - Met
+     - Requirement 27: "the DirectPosition of an EA_Cell [is] the
+       centroid of the EA_cell, computed as the geodesic centre of
+       surface area", and its test "requires verification that the
+       attribute EA_Zone(centroid) returns a direct position on the
+       surface of the cell". :meth:`~rhealpixdggs.cell.Cell.centroid`
+       is the published position: the area-weighted mean of longitude
+       and latitude over the cell, integrated in the equal-area plane
+       (where equal planar area is equal surface area) with a fixed
+       Gauss-Legendre rule per cell shape, exact to about 1e-14 degrees;
+       :func:`~rhealpixdggs.rhp_wrappers.rhp_to_geo` and
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.centroids` report it, the
+       exports of A.19 publish it, and ``tests/test_cell.py`` verifies
+       it lies inside its cell for every shape. The nucleus (the centre
+       of the planar square) remains the indexing point and the point on
+       the isolatitude rings.
    * - A.28 area error budget
      - A declared cell-area error budget of at most 1% per grid.
      - Partial
@@ -287,15 +347,18 @@ Equal-Area Earth Reference System
 Planned work by release
 -----------------------
 
-- **v0.9.0** — complete the zone-query interface (intersects, crosses,
+- **v0.9.0** — the zone-query interface is complete (intersects, crosses,
   distance, withinDistance, relativePosition, relatePosition, relate:
   `#96 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/96>`_;
-  DE-9IM semantics for ``overlaps``, done:
-  `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_),
-  adopt the centroid as the published representative position
+  DE-9IM semantics for ``overlaps``:
+  `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_)
+  the centroid is the published representative position
   (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_),
-  and add GeoJSON and delimited-text export of zones and query results
-  (`#99 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/99>`_).
+  zones and query results export to GeoJSON and delimited text
+  (`#99 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/99>`_),
+  and the hierarchy predicates, zone-set operations and query attributes
+  of Table 53 are in place
+  (`#161 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/161>`_).
 - **v1.0** — finish this page's remaining rows: CRS definitions
   (WKT2/PROJJSON) with epoch statement
   (`#100 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/100>`_),
