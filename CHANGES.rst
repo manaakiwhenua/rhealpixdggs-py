@@ -72,8 +72,12 @@ and ``inherit_id`` per clause 8.3.3, and the query attributes
 ``geometry``, ``boundary``, ``convex_hull`` and ``boundary_type``, the last
 from the EA_BoundaryType code list (``BoundaryType``; every rHEALPix edge
 is a ``projectedLine``). ``Cell`` has the same methods for the
-zone-to-zone form, each returning a ``ZoneSet``. With this the conformance
-page's A.17 row is Met and the v0.9.0 items are complete.
+zone-to-zone form, each returning a ``ZoneSet``. A ``ZoneSet`` also
+answers the DE-9IM predicates against another set or a cell, read as
+regions: ``equals``, ``contains``, ``within``, ``intersects``,
+``disjoint``, ``touches``, ``overlaps`` (which, unlike between two cells,
+can be True) and ``crosses``. With this the conformance page's A.17 row is
+Met and the v0.9.0 items are complete.
 
 0.8.6
 ^^^^^

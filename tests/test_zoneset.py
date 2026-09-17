@@ -218,6 +218,79 @@ class ZoneSetTestCase(unittest.TestCase):
             set(zs.buffer(0).cells), set(k_ring("P44", 1)) | set(k_ring("Q44", 1))
         )
 
+    def test_set_predicates(self):
+        rdggs = WGS84_003
+
+        def zs(*cells):
+            return ZoneSet(rdggs, cells)
+
+        a = zs("P40", "P41")
+        edge = zs("P42")  # shares an edge with P41
+        corner = zs("P45")  # shares only a corner with P41
+        parent = zs("P4")
+        far = zs("Q0", "S8")
+        straddling = zs("P41", "P42")  # shares P41 with a, has P42 outside it
+
+        self.assertTrue(a.equals(zs("P41", "P40")))
+        self.assertFalse(a.equals(parent))
+        self.assertTrue(parent.contains(a))
+        self.assertTrue(a.within(parent))
+        self.assertTrue(a.contains(a))
+        self.assertFalse(a.contains(parent))
+        # A set of nine children equals their parent as a region.
+        self.assertTrue(zs(*(str(c) for c in cell("P4").subcells())).equals(parent))
+
+        self.assertTrue(a.intersects(edge))
+        self.assertTrue(a.touches(edge))
+        self.assertTrue(a.touches(corner))
+        self.assertFalse(a.disjoint(edge))
+        self.assertFalse(a.overlaps(edge))
+        self.assertTrue(a.disjoint(far))
+        self.assertFalse(a.intersects(far))
+        self.assertFalse(a.touches(far))
+
+        self.assertTrue(a.overlaps(straddling))
+        self.assertTrue(straddling.overlaps(a))
+        self.assertTrue(a.intersects(straddling))
+        self.assertFalse(a.touches(straddling))
+        self.assertFalse(a.overlaps(parent))  # contained, not overlapping
+        self.assertFalse(a.overlaps(a))
+        for other in (edge, parent, far, straddling):
+            self.assertFalse(a.crosses(other))
+        # A Cell is accepted as the other operand.
+        self.assertTrue(a.touches(cell("P42")))
+        with self.assertRaises(ValueError):
+            a.intersects(ZoneSet(WGS84_122, ["P0"]))
+
+        # Against shapely on the planar squares, for random sets.
+        rng = random.Random(7)
+        pool = [str(c) for f in (P, Q) for c in rdggs.cell((f,)).subcells()]
+        pool += [str(g) for i in pool[:4] for g in cell(i).subcells()]
+        for _ in range(40):
+            x = ZoneSet(rdggs, rng.sample(pool, rng.randint(1, 4)))
+            y = ZoneSet(rdggs, rng.sample(pool, rng.randint(1, 4)))
+            gx, gy = planar_geometry(x), planar_geometry(y)
+            # Planar coordinates are built by summation, so squares that
+            # touch across a face boundary can sit a few nanometres apart
+            # in shapely: judge contact by distance, not exact touching.
+            scale = 1e-9 * gx.area
+            close = gx.distance(gy) <= 1e-6 * cell(pool[0]).width()
+            shared = gx.intersection(gy).area > scale
+            x_only = gx.difference(gy).area > scale
+            y_only = gy.difference(gx).area > scale
+            self.assertEqual(x.equals(y), not x_only and not y_only)
+            self.assertEqual(x.contains(y), not y_only)
+            self.assertEqual(x.within(y), not x_only)
+            self.assertEqual(x.intersects(y), close)
+            self.assertEqual(x.disjoint(y), not close)
+            self.assertEqual(x.touches(y), close and not shared)
+            self.assertEqual(x.overlaps(y), shared and x_only and y_only)
+            # Cell.region_overlaps is the one-cell case of the set form.
+            for c in x:
+                self.assertEqual(
+                    c.region_overlaps(list(y)), ZoneSet(rdggs, [c]).overlaps(y)
+                )
+
     def test_geometry_attributes(self):
         rdggs = WGS84_003
         zs = ZoneSet(rdggs, ["P40", "P41", "P43"])

@@ -222,7 +222,9 @@ DGGS Core — functions
        ``ZoneSet.convex_hull`` and ``ZoneSet.boundary_type``, the last a
        value of the EA_BoundaryType code list (Table 76,
        :class:`~rhealpixdggs.zoneset.BoundaryType`); every rHEALPix edge
-       is a ``projectedLine``. See :doc:`zoneset`.
+       is a ``projectedLine``. Beyond the mandate, the DE-9IM predicates
+       are also defined between two zone sets read as regions. See
+       :doc:`zoneset`.
    * - A.18 interoperation query
      - Operations to read, interpret and execute external data
        queries.

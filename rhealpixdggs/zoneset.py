@@ -272,6 +272,118 @@ class ZoneSet:
             max_res,
         )
 
+    def _shares_interior(self, other: "ZoneSet") -> bool:
+        a, b = self._disjoint(), other._disjoint()
+        return any(_covered(i, b) for i in a) or any(_covered(i, a) for i in b)
+
+    def _only(self, other: "ZoneSet") -> bool:
+        """True if this set covers ground `other` does not."""
+        return bool(self.difference(other, 0, self.rdggs.max_resolution)._cells)
+
+    def _cells_touch(self, other: "ZoneSet") -> bool:
+        cells_a = [self._cell(i) for i in self._disjoint()]
+        cells_b = [self._cell(i) for i in other._disjoint()]
+        return any(a.touches(b) for a in cells_a for b in cells_b)
+
+    def equals(self, other: "Cell | ZoneSet") -> bool:
+        """
+        DE-9IM `equals` between the regions this set and `other` cover:
+        True if neither covers ground the other does not, however the
+        cells are cut (nine children equal their parent).
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> children = [f'P4{d}' for d in range(9)]
+            >>> ZoneSet(WGS84_003, children).equals(ZoneSet(WGS84_003, ['P4']))
+            True
+
+        """
+        other = self._operand(other)
+        return not self._only(other) and not other._only(self)
+
+    def contains(self, other: "Cell | ZoneSet") -> bool:
+        """
+        DE-9IM `contains` between regions: True if the region `other`
+        covers lies within the region this set covers. As for cells, this
+        coincides with `covers`, since the regions are closed and tile.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> ZoneSet(WGS84_003, ['P4']).contains(ZoneSet(WGS84_003, ['P40', 'P41']))
+            True
+
+        """
+        return not self._operand(other)._only(self)
+
+    def within(self, other: "Cell | ZoneSet") -> bool:
+        """DE-9IM `within` between regions: the converse of `contains`."""
+        return self._operand(other).contains(self)
+
+    def intersects(self, other: "Cell | ZoneSet") -> bool:
+        """
+        DE-9IM `intersects` between regions: True if they share a point,
+        that is share interior or have a pair of cells that touch.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> ZoneSet(WGS84_003, ['P40']).intersects(ZoneSet(WGS84_003, ['P41']))
+            True
+
+        """
+        other = self._operand(other)
+        return self._shares_interior(other) or self._cells_touch(other)
+
+    def disjoint(self, other: "Cell | ZoneSet") -> bool:
+        """DE-9IM `disjoint` between regions: the negation of `intersects`."""
+        return not self.intersects(other)
+
+    def touches(self, other: "Cell | ZoneSet") -> bool:
+        """
+        DE-9IM `touches` between regions: True if they share boundary
+        points but no interior.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> a = ZoneSet(WGS84_003, ['P40', 'P41'])
+            >>> a.touches(ZoneSet(WGS84_003, ['P42'])), a.touches(ZoneSet(WGS84_003, ['P4']))
+            (True, False)
+
+        """
+        other = self._operand(other)
+        return not self._shares_interior(other) and self._cells_touch(other)
+
+    def overlaps(self, other: "Cell | ZoneSet") -> bool:
+        """
+        DE-9IM `overlaps` between regions: True if they share interior and
+        each covers ground the other does not. Unlike two single cells,
+        two sets of cells can overlap; ``Cell.region_overlaps`` is the
+        one-cell case.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> a = ZoneSet(WGS84_003, ['P40', 'P41'])
+            >>> a.overlaps(ZoneSet(WGS84_003, ['P41', 'P42']))
+            True
+            >>> a.overlaps(ZoneSet(WGS84_003, ['P4']))
+            False
+
+        """
+        other = self._operand(other)
+        return self._shares_interior(other) and self._only(other) and other._only(self)
+
+    def crosses(self, other: "Cell | ZoneSet") -> bool:
+        """
+        DE-9IM `crosses` between regions: always False, as both are
+        two-dimensional; present because the interface mandates it.
+        """
+        self._operand(other)
+        return False
+
     def buffer(self, dist: float, plane: bool = True, n: int = 8) -> "ZoneSet":
         """
         The cells at each member's resolution within `dist` of the set:

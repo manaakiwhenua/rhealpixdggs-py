@@ -96,6 +96,24 @@ plane or on the ellipsoid::
     >>> len(WGS84_003.cell(['P', 4, 4]).buffer(0))   # touching cells are at distance 0
     9
 
+Relations between sets
+----------------------
+
+The DE-9IM questions the :doc:`cell` page answers for two cells are also
+answered between two sets, read as the regions their cells cover:
+``equals``, ``contains``, ``within``, ``intersects``, ``disjoint``,
+``touches``, ``overlaps`` and ``crosses``. Unlike two single cells, two
+sets can genuinely overlap, sharing some ground while each has ground of
+its own; ``Cell.region_overlaps`` is the one-cell case of that::
+
+    >>> a = ZoneSet(WGS84_003, ['P40', 'P41'])
+    >>> a.overlaps(ZoneSet(WGS84_003, ['P41', 'P42']))
+    True
+    >>> a.touches(ZoneSet(WGS84_003, ['P42'])), a.within(ZoneSet(WGS84_003, ['P4']))
+    (True, True)
+    >>> ZoneSet(WGS84_003, [f'P4{d}' for d in range(9)]).equals(ZoneSet(WGS84_003, ['P4']))
+    True
+
 Geometry of a query
 -------------------
 
