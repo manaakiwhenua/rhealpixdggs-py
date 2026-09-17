@@ -177,15 +177,18 @@ DGGS Core — functions
        within, touches, disjoint, equals, intersects, overlaps,
        crosses, plus distance and relative position.
      - Partial
-     - :meth:`~rhealpixdggs.cell.Cell.touches`,
+     - :meth:`~rhealpixdggs.cell.Cell.equals`,
+       :meth:`~rhealpixdggs.cell.Cell.contains_cell`,
        :meth:`~rhealpixdggs.cell.Cell.within`,
-       :meth:`~rhealpixdggs.cell.Cell.contains_cell` and
-       :meth:`~rhealpixdggs.cell.Cell.disjoint` are implemented.
-       Remaining (v0.9.0): equals, intersects, crosses, distance and
-       relativePosition, and realigning
-       :meth:`~rhealpixdggs.cell.Cell.overlaps` with DE-9IM semantics
-       (a breaking change: its current meaning is
-       containment-in-either-direction).
+       :meth:`~rhealpixdggs.cell.Cell.touches`,
+       :meth:`~rhealpixdggs.cell.Cell.disjoint` and
+       :meth:`~rhealpixdggs.cell.Cell.overlaps` have their DE-9IM
+       meanings (``overlaps`` since 0.9.0; between two cells of one
+       hierarchy it is always False, and
+       :meth:`~rhealpixdggs.cell.Cell.region_overlaps` gives the
+       cell-against-region form). Remaining (v0.9.0, issue #96):
+       intersects, crosses, distance, withinDistance, relativePosition,
+       relatePosition and relate.
    * - A.18 interoperation query
      - Operations to read, interpret and execute external data
        queries.
@@ -284,10 +287,10 @@ Equal-Area Earth Reference System
 Planned work by release
 -----------------------
 
-- **v0.9.0** — complete the zone-query interface (equals, intersects,
-  crosses, distance, relativePosition:
+- **v0.9.0** — complete the zone-query interface (intersects, crosses,
+  distance, withinDistance, relativePosition, relatePosition, relate:
   `#96 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/96>`_;
-  DE-9IM semantics for ``overlaps``:
+  DE-9IM semantics for ``overlaps``, done:
   `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_),
   adopt the centroid as the published representative position
   (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_),

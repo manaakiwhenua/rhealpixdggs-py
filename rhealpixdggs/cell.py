@@ -1135,39 +1135,15 @@ class Cell:
         else:
             return lat_min <= phi and lat_max >= phi
 
-    def overlaps(self, other_cell: "Cell") -> bool:
+    def _nests(self, other: "Cell") -> bool:
         """
-        Return True if one of this cell and `other_cell` contains the
-        other (they are the same cell, or one is an ancestor of the
-        other), and False otherwise: the test is whether one cell's suid
-        is a prefix of the other's.
-
-        Note the name predates the DE-9IM predicates below and uses
-        "overlap" loosely: in the DE-9IM sense two grid cells can never
-        partially overlap (they either nest, touch, or are disjoint), and
-        what this method computes is containment-in-either-direction. It
-        is kept under this name for backward compatibility; for the
-        precisely-named relations, see `contains_cell()`, `within()`,
-        `touches()`, and `disjoint()`.
+        Return True if one of `self` and `other` is the other or an
+        ancestor of it, i.e. one suid is a prefix of the other's. Assumes
+        both cells belong to the same grid and neither is empty; the
+        public predicates check that first.
         """
-        if not self.suid:
-            raise ValueError("Cannot test overlap for an empty cell.")
-        for i, j in zip(self.suid, other_cell.suid):
-            if i != j:
-                return False
-        return True
-
-    def region_overlaps(self, region: "list[Cell]") -> bool:
-        """
-        Return True if `overlaps()` holds between this cell and any cell
-        in the list `region`, and False otherwise (including for an empty
-        list). See `overlaps()` for what is (and is not) meant by
-        "overlap" here.
-        """
-        for component_cell in region:
-            if self.overlaps(component_cell):
-                return True
-        return False
+        n = min(len(self.suid), len(other.suid))
+        return self.suid[:n] == other.suid[:n]
 
     def region(self) -> str:
         """
@@ -1813,8 +1789,10 @@ class Cell:
     def equals(self, other: "Cell") -> bool:
         """
         DE-9IM `equals` predicate: return True if this cell and `other`
-        are the same cell, and False otherwise. Equivalent to `self ==
-        other`.
+        are the same cell, and False otherwise. For two cells of one grid
+        this is `self == other`; unlike `==`, which is False across grids,
+        it raises `ValueError` for cells of different grids or for the
+        empty cell, as every predicate here does.
 
         EXAMPLES::
 
@@ -1826,7 +1804,8 @@ class Cell:
             False
 
         """
-        return self == other
+        self._check_comparable(other, "equality")
+        return self.suid == other.suid
 
     def contains_cell(self, other: "Cell") -> bool:
         """
@@ -1857,7 +1836,7 @@ class Cell:
 
         """
         self._check_comparable(other, "containment")
-        return self.overlaps(other) and len(self.suid) <= len(other.suid)
+        return other.suid[: len(self.suid)] == self.suid
 
     def within(self, other: "Cell") -> bool:
         """
@@ -1930,7 +1909,7 @@ class Cell:
 
         """
         self._check_comparable(other, "touches")
-        if self.overlaps(other):
+        if self._nests(other):
             # One is an ancestor of (or the same cell as) the other: their
             # closed regions share interior points, so this isn't touches.
             return False
@@ -1939,7 +1918,7 @@ class Cell:
         shallow, deep = (self, other) if self.resolution == r else (other, self)
         deep_ancestor = Cell(self.rdggs, deep.suid[: r + 1])
         # deep_ancestor != shallow is guaranteed here: if they were equal,
-        # self.overlaps(other) above would already have been True.
+        # the cells would nest and we would have returned above.
         tail = deep.suid[r + 1 :]
         child_order = self.rdggs.child_order
         N = self.N_side
@@ -1974,13 +1953,9 @@ class Cell:
         share no point at all (no shared interior and no shared
         boundary), and False otherwise.
 
-        Note DE-9IM's `intersects` is simply the negation of this, and
-        `crosses`/`overlaps` (in the DE-9IM sense, not to be confused
-        with the pre-existing, differently-named `Cell.overlaps()`
-        method above) can never hold between two cells of a hierarchical
-        grid: two cells always either nest (one contains the other),
-        touch along their boundary only, or are fully disjoint -- partial
-        interior overlap without full containment is impossible.
+        Two cells of one hierarchical grid always either nest (one
+        contains the other), touch along their boundary only, or are
+        disjoint; see `overlaps()` for why partial overlap is impossible.
 
         EXAMPLES::
 
@@ -1993,7 +1968,102 @@ class Cell:
 
         """
         self._check_comparable(other, "disjoint")
-        return not (self.overlaps(other) or self.touches(other))
+        return not (self._nests(other) or self.touches(other))
+
+    def overlaps(self, other: "Cell") -> bool:
+        """
+        DE-9IM `overlaps` predicate: return True if the interiors of this
+        cell and `other` intersect and neither contains the other. Two
+        cells of one hierarchical grid always either nest, touch along
+        their boundary only, or are disjoint, so this is False for every
+        pair of cells; it exists because OGC Topic 21 mandates the
+        predicate under this name, and it raises `ValueError` for cells
+        of different grids or the empty cell like the other predicates.
+
+        Before 0.9.0 this method answered containment in either direction
+        (one suid a prefix of the other's). For that relation use
+        ``a.contains_cell(b) or a.within(b)``.
+
+        .. versionchanged:: 0.9.0
+           DE-9IM semantics; formerly containment in either direction.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N']).overlaps(Cell(rdggs, ['N', 0]))
+            False
+            >>> Cell(rdggs, ['N']).contains_cell(Cell(rdggs, ['N', 0]))
+            True
+
+        """
+        self._check_comparable(other, "overlaps")
+        return False
+
+    def region_overlaps(self, region: "list[Cell]") -> bool:
+        """
+        DE-9IM `overlaps` predicate between this cell and the union of the
+        cells in `region`: return True if they share interior points but
+        neither covers the other, and False otherwise (including for an
+        empty list). That happens exactly when `region` holds descendants
+        of this cell that do not tile it completely, and also at least one
+        cell outside it. A region containing this cell or an ancestor, or
+        whose cells inside this cell tile it, covers the cell (`within`);
+        a region entirely inside this cell is covered by it
+        (`contains`); a region with no descendant of this cell shares no
+        interior with it. Raises `ValueError` if any cell belongs to a
+        different grid or is empty.
+
+        With `a` the cell P0 and `region` given as index strings:
+
+        ==================================  ======  ====================
+        `region`                            result  why
+        ==================================  ======  ====================
+        [S8, P03]                           True    partial fill, and S8
+        [P0]                                False   covers `a` exactly
+        [P03]                               False   `a` covers it
+        the nine children of P0, and S8     False   the children tile `a`
+        [P1, S8]                            False   no shared interior
+        ==================================  ======  ====================
+
+        .. versionchanged:: 0.9.0
+           DE-9IM semantics; formerly True if any cell of `region`
+           contained, or was contained by, this cell.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> a = Cell(rdggs, ['P', 0])
+            >>> a.region_overlaps([Cell(rdggs, ['S', 8]), Cell(rdggs, ['P', 0, 3])])
+            True
+            >>> a.region_overlaps([Cell(rdggs, ['P', 0, 3])])
+            False
+            >>> a.region_overlaps(list(a.subcells()) + [Cell(rdggs, ['S', 8])])
+            False
+
+        """
+        for cell in region:
+            self._check_comparable(cell, "overlaps")
+        depth = len(self.suid)
+        if any(len(cell.suid) <= depth and self._nests(cell) for cell in region):
+            return False  # A region cell is this cell or an ancestor.
+        inside = [cell for cell in region if self._nests(cell)]
+        if not inside or len(inside) == len(region):
+            return False  # No shared interior, or the region is inside.
+        # Does the region tile this cell? Drop cells nested in another
+        # region cell, then compare areas exactly in units of the finest
+        # cell present: a cell at resolution r covers N**(2*(rmax - r))
+        # such units.
+        suids = sorted({cell.suid for cell in inside}, key=len)
+        disjoint: list[tuple[str | int, ...]] = []
+        for suid in suids:
+            if not any(suid[: len(kept)] == kept for kept in disjoint):
+                disjoint.append(suid)
+        N2 = self.N_side**2
+        deepest = max(len(suid) for suid in disjoint)
+        covered = sum(N2 ** (deepest - len(suid)) for suid in disjoint)
+        return covered != N2 ** (deepest - depth)
 
     def random_point(self, plane: bool = True) -> tuple[float, float]:
         """
