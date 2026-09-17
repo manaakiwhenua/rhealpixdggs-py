@@ -805,17 +805,16 @@ class Cell:
 
     def nucleus(self, plane: bool = True) -> tuple[float, float]:
         """
-        Return the nucleus and vertices of this planar or ellipsoidal cell
-        in the order (nucleus, upper left corner, lower left corner,
-        lower right corner, upper right corner) with reference to the
-        planar cell.
-        The output for ellipsoidal cells is the projection onto the ellipsoid
-        of the output for planar cells.  In particular, while the
-        nucleus of a planar cell is its centroid, the nucleus
-        of an ellipsoidal cell is not its centroid.
-        To compute the centroid of a cell, use centroid() below.
-        The nuclei of a resolution lie on rings of constant latitude, one
-        per ``ring()`` number; see :doc:`isolatitude`.
+        Return the nucleus of this cell: the centre of its planar square,
+        or with `plane` = False the projection of that point onto the
+        ellipsoid. The nucleus is the grid's indexing point: it lies
+        inside the cell by construction, ``cell_from_point`` maps it back
+        to the cell, and the nuclei of a resolution lie on rings of
+        constant latitude, one per ``ring()`` number (see
+        :doc:`isolatitude`). It is not the cell's published position:
+        while the nucleus of a planar cell is its centroid, the nucleus of
+        an ellipsoidal cell is not, and the direct (representative)
+        position of a cell in the OGC Topic 21 sense is `centroid()`.
 
         EXAMPLES::
 
@@ -1308,7 +1307,16 @@ class Cell:
 
     def centroid(self, plane: bool = True) -> tuple[float, float]:
         """
-        Return the centroid of this planar or ellipsoidal cell.
+        Return the centroid of this planar or ellipsoidal cell: the
+        cell's direct position, in the sense of OGC Topic 21 v2.0
+        requirement 27 (the DirectPosition of an equal-area cell is its
+        centroid, the geodesic centre of surface area). In the plane it is
+        the centre of the square, the nucleus. On the ellipsoid it is the
+        area-weighted mean of longitude and latitude over the cell,
+        integrated in the equal-area plane, where equal planar area is
+        equal surface area: it lies inside the cell but, except for cap
+        cells and on the equator, not at the nucleus. `nucleus()` remains
+        the indexing point.
 
         EXAMPLES::
 

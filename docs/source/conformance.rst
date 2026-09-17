@@ -69,11 +69,12 @@ Common Spatio-temporal Classes
        position.
      - Partial
      - Cell suids, :func:`~rhealpixdggs.rhp_wrappers.rhp_to_parent`,
-       :meth:`~rhealpixdggs.cell.Cell.subcells`,
-       :meth:`~rhealpixdggs.cell.Cell.nucleus`,
-       :meth:`~rhealpixdggs.cell.Cell.centroid`; a formal identifier
-       grammar (valid strings, canonical form) is to be published
-       (v1.0).
+       :meth:`~rhealpixdggs.cell.Cell.subcells`, the extent from
+       :meth:`~rhealpixdggs.cell.Cell.boundary`, and the representative
+       position :meth:`~rhealpixdggs.cell.Cell.centroid` (A.27; the
+       :meth:`~rhealpixdggs.cell.Cell.nucleus` is the indexing point); a
+       formal identifier grammar (valid strings, canonical form) is to be
+       published (v1.0).
 
 DGGS Core — reference system
 ----------------------------
@@ -129,8 +130,11 @@ DGGS Core — reference system
    * - A.12 direct position
      - Every zone is assigned a direct position inside its boundary.
      - Met
-     - :meth:`~rhealpixdggs.cell.Cell.nucleus` is interior by
-       construction (see also A.27 for the equal-area refinement).
+     - The direct position is the centroid (A.27),
+       :meth:`~rhealpixdggs.cell.Cell.centroid`, which lies inside its
+       cell for every cell shape (tested in ``tests/test_cell.py``); the
+       indexing point :meth:`~rhealpixdggs.cell.Cell.nucleus` is interior
+       by construction.
    * - A.13 address
      - Every zone has a globally unique identifier, structured on a
        recognized indexing method.
@@ -284,12 +288,22 @@ Equal-Area Earth Reference System
    * - A.27 direct position is the centroid
      - Each cell's direct position is its centroid, the geodesic
        center of surface area.
-     - Partial
-     - :meth:`~rhealpixdggs.cell.Cell.centroid` computes area-true
-       centroids for all four cell shapes (integration is performed
-       in the equal-area plane); adopting it as the published
-       representative position, alongside the nucleus used for
-       indexing, is scheduled (v0.9.0).
+     - Met
+     - Requirement 27: "the DirectPosition of an EA_Cell [is] the
+       centroid of the EA_cell, computed as the geodesic centre of
+       surface area", and its test "requires verification that the
+       attribute EA_Zone(centroid) returns a direct position on the
+       surface of the cell". :meth:`~rhealpixdggs.cell.Cell.centroid`
+       is the published position: the area-weighted mean of longitude
+       and latitude over the cell, integrated in the equal-area plane
+       (where equal planar area is equal surface area) with a fixed
+       Gauss-Legendre rule per cell shape, exact to about 1e-14 degrees;
+       :func:`~rhealpixdggs.rhp_wrappers.rhp_to_geo` and
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.centroids` report it, the
+       exports of A.19 publish it, and ``tests/test_cell.py`` verifies
+       it lies inside its cell for every shape. The nucleus (the centre
+       of the planar square) remains the indexing point and the point on
+       the isolatitude rings.
    * - A.28 area error budget
      - A declared cell-area error budget of at most 1% per grid.
      - Partial
@@ -311,11 +325,11 @@ Planned work by release
   distance, withinDistance, relativePosition, relatePosition, relate:
   `#96 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/96>`_;
   DE-9IM semantics for ``overlaps``:
-  `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_);
-  still to do,
-  adopt the centroid as the published representative position
-  (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_),
-  and add GeoJSON and delimited-text export of zones and query results
+  `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_)
+  and the centroid is the published representative position
+  (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_);
+  still to do, GeoJSON and delimited-text export of zones and query
+  results
   (`#99 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/99>`_).
 - **v1.0** — finish this page's remaining rows: CRS definitions
   (WKT2/PROJJSON) with epoch statement

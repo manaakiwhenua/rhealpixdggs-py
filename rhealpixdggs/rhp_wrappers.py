@@ -71,7 +71,11 @@ def rhp_to_geo(
     dggs: RHEALPixDGGS = WGS84_003,
 ) -> tuple[float, float] | None:
     """
-    Look up the centroid (in degrees) of the cell identified by rhpindex.
+    Look up the centroid (in degrees) of the cell identified by rhpindex:
+    the cell's direct position in the sense of OGC Topic 21 (see
+    ``Cell.centroid``). With `plane` = True, the default, that is the
+    centre of the planar square, which is also the cell's nucleus; with
+    `plane` = False it is the area-weighted centroid on the ellipsoid.
 
     Returns None if the cell index is invalid.
 

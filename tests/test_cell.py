@@ -1236,6 +1236,33 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             p0.relate(Cell(RHEALPixDGGS(N_side=4), (P, 0)), "T********")
 
+    def test_centroid_is_the_direct_position_inside_its_cell(self):
+        # OGC Topic 21 A.27: the direct position of an equal-area cell is
+        # its centroid, and the test requires it to lie on the cell. Every
+        # ellipsoidal shape at two resolutions, on two grids, and the
+        # wrapper reports the same point.
+        from rhealpixdggs.rhp_wrappers import rhp_to_geo
+
+        for rdggs in (WGS84_003, WGS84_122):
+            # One cell of each shape at each resolution where it occurs: a
+            # grid with even N_side has no cell centred on the pole, hence
+            # no caps, and no skew quads at resolution 1.
+            samples = {}
+            for resolution in (1, 2):
+                for cell in rdggs.grid(resolution):
+                    samples.setdefault((resolution, cell.ellipsoidal_shape), cell)
+            shapes = {"quad", "dart", "skew_quad"}
+            if rdggs.N_side % 2:
+                shapes.add("cap")
+            self.assertEqual({shape for _, shape in samples}, shapes)
+            for cell in samples.values():
+                centroid = cell.centroid(plane=False)
+                self.assertTrue(cell.contains(centroid, plane=False), str(cell))
+                self.assertEqual(
+                    rhp_to_geo(str(cell), geo_json=True, plane=False, dggs=rdggs),
+                    (float(centroid[0]), float(centroid[1])),
+                )
+
     def test_area(self):
         rdggs = WGS84_003
         for resolution in (0, 1, 3):

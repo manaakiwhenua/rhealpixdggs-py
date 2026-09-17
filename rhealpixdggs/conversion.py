@@ -121,8 +121,8 @@ class CellZoneFromPoly:
                 self._write_cells(child_cell, child_poly, "fully contained")
             # 2: check we're not at the limit, if we are, check centroids
             elif child_cell.resolution == self.res_limit:
-                if self.geometry.contains(Point(child_cell.nucleus(plane=False))):
-                    self._write_cells(child_cell, child_poly, "nucleus")
+                if self.geometry.contains(Point(child_cell.centroid(plane=False))):
+                    self._write_cells(child_cell, child_poly, "centroid")
             # 3: check the children (call this same function on the children)
             else:
                 if self.geometry.overlaps(child_poly):
