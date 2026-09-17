@@ -74,6 +74,7 @@ Table of contents
    conversion
    rhp_wrappers
    export
+   zoneset
    conformance
 
 Indices and tables
