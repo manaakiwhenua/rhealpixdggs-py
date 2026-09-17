@@ -18,6 +18,25 @@ contained, or was contained by, the cell; write
 ``Cell.equals()`` now raises ``ValueError`` for cells of different grids or
 the empty cell, consistent with every other predicate; ``==`` still returns
 False across grids (issue #97).
+The zone-query interface of OGC Topic 21 v2.0 Table 53 is complete (issue
+#96). ``Cell.intersects()`` is the negation of ``disjoint()``;
+``Cell.crosses()`` is always False between cells, which are regions of one
+dimension, and exists because the interface mandates it;
+``Cell.relate(other, matrix)`` tests the pair's DE-9IM matrix against a
+nine-character pattern. ``Cell.distance(other, plane=True, n=8)`` is the
+infimum distance between two cells: 0 when they nest or touch, otherwise
+the least distance between their boundaries, Euclidean in the rHEALPix
+plane or, with ``plane=False``, geodesic on the ellipsoid (``pyproj.Geod``;
+boundaries sampled at ``n`` points per edge, then refined by minimising
+along the nearest edges), in the ellipsoid's length units;
+``Cell.within_distance(other, dist)`` is the strict comparison.
+``Cell.relative_position(other, direction=(1, 0))`` projects both planar
+cells onto a direction and returns a member of the new ``RelativePosition``
+enumeration, the fifteen values of Table 54 (the thirteen interval
+relations Before, After, Meets, MetBy, Overlaps, OverlappedBy, Starts,
+StartedBy, During, Contains, Finishes, FinishedBy and Equals, plus the
+groupings In and Disjoint); ``Cell.relate_position(other, relate)`` tests
+for one. The conformance page's A.17 row is now Met.
 
 0.8.6
 ^^^^^

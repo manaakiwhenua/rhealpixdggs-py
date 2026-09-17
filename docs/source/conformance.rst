@@ -176,19 +176,38 @@ DGGS Core — functions
      - The full DE-9IM query interface between zones: contains,
        within, touches, disjoint, equals, intersects, overlaps,
        crosses, plus distance and relative position.
-     - Partial
-     - :meth:`~rhealpixdggs.cell.Cell.equals`,
+     - Met
+     - The DE-9IM and one-dimensional operations of Table 53 are
+       methods of :class:`~rhealpixdggs.cell.Cell`:
+       :meth:`~rhealpixdggs.cell.Cell.equals`,
        :meth:`~rhealpixdggs.cell.Cell.contains_cell`,
        :meth:`~rhealpixdggs.cell.Cell.within`,
        :meth:`~rhealpixdggs.cell.Cell.touches`,
-       :meth:`~rhealpixdggs.cell.Cell.disjoint` and
-       :meth:`~rhealpixdggs.cell.Cell.overlaps` have their DE-9IM
-       meanings (``overlaps`` since 0.9.0; between two cells of one
-       hierarchy it is always False, and
-       :meth:`~rhealpixdggs.cell.Cell.region_overlaps` gives the
-       cell-against-region form). Remaining (v0.9.0, issue #96):
-       intersects, crosses, distance, withinDistance, relativePosition,
-       relatePosition and relate.
+       :meth:`~rhealpixdggs.cell.Cell.disjoint`,
+       :meth:`~rhealpixdggs.cell.Cell.intersects`,
+       :meth:`~rhealpixdggs.cell.Cell.overlaps` and
+       :meth:`~rhealpixdggs.cell.Cell.crosses` (the last two are always
+       False between two cells of one hierarchy, which nest, touch or
+       are disjoint; :meth:`~rhealpixdggs.cell.Cell.region_overlaps`
+       is the cell-against-region form), the DE-9IM pattern test
+       :meth:`~rhealpixdggs.cell.Cell.relate`,
+       :meth:`~rhealpixdggs.cell.Cell.distance` (the infimum distance
+       between the cells: 0 when they intersect, otherwise the least
+       distance between their boundaries, Euclidean in the plane or
+       geodesic on the ellipsoid) with
+       :meth:`~rhealpixdggs.cell.Cell.within_distance`, and
+       :meth:`~rhealpixdggs.cell.Cell.relative_position` returning the
+       Table 54 enumeration :class:`~rhealpixdggs.cell.RelativePosition`
+       with :meth:`~rhealpixdggs.cell.Cell.relate_position`. The
+       ``projectTo`` vector of the spec selects a dimension; for this
+       two-dimensional grid ``relative_position`` takes its spatial part
+       as a planar ``direction``. Not implemented: Table 53's hierarchy
+       predicates (parentOf, childOf, siblingOf), its zone-set
+       operations (buffer, union, intersection, difference,
+       symDifference, parent, child, sibling) and its boundary,
+       boundaryType and convexHull attributes; the hierarchy is
+       available through :meth:`~rhealpixdggs.cell.Cell.subcells` and
+       :func:`~rhealpixdggs.rhp_wrappers.rhp_to_parent`.
    * - A.18 interoperation query
      - Operations to read, interpret and execute external data
        queries.
@@ -287,11 +306,12 @@ Equal-Area Earth Reference System
 Planned work by release
 -----------------------
 
-- **v0.9.0** — complete the zone-query interface (intersects, crosses,
+- **v0.9.0** — the zone-query interface is complete (intersects, crosses,
   distance, withinDistance, relativePosition, relatePosition, relate:
   `#96 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/96>`_;
-  DE-9IM semantics for ``overlaps``, done:
-  `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_),
+  DE-9IM semantics for ``overlaps``:
+  `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_);
+  still to do,
   adopt the centroid as the published representative position
   (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_),
   and add GeoJSON and delimited-text export of zones and query results

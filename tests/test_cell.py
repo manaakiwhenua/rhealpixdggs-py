@@ -955,6 +955,287 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         # Same-face siblings far enough apart to neither touch nor nest.
         self.assertTrue(rdggs.cell((P, 0)).disjoint(rdggs.cell((P, 8))))
 
+    def test_intersects(self):
+        rdggs = WGS84_003
+        # Edge neighbours, corner neighbours, nested, cross-resolution
+        # cousins: all share at least a point.
+        self.assertTrue(rdggs.cell((P, 0)).intersects(rdggs.cell((P, 1))))
+        self.assertTrue(rdggs.cell((P, 0)).intersects(rdggs.cell((P, 4))))
+        self.assertTrue(rdggs.cell((P,)).intersects(rdggs.cell((P, 0))))
+        self.assertTrue(rdggs.cell((O,)).intersects(rdggs.cell((P, 3))))
+        self.assertFalse(rdggs.cell((P, 0)).intersects(rdggs.cell((P, 8))))
+        self.assertFalse(rdggs.cell((N, 0)).intersects(rdggs.cell((S, 0))))
+        self.assertFalse(rdggs.cell((P,)).intersects(rdggs.cell((R,))))
+        # The negation of disjoint, over every pair of two faces' children.
+        cells = [rdggs.cell((f, d)) for f in (P, Q) for d in range(9)]
+        for a in cells:
+            for b in cells:
+                self.assertEqual(a.intersects(b), not a.disjoint(b))
+        with self.assertRaises(ValueError):
+            rdggs.cell().intersects(rdggs.cell((P, 0)))
+        with self.assertRaises(ValueError):
+            rdggs.cell((P, 0)).intersects(Cell(RHEALPixDGGS(N_side=4), (P, 0)))
+
+    def test_crosses(self):
+        rdggs = WGS84_003
+        for a, b in (((P,), (P, 0)), ((P, 0), (P, 1)), ((P, 0), (P, 8))):
+            self.assertFalse(rdggs.cell(a).crosses(rdggs.cell(b)))
+        with self.assertRaises(ValueError):
+            rdggs.cell().crosses(rdggs.cell((P, 0)))
+        with self.assertRaises(ValueError):
+            rdggs.cell((P, 0)).crosses(Cell(RHEALPixDGGS(N_side=4), (P, 0)))
+
+    def test_distance_plane(self):
+        import shapely
+
+        rdggs = WGS84_003
+        p0, p1, p2, p4, p8 = (rdggs.cell((P, d)) for d in (0, 1, 2, 4, 8))
+        w = p0.width()
+        self.assertEqual(p0.distance(p2), w)
+        self.assertAlmostEqual(p0.distance(p8), w * 2**0.5, delta=1e-6)
+        # Touching (edge, corner) and nested cells are at distance 0.
+        self.assertEqual(p0.distance(p1), 0.0)
+        self.assertEqual(p0.distance(p4), 0.0)
+        self.assertEqual(rdggs.cell((P,)).distance(p0), 0.0)
+        self.assertEqual(p0.distance(p0), 0.0)
+        # Against shapely on the planar squares, including other faces.
+        for a, b in (
+            ((P, 0), (P, 2)),
+            ((P, 0), (P, 8)),
+            ((P, 0), (Q, 5)),
+            ((N, 0), (O, 8)),
+            ((P, 0, 4), (P, 8)),
+        ):
+            ca, cb = rdggs.cell(a), rdggs.cell(b)
+            boxes = [
+                shapely.box(x0, y0, x1, y1)
+                for (x0, x1), (y0, y1) in (ca.xy_range(), cb.xy_range())
+            ]
+            self.assertAlmostEqual(
+                ca.distance(cb), boxes[0].distance(boxes[1]), delta=1e-6
+            )
+            self.assertEqual(ca.distance(cb), cb.distance(ca))
+        self.assertIsInstance(p0.distance(p2), float)
+        with self.assertRaises(ValueError):
+            rdggs.cell().distance(p0)
+        with self.assertRaises(ValueError):
+            p0.distance(Cell(RHEALPixDGGS(N_side=4), (P, 0)))
+
+    def test_distance_ellipsoid(self):
+        import pyproj
+
+        rdggs = WGS84_003
+        E = rdggs.ellipsoid
+        geod = pyproj.Geod(a=E.a, f=E.f)
+        p0, p2, p6 = (rdggs.cell((P, d)) for d in (0, 2, 6))
+        # P0 and P2 are closest at their north-east and north-west corners,
+        # which sit on the same parallel: an independent Geod computation.
+        ne = p0.vertices(plane=False)[1]
+        nw = p2.vertices(plane=False)[0]
+        expect = geod.inv(ne[0], ne[1], nw[0], nw[1])[2]
+        got = p0.distance(p2, plane=False)
+        self.assertAlmostEqual(got, expect, delta=1e-6 * expect)
+        # P0 and P6 are separated by P3: the gap is a meridian arc between
+        # P0's south edge and P6's north edge, the same along any meridian.
+        south = p0.vertices(plane=False)[2]
+        north = p6.vertices(plane=False)[1]
+        expect = geod.inv(south[0], south[1], south[0], north[1])[2]
+        got = p0.distance(p6, plane=False)
+        self.assertAlmostEqual(got, expect, delta=1e-6 * expect)
+        # Symmetric, and the sampling count only affects the coarse stage.
+        self.assertAlmostEqual(
+            p0.distance(p2, plane=False), p2.distance(p0, plane=False), delta=1e-6
+        )
+        self.assertAlmostEqual(
+            p0.distance(p2, plane=False, n=4),
+            p0.distance(p2, plane=False, n=12),
+            delta=1e-6 * got,
+        )
+        # Nested and touching pairs, including across faces and at a cube
+        # corner, are at distance 0 exactly.
+        for a, b in (((O,), (P, 3)), ((N,), (N, 4)), ((N, 0), (Q, 2)), ((P,), (P, 0))):
+            self.assertEqual(rdggs.cell(a).distance(rdggs.cell(b), plane=False), 0.0)
+        # Cells near each other across the antimeridian seam: O3 and R4 are
+        # one cell apart on the ellipsoid but at opposite ends of the plane.
+        # (O3 and R5 touch across the seam, so both forms give 0.)
+        o3, r4, r5 = rdggs.cell((O, 3)), rdggs.cell((R, 4)), rdggs.cell((R, 5))
+        self.assertEqual(o3.distance(r5, plane=False), 0.0)
+        self.assertEqual(o3.distance(r5), 0.0)
+        self.assertLess(o3.distance(r4, plane=False), 4e6)
+        self.assertGreater(o3.distance(r4), 1e7)
+        # A pair of darts in opposite caps: the nearest points are the
+        # corners on the cap boundaries facing each other, N0's at
+        # longitude 120 and S0's at 150 (dart vertices are not in planar
+        # corner order, so pick them by longitude).
+        n0, s0 = rdggs.cell((N, 0)), rdggs.cell((S, 0))
+        se = max(n0.vertices(plane=False, trim_dart=True), key=lambda v: v[0])
+        nw = max(s0.vertices(plane=False, trim_dart=True), key=lambda v: v[0])
+        self.assertEqual((round(se[0]), round(nw[0])), (120, 150))
+        expect = geod.inv(se[0], se[1], nw[0], nw[1])[2]
+        got = n0.distance(s0, plane=False)
+        self.assertAlmostEqual(got, expect, delta=1e-6 * expect)
+
+    def test_distance_sphere_and_radians(self):
+        from math import asin
+
+        from rhealpixdggs.dggs import UNIT_003
+
+        # On the unit sphere the caps N and S are separated by the belt:
+        # the gap is the arc between latitudes +-arcsin(2/3).
+        d = UNIT_003.cell((N,)).distance(UNIT_003.cell((S,)), plane=False)
+        self.assertAlmostEqual(d, 2 * asin(2 / 3), delta=1e-9)
+        # A radians grid gives the same metres as its degrees twin.
+        a = WGS84_003.cell((P, 0)).distance(WGS84_003.cell((P, 2)), plane=False)
+        b = WGS84_003_RADIANS.cell((P, 0)).distance(
+            WGS84_003_RADIANS.cell((P, 2)), plane=False
+        )
+        self.assertAlmostEqual(a, b, delta=1e-6 * a)
+
+    def test_within_distance(self):
+        rdggs = WGS84_003
+        p0, p2 = rdggs.cell((P, 0)), rdggs.cell((P, 2))
+        w = p0.width()
+        # Strict inequality, as the standard defines it.
+        self.assertFalse(p0.within_distance(p2, w))
+        self.assertTrue(p0.within_distance(p2, w * 1.001))
+        self.assertTrue(p0.within_distance(rdggs.cell((P, 1)), 1e-9))
+        geodesic = p0.distance(p2, plane=False)
+        self.assertTrue(p0.within_distance(p2, geodesic * 1.001, plane=False))
+        self.assertFalse(p0.within_distance(p2, geodesic * 0.999, plane=False))
+
+    def test_relative_position(self):
+        from rhealpixdggs.cell import RelativePosition as RP
+
+        rdggs = WGS84_003
+        p = rdggs.cell((P,))
+        p0, p1, p2, p3, p4 = (rdggs.cell((P, d)) for d in (0, 1, 2, 3, 4))
+        # Along planar x (west to east in the equatorial belt).
+        self.assertEqual(p0.relative_position(p2), RP.BEFORE)
+        self.assertEqual(p2.relative_position(p0), RP.AFTER)
+        self.assertEqual(p0.relative_position(p1), RP.MEETS)
+        self.assertEqual(p1.relative_position(p0), RP.MET_BY)
+        self.assertEqual(p0.relative_position(p), RP.STARTS)
+        self.assertEqual(p.relative_position(p0), RP.STARTED_BY)
+        self.assertEqual(p1.relative_position(p), RP.DURING)
+        self.assertEqual(p.relative_position(p1), RP.CONTAINS)
+        self.assertEqual(p2.relative_position(p), RP.FINISHES)
+        self.assertEqual(p.relative_position(p2), RP.FINISHED_BY)
+        self.assertEqual(p0.relative_position(p3), RP.EQUALS)
+        self.assertEqual(p0.relative_position(p0), RP.EQUALS)
+        self.assertEqual(rdggs.cell((O,)).relative_position(p), RP.MEETS)
+        # Along planar y (south to north in the belt): P3 sits below P0.
+        self.assertEqual(p3.relative_position(p0, direction=(0, 1)), RP.MEETS)
+        self.assertEqual(p0.relative_position(p3, direction=(0, 1)), RP.MET_BY)
+        self.assertEqual(p0.relative_position(p1, direction=(0, 1)), RP.EQUALS)
+        # Along a diagonal, partial overlap becomes possible.
+        self.assertEqual(p0.relative_position(p1, direction=(1, 1)), RP.OVERLAPS)
+        self.assertEqual(p1.relative_position(p0, direction=(1, 1)), RP.OVERLAPPED_BY)
+        self.assertEqual(p0.relative_position(p4, direction=(1, 1)), RP.EQUALS)
+        self.assertEqual(p0.relative_position(p4, direction=(1, -1)), RP.MEETS)
+        # Every relation has its inverse when the arguments are swapped.
+        inverse = {
+            RP.BEFORE: RP.AFTER,
+            RP.MEETS: RP.MET_BY,
+            RP.OVERLAPS: RP.OVERLAPPED_BY,
+            RP.STARTS: RP.STARTED_BY,
+            RP.DURING: RP.CONTAINS,
+            RP.FINISHES: RP.FINISHED_BY,
+            RP.EQUALS: RP.EQUALS,
+        }
+        inverse.update({v: k for k, v in list(inverse.items())})
+        children = [p] + [rdggs.cell((P, d)) for d in range(9)]
+        for direction in ((1, 0), (0, 1), (1, 1), (2, -1)):
+            for a in children:
+                for b in children:
+                    ab = a.relative_position(b, direction=direction)
+                    ba = b.relative_position(a, direction=direction)
+                    self.assertEqual(inverse[ab], ba)
+                    self.assertNotIn(ab, (RP.IN, RP.DISJOINT))
+        # The two groupings.
+        self.assertEqual(
+            {m for m in RP if m.is_in}, {RP.STARTS, RP.DURING, RP.FINISHES}
+        )
+        self.assertEqual({m for m in RP if m.is_disjoint}, {RP.BEFORE, RP.AFTER})
+        self.assertEqual(len(RP), 15)
+        self.assertEqual(RP.MET_BY.value, "MetBy")
+        with self.assertRaises(ValueError):
+            p0.relative_position(p1, direction=(0, 0))
+        with self.assertRaises(ValueError):
+            p0.relative_position(Cell(RHEALPixDGGS(N_side=4), (P, 0)))
+
+    def test_relate_position(self):
+        from rhealpixdggs.cell import RelativePosition as RP
+
+        rdggs = WGS84_003
+        p = rdggs.cell((P,))
+        p0, p1, p2 = (rdggs.cell((P, d)) for d in (0, 1, 2))
+        self.assertTrue(p0.relate_position(p2, RP.BEFORE))
+        self.assertFalse(p0.relate_position(p2, RP.AFTER))
+        self.assertTrue(p0.relate_position(p2, RP.DISJOINT))
+        self.assertFalse(p0.relate_position(p1, RP.DISJOINT))
+        self.assertTrue(p1.relate_position(p, RP.IN))
+        self.assertTrue(p0.relate_position(p, RP.IN))
+        self.assertFalse(p.relate_position(p1, RP.IN))
+        p3 = rdggs.cell((P, 3))
+        self.assertTrue(p0.relate_position(p3, RP.EQUALS))
+        self.assertTrue(p3.relate_position(p0, RP.MEETS, direction=(0, 1)))
+
+    def test_relate(self):
+        import shapely
+
+        rdggs = WGS84_003
+        p = rdggs.cell((P,))
+        p0, p1, p4, p8 = (rdggs.cell((P, d)) for d in (0, 1, 4, 8))
+        pairs = {
+            "equal": (p0, p0),
+            "contains, child on the boundary": (p, p0),
+            "contains, interior child": (p, p4),
+            "within, on the boundary": (p0, p),
+            "within, interior": (p4, p),
+            "touch along an edge": (p0, p1),
+            "touch at a corner": (p0, p4),
+            "disjoint": (p0, p8),
+        }
+        for label, (a, b) in pairs.items():
+            boxes = [
+                shapely.box(x0, y0, x1, y1)
+                for (x0, x1), (y0, y1) in (a.xy_range(), b.xy_range())
+            ]
+            expect = shapely.relate(boxes[0], boxes[1])
+            self.assertTrue(a.relate(b, expect), label)
+            self.assertEqual(a._de9im(b), expect, label)
+        # Mask semantics: T is any dimension, F is empty, * is anything,
+        # a digit is that dimension exactly.
+        self.assertTrue(p0.relate(p1, "FF*F1****"))
+        self.assertFalse(p0.relate(p4, "FF*F1****"))
+        self.assertTrue(p0.relate(p4, "FF*F0****"))
+        self.assertTrue(p.relate(p0, "T*****FF*"))
+        self.assertFalse(p0.relate(p8, "T********"))
+        # Equivalences with the named predicates over two faces' children
+        # and their parents.
+        cells = [rdggs.cell((f,)) for f in (P, Q)]
+        cells += [rdggs.cell((f, d)) for f in (P, Q) for d in range(9)]
+        for a in cells:
+            for b in cells:
+                intersects = any(
+                    a.relate(b, m)
+                    for m in ("T********", "*T*******", "***T*****", "****T****")
+                )
+                self.assertEqual(intersects, a.intersects(b))
+                self.assertEqual(a.relate(b, "FF*FF****"), a.disjoint(b))
+                touches = any(
+                    a.relate(b, m) for m in ("FT*******", "F**T*****", "F***T****")
+                )
+                self.assertEqual(touches, a.touches(b))
+                self.assertEqual(a.relate(b, "T*F**F***"), a.within(b))
+                self.assertEqual(a.relate(b, "T*****FF*"), a.contains_cell(b))
+                self.assertEqual(a.relate(b, "T*F**FFF*"), a.equals(b))
+        for bad in ("", "T" * 8, "T" * 10, "TFX******"):
+            with self.assertRaises(ValueError):
+                p0.relate(p1, bad)
+        with self.assertRaises(ValueError):
+            p0.relate(Cell(RHEALPixDGGS(N_side=4), (P, 0)), "T********")
+
     def test_area(self):
         rdggs = WGS84_003
         for resolution in (0, 1, 3):
