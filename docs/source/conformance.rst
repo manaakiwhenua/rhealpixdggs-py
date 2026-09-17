@@ -176,7 +176,7 @@ DGGS Core — functions
      - The full DE-9IM query interface between zones: contains,
        within, touches, disjoint, equals, intersects, overlaps,
        crosses, plus distance and relative position.
-     - Met
+     - Partial
      - The DE-9IM and one-dimensional operations of Table 53 are
        methods of :class:`~rhealpixdggs.cell.Cell`:
        :meth:`~rhealpixdggs.cell.Cell.equals`,
@@ -201,12 +201,13 @@ DGGS Core — functions
        with :meth:`~rhealpixdggs.cell.Cell.relate_position`. The
        ``projectTo`` vector of the spec selects a dimension; for this
        two-dimensional grid ``relative_position`` takes its spatial part
-       as a planar ``direction``. Not implemented: Table 53's hierarchy
-       predicates (parentOf, childOf, siblingOf), its zone-set
+       as a planar ``direction``. Remaining (v0.9.0): Table 53's
+       hierarchy predicates (parentOf, childOf, siblingOf), its zone-set
        operations (buffer, union, intersection, difference,
        symDifference, parent, child, sibling) and its boundary,
-       boundaryType and convexHull attributes; the hierarchy is
-       available through :meth:`~rhealpixdggs.cell.Cell.subcells` and
+       boundaryType and convexHull attributes of a query; meanwhile the
+       hierarchy is available through
+       :meth:`~rhealpixdggs.cell.Cell.subcells` and
        :func:`~rhealpixdggs.rhp_wrappers.rhp_to_parent`.
    * - A.18 interoperation query
      - Operations to read, interpret and execute external data
