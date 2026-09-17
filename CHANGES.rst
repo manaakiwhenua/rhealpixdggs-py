@@ -46,6 +46,17 @@ verifies the centroid lies inside its cell for every cell shape.
 limit when the cell's centroid, rather than its nucleus, is inside the
 geometry, as ``polyfill`` does; its output can change for cells on the
 boundary (issue #98).
+New module ``rhealpixdggs.export``: ``to_geojson(indices)`` returns cells,
+or the index strings a query such as ``polyfill_array`` produces, as an RFC
+7946 GeoJSON FeatureCollection dictionary (longitude-latitude degrees,
+counter-clockwise rings, cells straddling the antimeridian split into
+MultiPolygons, cap and pole-touching cells closed over the pole), each
+feature carrying the cell's index, resolution, shape, area, centroid and
+nucleus as flat properties; ``to_csv(indices)`` writes the same attributes
+as delimited text; ``cell_table`` and ``geometries`` give the attributes
+as arrays and the geometries as shapely objects. ``RHEALPixDGGS.shapes``
+names the ellipsoidal shapes of many cells at once. Invalid indices raise
+rather than being dropped (issue #99).
 
 0.8.6
 ^^^^^
