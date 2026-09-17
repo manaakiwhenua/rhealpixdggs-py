@@ -57,6 +57,23 @@ as delimited text; ``cell_table`` and ``geometries`` give the attributes
 as arrays and the geometries as shapely objects. ``RHEALPixDGGS.shapes``
 names the ellipsoidal shapes of many cells at once. Invalid indices raise
 rather than being dropped (issue #99).
+The remaining operations of OGC Topic 21 v2.0 Table 53 (issue #161).
+``Cell.parent_of``, ``child_of`` and ``sibling_of`` are the hierarchy
+predicates, with the spec's ``inherit_id`` flag: siblings share a parent
+when it is True and are the neighbouring cells at the same resolution when
+it is False, as the spec's example has it. New module
+``rhealpixdggs.zoneset``: ``ZoneSet`` is a set of cells of one grid, kept
+as given, with ``union``, ``intersection``, ``difference`` and
+``sym_difference`` by exact hierarchical algebra on the index strings under
+the ``rangeRefine`` resolution filter (``min_res``, ``max_res``; complete
+sibling groups compact no coarser than ``min_res``), ``buffer(dist)`` from
+``Cell.distance``, ``parent``, ``child`` and ``sibling`` with ``levels``
+and ``inherit_id`` per clause 8.3.3, and the query attributes
+``geometry``, ``boundary``, ``convex_hull`` and ``boundary_type``, the last
+from the EA_BoundaryType code list (``BoundaryType``; every rHEALPix edge
+is a ``projectedLine``). ``Cell`` has the same methods for the
+zone-to-zone form, each returning a ``ZoneSet``. With this the conformance
+page's A.17 row is Met and the v0.9.0 items are complete.
 
 0.8.6
 ^^^^^

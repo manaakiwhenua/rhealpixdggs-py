@@ -180,9 +180,10 @@ DGGS Core — functions
      - The full DE-9IM query interface between zones: contains,
        within, touches, disjoint, equals, intersects, overlaps,
        crosses, plus distance and relative position.
-     - Partial
-     - The DE-9IM and one-dimensional operations of Table 53 are
-       methods of :class:`~rhealpixdggs.cell.Cell`:
+     - Met
+     - Every operation and attribute of Table 53 is implemented. The
+       DE-9IM and one-dimensional operations are methods of
+       :class:`~rhealpixdggs.cell.Cell`:
        :meth:`~rhealpixdggs.cell.Cell.equals`,
        :meth:`~rhealpixdggs.cell.Cell.contains_cell`,
        :meth:`~rhealpixdggs.cell.Cell.within`,
@@ -205,14 +206,23 @@ DGGS Core — functions
        with :meth:`~rhealpixdggs.cell.Cell.relate_position`. The
        ``projectTo`` vector of the spec selects a dimension; for this
        two-dimensional grid ``relative_position`` takes its spatial part
-       as a planar ``direction``. Remaining (v0.9.0): Table 53's
-       hierarchy predicates (parentOf, childOf, siblingOf), its zone-set
-       operations (buffer, union, intersection, difference,
-       symDifference, parent, child, sibling) and its boundary,
-       boundaryType and convexHull attributes of a query; meanwhile the
-       hierarchy is available through
-       :meth:`~rhealpixdggs.cell.Cell.subcells` and
-       :func:`~rhealpixdggs.rhp_wrappers.rhp_to_parent`.
+       as a planar ``direction``. The hierarchy predicates are
+       :meth:`~rhealpixdggs.cell.Cell.parent_of`,
+       :meth:`~rhealpixdggs.cell.Cell.child_of` and
+       :meth:`~rhealpixdggs.cell.Cell.sibling_of`, with the spec's
+       ``inheritID`` flag. The operations that return zone sets are
+       methods of :class:`~rhealpixdggs.zoneset.ZoneSet`, with
+       zone-to-zone delegates on ``Cell``: ``union``, ``intersection``,
+       ``difference`` and ``sym_difference`` by exact hierarchical
+       algebra under the ``rangeRefine`` resolution filter, ``buffer``
+       from ``distance``, and ``parent``, ``child`` and ``sibling`` with
+       ``levels`` and ``inheritID`` per clause 8.3.3, whose worked
+       examples are the tests. The query attributes ``boundary``,
+       ``convexHull`` and ``boundaryType`` are ``ZoneSet.boundary``,
+       ``ZoneSet.convex_hull`` and ``ZoneSet.boundary_type``, the last a
+       value of the EA_BoundaryType code list (Table 76,
+       :class:`~rhealpixdggs.zoneset.BoundaryType`); every rHEALPix edge
+       is a ``projectedLine``. See :doc:`zoneset`.
    * - A.18 interoperation query
      - Operations to read, interpret and execute external data
        queries.
@@ -342,10 +352,10 @@ Planned work by release
   `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_)
   the centroid is the published representative position
   (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_),
-  and zones and query results export to GeoJSON and delimited text
-  (`#99 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/99>`_);
-  still to do, the hierarchy predicates, zone-set operations and query
-  attributes of Table 53
+  zones and query results export to GeoJSON and delimited text
+  (`#99 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/99>`_),
+  and the hierarchy predicates, zone-set operations and query attributes
+  of Table 53 are in place
   (`#161 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/161>`_).
 - **v1.0** — finish this page's remaining rows: CRS definitions
   (WKT2/PROJJSON) with epoch statement

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, ClassVar, Literal, cast, overload
 
 if TYPE_CHECKING:
     from rhealpixdggs.dggs import RHEALPixDGGS
+    from rhealpixdggs.zoneset import ZoneSet
 
 # pi is doctest-only: the doctests use it from the module globals.
 import numpy as np
@@ -2574,6 +2575,139 @@ class Cell:
             elif want != have:
                 return False
         return True
+
+    def parent_of(self, other: "Cell", inherit_id: bool = False) -> bool:
+        """
+        Return True if this cell is the parent of `other`, one level up:
+        ``parentOf`` of OGC Topic 21 v2.0 Table 53. `inherit_id` is
+        accepted for the spec's signature; in rHEALPix's nested hierarchy
+        a child always inherits its parent's identifier prefix, so it
+        changes nothing.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['P', 4]).parent_of(Cell(rdggs, ['P', 4, 0]))
+            True
+            >>> Cell(rdggs, ['P', 4]).parent_of(Cell(rdggs, ['P', 4, 0, 0]))
+            False
+
+        """
+        self._check_comparable(other, "parenthood")
+        return len(other.suid) == len(self.suid) + 1 and other.suid[:-1] == self.suid
+
+    def child_of(self, other: "Cell", inherit_id: bool = False) -> bool:
+        """
+        Return True if this cell is a child of `other`, one level down:
+        ``childOf`` of Table 53, the converse of `parent_of()`.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['P', 4, 0]).child_of(Cell(rdggs, ['P', 4]))
+            True
+
+        """
+        return other.parent_of(self, inherit_id)
+
+    def sibling_of(self, other: "Cell", inherit_id: bool = False) -> bool:
+        """
+        Return True if `other` is a sibling of this cell, itself included:
+        ``siblingOf`` of Table 53. With `inherit_id` True siblings share a
+        parent; with `inherit_id` False (the default) inheritance is
+        ignored and siblings are the cells at the same resolution that
+        share an edge or a corner, so the neighbours across a parent's
+        edge count too, as the spec's example ``40.siblingOf(31)`` shows.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> p40, p32 = Cell(rdggs, ['P', 4, 0]), Cell(rdggs, ['P', 3, 2])
+            >>> p40.sibling_of(Cell(rdggs, ['P', 4, 1]))
+            True
+            >>> p40.sibling_of(p32), p40.sibling_of(p32, inherit_id=True)
+            (True, False)
+
+        """
+        self._check_comparable(other, "siblinghood")
+        if len(self.suid) != len(other.suid):
+            return False
+        if self.suid == other.suid:
+            return True
+        if inherit_id:
+            return len(self.suid) > 1 and self.suid[:-1] == other.suid[:-1]
+        return self._touch_dimension(other) is not None
+
+    def union(
+        self,
+        other: "Cell | ZoneSet",
+        min_res: int | None = None,
+        max_res: int | None = None,
+    ) -> "ZoneSet":
+        """The ``union`` of Table 53: see ``ZoneSet.union``."""
+        from rhealpixdggs.zoneset import ZoneSet
+
+        return ZoneSet(self.rdggs, [self]).union(other, min_res, max_res)
+
+    def intersection(
+        self,
+        other: "Cell | ZoneSet",
+        min_res: int | None = None,
+        max_res: int | None = None,
+    ) -> "ZoneSet":
+        """The ``intersection`` of Table 53: see ``ZoneSet.intersection``."""
+        from rhealpixdggs.zoneset import ZoneSet
+
+        return ZoneSet(self.rdggs, [self]).intersection(other, min_res, max_res)
+
+    def difference(
+        self,
+        other: "Cell | ZoneSet",
+        min_res: int | None = None,
+        max_res: int | None = None,
+    ) -> "ZoneSet":
+        """The ``difference`` of Table 53: see ``ZoneSet.difference``."""
+        from rhealpixdggs.zoneset import ZoneSet
+
+        return ZoneSet(self.rdggs, [self]).difference(other, min_res, max_res)
+
+    def sym_difference(
+        self,
+        other: "Cell | ZoneSet",
+        min_res: int | None = None,
+        max_res: int | None = None,
+    ) -> "ZoneSet":
+        """The ``symDifference`` of Table 53: see ``ZoneSet.sym_difference``."""
+        from rhealpixdggs.zoneset import ZoneSet
+
+        return ZoneSet(self.rdggs, [self]).sym_difference(other, min_res, max_res)
+
+    def buffer(self, dist: float, plane: bool = True, n: int = 8) -> "ZoneSet":
+        """The ``buffer`` of Table 53: see ``ZoneSet.buffer``."""
+        from rhealpixdggs.zoneset import ZoneSet
+
+        return ZoneSet(self.rdggs, [self]).buffer(dist, plane, n)
+
+    def parent(self, levels: int = 1, inherit_id: bool = False) -> "ZoneSet":
+        """The ``parent`` of Table 53: see ``ZoneSet.parent``."""
+        from rhealpixdggs.zoneset import ZoneSet
+
+        return ZoneSet(self.rdggs, [self]).parent(levels, inherit_id)
+
+    def child(self, levels: int = 1, inherit_id: bool = False) -> "ZoneSet":
+        """The ``child`` of Table 53: see ``ZoneSet.child``."""
+        from rhealpixdggs.zoneset import ZoneSet
+
+        return ZoneSet(self.rdggs, [self]).child(levels, inherit_id)
+
+    def sibling(self, levels: int = 1, inherit_id: bool = False) -> "ZoneSet":
+        """The ``sibling`` of Table 53: see ``ZoneSet.sibling``."""
+        from rhealpixdggs.zoneset import ZoneSet
+
+        return ZoneSet(self.rdggs, [self]).sibling(levels, inherit_id)
 
     def random_point(self, plane: bool = True) -> tuple[float, float]:
         """
