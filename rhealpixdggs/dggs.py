@@ -2060,6 +2060,29 @@ class RHEALPixDGGS:
             )
         return result
 
+    def shapes(self, indices: Iterable[str]) -> np.ndarray:
+        """
+        Return the ellipsoidal shape of each cell with index strings
+        `indices` as one array of strings: entry `k` is
+        ``cell.ellipsoidal_shape`` (``'quad'``, ``'cap'``, ``'dart'`` or
+        ``'skew_quad'``) for the cell whose ``str()`` is ``indices[k]``,
+        or the empty string for an invalid index.
+
+        EXAMPLES::
+
+            >>> WGS84_003.shapes(['P0', 'N', 'N0', 'N1', 'bad']).tolist()
+            ['quad', 'cap', 'dart', 'skew_quad', '']
+
+        """
+        valid, face, digits, resolution = self._parse_indices(indices)
+        names = np.array(["quad", "cap", "dart", "skew_quad", ""])
+        code = np.full(len(valid), 4, dtype=np.int64)
+        if valid.any():
+            code[valid] = self._shape_code(
+                face[valid], digits[valid], resolution[valid]
+            )
+        return names[code]
+
     def nuclei(self, indices: Iterable[str], plane: bool = False) -> FloatArray:
         """
         Return the nuclei of the cells with index strings `indices` as one

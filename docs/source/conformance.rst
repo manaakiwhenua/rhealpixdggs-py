@@ -226,10 +226,24 @@ DGGS Core — functions
    * - A.19 interoperation broadcast
      - Operations translating query results into standard data
        formats for delivery.
-     - Planned
-     - GeoJSON FeatureCollection export of zones and query results,
-       plus delimited-text export (v0.9.0); GML export with a
-       published application schema (v1.0).
+     - Met
+     - :mod:`rhealpixdggs.export` translates cells and query results
+       into the ``TranslationType`` codes ``toGeoJSON``
+       (:func:`~rhealpixdggs.export.to_geojson`, an RFC 7946
+       FeatureCollection: longitude-latitude order, counter-clockwise
+       rings, antimeridian-straddling cells split into MultiPolygons,
+       cap and pole-touching cells closed as section 3.1.9 recommends;
+       every feature valid and the features of a resolution tiling the
+       longitude-latitude rectangle, verified over whole resolutions in
+       ``tests/test_export.py``) and ``toASCII``
+       (:func:`~rhealpixdggs.export.to_csv`, delimited text with the
+       same attributes), publishing the centroid of A.27 as each cell's
+       position; :func:`~rhealpixdggs.export.geometries` gives the
+       shapely geometries for OGR-backed writers. ``toGML`` follows in
+       v1.0 with the application schema (#103); ``toHDF``,
+       ``toJSON-LD``, ``toNetCDF`` and ``toXML`` are not planned. The
+       ``broadcastResult`` operation of Table 60 (transport) is outside
+       the library's scope, per the note above.
 
 Equal-Area Earth Reference System
 ---------------------------------
@@ -326,11 +340,13 @@ Planned work by release
   `#96 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/96>`_;
   DE-9IM semantics for ``overlaps``:
   `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_)
-  and the centroid is the published representative position
-  (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_);
-  still to do, GeoJSON and delimited-text export of zones and query
-  results
-  (`#99 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/99>`_).
+  the centroid is the published representative position
+  (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_),
+  and zones and query results export to GeoJSON and delimited text
+  (`#99 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/99>`_);
+  still to do, the hierarchy predicates, zone-set operations and query
+  attributes of Table 53
+  (`#161 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/161>`_).
 - **v1.0** — finish this page's remaining rows: CRS definitions
   (WKT2/PROJJSON) with epoch statement
   (`#100 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/100>`_),
