@@ -1,10 +1,11 @@
 # from rhealpixdggs.dggs import WGS84_003
 
+import enum
 from collections.abc import Iterator
 from colorsys import hsv_to_rgb
 from functools import cache, cached_property, total_ordering
 from itertools import product
-from math import fsum
+from math import fsum, hypot
 from random import uniform
 from typing import TYPE_CHECKING, ClassVar, Literal, cast, overload
 
@@ -13,10 +14,11 @@ if TYPE_CHECKING:
 
 # pi is doctest-only: the doctests use it from the module globals.
 import numpy as np
+import pyproj
 from numpy import base_repr, pi  # noqa: F401
-from scipy import integrate
+from scipy import integrate, optimize
 
-from rhealpixdggs.utils import wrap_longitude
+from rhealpixdggs.utils import FloatArray, wrap_longitude
 
 # Level 0 cell IDs, which are anomalous.
 CELLS0 = ["N", "O", "P", "Q", "R", "S"]
@@ -37,6 +39,89 @@ def _gauss_legendre_unit(n: int) -> tuple[np.ndarray, np.ndarray]:
     """
     nodes, weights = np.polynomial.legendre.leggauss(n)
     return (nodes + 1) / 2, weights / 2
+
+
+@cache
+def _geod(a: float, f: float) -> pyproj.Geod:
+    """
+    The geodesic calculator for the ellipsoid of semi-major axis `a` and
+    flattening `f` (a sphere when `f` is 0), shared by every cell of every
+    grid on that ellipsoid.
+    """
+    return pyproj.Geod(a=a, f=f)
+
+
+class RelativePosition(enum.Enum):
+    """
+    The relative position of two cells projected onto one direction, as
+    ``Cell.relative_position`` reports it: the enumeration of OGC Topic 21
+    v2.0 Table 54, whose names follow OGC 16-071r3 (OWL-Time). Each cell
+    projects to a closed interval from `begin` to `end` along the
+    direction, and the thirteen primary members are the interval
+    relations of Allen (1983), here with `self` the cell asked and
+    `other` the argument:
+
+    =============  =================================================
+    member         condition
+    =============  =================================================
+    BEFORE         self.end < other.begin
+    AFTER          self.begin > other.end
+    MEETS          self.end == other.begin
+    MET_BY         self.begin == other.end
+    OVERLAPS       self.begin < other.begin < self.end < other.end
+    OVERLAPPED_BY  other.begin < self.begin < other.end < self.end
+    STARTS         self.begin == other.begin and self.end < other.end
+    STARTED_BY     self.begin == other.begin and self.end > other.end
+    DURING         other.begin < self.begin and self.end < other.end
+    CONTAINS       self.begin < other.begin and other.end < self.end
+    FINISHES       self.end == other.end and self.begin > other.begin
+    FINISHED_BY    self.end == other.end and self.begin < other.begin
+    EQUALS         self.begin == other.begin and self.end == other.end
+    =============  =================================================
+
+    (Table 54 prints FINISHED_BY with its `begin` inequality reversed and
+    OVERLAPPED_BY without its `begin` clause; these are the standard
+    relations.) The table's two further members are groupings: IN is
+    STARTS, DURING or FINISHES, and DISJOINT is BEFORE or AFTER.
+    ``relative_position`` never returns them; ``relate_position`` accepts
+    them, as do the ``is_in`` and ``is_disjoint`` properties.
+
+    Read along the planar x axis the words describe east-west
+    arrangement in the equatorial belt: BEFORE is "entirely west of",
+    MEETS "shares an edge on the east side", DURING "lies within the
+    other's east-west span". Along planar y they describe south to
+    north.
+    """
+
+    BEFORE = "Before"
+    AFTER = "After"
+    MEETS = "Meets"
+    MET_BY = "MetBy"
+    OVERLAPS = "Overlaps"
+    OVERLAPPED_BY = "OverlappedBy"
+    STARTS = "Starts"
+    STARTED_BY = "StartedBy"
+    DURING = "During"
+    CONTAINS = "Contains"
+    FINISHES = "Finishes"
+    FINISHED_BY = "FinishedBy"
+    EQUALS = "Equals"
+    IN = "In"
+    DISJOINT = "Disjoint"
+
+    @property
+    def is_in(self) -> bool:
+        """True for STARTS, DURING and FINISHES, the members grouped as IN."""
+        return self in (
+            RelativePosition.STARTS,
+            RelativePosition.DURING,
+            RelativePosition.FINISHES,
+        )
+
+    @property
+    def is_disjoint(self) -> bool:
+        """True for BEFORE and AFTER, the members grouped as DISJOINT."""
+        return self in (RelativePosition.BEFORE, RelativePosition.AFTER)
 
 
 @total_ordering
@@ -1909,10 +1994,20 @@ class Cell:
 
         """
         self._check_comparable(other, "touches")
+        return self._touch_dimension(other) is not None
+
+    def _touch_dimension(self, other: "Cell") -> int | None:
+        """
+        The dimension of the boundary this cell and `other` share when
+        they touch: 1 for a segment of an edge, 0 for a single corner
+        point, and None when they do not touch (they nest or are
+        disjoint). Assumes both cells belong to the same grid and neither
+        is empty; `touches()` documents the algorithm.
+        """
         if self._nests(other):
             # One is an ancestor of (or the same cell as) the other: their
             # closed regions share interior points, so this isn't touches.
-            return False
+            return None
         assert self.resolution is not None and other.resolution is not None
         r = min(self.resolution, other.resolution)
         shallow, deep = (self, other) if self.resolution == r else (other, self)
@@ -1927,25 +2022,27 @@ class Cell:
         for direction in ("up", "down", "left", "right"):
             if deep_ancestor.neighbor(direction, plane=True) == shallow:
                 if direction in row_edge:
-                    return all(
+                    on_edge = all(
                         cast("tuple[int, int]", child_order[int(d)])[0]
                         == row_edge[direction]
                         for d in tail
                     )
                 else:
-                    return all(
+                    on_edge = all(
                         cast("tuple[int, int]", child_order[int(d)])[1]
                         == col_edge[direction]
                         for d in tail
                     )
+                return 1 if on_edge else None
         for direction in ("up_left", "up_right", "down_left", "down_right"):
             if deep_ancestor.diagonal_neighbor(direction) == shallow:
                 target_row = 0 if direction.startswith("up") else N - 1
                 target_col = 0 if direction.endswith("left") else N - 1
-                return all(
+                at_corner = all(
                     child_order[int(d)] == (target_row, target_col) for d in tail
                 )
-        return False
+                return 0 if at_corner else None
+        return None
 
     def disjoint(self, other: "Cell") -> bool:
         """
@@ -2064,6 +2161,411 @@ class Cell:
         deepest = max(len(suid) for suid in disjoint)
         covered = sum(N2 ** (deepest - len(suid)) for suid in disjoint)
         return covered != N2 ** (deepest - depth)
+
+    def intersects(self, other: "Cell") -> bool:
+        """
+        DE-9IM `intersects` predicate: return True if this cell and
+        `other` share at least one point, which for cells means they nest
+        or touch, and False otherwise. The negation of `disjoint()`.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N', 0]).intersects(Cell(rdggs, ['N', 1]))
+            True
+            >>> Cell(rdggs, ['N']).intersects(Cell(rdggs, ['N', 0]))
+            True
+            >>> Cell(rdggs, ['N', 0]).intersects(Cell(rdggs, ['S', 0]))
+            False
+
+        """
+        self._check_comparable(other, "intersects")
+        return self._nests(other) or self.touches(other)
+
+    def crosses(self, other: "Cell") -> bool:
+        """
+        DE-9IM `crosses` predicate: return True if the interiors of this
+        cell and `other` intersect in something of lower dimension than
+        at least one of them, which needs inputs of different dimension
+        (or two lines). Two cells are regions of the same dimension, so
+        this is False for every pair; it exists because OGC Topic 21
+        mandates the predicate, and it validates its inputs like the
+        other predicates.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> Cell(rdggs, ['N']).crosses(Cell(rdggs, ['N', 0]))
+            False
+
+        """
+        self._check_comparable(other, "crosses")
+        return False
+
+    def distance(self, other: "Cell", plane: bool = True, n: int = 8) -> float:
+        """
+        Return the distance between this cell and `other`: the infimum
+        of the distance between a point of one and a point of the other.
+        It is 0 when the cells nest or touch, and otherwise the least
+        distance between their boundaries. With `plane` = True that is
+        the Euclidean distance in the rHEALPix plane; with `plane` =
+        False it is the geodesic (shortest surface) distance on the
+        ellipsoid, from ``pyproj.Geod``. Both are in the ellipsoid's
+        length units: metres on the WGS84 grids, and on the unit sphere
+        the central angle in radians.
+
+        The plane is one unfolding of the cube, so `plane` = True can put
+        cells that are near each other on the ellipsoid far apart: cells
+        close to the seam at x = +-pi R from opposite sides, or a polar
+        cell and an equatorial face its polar square is not attached to
+        in the layout. (Cells that touch across such a seam still give 0,
+        since touching is decided from the grid's topology.) Use `plane` =
+        False for a surface distance.
+
+        On the ellipsoid each cell's boundary is sampled at `n` points
+        per edge, the nearest pair of samples is found, and the result is
+        refined by minimising the geodesic distance along the nearest
+        pair of edges, which are smooth curves, so the answer is accurate
+        to the optimiser's tolerance (millimetres on WGS84) rather than
+        to the sample spacing. This is the ``distance`` operation of OGC
+        Topic 21 v2.0 Table 53; its ``projectTo`` argument selects a
+        dimension, and here the distance is taken in the two surface
+        dimensions.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import UNIT_003
+            >>> from rhealpixdggs.utils import my_round
+            >>> rdggs = UNIT_003
+            >>> my_round(Cell(rdggs, ['P', 0]).distance(Cell(rdggs, ['P', 2])), 9)
+            0.523598776
+            >>> Cell(rdggs, ['P', 0]).distance(Cell(rdggs, ['P', 1]))
+            0.0
+            >>> my_round(Cell(rdggs, ['N']).distance(Cell(rdggs, ['S']), plane=False), 9)
+            1.459455312
+
+        """
+        self._check_comparable(other, "distance")
+        if self._nests(other) or self.touches(other):
+            return 0.0
+        if plane:
+            (ax0, ax1), (ay0, ay1) = self.xy_range()
+            (bx0, bx1), (by0, by1) = other.xy_range()
+            dx = max(0.0, ax0 - bx1, bx0 - ax1)
+            dy = max(0.0, ay0 - by1, by0 - ay1)
+            return float(hypot(dx, dy))
+        return self._geodesic_distance(other, max(n, 2))
+
+    def _boundary_samples(self, n: int) -> tuple[FloatArray, FloatArray, np.ndarray]:
+        """
+        `n` points along each of the four planar edges of this cell,
+        projected to the ellipsoid: their longitudes, their latitudes and
+        the index (0 to 3, clockwise from the upper-left corner) of the
+        edge each lies on.
+        """
+        corners = np.array(self.vertices(plane=True))
+        ends = np.roll(corners, -1, axis=0)
+        t = np.linspace(0.0, 1.0, n)
+        x = (corners[:, None, 0] + t * (ends[:, None, 0] - corners[:, None, 0])).ravel()
+        y = (corners[:, None, 1] + t * (ends[:, None, 1] - corners[:, None, 1])).ravel()
+        lon, lat = self.rdggs.rhealpix(x, y, inverse=True, region=self.region())
+        return lon, lat, np.repeat(np.arange(4), n)
+
+    def _geodesic_distance(self, other: "Cell", n: int) -> float:
+        """
+        The least geodesic distance between the boundaries of this cell
+        and `other`, which do not intersect: a nearest pair among `n`
+        samples per edge, then a bounded minimisation along every pair of
+        edges whose samples could hide the true minimum.
+        """
+        E = self.ellipsoid
+        geod = _geod(E.a, E.f)
+        radians = E.radians
+        lon_a, lat_a, edge_a = self._boundary_samples(n)
+        lon_b, lat_b, edge_b = other._boundary_samples(n)
+
+        def between(
+            u0: FloatArray, v0: FloatArray, u1: FloatArray, v1: FloatArray
+        ) -> FloatArray:
+            return np.asarray(geod.inv(u0, v0, u1, v1, radians=radians)[2], dtype=float)
+
+        m, k = len(lon_a), len(lon_b)
+        dist = between(
+            np.repeat(lon_a, k),
+            np.repeat(lat_a, k),
+            np.tile(lon_b, m),
+            np.tile(lat_b, m),
+        ).reshape(m, k)
+        # Any boundary point lies within half a sample step of a sample, so
+        # the sampled minimum overestimates the true one by at most the
+        # largest step on either boundary; only edge pairs within that
+        # margin of the best sample can hold the true minimum.
+        spacing = max(
+            float(between(lon_a[:-1], lat_a[:-1], lon_a[1:], lat_a[1:]).max()),
+            float(between(lon_b[:-1], lat_b[:-1], lon_b[1:], lat_b[1:]).max()),
+        )
+        best = float(dist.min())
+        corners_a = np.array(self.vertices(plane=True))
+        corners_b = np.array(other.vertices(plane=True))
+        region_a, region_b = self.region(), other.region()
+
+        def objective(
+            t: np.ndarray,
+            a0: np.ndarray,
+            a1: np.ndarray,
+            b0: np.ndarray,
+            b1: np.ndarray,
+        ) -> float:
+            # Geodesic distance between the points at fractions t[0] and
+            # t[1] along the planar edges a0-a1 of this cell and b0-b1 of
+            # the other.
+            ax, ay = a0 + t[0] * (a1 - a0)
+            bx, by = b0 + t[1] * (b1 - b0)
+            pa = self.rdggs.rhealpix(
+                float(ax), float(ay), inverse=True, region=region_a
+            )
+            pb = other.rdggs.rhealpix(
+                float(bx), float(by), inverse=True, region=region_b
+            )
+            return float(geod.inv(pa[0], pa[1], pb[0], pb[1], radians=radians)[2])
+
+        result = best
+        for i in range(4):
+            a0, a1 = corners_a[i], corners_a[(i + 1) % 4]
+            for j in range(4):
+                block = dist[np.ix_(edge_a == i, edge_b == j)]
+                if block.min() > best + 2 * spacing:
+                    continue
+                b0, b1 = corners_b[j], corners_b[(j + 1) % 4]
+                row, col = np.unravel_index(block.argmin(), block.shape)
+                start = np.array([row, col], dtype=float) / (n - 1)
+                fit = optimize.minimize(
+                    objective,
+                    start,
+                    args=(a0, a1, b0, b1),
+                    method="L-BFGS-B",
+                    bounds=[(0.0, 1.0), (0.0, 1.0)],
+                )
+                result = min(result, float(fit.fun))
+        return result
+
+    def within_distance(
+        self, other: "Cell", dist: float, plane: bool = True, n: int = 8
+    ) -> bool:
+        """
+        Return True if `distance(other, plane, n)` is less than `dist`,
+        and False otherwise: the ``withinDistance`` operation of OGC Topic
+        21 v2.0 Table 53, with its strict inequality. See `distance()` for
+        the definition and units.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import UNIT_003
+            >>> rdggs = UNIT_003
+            >>> Cell(rdggs, ['P', 0]).within_distance(Cell(rdggs, ['P', 2]), 0.6)
+            True
+            >>> Cell(rdggs, ['P', 0]).within_distance(Cell(rdggs, ['P', 2]), 0.5)
+            False
+
+        """
+        return self.distance(other, plane=plane, n=n) < dist
+
+    def relative_position(
+        self, other: "Cell", direction: tuple[float, float] = (1.0, 0.0)
+    ) -> RelativePosition:
+        """
+        Return the position of this cell relative to `other` along
+        `direction`, as a `RelativePosition`: project both planar cells
+        onto the line through the origin with that direction, giving each
+        a closed interval from its smallest to its largest coordinate,
+        and classify the two intervals. This is the ``relativePosition``
+        operation of OGC Topic 21 v2.0 Table 53; `direction` is the
+        spatial part of its ``projectTo`` vector, which for a
+        two-dimensional grid can only have those two components nonzero.
+
+        The default `direction` (1, 0) is the planar x axis, west to east
+        in the equatorial belt; (0, 1) is the planar y axis, south to
+        north there. Polar cells' orientation depends on
+        ``north_square`` and ``south_square``, and the plane is one
+        unfolding of the cube, so cells that meet across the seam at
+        x = +-pi R are far apart along x. Along either axis two cells of
+        one hierarchy only ever give EQUALS, the nesting relations,
+        MEETS/MET_BY or BEFORE/AFTER, because their edges line up;
+        OVERLAPS needs a diagonal direction. Raise `ValueError` for a zero
+        vector.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> p0, p1 = Cell(rdggs, ['P', 0]), Cell(rdggs, ['P', 1])
+            >>> p0.relative_position(p1).name
+            'MEETS'
+            >>> p1.relative_position(Cell(rdggs, ['P'])).name
+            'DURING'
+            >>> p0.relative_position(p1, direction=(1, 1)).name
+            'OVERLAPS'
+            >>> Cell(rdggs, ['P', 3]).relative_position(p0, direction=(0, 1)).name
+            'MEETS'
+
+        """
+        self._check_comparable(other, "relative position")
+        dx, dy = float(direction[0]), float(direction[1])
+        norm = hypot(dx, dy)
+        if norm == 0:
+            raise ValueError("direction must be a nonzero vector.")
+
+        def interval(cell: "Cell") -> tuple[float, float]:
+            values = [x * dx + y * dy for x, y in cell.vertices(plane=True)]
+            return min(values), max(values)
+
+        a0, a1 = interval(self)
+        b0, b1 = interval(other)
+        tol = 1e-9 * min(self.width(), other.width()) * norm
+
+        def same(u: float, v: float) -> bool:
+            return abs(u - v) <= tol
+
+        RP = RelativePosition
+        if a1 < b0 - tol:
+            return RP.BEFORE
+        if a0 > b1 + tol:
+            return RP.AFTER
+        if same(a1, b0):
+            return RP.MEETS
+        if same(a0, b1):
+            return RP.MET_BY
+        begin, end = same(a0, b0), same(a1, b1)
+        if begin and end:
+            return RP.EQUALS
+        if begin:
+            return RP.STARTS if a1 < b1 else RP.STARTED_BY
+        if end:
+            return RP.FINISHES if a0 > b0 else RP.FINISHED_BY
+        if a0 > b0 and a1 < b1:
+            return RP.DURING
+        if a0 < b0 and a1 > b1:
+            return RP.CONTAINS
+        return RP.OVERLAPS if a0 < b0 else RP.OVERLAPPED_BY
+
+    def relate_position(
+        self,
+        other: "Cell",
+        relate: RelativePosition,
+        direction: tuple[float, float] = (1.0, 0.0),
+    ) -> bool:
+        """
+        Return True if `relative_position(other, direction)` is `relate`,
+        or belongs to it when `relate` is one of the groupings
+        ``RelativePosition.IN`` (STARTS, DURING or FINISHES) and
+        ``RelativePosition.DISJOINT`` (BEFORE or AFTER). The
+        ``relatePosition`` operation of OGC Topic 21 v2.0 Table 53.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> p1 = Cell(rdggs, ['P', 1])
+            >>> p1.relate_position(Cell(rdggs, ['P']), RelativePosition.IN)
+            True
+            >>> p1.relate_position(Cell(rdggs, ['P', 0]), RelativePosition.DISJOINT)
+            False
+
+        """
+        position = self.relative_position(other, direction)
+        if relate is RelativePosition.IN:
+            return position.is_in
+        if relate is RelativePosition.DISJOINT:
+            return position.is_disjoint
+        return position is relate
+
+    def _on_boundary_of(self, ancestor: "Cell") -> bool:
+        """
+        True if this cell, a proper descendant of `ancestor`, touches the
+        ancestor's boundary: along some side, every digit below the
+        ancestor keeps the extreme row or column.
+        """
+        child_order = self.rdggs.child_order
+        N = self.N_side
+        rows_cols = [
+            cast("tuple[int, int]", child_order[int(d)])
+            for d in self.suid[len(ancestor.suid) :]
+        ]
+        return any(
+            all(rc[axis] == extreme for rc in rows_cols)
+            for axis in (0, 1)
+            for extreme in (0, N - 1)
+        )
+
+    def _de9im(self, other: "Cell") -> str:
+        """
+        The DE-9IM matrix of this cell against `other` as nine
+        characters, row by row: this cell's interior, boundary and
+        exterior against `other`'s, each entry the dimension of the
+        intersection (0, 1 or 2) or F for empty. Assumes both cells belong
+        to the same grid and neither is empty.
+        """
+        if self.suid == other.suid:
+            return "2FFF1FFF2"
+        if self._nests(other):
+            if len(self.suid) < len(other.suid):
+                shared = other._on_boundary_of(self)
+                return "212F11FF2" if shared else "212FF1FF2"
+            shared = self._on_boundary_of(other)
+            return "2FF11F212" if shared else "2FF1FF212"
+        touch = self._touch_dimension(other)
+        if touch is None:
+            return "FF2FF1212"
+        return "FF2F11212" if touch == 1 else "FF2F01212"
+
+    def relate(self, other: "Cell", matrix: str) -> bool:
+        """
+        DE-9IM `relate` predicate: return True if the DE-9IM matrix of
+        this cell against `other` matches the nine-character pattern
+        `matrix`, read row by row as this cell's interior, boundary and
+        exterior against `other`'s. Pattern characters are ``T`` (a
+        non-empty intersection of any dimension), ``F`` (empty), ``*``
+        (anything) and ``0``, ``1``, ``2`` (that dimension exactly). The
+        ``relate`` operation of OGC Topic 21 v2.0 Table 53.
+
+        Between two cells of one hierarchy only six matrices occur: equal
+        cells ``2FFF1FFF2``; an ancestor against a descendant
+        ``212F11FF2`` when the descendant touches the ancestor's boundary
+        and ``212FF1FF2`` when it is interior, and their transposes for a
+        descendant against its ancestor; cells touching along an edge
+        ``FF2F11212``, at a corner ``FF2F01212``; and disjoint cells
+        ``FF2FF1212``.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> p0, p1 = Cell(rdggs, ['P', 0]), Cell(rdggs, ['P', 1])
+            >>> p0.relate(p1, 'FF*F1****')  # touching along an edge
+            True
+            >>> p0.relate(p1, 'T********')  # interiors intersect
+            False
+            >>> Cell(rdggs, ['P']).relate(p0, 'T*****FF*')  # contains
+            True
+
+        """
+        self._check_comparable(other, "relate")
+        if len(matrix) != 9 or any(c not in "TF*012" for c in matrix):
+            raise ValueError(
+                "matrix must be nine characters from 'T', 'F', '*', '0', '1', "
+                f"'2', not {matrix!r}."
+            )
+        for want, have in zip(matrix, self._de9im(other)):
+            if want == "*":
+                continue
+            if want == "T":
+                if have == "F":
+                    return False
+            elif want != have:
+                return False
+        return True
 
     def random_point(self, plane: bool = True) -> tuple[float, float]:
         """
