@@ -36,8 +36,9 @@ cells. Along each ring the nuclei sit at a constant longitude step, since
 they are equally spaced in the plane and, on a parallel, planar ``x`` is
 proportional to longitude.
 
-rHEALPix inherits this from HEALPix [GRS2013]_, where it is the reason
-the grid exists: a spherical harmonic transform evaluates the associated
+rHEALPix inherits this from HEALPix [GRS2013]_; HEALPix is the *Hierarchical Equal Area isoLatitude
+Pixelization*, and rHEALPix is its *rearranged* form. In HEALPix it is the
+reason the grid exists: a spherical harmonic transform evaluates the associated
 Legendre functions once per ring rather than once per cell, and handles
 the longitude direction on each ring with a fast Fourier transform,
 which brings the cost of a transform down from the square of the cell

@@ -5,7 +5,9 @@
 
 ## Introduction
 
-rHEALPixDGGS is a Python package that implements the rHEALPix Discrete Global Grid System (DGGS).
+rHEALPixDGGS is a Python package that implements the rHEALPix Discrete Global Grid System (DGGS). rHEALPix stands for *rearranged Hierarchical Equal Area isoLatitude Pixelization*. HEALPix is an equal-area pixelization of the sphere from astronomy whose pixel centres lie on rings of constant latitude. rHEALPix rearranges its planar projection so that the globe unfolds into six equal squares.
+
+The projection maps points between the ellipsoid and the plane. The grid system is built on top of it. Each square is divided into `N_side × N_side` equal children, and so on recursively, so every point on Earth lies in one cell at each resolution and all cells of a resolution have the same area. A cell is named by an identifier such as `P40`: a letter for its base square and one digit per level. Parents, children, neighbours and the topological relations between cells are computed from these identifiers. The projection is implemented in `rhealpixdggs.pj_rhealpix`; the grid system is `rhealpixdggs.dggs.RHEALPixDGGS`, with parameters `N_side`, the placement of the polar squares and the ellipsoid's central meridian.
 
 ### Standards conformance
 
