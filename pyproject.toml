@@ -14,8 +14,6 @@ maintainers = [
     { name = "Richard Law", email = "lawr@landcareresearch.co.nz" }
 ]
 readme = "README.md"
-# Dual-licensed: the user may choose either license. See LICENSE,
-# LICENSE-LGPL, and LICENSE-MIT.
 license = "LGPL-3.0-or-later OR MIT"
 requires-python = ">=3.11"
 dependencies = [
@@ -66,9 +64,8 @@ types-shapely = "*"
 pytest = "^7.4.0"
 sphinx = "^7.2"
 furo = ">=2024.8"
+coverage = "^7.16.1"
 
-# Only needed to regenerate the committed docs figures (docs/make_figures.py
-# / `make -C docs figures`); install with `poetry install --with figures`.
 [tool.poetry.group.figures]
 optional = true
 
@@ -76,11 +73,8 @@ optional = true
 matplotlib = "3.11.1"
 
 [tool.poetry]
-# Ship the tests and docs sources in the sdist (they are not included in
-# the wheel). NOTE: these include patterns override gitignore, so nothing
-# transient may live under docs/ -- e.g. make_figures.py keeps its
-# downloaded-data cache at the repository root, not in docs/.
 include = ["tests/", "docs/"]
+
 [tool.mypy]
 files = ["rhealpixdggs"]
 check_untyped_defs = true
@@ -89,3 +83,11 @@ disallow_untyped_defs = true
 [[tool.mypy.overrides]]
 module = "ducc0.*"
 ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["rhealpixdggs"]
+
+[tool.coverage.report]
+fail_under = 94
+skip_empty = true
+show_missing = true

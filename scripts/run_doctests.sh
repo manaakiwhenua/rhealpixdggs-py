@@ -5,6 +5,7 @@
 set -u
 cd "$(dirname "$0")/.."
 status=0
+PYTHON="${PYTHON:-python}"
 
 # the .rst files with their own doctest code; harmonics needs the optional
 # ducc0, as does the module of that name below
@@ -17,7 +18,7 @@ do
     echo "skipping $f: ducc0 is not installed"
     continue
   fi
-  python -m doctest "$f" || status=1
+  $PYTHON -m doctest "$f" || status=1
 done
 
 # test the other python files
@@ -28,7 +29,7 @@ do
     echo "skipping $f: ducc0 is not installed"
     continue
   fi
-  python -m doctest "$f" || status=1
+  $PYTHON -m doctest "$f" || status=1
 done
 
 exit $status
