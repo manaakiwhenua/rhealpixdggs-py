@@ -1,6 +1,10 @@
 # rHEALPixDGGS
 
+[![PyPI](https://img.shields.io/pypi/v/rhealpixdggs)](https://pypi.org/project/rHEALPixDGGS/)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/rhealpixdggs)](https://anaconda.org/conda-forge/rhealpixdggs)
+[![Documentation](https://img.shields.io/badge/docs-manaakiwhenua.github.io-blue)](https://manaakiwhenua.github.io/rhealpixdggs-py/)
 [![Tests](https://github.com/manaakiwhenua/rhealpixdggs-py/actions/workflows/tests.yml/badge.svg)](https://github.com/manaakiwhenua/rhealpixdggs-py/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/manaakiwhenua/rhealpixdggs-py/graph/badge.svg)](https://codecov.io/gh/manaakiwhenua/rhealpixdggs-py)
 [![manaakiwhenua-standards](https://github.com/manaakiwhenua/rhealpixdggs-py/workflows/manaakiwhenua-standards/badge.svg)](https://github.com/manaakiwhenua/manaakiwhenua-standards)
 
 ## Introduction
