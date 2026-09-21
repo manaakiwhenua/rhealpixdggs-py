@@ -9,15 +9,18 @@ False for every pair of cells, and like the other predicates it raises
 it answered containment in either direction (one index a prefix of the
 other); write ``a.contains_cell(b) or a.within(b)`` for that. Its parameter
 is now named ``other``, not ``other_cell``.
+
 ``Cell.region_overlaps(region)`` likewise has the DE-9IM meaning for a cell
 against the union of a set of cells: True only when the set holds
 descendants of the cell that do not tile it completely and also at least
 one cell outside it. Before 0.9.0 it was True if any cell of the set
 contained, or was contained by, the cell; write
 ``any(a.contains_cell(b) or a.within(b) for b in region)`` for that.
+
 ``Cell.equals()`` now raises ``ValueError`` for cells of different grids or
 the empty cell, consistent with every other predicate; ``==`` still returns
 False across grids (issue #97).
+
 The zone-query interface of OGC Topic 21 v2.0 Table 53 is complete (issue
 #96). ``Cell.intersects()`` is the negation of ``disjoint()``;
 ``Cell.crosses()`` is always False between cells, which are regions of one
@@ -30,6 +33,7 @@ plane or, with ``plane=False``, geodesic on the ellipsoid (``pyproj.Geod``;
 boundaries sampled at ``n`` points per edge, then refined by minimising
 along the nearest edges), in the ellipsoid's length units;
 ``Cell.within_distance(other, dist)`` is the strict comparison.
+
 ``Cell.relative_position(other, direction=(1, 0))`` projects both planar
 cells onto a direction and returns a member of the new ``RelativePosition``
 enumeration, the fifteen values of Table 54 (the thirteen interval
@@ -37,15 +41,18 @@ relations Before, After, Meets, MetBy, Overlaps, OverlappedBy, Starts,
 StartedBy, During, Contains, Finishes, FinishedBy and Equals, plus the
 groupings In and Disjoint); ``Cell.relate_position(other, relate)`` tests
 for one. The conformance page's A.17 row is now Met.
+
 The centroid is the published position of a cell, its direct position in
 the sense of OGC Topic 21 v2.0 requirement 27: ``Cell.centroid``,
 ``RHEALPixDGGS.centroids`` and ``rhp_to_geo`` (which already reported it)
 are documented as such, the nucleus as the indexing point, and a test
 verifies the centroid lies inside its cell for every cell shape.
+
 ``CellZoneFromPoly`` in ``conversion`` now admits a cell at its resolution
 limit when the cell's centroid, rather than its nucleus, is inside the
 geometry, as ``polyfill`` does; its output can change for cells on the
 boundary (issue #98).
+
 New module ``rhealpixdggs.export``: ``to_geojson(indices)`` returns cells,
 or the index strings a query such as ``polyfill_array`` produces, as an RFC
 7946 GeoJSON FeatureCollection dictionary (longitude-latitude degrees,
@@ -57,13 +64,15 @@ as delimited text; ``cell_table`` and ``geometries`` give the attributes
 as arrays and the geometries as shapely objects. ``RHEALPixDGGS.shapes``
 names the ellipsoidal shapes of many cells at once. Invalid indices raise
 rather than being dropped (issue #99).
+
 The remaining operations of OGC Topic 21 v2.0 Table 53 (issue #161).
 ``Cell.parent_of``, ``child_of`` and ``sibling_of`` are the hierarchy
 predicates, with the spec's ``inherit_id`` flag: siblings share a parent
 when it is True and are the neighbouring cells at the same resolution when
-it is False, as the spec's example has it. New module
-``rhealpixdggs.zoneset``: ``ZoneSet`` is a set of cells of one grid, kept
-as given, with ``union``, ``intersection``, ``difference`` and
+it is False, as the spec's example has it.
+
+New module ``rhealpixdggs.zoneset``: ``ZoneSet`` is a set of cells of one
+grid, kept as given, with ``union``, ``intersection``, ``difference`` and
 ``sym_difference`` by exact hierarchical algebra on the index strings under
 the ``rangeRefine`` resolution filter (``min_res``, ``max_res``; complete
 sibling groups compact no coarser than ``min_res``), ``buffer(dist)`` from
@@ -72,12 +81,13 @@ and ``inherit_id`` per clause 8.3.3, and the query attributes
 ``geometry``, ``boundary``, ``convex_hull`` and ``boundary_type``, the last
 from the EA_BoundaryType code list (``BoundaryType``; every rHEALPix edge
 is a ``projectedLine``). ``Cell`` has the same methods for the
-zone-to-zone form, each returning a ``ZoneSet``. A ``ZoneSet`` also
-answers the DE-9IM predicates against another set or a cell, read as
-regions: ``equals``, ``contains``, ``within``, ``intersects``,
-``disjoint``, ``touches``, ``overlaps`` (which, unlike between two cells,
-can be True) and ``crosses``. With this the conformance page's A.17 row is
-Met and the v0.9.0 items are complete.
+zone-to-zone form, each returning a ``ZoneSet``.
+
+A ``ZoneSet`` also answers the DE-9IM predicates against another set or a
+cell, read as regions: ``equals``, ``contains``, ``within``,
+``intersects``, ``disjoint``, ``touches``, ``overlaps`` (which, unlike
+between two cells, can be True) and ``crosses``. With this the conformance
+page's A.17 row is Met and the v0.9.0 items are complete.
 
 0.8.6
 ^^^^^
