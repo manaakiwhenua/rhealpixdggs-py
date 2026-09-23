@@ -11,7 +11,7 @@ PYTHON="${PYTHON:-python}"
 # ducc0, as does the module of that name below
 have_ducc0=1
 python -c "import ducc0" 2>/dev/null || have_ducc0=0
-for f in docs/source/introduction.rst docs/source/isolatitude.rst docs/source/harmonics.rst docs/source/export.rst docs/source/zoneset.rst
+for f in docs/source/introduction.rst docs/source/isolatitude.rst docs/source/harmonics.rst docs/source/export.rst docs/source/zoneset.rst docs/source/nside.rst
 do
   if [ "$f" = docs/source/harmonics.rst ] && [ $have_ducc0 = 0 ]
   then

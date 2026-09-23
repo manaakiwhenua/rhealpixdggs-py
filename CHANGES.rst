@@ -1,3 +1,22 @@
+0.10.0
+^^^^^^
+A new documentation page, Choosing N_side, compares the ``N_side`` 2 and 3
+grids: one-to-four against one-to-nine refinement and the 2 against 4 bits
+a level takes, the cell shapes and the poles (no cell is centred on a pole
+of an even grid from resolution 1, so there are no caps there and
+``rhp_to_center_child`` returns None), the isolatitude ring structure, and
+a table of cells, widths, areas, rings and encoding sizes per resolution,
+with figures of both grids at resolutions 0 to 3 in the plane and from
+above the pole (issue #168). In the globe-views figure of the introduction,
+cells cut by the horizon are now filled to the limb and more cells are
+labelled.
+A new test module checks grid invariants on ``N_side`` 2 and 3 grids with
+both polar-square placements: neighbour symmetry, touching against
+k-rings and distance, the DE-9IM matrices and relative positions against
+an exact lattice, the tiling arithmetic of ``region_overlaps`` and
+``ZoneSet``, point round trips, connected line traces, and
+``boundary_array`` against ``Cell.boundary``.
+
 0.9.0
 ^^^^^
 **Breaking change:** ``Cell.overlaps()`` has its DE-9IM meaning, the one
