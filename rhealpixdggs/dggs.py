@@ -193,6 +193,7 @@ from rhealpixdggs.ellipsoids import (
 from rhealpixdggs.utils import (  # noqa: F401
     FloatArray,
     _auth_lat_array,
+    _wrap_boundary_longitudes,
     auth_lat,
     my_round,
 )
@@ -2021,7 +2022,8 @@ class RHEALPixDGGS:
 
         When `plane` = False every distinct planar point is projected once,
         in one array call per resolution and region, so adjacent cells'
-        copies of a shared point are identical floats. In the equatorial
+        copies of a shared point are identical floats, except for the
+        equivalent -180/+180 representations on the antimeridian. In the equatorial
         region the inverse projection is separable (longitude depends only on
         `x`, latitude only on `y`), so that call holds one point per distinct
         lattice column and one per distinct row: the number of projected
@@ -2031,6 +2033,8 @@ class RHEALPixDGGS:
         one lattice column (or row) share one longitude (or latitude) value
         across the whole block.
 
+        A cell with an edge on the antimeridian uses the sign of 180
+        (or pi in radians) that keeps its longitude span below half a turn.
         A cell straddling the antimeridian yields a ring whose longitudes
         jump between -180 and 180; splitting such rings is the caller's
         concern.
@@ -2533,6 +2537,7 @@ class RHEALPixDGGS:
                 )
                 lon[polar] = lons[inverse].reshape(-1, m)
                 lat[polar] = lats[inverse].reshape(-1, m)
+        lon = _wrap_boundary_longitudes(lon, self.ellipsoid.radians)
         return np.stack([lon, lat], axis=-1)
 
     def cell_boundaries(
@@ -2554,7 +2559,8 @@ class RHEALPixDGGS:
         cells' copies of their shared points are identical floats rather
         than two independently computed (and potentially last-digit
         different) values, which helps downstream consumers that dissolve
-        or snap cell geometries.
+        or snap cell geometries. The antimeridian is represented as -180
+        or +180 (or -pi/+pi in radians), according to the side of each cell.
 
         Points are shared only between cells of the same region
         ('equatorial', 'north_polar', 'south_polar'): the inverse

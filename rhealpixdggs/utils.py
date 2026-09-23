@@ -135,6 +135,23 @@ def wrap_latitude(phi: float, radians: bool = False) -> float:
     return result
 
 
+def _wrap_boundary_longitudes(lon: FloatArray, radians: bool = False) -> FloatArray:
+    """Choose an antimeridian edge's sign per ring (along the last axis).
+
+    Allow relative roundoff of 1e-12 at a half turn: the polar inverse
+    projection amplifies planar rounding near a pole. Choose the sign
+    that keeps the ring narrower than a half turn; cap rings and
+    rings genuinely crossing the antimeridian keep their wrapped coordinates.
+    """
+    half = pi if radians else 180.0
+    edge = np.abs(np.abs(lon) - half) <= 1e-12 * half
+    east = np.where(edge, half, lon)
+    west = np.where(edge, -half, lon)
+    east_fits = np.ptp(east, axis=-1, keepdims=True) < half
+    west_fits = np.ptp(west, axis=-1, keepdims=True) < half
+    return np.where(edge & east_fits, half, np.where(edge & west_fits, -half, lon))
+
+
 def _wrap_longitude_array(lam: FloatArray, radians: bool = False) -> FloatArray:
     """
     ``wrap_longitude`` applied elementwise to an array.

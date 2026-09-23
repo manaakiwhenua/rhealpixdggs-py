@@ -19,7 +19,7 @@ import pyproj
 from numpy import base_repr, pi  # noqa: F401
 from scipy import integrate, optimize
 
-from rhealpixdggs.utils import FloatArray, wrap_longitude
+from rhealpixdggs.utils import FloatArray, _wrap_boundary_longitudes, wrap_longitude
 
 # Level 0 cell IDs, which are anomalous.
 CELLS0 = ["N", "O", "P", "Q", "R", "S"]
@@ -908,6 +908,10 @@ class Cell:
             result = [
                 self.rdggs.rhealpix(*p, inverse=True, region=region) for p in result
             ]
+            lons = _wrap_boundary_longitudes(
+                np.array([p[0] for p in result]), self.rdggs.ellipsoid.radians
+            )
+            result = [(lon, p[1]) for lon, p in zip(lons, result)]
             if trim_dart and self.ellipsoidal_shape == "dart":
                 # Remove non-vertex point.
                 if self.region() == "north_polar":
@@ -961,9 +965,11 @@ class Cell:
         parallels sharing the same `n - 2` interior longitudes. Only the four
         corners and the interior points of the west and north edges are
         projected (`2*n` calls instead of `4*n - 4`); the east and south
-        edges reuse those values. Every coordinate returned is one the
-        projection computed, and adjacent quad cells get bit-identical
-        shared points.
+        edges reuse those values. Adjacent quad cells get bit-identical
+        shared points, except for the equivalent -180/+180 representations
+        on the antimeridian (-pi/+pi in radians). For a cell with an edge
+        on that meridian, its sign keeps the longitude span below half a
+        turn. Genuine crossings and cap rings keep their wrapped longitudes.
 
         For quad and cap cells with `n` = 2 and `interior` = False the result
         is ``vertices(plane=False)``. Cap cells with `n` > 2 take the general
@@ -1044,6 +1050,7 @@ class Cell:
             xs = np.array([p[0] for p in result])
             ys = np.array([p[1] for p in result])
             lons, lats = self.rdggs.rhealpix(xs, ys, inverse=True, region=self.region())
+            lons = _wrap_boundary_longitudes(lons, self.rdggs.ellipsoid.radians)
             return list(zip(lons, lats))
         return result
 
@@ -1070,6 +1077,7 @@ class Cell:
             [np.full(n, y_north), y_north - delta * np.arange(1, n - 1), [y_south]]
         )
         all_lons, all_lats = self.rdggs.rhealpix(xs, ys, inverse=True, region=region)
+        all_lons = _wrap_boundary_longitudes(all_lons, self.rdggs.ellipsoid.radians)
         lons = list(all_lons[1 : n - 1])
         lats = list(all_lats[n:-1])
         nw = (all_lons[0], all_lats[0])

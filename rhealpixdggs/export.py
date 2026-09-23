@@ -172,11 +172,6 @@ def _unwrap(ring: FloatArray) -> tuple[FloatArray, bool]:
         return ring, False
     ring = ring.copy()
     ring[:, 0] = np.where(lon < 0, lon + 360, lon)
-    if ring[:, 0].min() >= 180:
-        # The ring lies west of the antimeridian; its west edge was
-        # reported as +180 rather than -180.
-        ring[:, 0] -= 360
-        return ring, False
     return ring, bool(ring[:, 0].max() > 180)
 
 
@@ -275,12 +270,7 @@ def geometries(
             lon = plain[:, :, 0]
             wraps = lon.max(axis=1) - lon.min(axis=1) > 180
             plain[wraps, :, 0] = np.where(lon[wraps] < 0, lon[wraps] + 360, lon[wraps])
-            # A wrapped ring whose longitudes all reach 180 or more lies
-            # west of the antimeridian, its west edge reported as +180:
-            # shift it back. The rest straddle the antimeridian.
-            western = wraps & (plain[:, :, 0].min(axis=1) >= 180)
-            plain[western, :, 0] -= 360
-            crosses = wraps & ~western & (plain[:, :, 0].max(axis=1) > 180)
+            crosses = wraps & (plain[:, :, 0].max(axis=1) > 180)
             built = np.asarray(
                 shapely.polygons(_counter_clockwise(plain)), dtype=object
             )

@@ -527,6 +527,15 @@ class SCENZGridCELLTestCase(unittest.TestCase):
                             rdggs.rhealpix(*p, inverse=True, region=c.region())
                             for p in planar
                         ]
+                        if suid == (R, 5) and not interior and rdggs is not shifted:
+                            # This cell's east edge is the antimeridian. The
+                            # point projection wraps it west, but the ring
+                            # must keep it east to stay narrow.
+                            half = pi if rdggs.ellipsoid.radians else 180.0
+                            expect = [
+                                (half if abs(abs(x) - half) < 1e-12 else x, y)
+                                for x, y in expect
+                            ]
                         self.assertEqual(len(got), 4 * n - 4)
                         for g, e in zip(got, expect):
                             self.assertTrue(
@@ -578,7 +587,6 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         for a, b in [
             ((P, 4), (P, 5)),
             ((P, 5), (Q, 3)),
-            ((R, 2), (O, 0)),
             ((P, 1), (P, 4)),
             ((P, 3, 8), (P, 4, 6)),
         ]:
@@ -588,6 +596,14 @@ class SCENZGridCELLTestCase(unittest.TestCase):
                 map(tuple, cb.boundary(n=n, plane=False))
             )
             self.assertEqual(len(shared), n, (a, b))
+        # Across the antimeridian the shared latitudes are identical, but
+        # each ring uses the longitude sign that keeps its polygon narrow.
+        east = rdggs.cell((R, 2)).boundary(n=n, plane=False)
+        west = rdggs.cell((O, 0)).boundary(n=n, plane=False)
+        east_edge = {lat for lon, lat in east if lon == 180}
+        west_edge = {lat for lon, lat in west if lon == -180}
+        self.assertEqual(len(east_edge), n)
+        self.assertEqual(east_edge, west_edge)
         quad, skew = rdggs.cell((P, 1)), rdggs.cell((N, 5))
         self.assertEqual(skew.ellipsoidal_shape, "skew_quad")
         bq = quad.boundary(n=n, plane=False)
