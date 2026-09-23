@@ -14,7 +14,9 @@ The dggs Module
    The ``north_square`` and ``south_square`` parameters choose which of
    the four equatorial squares the polar squares unfold above and
    below. Both grids cover the ellipsoid identically -- the choice only
-   changes where the polar faces land in the planar projection.
+   changes where the polar faces land in the planar projection. The
+   third parameter, ``N_side``, changes the cells themselves; see
+   :doc:`nside`.
 
 .. figure:: images/recentred.*
    :alt: A world map in longitude-latitude coordinates showing the

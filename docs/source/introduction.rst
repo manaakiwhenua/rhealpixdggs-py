@@ -205,7 +205,8 @@ Create the (0, 0)-rHEALPix DGGS with N_side=3 that is based upon the WGS84 ellip
             radians = False
             sphere = False
 
-Some common rHEALPix DGGSs are predefined as constants::
+Some common rHEALPix DGGSs are predefined as constants; ``WGS84_002`` is
+the same grid with ``N_side`` 2 (see :doc:`nside`)::
 
     >>> print(UNIT_003)
     rHEALPix DGGS:

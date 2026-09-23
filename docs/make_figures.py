@@ -46,6 +46,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["svg.hashsalt"] = "rhealpixdggs"
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.collections import LineCollection, PatchCollection
 from matplotlib.colors import to_rgba
 from matplotlib.patches import Polygon as PolygonPatch
 from matplotlib.patches import Rectangle
@@ -324,6 +325,15 @@ def ortho(lon_deg, lat_deg, lon0_deg, lat0_deg):
     return x, y, cosc >= 0
 
 
+def to_limb(x, y, vis):
+    """The projected ring of a cell that is partly behind the globe, with the
+    hidden points moved radially onto the limb, so the polygon covers the
+    visible part of the cell out to the horizon."""
+    r = np.hypot(x, y)
+    r = np.where(r == 0, 1.0, r)
+    return np.where(vis, x, x / r), np.where(vis, y, y / r)
+
+
 def draw_globe(ax, lon0, lat0, title):
     # Globe outline.
     t = np.linspace(0, 2 * np.pi, 400)
@@ -360,19 +370,19 @@ def draw_globe(ax, lon0, lat0, title):
             lons = [p[0] for p in pts]
             lats = [p[1] for p in pts]
             x, y, vis = ortho(lons, lats, lon0, lat0)
-            if vis.all():
-                ax.fill(x, y, color=color, alpha=0.18, linewidth=0)
+            if vis.any():
+                fx, fy = to_limb(x, y, vis)
+                ax.fill(fx, fy, color=color, alpha=0.18, linewidth=0)
             x, y = np.where(vis, x, np.nan), np.where(vis, y, np.nan)
             ax.plot(x, y, color=color, linewidth=1.0)
-            nx, ny, nvis = ortho(*cell.nucleus(plane=False), lon0, lat0)
-            ncos = np.sin(np.radians(lat0)) * np.sin(
-                np.radians(cell.nucleus(plane=False)[1])
-            ) + np.cos(np.radians(lat0)) * np.cos(
-                np.radians(cell.nucleus(plane=False)[1])
-            ) * np.cos(
-                np.radians(cell.nucleus(plane=False)[0] - lon0)
-            )
-            if nvis and ncos > 0.45:
+            nlon, nlat = cell.nucleus(plane=False)
+            nx, ny, nvis = ortho(nlon, nlat, lon0, lat0)
+            # Label cells that face the viewer enough to read: a cosine of
+            # 0.2 keeps labels off the limb itself.
+            ncos = np.sin(np.radians(lat0)) * np.sin(np.radians(nlat)) + np.cos(
+                np.radians(lat0)
+            ) * np.cos(np.radians(nlat)) * np.cos(np.radians(nlon - lon0))
+            if nvis and ncos > 0.2:
                 ax.text(
                     nx,
                     ny,
@@ -1961,6 +1971,189 @@ fig.tight_layout()
 save(fig, "ring_spectrum")
 plt.close(fig)
 print("ring spectrum figure written")
+
+# --------------------------------------------------------------- figure 19
+# N_side 2 against N_side 3, resolutions 0 to 3: the planar grids coloured
+# by ellipsoidal shape, and the view from above the north pole.
+from rhealpixdggs.dggs import WGS84_002
+
+NSIDE_GRIDS = [(WGS84_002, "N_side = 2"), (rdggs, "N_side = 3")]
+NSIDE_RESOLUTIONS = (0, 1, 2, 3)
+SHAPE_ORDER = ("quad", "skew_quad", "dart", "cap")
+shape_handles = [
+    Patch(facecolor=SHAPE_COLORS[s], alpha=0.5, label=s) for s in SHAPE_ORDER
+]
+
+fig, axes = plt.subplots(
+    len(NSIDE_RESOLUTIONS), 2, figsize=(11.5, 4.1 * len(NSIDE_RESOLUTIONS))
+)
+for row, resolution in zip(axes, NSIDE_RESOLUTIONS):
+    for ax, (grid_, label) in zip(row, NSIDE_GRIDS):
+        Rg = grid_.ellipsoid.R_A
+        cells = list(grid_.grid(resolution))
+        squares = []
+        for cell in cells:
+            cx, cy = cell.ul_vertex()
+            cw = cell.width()
+            squares.append(
+                Rectangle(
+                    (cx / Rg, (cy - cw) / Rg),
+                    cw / Rg,
+                    cw / Rg,
+                    facecolor=SHAPE_COLORS[cell.ellipsoidal_shape],
+                    alpha=0.5,
+                    edgecolor="#555555",
+                    linewidth=0.5 if resolution < 3 else 0.2,
+                )
+            )
+        ax.add_collection(
+            PatchCollection(squares, match_original=True, rasterized=resolution >= 3)
+        )
+        for face in CELLS0:
+            c0 = grid_.cell([face])
+            x, y = c0.ul_vertex()
+            w = c0.width()
+            ax.add_patch(
+                Rectangle(
+                    (x / Rg, (y - w) / Rg),
+                    w / Rg,
+                    w / Rg,
+                    facecolor="none",
+                    edgecolor="black",
+                    linewidth=1.4,
+                    zorder=4,
+                )
+            )
+            ax.text(
+                (x + 0.5 * w) / Rg,
+                (y - 0.5 * w) / Rg,
+                face,
+                ha="center",
+                va="center",
+                fontsize=20,
+                fontweight="bold",
+                color="#333333",
+                alpha=0.35,
+                zorder=5,
+            )
+        for seg in COASTLINES:
+            xy = [grid_.rhealpix(lon, lat) for lon, lat in seg]
+            run = [xy[0]]
+            for prev, cur in itertools.pairwise(xy):
+                if (
+                    abs(cur[0] - prev[0]) > 0.15 * Rg
+                    or abs(cur[1] - prev[1]) > 0.15 * Rg
+                ):
+                    if len(run) > 1:
+                        ax.plot(
+                            [p[0] / Rg for p in run],
+                            [p[1] / Rg for p in run],
+                            color="#555555",
+                            linewidth=0.5,
+                            zorder=3,
+                        )
+                    run = []
+                run.append(cur)
+            if len(run) > 1:
+                ax.plot(
+                    [p[0] / Rg for p in run],
+                    [p[1] / Rg for p in run],
+                    color="#555555",
+                    linewidth=0.5,
+                    zorder=3,
+                )
+        ax.set_xlim(-3.25, 3.25)
+        ax.set_ylim(-2.45, 2.45)
+        ax.set_aspect("equal")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(
+            f"{label}, resolution {resolution}: {len(cells)} cells", fontsize=11
+        )
+fig.legend(handles=shape_handles, loc="lower center", ncol=4, fontsize=9)
+fig.tight_layout(rect=(0, 0.025, 1, 1))
+fig.set_dpi(300)
+save(fig, "nside_planar")
+plt.close(fig)
+print("N_side planar figure written")
+
+fig, axes = plt.subplots(
+    len(NSIDE_RESOLUTIONS), 2, figsize=(9, 4.5 * len(NSIDE_RESOLUTIONS))
+)
+t_circle = np.linspace(0, 2 * np.pi, 400)
+for row, resolution in zip(axes, NSIDE_RESOLUTIONS):
+    points_per_edge = {0: 24, 1: 12, 2: 8, 3: 4}[resolution]
+    for ax, (grid_, label) in zip(row, NSIDE_GRIDS):
+        ax.plot(np.cos(t_circle), np.sin(t_circle), color="#555555", linewidth=1.2)
+        for seg in COASTLINES:
+            x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], 0, 90)
+            ax.plot(
+                np.where(vis, x, np.nan),
+                np.where(vis, y, np.nan),
+                color=COAST_COLOR,
+                linewidth=0.4,
+                zorder=1,
+            )
+        width = 0.8 if resolution < 3 else 0.4
+        filled, outlines, outline_colors = [], [], []
+        for cell in grid_.grid(resolution):
+            pts = cell.boundary(n=points_per_edge, plane=False)
+            if max(p[1] for p in pts) <= 0:
+                continue
+            pts = pts + [pts[0]]
+            x, y, _ = ortho([p[0] for p in pts], [p[1] for p in pts], 0, 90)
+            # The horizon is the equator; a cell edge lying on it is visible.
+            vis = np.array([p[1] for p in pts]) >= -1e-9
+            color = SHAPE_COLORS[cell.ellipsoidal_shape]
+            if vis.all():
+                filled.append(
+                    PolygonPatch(
+                        np.column_stack([x, y]),
+                        facecolor=to_rgba(color, 0.4),
+                        edgecolor=color,
+                        linewidth=width,
+                    )
+                )
+            elif vis.any():
+                fx, fy = to_limb(x, y, vis)
+                filled.append(
+                    PolygonPatch(
+                        np.column_stack([fx, fy]),
+                        facecolor=to_rgba(color, 0.4),
+                        edgecolor="none",
+                    )
+                )
+                outlines.append(
+                    np.column_stack(
+                        [np.where(vis, x, np.nan), np.where(vis, y, np.nan)]
+                    )
+                )
+                outline_colors.append(color)
+        ax.add_collection(
+            PatchCollection(
+                filled, match_original=True, zorder=2, rasterized=resolution >= 3
+            )
+        )
+        ax.add_collection(
+            LineCollection(
+                outlines,
+                colors=outline_colors,
+                linewidths=width,
+                zorder=3,
+                rasterized=resolution >= 3,
+            )
+        )
+        ax.set_xlim(-1.05, 1.05)
+        ax.set_ylim(-1.05, 1.05)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        ax.set_title(f"{label}, resolution {resolution}", fontsize=10)
+fig.legend(handles=shape_handles, loc="lower center", ncol=4, fontsize=9)
+fig.tight_layout(rect=(0, 0.02, 1, 1))
+fig.set_dpi(300)
+save(fig, "nside_polar")
+plt.close(fig)
+print("N_side polar figure written")
 
 # Drop matplotlib's six decimal places of coordinate precision, which is
 # around a nanometre on the page and about a third of every SVG's bytes.
