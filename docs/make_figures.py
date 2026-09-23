@@ -324,6 +324,15 @@ def ortho(lon_deg, lat_deg, lon0_deg, lat0_deg):
     return x, y, cosc >= 0
 
 
+def to_limb(x, y, vis):
+    """The projected ring of a cell that is partly behind the globe, with the
+    hidden points moved radially onto the limb, so the polygon covers the
+    visible part of the cell out to the horizon."""
+    r = np.hypot(x, y)
+    r = np.where(r == 0, 1.0, r)
+    return np.where(vis, x, x / r), np.where(vis, y, y / r)
+
+
 def draw_globe(ax, lon0, lat0, title):
     # Globe outline.
     t = np.linspace(0, 2 * np.pi, 400)
@@ -360,19 +369,19 @@ def draw_globe(ax, lon0, lat0, title):
             lons = [p[0] for p in pts]
             lats = [p[1] for p in pts]
             x, y, vis = ortho(lons, lats, lon0, lat0)
-            if vis.all():
-                ax.fill(x, y, color=color, alpha=0.18, linewidth=0)
+            if vis.any():
+                fx, fy = to_limb(x, y, vis)
+                ax.fill(fx, fy, color=color, alpha=0.18, linewidth=0)
             x, y = np.where(vis, x, np.nan), np.where(vis, y, np.nan)
             ax.plot(x, y, color=color, linewidth=1.0)
-            nx, ny, nvis = ortho(*cell.nucleus(plane=False), lon0, lat0)
-            ncos = np.sin(np.radians(lat0)) * np.sin(
-                np.radians(cell.nucleus(plane=False)[1])
-            ) + np.cos(np.radians(lat0)) * np.cos(
-                np.radians(cell.nucleus(plane=False)[1])
-            ) * np.cos(
-                np.radians(cell.nucleus(plane=False)[0] - lon0)
-            )
-            if nvis and ncos > 0.45:
+            nlon, nlat = cell.nucleus(plane=False)
+            nx, ny, nvis = ortho(nlon, nlat, lon0, lat0)
+            # Label cells that face the viewer enough to read: a cosine of
+            # 0.2 keeps labels off the limb itself.
+            ncos = np.sin(np.radians(lat0)) * np.sin(np.radians(nlat)) + np.cos(
+                np.radians(lat0)
+            ) * np.cos(np.radians(nlat)) * np.cos(np.radians(nlon - lon0))
+            if nvis and ncos > 0.2:
                 ax.text(
                     nx,
                     ny,
