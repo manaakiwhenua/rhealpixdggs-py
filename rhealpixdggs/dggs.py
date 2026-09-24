@@ -2034,7 +2034,10 @@ class RHEALPixDGGS:
 
         A cell straddling the antimeridian yields a ring whose longitudes
         jump between -180 and 180; splitting such rings is the caller's
-        concern.
+        concern. A cell whose edge lies on the antimeridian does not: that
+        edge takes the sign that keeps the ring's longitude span under
+        half a turn, +180 for a cell just west of it and -180 for a cell
+        just east, the same as ``Cell.boundary`` gives.
 
         EXAMPLES::
 

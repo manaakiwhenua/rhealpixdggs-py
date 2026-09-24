@@ -852,6 +852,8 @@ class Cell:
         If `plane` = False, this cell is a dart cell, and
         `trim_dart` = True, then remove the one non-vertex point from
         the output. (Dart cells only have three vertices.)
+        A vertex on the antimeridian takes the sign that keeps the cell's
+        longitude span under half a turn, as ``boundary()`` describes.
 
         EXAMPLES::
 
@@ -956,6 +958,10 @@ class Cell:
         If `n` = 2, then the output is the same as vertices().
         If `interior` = True, then push the boundary points slighly into the
         interior of the cell, which is convenient for some graphics methods.
+        When `plane` = False, a point on the antimeridian takes the sign
+        that keeps the ring's longitude span under half a turn: +180 for a
+        cell just west of the antimeridian, -180 for one just east. Cells
+        that straddle it, and cap cells, keep both signs.
 
         When `plane` = False, the cost scales with `n` because each point
         requires an inverse projection call, except on quad cells. A quad

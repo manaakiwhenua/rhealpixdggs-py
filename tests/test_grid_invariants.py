@@ -13,7 +13,7 @@ import numpy as np
 import shapely
 
 from rhealpixdggs.cell import RelativePosition as RP
-from rhealpixdggs.dggs import WGS84_002, WGS84_003, RHEALPixDGGS
+from rhealpixdggs.dggs import WGS84_002, WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
 from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 from rhealpixdggs.rhp_wrappers import k_ring
 from rhealpixdggs.zoneset import ZoneSet
@@ -165,21 +165,32 @@ class GridInvariantsTestCase(unittest.TestCase):
             (WGS84_003, "R2", 1),
             (WGS84_003, "R22", 1),
             (WGS84_003, "O0", -1),
+            (WGS84_003_RADIANS, "R2", 1),
+            (WGS84_003_RADIANS, "O0", -1),
         ]
         for rdggs, index, side in cases:
             suid = [ch if not ch.isdigit() else int(ch) for ch in index]
+            half_turn = np.pi if rdggs.ellipsoid.radians else 180.0
             for label, lons in (
                 ("boundary_array", rdggs.boundary_array([index], n=2)[0, :, 0]),
                 (
                     "Cell.boundary",
                     np.array(rdggs.cell(suid).boundary(n=2, plane=False))[:, 0],
                 ),
+                (
+                    "Cell.vertices",
+                    np.array(rdggs.cell(suid).vertices(plane=False))[:, 0],
+                ),
             ):
                 self.assertLess(
-                    lons.max() - lons.min(), 180, f"{index} {label}: {lons}"
+                    lons.max() - lons.min(), half_turn, f"{index} {label}: {lons}"
                 )
                 self.assertTrue(
                     (np.sign(lons) == side).all(), f"{index} {label}: {lons}"
+                )
+                self.assertTrue(
+                    np.isclose(np.abs(lons), half_turn).any(),
+                    f"{index} {label}: {lons}",
                 )
 
     def test_straddling_and_cap_rings_keep_both_signs(self):
