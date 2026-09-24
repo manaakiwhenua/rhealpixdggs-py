@@ -156,7 +156,7 @@ destroy the equal-area property.) ::
 #  Distributed under the terms of the GNU Lesser General Public License (LGPL)
 #                  http: //www.gnu.org/licenses/
 # *****************************************************************************
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import pairwise, product
 from math import asin, copysign, floor, pi
 from random import randint
@@ -222,6 +222,43 @@ class RingTable(NamedTuple):
     authalic_latitude: FloatArray
     first_longitude: FloatArray
     longitude_spacing: FloatArray
+
+
+INDEX_STRING_N_SIDES = (2, 3)
+
+
+def _index_width(N_side: int) -> int:
+    """
+    Characters per digit in the index strings of a grid with `N_side`.
+    Index strings, a face letter followed by one digit per resolution, are
+    defined for ``N_side`` 2 and 3 (issue #146); raise ValueError otherwise.
+    """
+    if N_side not in INDEX_STRING_N_SIDES:
+        raise ValueError(
+            f"index strings are defined for N_side 2 and 3, not N_side={N_side}; "
+            "address the cells of this grid by their suid tuples (issue #146)"
+        )
+    return 1
+
+
+def _parse_index(index: str, N_side: int) -> tuple[str | int, ...] | None:
+    """The suid for `index` in a grid with `N_side`; see ``RHEALPixDGGS.parse_index``."""
+    _index_width(N_side)
+    if not index or index[0] not in CELLS0:
+        return None
+    digits = index[1:]
+    if not all(d in "0123456789" for d in digits):
+        return None
+    values = [int(d) for d in digits]
+    if any(v >= N_side**2 for v in values):
+        return None
+    return (index[0], *values)
+
+
+def _format_index(suid: Sequence[str | int], N_side: int) -> str:
+    """The index string for `suid` in a grid with `N_side`; see ``RHEALPixDGGS.format_index``."""
+    _index_width(N_side)
+    return str(suid[0]) + "".join(str(d) for d in suid[1:])
 
 
 class RHEALPixDGGS:
@@ -1117,15 +1154,15 @@ class RHEALPixDGGS:
             digits[valid] = row * N + col
         return valid, face, digits
 
-    @staticmethod
     def _format_indices(
-        face: np.ndarray, digits: np.ndarray, resolution: int
+        self, face: np.ndarray, digits: np.ndarray, resolution: int
     ) -> np.ndarray:
         """
         The index strings of valid cells given as base cell codes and digit
         rows, all of resolution `resolution` (digit columns beyond it are
         ignored: ``_parse_planar_points`` always yields at least one).
         """
+        self._require_index_strings()
         chars = np.empty((len(face), resolution + 1), dtype=np.uint32)
         chars[:, 0] = np.array([ord(c) for c in CELLS0])[face]
         # Column by column: a whole-array temporary would be int64 and, for
@@ -1894,6 +1931,108 @@ class RHEALPixDGGS:
             active &= (b_ - a) > 2 * eps
         return (0.5 * (a + b_)).tolist()
 
+    @property
+    def has_index_strings(self) -> bool:
+        """
+        True if the cells of this grid have index strings: a face letter
+        followed by one digit per resolution, which is defined for
+        ``N_side`` 2 and 3 (see the Choosing N_side page and issue #146).
+        The cells of other grids are addressed by their suid tuples, and
+        every function that reads or writes index strings raises
+        ValueError for them.
+
+        EXAMPLES::
+
+            >>> WGS84_003.has_index_strings
+            True
+            >>> RHEALPixDGGS(N_side=4).has_index_strings
+            False
+
+        """
+        return self.N_side in INDEX_STRING_N_SIDES
+
+    def _index_width(self) -> int:
+        """Characters per digit in this grid's index strings; raise ValueError if it has none."""
+        return _index_width(self.N_side)
+
+    def _require_index_strings(self) -> None:
+        """Raise ValueError if this grid has no index strings."""
+        _index_width(self.N_side)
+
+    def parse_index(self, index: str) -> tuple[str | int, ...] | None:
+        """
+        Return the suid of the cell with index string `index`, or None if
+        `index` is not an index string of this grid: a face letter from
+        ``CELLS0`` followed by one decimal digit below ``N_side ** 2`` per
+        resolution. Raise ValueError if the grid has no index strings.
+
+        EXAMPLES::
+
+            >>> WGS84_003.parse_index('P41')
+            ('P', 4, 1)
+            >>> WGS84_003.parse_index('P9') is None
+            True
+            >>> WGS84_002.parse_index('P41') is None
+            True
+
+        """
+        return _parse_index(index, self.N_side)
+
+    def format_index(self, suid: Sequence[str | int]) -> str:
+        """
+        Return the index string of the cell with suid `suid`, the inverse of
+        ``parse_index``. Raise ValueError if the grid has no index strings.
+
+        EXAMPLES::
+
+            >>> WGS84_003.format_index(('P', 4, 1))
+            'P41'
+
+        """
+        return _format_index(suid, self.N_side)
+
+    def index_resolution(self, index: str) -> int:
+        """
+        Return the resolution of the cell with valid index string `index`.
+
+        EXAMPLES::
+
+            >>> WGS84_003.index_resolution('P41')
+            2
+
+        """
+        return (len(index) - 1) // self._index_width()
+
+    def index_ancestor(self, index: str, resolution: int) -> str:
+        """
+        Return the index string of the ancestor at `resolution` of the cell
+        with valid index string `index`, or `index` itself if `resolution`
+        is the cell's own or deeper.
+
+        EXAMPLES::
+
+            >>> WGS84_003.index_ancestor('P412', 1)
+            'P4'
+            >>> WGS84_003.index_ancestor('P412', 5)
+            'P412'
+
+        """
+        return index[: 1 + resolution * self._index_width()]
+
+    def index_children(self, index: str) -> list[str]:
+        """
+        Return the index strings of the ``N_side ** 2`` children of the cell
+        with valid index string `index`, in digit order.
+
+        EXAMPLES::
+
+            >>> WGS84_002.index_children('P4')
+            ['P40', 'P41', 'P42', 'P43']
+
+        """
+        width = self._index_width()
+        return [f"{index}{digit:0{width}d}" for digit in range(self.N_side**2)]
+
     def _parse_indices(
         self, indices: Iterable[str]
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -1904,7 +2043,9 @@ class RHEALPixDGGS:
         resolution) and each index's resolution. Invalid indices -- empty,
         unknown base cell, or a character that is not a digit below
         ``N_side ** 2`` -- get resolution 0, base cell code -1 and zero digits.
+        Raise ValueError if the grid has no index strings.
         """
+        self._require_index_strings()
         strings = np.array(list(indices), dtype=str)
         count = len(strings)
         chars = max(strings.dtype.itemsize // 4, 2)

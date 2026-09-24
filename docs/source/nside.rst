@@ -202,9 +202,24 @@ operation in this package accepts either.
 Larger values
 -------------
 
-The projection and the grid work for any ``N_side``, but the string form
-of identifiers assumes one character per digit, which holds only for
-``N_side`` 2 and 3; grids with ``N_side`` 4 or more are supported through
-the tuple-based :class:`~rhealpixdggs.cell.Cell` API and their string
-handling is being defined (issue #146). Letting ``N_side`` vary from level
-to level, a mixed-aperture grid, is under exploration (issue #169).
+Index strings, a face letter followed by one digit per resolution, are
+defined for ``N_side`` 2 and 3, the grids whose digits are single
+characters; :attr:`~rhealpixdggs.dggs.RHEALPixDGGS.has_index_strings`
+says so, and :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.parse_index` and
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.format_index` are the one place
+that reads and writes them. A grid with a larger ``N_side`` can be
+constructed and used through the tuple-based
+:class:`~rhealpixdggs.cell.Cell` API, but every function that takes or
+returns index strings raises ``ValueError`` for it, and ``str(cell)``
+gives a display form such as ``'(N, 10, 15)'`` that is not an identifier.
+
+Two grids share cells above resolution 0 only when their ``N_side`` values
+are powers of one base: ``N_side`` 4 is the ``N_side`` 2 grid restricted to
+even resolutions, 9 is the 3 grid likewise, while 5, 7 and 11 partition
+the cube in ways no other grid does. The general rule, decided in issue
+#146 and to be implemented with the mixed-aperture grids of issue #169,
+treats a grid as a sequence of prime apertures, one per level, and writes
+an identifier as a face letter followed by one digit per prime level, each
+digit with the width its prime needs; an ``N_side`` 4 cell then carries
+its ``N_side`` 2 identifier, so composite grids never need identifiers of
+their own.

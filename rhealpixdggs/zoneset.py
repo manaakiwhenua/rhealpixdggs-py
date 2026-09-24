@@ -45,9 +45,17 @@ class BoundaryType(enum.Enum):
     PROJECTED_LINE = "projectedLine"
 
 
-def _covered(index: str, cells: frozenset[str] | set[str]) -> bool:
+def _covered(rdggs: RHEALPixDGGS, index: str, cells: frozenset[str] | set[str]) -> bool:
     """True if `index` is one of `cells` or a descendant of one."""
-    return any(index[:k] in cells for k in range(1, len(index) + 1))
+    return any(
+        rdggs.index_ancestor(index, r) in cells
+        for r in range(rdggs.index_resolution(index) + 1)
+    )
+
+
+def _within(rdggs: RHEALPixDGGS, index: str, ancestor: str) -> bool:
+    """True if `index` is `ancestor` or a descendant of it."""
+    return _covered(rdggs, index, {ancestor})
 
 
 class ZoneSet:
@@ -87,10 +95,20 @@ class ZoneSet:
     @property
     def resolutions(self) -> tuple[int, ...]:
         """The distinct resolutions present, ascending."""
-        return tuple(sorted({len(index) - 1 for index in self._cells}))
+        return tuple(sorted({self.rdggs.index_resolution(i) for i in self._cells}))
 
     def _cell(self, index: str) -> Cell:
-        return self.rdggs.cell([index[0]] + [int(d) for d in index[1:]])
+        suid = self.rdggs.parse_index(index)
+        if suid is None:
+            raise ValueError(f"invalid cell index {index!r}")
+        return self.rdggs.cell(suid)
+
+    def _parent(self, index: str) -> str:
+        """The parent's index string, the empty string for a resolution 0 cell."""
+        resolution = self.rdggs.index_resolution(index)
+        return (
+            "" if resolution == 0 else self.rdggs.index_ancestor(index, resolution - 1)
+        )
 
     def __len__(self) -> int:
         return len(self._cells)
@@ -122,7 +140,10 @@ class ZoneSet:
     def _disjoint(self) -> set[str]:
         """The cells with those nested in another member dropped."""
         return {
-            i for i in self._cells if not _covered(i[:-1], self._cells) or len(i) == 1
+            i
+            for i in self._cells
+            if self.rdggs.index_resolution(i) == 0
+            or not _covered(self.rdggs, self._parent(i), self._cells)
         }
 
     def _finish(
@@ -143,28 +164,30 @@ class ZoneSet:
         )
         low = min(resolutions) if min_res is None else min_res
         high = max(resolutions) if max_res is None else max_res
-        kept = {i for i in cells if low <= len(i) - 1 <= high}
+        resolution = self.rdggs.index_resolution
+        kept = {i for i in cells if low <= resolution(i) <= high}
         full = self.rdggs.N_side**2
         while True:
             groups: dict[str, set[str]] = {}
             for index in kept:
-                if len(index) - 2 >= low:
-                    groups.setdefault(index[:-1], set()).add(index)
+                if resolution(index) - 1 >= low:
+                    groups.setdefault(self._parent(index), set()).add(index)
             merged = {p for p, children in groups.items() if len(children) == full}
             if not merged:
                 return ZoneSet(self.rdggs, kept)
-            kept = {i for i in kept if i[:-1] not in merged} | merged
+            kept = {i for i in kept if self._parent(i) not in merged} | merged
 
     def _subtract(self, index: str, inside: list[str]) -> set[str]:
         """`index` minus the cells `inside` it (proper descendants)."""
         if not inside:
             return {index}
         result: set[str] = set()
-        for digit in range(self.rdggs.N_side**2):
-            child = f"{index}{digit}"
+        for child in self.rdggs.index_children(index):
             if child in inside:
                 continue
-            result |= self._subtract(child, [b for b in inside if b.startswith(child)])
+            result |= self._subtract(
+                child, [b for b in inside if _within(self.rdggs, b, child)]
+            )
         return result
 
     def union(
@@ -215,7 +238,9 @@ class ZoneSet:
         """
         other = self._operand(other)
         a, b = self._disjoint(), other._disjoint()
-        cells = {i for i in a if _covered(i, b)} | {i for i in b if _covered(i, a)}
+        cells = {i for i in a if _covered(self.rdggs, i, b)} | {
+            i for i in b if _covered(self.rdggs, i, a)
+        }
         return self._finish(cells, other, min_res, max_res)
 
     def difference(
@@ -240,9 +265,9 @@ class ZoneSet:
         a, b = self._disjoint(), other._disjoint()
         cells: set[str] = set()
         for index in a:
-            if _covered(index, b):
+            if _covered(self.rdggs, index, b):
                 continue
-            inside = [i for i in b if i.startswith(index) and i != index]
+            inside = [i for i in b if i != index and _within(self.rdggs, i, index)]
             cells |= self._subtract(index, inside)
         return self._finish(cells, other, min_res, max_res)
 
@@ -274,7 +299,9 @@ class ZoneSet:
 
     def _shares_interior(self, other: "ZoneSet") -> bool:
         a, b = self._disjoint(), other._disjoint()
-        return any(_covered(i, b) for i in a) or any(_covered(i, a) for i in b)
+        return any(_covered(self.rdggs, i, b) for i in a) or any(
+            _covered(self.rdggs, i, a) for i in b
+        )
 
     def _only(self, other: "ZoneSet") -> bool:
         """True if this set covers ground `other` does not."""

@@ -10,6 +10,22 @@ with figures of both grids at resolutions 0 to 3 in the plane and from
 above the pole (issue #168). In the globe-views figure of the introduction,
 cells cut by the horizon are now filled to the limb and more cells are
 labelled.
+
+Index strings have one parser and one formatter, ``RHEALPixDGGS.parse_index``
+and ``format_index``, with ``index_resolution``, ``index_ancestor``,
+``index_children`` and the ``has_index_strings`` property beside them, and
+every function that reads or writes an index string now goes through them:
+the ``rhp_wrappers`` functions, ``compress_order_cells`` and
+``compact_cells``, ``ZoneSet``, the export functions, the array API and
+``str(cell)``. Index strings of the ``N_side`` 2 and 3 grids are unchanged,
+though the two compaction functions now raise ``ValueError`` for a string
+that is not an index of the grid instead of grouping it silently.
+For any other ``N_side``, whose digits would need more than one character,
+these functions used to disagree with each other about what a string meant;
+they now all raise ``ValueError`` and point to the tuple-based ``Cell`` API,
+while ``str(cell)`` keeps its tuple rendering as a display form. The
+identifier rule for larger and mixed-aperture grids is recorded in issues
+#146 and #169 and described on the Choosing N_side page (issue #146).
 A new test module checks grid invariants on ``N_side`` 2 and 3 grids with
 both polar-square placements: neighbour symmetry, touching against
 k-rings and distance, the DE-9IM matrices and relative positions against
