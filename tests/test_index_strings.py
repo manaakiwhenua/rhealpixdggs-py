@@ -82,6 +82,15 @@ class IndexStringsTestCase(unittest.TestCase):
         self.assertEqual(compress_order_cells(children, N_side=2), ["P1"])
         self.assertEqual(compact_cells(children[:-1], N_side=2), set(children[:-1]))
 
+    def test_invalid_strings_raise_where_they_used_to_be_grouped(self):
+        for call in (
+            lambda: compact_cells(["N0", "bad"], N_side=3),
+            lambda: compress_order_cells(["N0", "bad"], N_side=3),
+            lambda: ZoneSet(WGS84_003)._cell("bad"),
+        ):
+            with self.assertRaisesRegex(ValueError, "invalid cell index"):
+                call()
+
     def test_large_n_side_has_no_index_strings(self):
         for rdggs in LARGE:
             with self.subTest(N_side=rdggs.N_side):
