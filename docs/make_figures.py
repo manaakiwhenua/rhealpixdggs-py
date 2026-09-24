@@ -2554,11 +2554,11 @@ for slot in (1, 3):
         "",
         xy=(0.93, 0.5),
         xytext=(0.07, 0.5),
-        arrowprops=dict(
-            arrowstyle="-|>,head_width=0.3,head_length=0.62",
-            color="#b4b4b4",
-            linewidth=2.6,
-        ),
+        arrowprops={
+            "arrowstyle": "-|>,head_width=0.3,head_length=0.62",
+            "color": "#b4b4b4",
+            "linewidth": 2.6,
+        },
     )
 hero_cube(fig.add_subplot(grid[2]))
 hero_net(fig.add_subplot(grid[4]))
