@@ -13,6 +13,7 @@ from rhealpixdggs.ellipsoids import (
     WGS84_ELLIPSOID_RADIANS,
     Ellipsoid,
 )
+from rhealpixdggs.utils import _normalise_antimeridian_rings
 
 # Level 0 cell names
 N = CELLS0[0]
@@ -527,6 +528,13 @@ class SCENZGridCELLTestCase(unittest.TestCase):
                             rdggs.rhealpix(*p, inverse=True, region=c.region())
                             for p in planar
                         ]
+                        # boundary() applies the antimeridian edge-sign rule
+                        # on top of the raw projection; so must the recipe
+                        expect_lons = _normalise_antimeridian_rings(
+                            np.array([e[0] for e in expect]),
+                            radians=rdggs.ellipsoid.radians,
+                        )
+                        expect = list(zip(expect_lons, (e[1] for e in expect)))
                         self.assertEqual(len(got), 4 * n - 4)
                         for g, e in zip(got, expect):
                             self.assertTrue(
@@ -584,6 +592,16 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         ]:
             ca, cb = rdggs.cell(a), rdggs.cell(b)
             self.assertIn(cb, ca.neighbors(plane=True).values())
+            if a == (R, 2):
+                # Across the antimeridian the shared edge is +180 in the
+                # western ring and -180 in the eastern: compare latitudes.
+                east = {lat for lon, lat in ca.boundary(n=n, plane=False) if lon == 180}
+                west = {
+                    lat for lon, lat in cb.boundary(n=n, plane=False) if lon == -180
+                }
+                self.assertEqual(len(east), n)
+                self.assertEqual(east, west)
+                continue
             shared = set(map(tuple, ca.boundary(n=n, plane=False))) & set(
                 map(tuple, cb.boundary(n=n, plane=False))
             )

@@ -19,7 +19,11 @@ import pyproj
 from numpy import base_repr, pi  # noqa: F401
 from scipy import integrate, optimize
 
-from rhealpixdggs.utils import FloatArray, wrap_longitude
+from rhealpixdggs.utils import (
+    FloatArray,
+    _normalise_antimeridian_rings,
+    wrap_longitude,
+)
 
 # Level 0 cell IDs, which are anomalous.
 CELLS0 = ["N", "O", "P", "Q", "R", "S"]
@@ -848,6 +852,8 @@ class Cell:
         If `plane` = False, this cell is a dart cell, and
         `trim_dart` = True, then remove the one non-vertex point from
         the output. (Dart cells only have three vertices.)
+        A vertex on the antimeridian takes the sign that keeps the cell's
+        longitude span under half a turn, as ``boundary()`` describes.
 
         EXAMPLES::
 
@@ -908,6 +914,7 @@ class Cell:
             result = [
                 self.rdggs.rhealpix(*p, inverse=True, region=region) for p in result
             ]
+            result = self._normalise_ring(result)
             if trim_dart and self.ellipsoidal_shape == "dart":
                 # Remove non-vertex point.
                 if self.region() == "north_polar":
@@ -951,6 +958,10 @@ class Cell:
         If `n` = 2, then the output is the same as vertices().
         If `interior` = True, then push the boundary points slighly into the
         interior of the cell, which is convenient for some graphics methods.
+        When `plane` = False, a point on the antimeridian takes the sign
+        that keeps the ring's longitude span under half a turn: +180 for a
+        cell just west of the antimeridian, -180 for one just east. Cells
+        that straddle it, and cap cells, keep both signs.
 
         When `plane` = False, the cost scales with `n` because each point
         requires an inverse projection call, except on quad cells. A quad
@@ -963,7 +974,9 @@ class Cell:
         projected (`2*n` calls instead of `4*n - 4`); the east and south
         edges reuse those values. Every coordinate returned is one the
         projection computed, and adjacent quad cells get bit-identical
-        shared points.
+        shared points, except that an edge on the antimeridian is +180 in
+        the western cell's ring and -180 in the eastern's (see
+        ``boundary()``).
 
         For quad and cap cells with `n` = 2 and `interior` = False the result
         is ``vertices(plane=False)``. Cap cells with `n` > 2 take the general
@@ -1044,7 +1057,7 @@ class Cell:
             xs = np.array([p[0] for p in result])
             ys = np.array([p[1] for p in result])
             lons, lats = self.rdggs.rhealpix(xs, ys, inverse=True, region=self.region())
-            return list(zip(lons, lats))
+            return self._normalise_ring(list(zip(lons, lats)))
         return result
 
     def _quad_boundary(self, n: int, eps: float) -> list[tuple[float, float]]:
@@ -1078,7 +1091,7 @@ class Cell:
         # Longitude depends only on x and latitude only on y in the
         # equatorial region, so the south-east corner needs no projection.
         se = (ne[0], sw[1])
-        return (
+        return self._normalise_ring(
             [nw]
             + [(lon, nw[1]) for lon in lons]
             + [ne]
@@ -1088,6 +1101,19 @@ class Cell:
             + [sw]
             + [(sw[0], lat) for lat in reversed(lats)]
         )
+
+    def _normalise_ring(
+        self, ring: list[tuple[float, float]]
+    ) -> list[tuple[float, float]]:
+        """
+        The ring with any point on the antimeridian given the sign that
+        keeps the ring's longitude span under half a turn. See
+        ``utils._normalise_antimeridian_rings``.
+        """
+        lons = _normalise_antimeridian_rings(
+            np.array([p[0] for p in ring]), radians=self.rdggs.ellipsoid.radians
+        )
+        return [(lon, p[1]) for lon, p in zip(lons, ring)]
 
     def interior(
         self, n: int = 2, plane: bool = True, flatten: bool = False

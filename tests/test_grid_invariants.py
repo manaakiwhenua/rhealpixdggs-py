@@ -8,13 +8,14 @@ N_side gets the same scrutiny.
 import itertools
 import random
 import unittest
+from math import pi
 
 import numpy as np
 import shapely
 
 from rhealpixdggs.cell import RelativePosition as RP
 from rhealpixdggs.dggs import WGS84_002, WGS84_003, RHEALPixDGGS
-from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
+from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID, WGS84_ELLIPSOID_RADIANS, Ellipsoid
 from rhealpixdggs.rhp_wrappers import k_ring
 from rhealpixdggs.zoneset import ZoneSet
 
@@ -145,18 +146,100 @@ class GridInvariantsTestCase(unittest.TestCase):
                     self.assertTrue(a.touches(b), f"{name} {a} {b}")
 
     def test_boundary_array_matches_cell_boundary_on_the_sphere(self):
-        # Compared as points on the sphere: a longitude of 180 and one of
-        # -180 are the same meridian.
         for name, rdggs in GRIDS.items():
             cells = list(rdggs.grid(2))
             rows = rdggs.boundary_array([str(c) for c in cells], n=3)
             for row, cell in zip(rows, cells):
                 expected = np.array(cell.boundary(n=3, plane=False))
-                dlon = (row[:, 0] - expected[:, 0] + 180) % 360 - 180
-                self.assertTrue(np.allclose(dlon, 0, atol=1e-9), f"{name} {cell}")
-                self.assertTrue(
-                    np.allclose(row[:, 1], expected[:, 1], atol=1e-9), f"{name} {cell}"
+                self.assertTrue(np.allclose(row, expected, atol=1e-9), f"{name} {cell}")
+
+    def test_antimeridian_edge_sign_keeps_ring_span_small(self):
+        # A cell whose east or west edge lies on the antimeridian must
+        # report that edge with the sign that keeps its ring's longitude
+        # span under 180 degrees, identically in both boundary paths and
+        # in vertices(), so a planar consumer never sees it as straddling
+        # the antimeridian. The span is then exactly the cell's width in
+        # longitude, 90 degrees over N_side ** resolution.
+        cases = [
+            (2, "R11", 1),
+            (2, "R13", 1),
+            (2, "R31", 1),
+            (2, "R33", 1),
+            (2, "O00", -1),
+            (2, "O02", -1),
+            (2, "O20", -1),
+            (2, "O22", -1),
+            (3, "R2", 1),
+            (3, "R22", 1),
+            (3, "O0", -1),
+            (3, "O00", -1),
+        ]
+        for side, index, sign in cases:
+            for radians in (False, True):
+                rdggs = (
+                    RHEALPixDGGS(N_side=side, ellipsoid=WGS84_ELLIPSOID_RADIANS)
+                    if radians
+                    else (WGS84_002 if side == 2 else WGS84_003)
                 )
+                cell = rdggs.cell((index[0], *map(int, index[1:])))
+                half_turn = pi if radians else 180.0
+                width = half_turn / (2 * side ** (len(index) - 1))
+                for n in (2, 3, 6):
+                    row = rdggs.boundary_array([index], n=n)[0]
+                    scalar = np.asarray(cell.boundary(n=n, plane=False))
+                    label = f"{index} N_side {side} radians={radians} n={n}"
+                    self.assertTrue(np.allclose(row, scalar, atol=1e-9), label)
+                    if n == 2:
+                        vertices = np.asarray(cell.vertices(plane=False))
+                        self.assertTrue(np.allclose(row, vertices, atol=1e-9), label)
+                    lons = row[:, 0]
+                    self.assertTrue((sign * lons > 0).all(), label)
+                    self.assertIn(sign * half_turn, lons, label)
+                    self.assertAlmostEqual(np.ptp(lons), width, msg=label)
+                    bounds = shapely.polygons(row).bounds
+                    self.assertAlmostEqual(bounds[2] - bounds[0], width, msg=label)
+
+    def test_antimeridian_edge_sign_survives_polar_roundoff(self):
+        # Near a pole the inverse projection amplifies planar rounding, so
+        # an edge meant to lie on the antimeridian can come back a little
+        # off it; the rule must still recognise and snap it.
+        for index in ("N443", "S443"):
+            cell = WGS84_003.cell((index[0], *map(int, index[1:])))
+            for n in (2, 3, 6):
+                row = WGS84_003.boundary_array([index], n=n)[0]
+                self.assertTrue(
+                    np.allclose(row, cell.boundary(n=n, plane=False), atol=1e-9),
+                    f"{index} n={n}",
+                )
+                self.assertIn(180.0, row[:, 0], f"{index} n={n}")
+                self.assertLess(np.ptp(row[:, 0]), 180, f"{index} n={n}")
+
+    def test_straddling_and_cap_rings_keep_both_signs(self):
+        # Cells that genuinely straddle the antimeridian, and cap cells,
+        # legitimately mix +180-side and -180-side longitudes; the edge-sign
+        # rule must leave them alone.
+        for index in ("S0", "N"):
+            suid = [ch if not ch.isdigit() else int(ch) for ch in index]
+            for lons in (
+                WGS84_003.boundary_array([index], n=3)[0, :, 0],
+                np.array(WGS84_003.cell(suid).boundary(n=3, plane=False))[:, 0],
+            ):
+                self.assertTrue((lons > 90).any(), f"{index}: {lons}")
+                self.assertTrue((lons < -90).any(), f"{index}: {lons}")
+        for lons in (
+            WGS84_003.boundary_array(["N"])[0, :, 0],
+            np.array(WGS84_003.cell(("S",)).boundary(plane=False))[:, 0],
+        ):
+            self.assertTrue(np.allclose(sorted(lons), [-180, -90, 0, 90], atol=1e-9))
+        # An equatorial cell straddling the antimeridian on a rotated grid.
+        rotated = RHEALPixDGGS(ellipsoid=Ellipsoid(lon_0=50))
+        for lons in (
+            rotated.boundary_array(["R1"])[0, :, 0],
+            np.array(rotated.cell(("R", 1)).boundary(plane=False))[:, 0],
+        ):
+            self.assertTrue(
+                np.allclose(sorted(lons), [-160, -160, 170, 170], atol=1e-9)
+            )
 
 
 if __name__ == "__main__":
