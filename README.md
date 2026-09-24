@@ -178,11 +178,6 @@ A **conda package** `rhealpixdggs` is also maintained at
 [Bioeconomy Science Institute](https://www.bioeconomyscience.co.nz/)  
 <lawr@landcareresearch.co.nz>  
   
-*Release Manager*:  
-**Dr Nicholas J. Car**  
-[SURROUND Australia Pty Ltd](https://surround.com)  
-<nicholas.car@surroundaustralia.com>  
-  
 *Original author*:  
 **Alexander Raichev**  
 <https://raichev.net/>  
@@ -191,4 +186,9 @@ A **conda package** `rhealpixdggs` is also maintained at
 *Former Maintainer*:  
 **Robert Gibb**  
 [Manaaki Whenua – Landcare Research](https://www.landcareresearch.co.nz/)  
-<gibbr@landcareresearch.co.nz>
+<gibbr@landcareresearch.co.nz>  
+  
+*Former Maintainer*:  
+**Dr Nicholas J. Car**  
+[SURROUND Australia Pty Ltd](https://surround.com)  
+<nicholas.car@surroundaustralia.com>
