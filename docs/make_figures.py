@@ -64,12 +64,25 @@ from rhealpixdggs.dggs import CELLS0, WGS84_003
 OUT = pathlib.Path(__file__).parent / "source" / "images"
 
 
+# Figure names given on the command line limit what gets written, so one
+# figure can be reworked without rewriting (and rediffing) the other 23:
+#
+#     python docs/make_figures.py hero
+#
+# Everything is still computed either way; only the writing is skipped.
+ONLY = set(sys.argv[1:])
+WRITTEN = []
+
+
 def save(fig, name):
     """
     Write `fig` as SVG (for the HTML docs) and PDF (for the LaTeX docs).
     """
+    if ONLY and name not in ONLY:
+        return
     fig.savefig(OUT / f"{name}.svg", bbox_inches="tight")
     fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight")
+    WRITTEN.append(name)
 
 
 rdggs = WGS84_003
@@ -1030,11 +1043,35 @@ def iso(x, y, z):
 # edge lies along Q, N's left (p=0) edge lies along R, and Q's right
 # (p=1) edge is R's left (p=0) edge. The corner vertex (1, 1, 1) is then
 # shared by exactly the children N0, Q2 and R0.
-CUBE_FACE_POINT = {
-    "N": lambda p, q: (1 - p, 1 - q, 1.0),
-    "Q": lambda p, q: (p, 1.0, 1 - q),
-    "R": lambda p, q: (1.0, 1 - p, 1 - q),
+# north_square rotates the N square's planar layout by that many quarter
+# turns. The cube mapping has to undo it, or the top face will not join the
+# sides: with the rotation a point on the shared N/Q or N/R edge lands in
+# the same place whichever face it is approached from (gap 0.0009 in cube
+# units), without it the gap reaches 1.54. The default DGGS has
+# north_square 0, where the rotation is the identity, which is why this went
+# unnoticed for as long as every figure here used the default.
+QUARTER_TURN = {
+    0: lambda p, q: (p, q),
+    1: lambda p, q: (q, 1 - p),
+    2: lambda p, q: (1 - p, 1 - q),
+    3: lambda p, q: (1 - q, p),
 }
+
+
+def cube_face_point(face, dggs=None):
+    """Map a face's planar (p, q), both in [0, 1], onto the cube."""
+    turn = QUARTER_TURN[(dggs or rdggs).north_square]
+    base = {
+        "N": lambda p, q: (1 - p, 1 - q, 1.0),
+        "Q": lambda p, q: (p, 1.0, 1 - q),
+        "R": lambda p, q: (1.0, 1 - p, 1 - q),
+    }[face]
+    if face != "N":
+        return base
+    return lambda p, q: base(*turn(p, q))
+
+
+CUBE_FACE_POINT = {face: cube_face_point(face) for face in ("N", "Q", "R")}
 CORNER_CELLS = ("N0", "Q2", "R0")
 
 fig, ax = plt.subplots(figsize=(6.2, 6.8))
@@ -2155,11 +2192,382 @@ save(fig, "nside_polar")
 plt.close(fig)
 print("N_side polar figure written")
 
+# --------------------------------------------------------------- figure 19
+# The README banner: the same six faces as a sphere, as the cube they are
+# the faces of, and as the net that cube unfolds into. The coastlines are
+# projected through the library's own rHEALPix projection in all three, so
+# a landmass can be followed across the whole image, and the resolution 2
+# nuclei of N are marked in all three to show the isoLatitude property --
+# rings of constant latitude on the sphere become concentric squares once
+# projected. O carries its children's digits and P is drawn one resolution
+# deeper, so the addressing and the recursion are both visible.
+#
+# It uses a non-default unfolding (north_square 2, south_square 1): the
+# offset polar squares make a livelier shape than the default's T, and show
+# that the two are placed independently.
+HERO_NS, HERO_SS = 2, 1
+hero_dggs = RHEALPixDGGS(
+    ellipsoid=WGS84_ELLIPSOID, N_side=3, north_square=HERO_NS, south_square=HERO_SS
+)
+HERO_R = hero_dggs.ellipsoid.R_A
+HERO_VIEW = (90.0, 35.0)  # centred on the Q/R boundary, so the globe shows
+# the same three faces the cube does
+HERO_ISO_RES = 2
+
+
+def hero_darker(color, factor=0.55):
+    r, g, b = to_rgba(color)[:3]
+    return (r * factor, g * factor, b * factor)
+
+
+def hero_face_box(face):
+    cell = hero_dggs.cell([face])
+    x, y = cell.ul_vertex()
+    return x, y, cell.width()
+
+
+def hero_iso_nuclei():
+    """Planar nuclei of the N face's cells, one ring of latitude each."""
+    return [c.nucleus(plane=True) for c in hero_dggs.cell(["N"]).subcells(HERO_ISO_RES)]
+
+
+def hero_globe(ax):
+    lon0, lat0 = HERO_VIEW
+    ring = np.linspace(0, 2 * np.pi, 400)
+    ax.fill(np.cos(ring), np.sin(ring), color="#ffffff", zorder=0)
+    for seg in COASTLINES:
+        x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], lon0, lat0)
+        ax.plot(
+            np.where(vis, x, np.nan),
+            np.where(vis, y, np.nan),
+            color=COAST_COLOR,
+            linewidth=0.55,
+            zorder=2,
+        )
+    for face in CELLS0:
+        color = FACE_COLORS[face]
+        for cell in hero_dggs.cell([face]).subcells():
+            pts = cell.boundary(n=60, plane=False)
+            pts = pts + [pts[0]]
+            x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], lon0, lat0)
+            if vis.any():
+                fx, fy = to_limb(x, y, vis)
+                ax.fill(fx, fy, color=color, alpha=0.30, linewidth=0, zorder=1)
+            ax.plot(
+                np.where(vis, x, np.nan),
+                np.where(vis, y, np.nan),
+                color=color,
+                linewidth=1.15,
+                zorder=3,
+            )
+    # The isoLatitude property: every nucleus sits on a ring of constant
+    # latitude. At resolution 2 the N face's 81 cells lie on just five.
+    lonlat = [
+        c.nucleus(plane=False) for c in hero_dggs.cell(["N"]).subcells(HERO_ISO_RES)
+    ]
+    ix, iy, ivis = ortho([p[0] for p in lonlat], [p[1] for p in lonlat], lon0, lat0)
+    ax.scatter(
+        ix[ivis],
+        iy[ivis],
+        s=2.6,
+        color=hero_darker(FACE_COLORS["N"]),
+        alpha=0.6,
+        linewidths=0,
+        zorder=5,
+    )
+    ax.plot(np.cos(ring), np.sin(ring), color="#4a4a4a", linewidth=1.4, zorder=4)
+    # Only N, Q and R face the viewer, which is exactly what the cube shows.
+    for face, (lon, lat) in (("N", (90, 90)), ("Q", (45, 0)), ("R", (135, 0))):
+        lx, ly, vis = ortho(lon, lat, lon0, lat0)
+        if not vis:
+            raise AssertionError(f"the {face} label is on the far side")
+        ax.text(
+            float(lx),
+            float(ly),
+            face,
+            ha="center",
+            va="center",
+            fontsize=15,
+            fontweight="bold",
+            color=hero_darker(FACE_COLORS[face]),
+            alpha=0.85,
+            zorder=6,
+        )
+    ax.set_xlim(-1.08, 1.08)
+    ax.set_ylim(-1.08, 1.08)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+
+def hero_cube(ax):
+    to_cube = {f: cube_face_point(f, hero_dggs) for f in ("N", "Q", "R")}
+    corners = ((0, 0), (1, 0), (1, 1), (0, 1))
+    for face in ("N", "Q", "R"):
+        color = FACE_COLORS[face]
+        ax.add_patch(
+            PolygonPatch(
+                [iso(*to_cube[face](p, q)) for p, q in corners],
+                closed=True,
+                facecolor=to_rgba(color, 0.34),
+                edgecolor="none",
+                zorder=1,
+            )
+        )
+        for i in (1, 2):
+            for a, b in (((i / 3, 0), (i / 3, 1)), ((0, i / 3), (1, i / 3))):
+                xa, ya = iso(*to_cube[face](*a))
+                xb, yb = iso(*to_cube[face](*b))
+                ax.plot([xa, xb], [ya, yb], color=color, linewidth=0.8, zorder=3)
+    # Coastlines, assigned to a face through the projection then folded up.
+    boxes = {f: hero_face_box(f) for f in CELLS0}
+
+    def face_of(lon, lat):
+        x, y = hero_dggs.rhealpix(lon, lat)
+        for face, (x0, y0, w) in boxes.items():
+            p, q = (x - x0) / w, (y0 - y) / w
+            if -1e-9 <= p <= 1 + 1e-9 and -1e-9 <= q <= 1 + 1e-9:
+                return face, min(max(p, 0.0), 1.0), min(max(q, 0.0), 1.0)
+        return None, None, None
+
+    runs = {f: [] for f in ("N", "Q", "R")}
+    for seg in COASTLINES:
+        current_face, current = None, []
+        for lon, lat in seg:
+            face, p, q = face_of(lon, lat)
+            if face != current_face:
+                if current_face in runs and len(current) > 1:
+                    runs[current_face].append(current)
+                current_face, current = face, []
+            if face is not None:
+                current.append((p, q))
+        if current_face in runs and len(current) > 1:
+            runs[current_face].append(current)
+    for face, segments in runs.items():
+        for segment in segments:
+            pts = [iso(*to_cube[face](p, q)) for p, q in segment]
+            ax.plot(
+                [a for a, _ in pts],
+                [b for _, b in pts],
+                color=COAST_COLOR,
+                linewidth=0.55,
+                zorder=2,
+            )
+    x0, y0, w = hero_face_box("N")
+    pts = [
+        iso(*to_cube["N"]((nx - x0) / w, (y0 - ny) / w)) for nx, ny in hero_iso_nuclei()
+    ]
+    ax.scatter(
+        [a for a, _ in pts],
+        [b for _, b in pts],
+        s=2.2,
+        color=hero_darker(FACE_COLORS["N"]),
+        alpha=0.65,
+        linewidths=0,
+        zorder=3,
+    )
+    for face in ("N", "Q", "R"):
+        ax.add_patch(
+            PolygonPatch(
+                [iso(*to_cube[face](p, q)) for p, q in corners],
+                closed=True,
+                facecolor="none",
+                edgecolor="#5c5c5c",
+                linewidth=1.15,
+                zorder=4,
+            )
+        )
+        lx, ly = iso(*to_cube[face](0.5, 0.5))
+        ax.text(
+            lx,
+            ly,
+            face,
+            ha="center",
+            va="center",
+            fontsize=19,
+            fontweight="bold",
+            color=hero_darker(FACE_COLORS[face]),
+            alpha=0.85,
+            zorder=5,
+        )
+    ax.set_xlim(-0.95, 0.95)
+    ax.set_ylim(-0.80, 0.92)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+
+def hero_net(ax, digit_face="O", deep_face="P", iso_face="N"):
+    for face in CELLS0:
+        x, y, w = hero_face_box(face)
+        ax.add_patch(
+            Rectangle(
+                (x / HERO_R, (y - w) / HERO_R),
+                w / HERO_R,
+                w / HERO_R,
+                facecolor=FACE_COLORS[face],
+                alpha=0.34,
+                edgecolor="none",
+                zorder=0,
+            )
+        )
+        for child in hero_dggs.cell([face]).subcells():
+            cx, cy = child.ul_vertex()
+            cw = child.width()
+            ax.add_patch(
+                Rectangle(
+                    (cx / HERO_R, (cy - cw) / HERO_R),
+                    cw / HERO_R,
+                    cw / HERO_R,
+                    facecolor="none",
+                    edgecolor=FACE_COLORS[face],
+                    linewidth=0.75,
+                    alpha=0.95,
+                    zorder=2,
+                )
+            )
+        ax.add_patch(
+            Rectangle(
+                (x / HERO_R, (y - w) / HERO_R),
+                w / HERO_R,
+                w / HERO_R,
+                facecolor="none",
+                edgecolor="#5c5c5c",
+                linewidth=1.15,
+                zorder=3,
+            )
+        )
+        if face == digit_face:
+            # The digits sit at the children's centres, so this face's letter
+            # goes just outside the square to keep clear of them.
+            tx, ty, ha, va = (
+                (x + 0.06 * w) / HERO_R,
+                (y + 0.09 * w) / HERO_R,
+                "left",
+                "bottom",
+            )
+        else:
+            tx, ty, ha, va = (
+                (x + 0.14 * w) / HERO_R,
+                (y - 0.13 * w) / HERO_R,
+                "left",
+                "top",
+            )
+        ax.text(
+            tx,
+            ty,
+            face,
+            ha=ha,
+            va=va,
+            fontsize=15,
+            fontweight="bold",
+            color=hero_darker(FACE_COLORS[face]),
+            alpha=0.85,
+            zorder=4,
+        )
+    # One resolution deeper, so the recursion is shown rather than asserted.
+    for cell in hero_dggs.cell([deep_face]).subcells(2):
+        gx, gy = cell.ul_vertex()
+        gw = cell.width()
+        ax.add_patch(
+            Rectangle(
+                (gx / HERO_R, (gy - gw) / HERO_R),
+                gw / HERO_R,
+                gw / HERO_R,
+                facecolor="none",
+                edgecolor=FACE_COLORS[deep_face],
+                linewidth=0.3,
+                alpha=0.75,
+                zorder=2,
+            )
+        )
+    # An address appends one digit per resolution, so O4 is O's middle child.
+    for child in hero_dggs.cell([digit_face]).subcells():
+        cx, cy = child.ul_vertex()
+        cw = child.width()
+        ax.text(
+            (cx + 0.5 * cw) / HERO_R,
+            (cy - 0.5 * cw) / HERO_R,
+            str(child.suid[1]),
+            ha="center",
+            va="center",
+            fontsize=10,
+            color=hero_darker(FACE_COLORS[digit_face]),
+            alpha=0.8,
+            zorder=4,
+        )
+    # The rings of constant latitude the globe shows, now concentric squares.
+    nuclei = hero_iso_nuclei()
+    ax.scatter(
+        [nx / HERO_R for nx, _ in nuclei],
+        [ny / HERO_R for _, ny in nuclei],
+        s=2.2,
+        color=hero_darker(FACE_COLORS[iso_face]),
+        alpha=0.65,
+        linewidths=0,
+        zorder=4,
+    )
+    for seg in COASTLINES:
+        xy = [hero_dggs.rhealpix(lon, lat) for lon, lat in seg]
+        run = [xy[0]]
+        for previous, current in itertools.pairwise(xy):
+            if (
+                abs(current[0] - previous[0]) > 0.15 * HERO_R
+                or abs(current[1] - previous[1]) > 0.15 * HERO_R
+            ):
+                if len(run) > 1:
+                    ax.plot(
+                        [p[0] / HERO_R for p in run],
+                        [p[1] / HERO_R for p in run],
+                        color=COAST_COLOR,
+                        linewidth=0.6,
+                        zorder=1,
+                    )
+                run = []
+            run.append(current)
+        if len(run) > 1:
+            ax.plot(
+                [p[0] / HERO_R for p in run],
+                [p[1] / HERO_R for p in run],
+                color=COAST_COLOR,
+                linewidth=0.6,
+                zorder=1,
+            )
+    ax.set_xlim(-3.3, 3.3)
+    ax.set_ylim(-2.4, 2.4)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+
+fig = plt.figure(figsize=(13.5, 4.1))
+fig.patch.set_facecolor("white")
+grid = fig.add_gridspec(1, 5, width_ratios=[2.7, 0.55, 2.7, 0.55, 5.4], wspace=0.0)
+hero_globe(fig.add_subplot(grid[0]))
+for slot in (1, 3):
+    arrow_ax = fig.add_subplot(grid[slot])
+    arrow_ax.axis("off")
+    arrow_ax.set_xlim(0, 1)
+    arrow_ax.set_ylim(0, 1)
+    arrow_ax.annotate(
+        "",
+        xy=(0.93, 0.5),
+        xytext=(0.07, 0.5),
+        arrowprops=dict(
+            arrowstyle="-|>,head_width=0.3,head_length=0.62",
+            color="#b4b4b4",
+            linewidth=2.6,
+        ),
+    )
+hero_cube(fig.add_subplot(grid[2]))
+hero_net(fig.add_subplot(grid[4]))
+fig.subplots_adjust(left=0.005, right=0.995, top=0.995, bottom=0.005)
+save(fig, "hero")
+plt.close(fig)
+print("hero figure written")
+
 # Drop matplotlib's six decimal places of coordinate precision, which is
 # around a nanometre on the page and about a third of every SVG's bytes.
 # Committed figures are stored shrunk, so this keeps regeneration diff-free.
 saved = 0
-for svg in sorted(OUT.glob("*.svg")):
-    before, after = svg_shrink.shrink_file(svg)
+for name in sorted(WRITTEN):
+    before, after = svg_shrink.shrink_file(OUT / f"{name}.svg")
     saved += before - after
 print(f"figures shrunk: {saved:,} bytes of surplus coordinate precision removed")
