@@ -190,5 +190,5 @@ A **conda package** `rhealpixdggs` is also maintained at
   
 *Former Maintainer*:  
 **Dr Nicholas J. Car**  
-[SURROUND Australia Pty Ltd](https://surround.com)  
+[SURROUND Australia Pty Ltd](https://surroundaustralia.com/)  
 <nicholas.car@surroundaustralia.com>
