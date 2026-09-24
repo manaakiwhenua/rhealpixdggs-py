@@ -193,6 +193,7 @@ from rhealpixdggs.ellipsoids import (
 from rhealpixdggs.utils import (  # noqa: F401
     FloatArray,
     _auth_lat_array,
+    _normalise_antimeridian_rings,
     auth_lat,
     my_round,
 )
@@ -2533,6 +2534,7 @@ class RHEALPixDGGS:
                 )
                 lon[polar] = lons[inverse].reshape(-1, m)
                 lat[polar] = lats[inverse].reshape(-1, m)
+        lon = _normalise_antimeridian_rings(lon, radians=self.ellipsoid.radians)
         return np.stack([lon, lat], axis=-1)
 
     def cell_boundaries(

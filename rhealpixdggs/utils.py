@@ -147,6 +147,43 @@ def _wrap_longitude_array(lam: FloatArray, radians: bool = False) -> FloatArray:
     return np.asarray(np.where(out_of_range, wrapped, lam), dtype=np.float64)
 
 
+def _normalise_antimeridian_rings(lon: FloatArray, radians: bool = False) -> FloatArray:
+    """
+    Ring longitudes (rings along the last axis) with each point lying on
+    the antimeridian snapped exactly onto it with the sign that keeps its
+    ring's longitude span under half a turn: positive when the ring's
+    other longitudes are all positive (a cell just west of the
+    antimeridian), negative when they are all negative. A point counts as
+    lying on the antimeridian within 1e-9 degrees, the slack left by
+    computing the same boundary point from two bit-different planar
+    inputs, far below any cell width. Rings that genuinely straddle the
+    antimeridian, cap rings, and rings with no point on the antimeridian
+    are returned unchanged.
+
+    EXAMPLES::
+
+        >>> _normalise_antimeridian_rings(np.array([150.0, -180.0, -180.0, 150.0])).tolist()
+        [150.0, 180.0, 180.0, 150.0]
+        >>> _normalise_antimeridian_rings(np.array([135.0, -179.99999999999994, 157.5])).tolist()
+        [135.0, 180.0, 157.5]
+        >>> _normalise_antimeridian_rings(np.array([180.0, -150.0, -150.0, 180.0])).tolist()
+        [-180.0, -150.0, -150.0, -180.0]
+        >>> _normalise_antimeridian_rings(np.array([150.0, -180.0, -150.0, -179.9])).tolist()
+        [150.0, -180.0, -150.0, -179.9]
+
+    """
+    lon = np.asarray(lon, dtype=np.float64)
+    half = pi if radians else 180.0
+    on_antimeridian = np.abs(np.abs(lon) - half) <= half / 180 * 1e-9
+    if not on_antimeridian.any():
+        return lon
+    off_min = np.min(np.where(on_antimeridian, np.inf, lon), axis=-1, keepdims=True)
+    off_max = np.max(np.where(on_antimeridian, -np.inf, lon), axis=-1, keepdims=True)
+    lon = np.where(on_antimeridian & (off_min > 0), half, lon)
+    lon = np.where(on_antimeridian & (off_max < 0), -half, lon)
+    return lon
+
+
 def _wrap_latitude_array(phi: FloatArray, radians: bool = False) -> FloatArray:
     """
     ``wrap_latitude`` applied elementwise to an array.

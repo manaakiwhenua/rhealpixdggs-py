@@ -145,18 +145,55 @@ class GridInvariantsTestCase(unittest.TestCase):
                     self.assertTrue(a.touches(b), f"{name} {a} {b}")
 
     def test_boundary_array_matches_cell_boundary_on_the_sphere(self):
-        # Compared as points on the sphere: a longitude of 180 and one of
-        # -180 are the same meridian.
         for name, rdggs in GRIDS.items():
             cells = list(rdggs.grid(2))
             rows = rdggs.boundary_array([str(c) for c in cells], n=3)
             for row, cell in zip(rows, cells):
                 expected = np.array(cell.boundary(n=3, plane=False))
-                dlon = (row[:, 0] - expected[:, 0] + 180) % 360 - 180
-                self.assertTrue(np.allclose(dlon, 0, atol=1e-9), f"{name} {cell}")
-                self.assertTrue(
-                    np.allclose(row[:, 1], expected[:, 1], atol=1e-9), f"{name} {cell}"
+                self.assertTrue(np.allclose(row, expected, atol=1e-9), f"{name} {cell}")
+
+    def test_antimeridian_edge_sign_keeps_ring_span_small(self):
+        # A cell whose east or west edge lies on the antimeridian must
+        # report that edge with the sign that keeps its ring's longitude
+        # span under 180 degrees, identically in both boundary paths, so a
+        # planar consumer never sees it as straddling the antimeridian.
+        cases = [
+            (WGS84_002, "R11", 1),
+            (WGS84_002, "R13", 1),
+            (WGS84_002, "R31", 1),
+            (WGS84_002, "R33", 1),
+            (WGS84_003, "R2", 1),
+            (WGS84_003, "R22", 1),
+            (WGS84_003, "O0", -1),
+        ]
+        for rdggs, index, side in cases:
+            suid = [ch if not ch.isdigit() else int(ch) for ch in index]
+            for label, lons in (
+                ("boundary_array", rdggs.boundary_array([index], n=2)[0, :, 0]),
+                (
+                    "Cell.boundary",
+                    np.array(rdggs.cell(suid).boundary(n=2, plane=False))[:, 0],
+                ),
+            ):
+                self.assertLess(
+                    lons.max() - lons.min(), 180, f"{index} {label}: {lons}"
                 )
+                self.assertTrue(
+                    (np.sign(lons) == side).all(), f"{index} {label}: {lons}"
+                )
+
+    def test_straddling_and_cap_rings_keep_both_signs(self):
+        # Cells that genuinely straddle the antimeridian, and cap cells,
+        # legitimately mix +180-side and -180-side longitudes; the edge-sign
+        # rule must leave them alone.
+        for index in ("S0", "N"):
+            suid = [ch if not ch.isdigit() else int(ch) for ch in index]
+            for lons in (
+                WGS84_003.boundary_array([index], n=3)[0, :, 0],
+                np.array(WGS84_003.cell(suid).boundary(n=3, plane=False))[:, 0],
+            ):
+                self.assertTrue((lons > 90).any(), f"{index}: {lons}")
+                self.assertTrue((lons < -90).any(), f"{index}: {lons}")
 
 
 if __name__ == "__main__":

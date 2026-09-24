@@ -17,6 +17,20 @@ an exact lattice, the tiling arithmetic of ``region_overlaps`` and
 ``ZoneSet``, point round trips, connected line traces, and
 ``boundary_array`` against ``Cell.boundary``.
 
+A boundary point lying on the antimeridian now gets the longitude sign
+that keeps its ring's span under half a turn, identically in
+``boundary_array``, ``Cell.boundary`` and ``Cell.vertices``: a cell just
+west of the antimeridian reports its east edge as +180 and a cell just
+east reports its west edge as -180, so a planar consumer building
+polygons from the rings never sees such a cell as straddling the
+antimeridian, and the two boundary paths agree exactly rather than
+modulo a full turn (issue #171). Rings of cells that genuinely straddle
+the antimeridian, and cap rings, are unchanged. One consequence: the
+same physical antimeridian point is +180 in the western neighbour's
+ring and -180 in the eastern's. The export module's special case for a
+ring whose west edge was reported as +180, now impossible by
+construction, is gone.
+
 0.9.0
 ^^^^^
 **Breaking change:** ``Cell.overlaps()`` has its DE-9IM meaning, the one
