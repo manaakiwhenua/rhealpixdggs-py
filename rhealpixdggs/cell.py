@@ -974,7 +974,9 @@ class Cell:
         projected (`2*n` calls instead of `4*n - 4`); the east and south
         edges reuse those values. Every coordinate returned is one the
         projection computed, and adjacent quad cells get bit-identical
-        shared points.
+        shared points, except that an edge on the antimeridian is +180 in
+        the western cell's ring and -180 in the eastern's (see
+        ``boundary()``).
 
         For quad and cap cells with `n` = 2 and `interior` = False the result
         is ``vertices(plane=False)``. Cap cells with `n` > 2 take the general

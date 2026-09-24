@@ -592,16 +592,18 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         ]:
             ca, cb = rdggs.cell(a), rdggs.cell(b)
             self.assertIn(cb, ca.neighbors(plane=True).values())
-
-            def canonical(point):
-                # The antimeridian's two names are one point: the edge-sign
-                # rule gives the shared edge of the (R, 2)/(O, 0) pair +180
-                # in the western cell's ring and -180 in the eastern's.
-                lon, lat = point
-                return (-180.0 if lon == 180.0 else lon, lat)
-
-            shared = set(map(canonical, ca.boundary(n=n, plane=False))) & set(
-                map(canonical, cb.boundary(n=n, plane=False))
+            if a == (R, 2):
+                # Across the antimeridian the shared edge is +180 in the
+                # western ring and -180 in the eastern: compare latitudes.
+                east = {lat for lon, lat in ca.boundary(n=n, plane=False) if lon == 180}
+                west = {
+                    lat for lon, lat in cb.boundary(n=n, plane=False) if lon == -180
+                }
+                self.assertEqual(len(east), n)
+                self.assertEqual(east, west)
+                continue
+            shared = set(map(tuple, ca.boundary(n=n, plane=False))) & set(
+                map(tuple, cb.boundary(n=n, plane=False))
             )
             self.assertEqual(len(shared), n, (a, b))
         quad, skew = rdggs.cell((P, 1)), rdggs.cell((N, 5))
