@@ -7,6 +7,12 @@
 [![codecov](https://codecov.io/gh/manaakiwhenua/rhealpixdggs-py/graph/badge.svg)](https://codecov.io/gh/manaakiwhenua/rhealpixdggs-py)
 [![manaakiwhenua-standards](https://github.com/manaakiwhenua/rhealpixdggs-py/workflows/manaakiwhenua-standards/badge.svg)](https://github.com/manaakiwhenua/manaakiwhenua-standards)
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/manaakiwhenua/rhealpixdggs-py/master/docs/source/images/hero.svg"
+       width="820"
+       alt="The same rHEALPix grid shown three ways: on the globe, on the cube whose faces it defines, and on the net that cube unfolds into. Coastlines are projected through the library's own projection in all three. Dots mark the cell nuclei of the north polar face, which lie on rings of constant latitude on the globe and on concentric squares once projected.">
+</p>
+
 ## Introduction
 
 rHEALPixDGGS is a Python package that implements the rHEALPix Discrete Global Grid System (DGGS). rHEALPix stands for *rearranged Hierarchical Equal Area isoLatitude Pixelization*. HEALPix is an equal-area pixelization of the sphere from astronomy whose pixel centres lie on rings of constant latitude. rHEALPix rearranges its planar projection so that the globe unfolds into six equal squares.
@@ -20,7 +26,7 @@ System and to perform topological queries on its identifiers. Our roadmap
 is for v1.0 to be fully compliant with [OGC Topic 21 v2.0 / ISO
 19170-1:2020](https://docs.ogc.org/as/20-040r3/20-040r3.html). The
 requirement-by-requirement status is maintained in
-[docs/source/conformance.rst](docs/source/conformance.rst).
+[docs/source/conformance.rst](https://github.com/manaakiwhenua/rhealpixdggs-py/blob/master/docs/source/conformance.rst).
 
 ### Release Notes
 

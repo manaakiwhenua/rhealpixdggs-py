@@ -74,14 +74,18 @@ ONLY = set(sys.argv[1:])
 WRITTEN = []
 
 
-def save(fig, name):
+def save(fig, name, pdf=True):
     """
     Write `fig` as SVG (for the HTML docs) and PDF (for the LaTeX docs).
+
+    Pass pdf=False for a figure the manual does not include: the PDF is
+    only there for the LaTeX builder, so there is nothing to carry.
     """
     if ONLY and name not in ONLY:
         return
     fig.savefig(OUT / f"{name}.svg", bbox_inches="tight")
-    fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight")
+    if pdf:
+        fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight")
     WRITTEN.append(name)
 
 
@@ -2559,7 +2563,7 @@ for slot in (1, 3):
 hero_cube(fig.add_subplot(grid[2]))
 hero_net(fig.add_subplot(grid[4]))
 fig.subplots_adjust(left=0.005, right=0.995, top=0.995, bottom=0.005)
-save(fig, "hero")
+save(fig, "hero", pdf=False)  # README only; the manual does not include it
 plt.close(fig)
 print("hero figure written")
 
