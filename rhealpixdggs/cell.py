@@ -299,13 +299,15 @@ class Cell:
         return bool(self.suid)
 
     def __str__(self) -> str:
-        if (self.rdggs.N_side) ** 2 < 10:
-            s0 = str(self.suid[0])
-            s = "".join(str(n) for n in self.suid[1:])
-            return s0 + s
-        else:
-            # Comma separate suid entries.
-            return "(" + str(self.suid[0]) + str(self.suid)[4:]
+        """
+        The cell's index string, ``rdggs.format_index(suid)``, for a grid
+        with index strings (``N_side`` 2 or 3); for any other grid a display
+        form such as ``'(N, 10, 15)'``, which is not an identifier (issue
+        #146).
+        """
+        if self.rdggs.has_index_strings:
+            return self.rdggs.format_index(self.suid)
+        return "(" + str(self.suid[0]) + str(self.suid)[4:]
 
     def __eq__(self, other: object) -> bool:
         return (

@@ -16,7 +16,7 @@ from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon,
 import rhealpixdggs.dggs as rhp_dggs
 
 # List of resolution 0 cell addresses (i.e. cube faces)
-from rhealpixdggs.cell import CELLS0, Cell
+from rhealpixdggs.cell import Cell
 from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
 
 # Warnings
@@ -53,15 +53,14 @@ def geo_to_rhp(
         >>> geo_to_rhp(-43.738379,-176.258807, 9, plane=False)
         'S001450635'
     """
-    # Get the grid cell corresponding to the coordinates
+    dggs._require_index_strings()
     cell = dggs.cell_from_point(resolution, (lng, lat), plane)
 
     # Bail out if there's no matching cell
     if cell is None:
         return None
 
-    # Return the cell ID after converting int digits to str
-    return str(cell)
+    return dggs.format_index(cell.suid)
 
 
 def rhp_to_geo(
@@ -94,12 +93,10 @@ def rhp_to_geo(
         (-176.25592420875034, -43.7365450535837)
         >>> rhp_to_geo('NotACellId', True, False)
     """
-    # Stop early if the cell index is invalid
-    if not rhp_is_valid(rhpindex, dggs):
+    suid = dggs.parse_index(rhpindex)
+    if suid is None:
         return None
 
-    # Grab cell centroid matching rhpindex string
-    suid = [int(d) if d.isdigit() else d for d in rhpindex]
     cell = dggs.cell(suid)
     centroid = cell.centroid(plane=plane)
 
@@ -130,18 +127,18 @@ def rhp_to_parent(
         'S00145063'
         >>> rhp_to_parent('INVALID')
     """
-    # Stop early if the cell index is invalid
-    if not rhp_is_valid(rhpindex, dggs):
+    suid = dggs.parse_index(rhpindex)
+    if suid is None:
         return None
 
     # Top-level cells are their own parent, regardless of the requested resolution (by convention)
-    child_res = len(rhpindex) - 1
+    child_res = len(suid) - 1
     if child_res < 1:
         return rhpindex
 
     # res == None returns the first address up (by convention)
     elif res is None:
-        return rhpindex[:-1]
+        return dggs.index_ancestor(rhpindex, child_res - 1)
 
     # Handle mismatch between cell resolution and requested parent resolution
     elif res > child_res:
@@ -151,7 +148,7 @@ def rhp_to_parent(
 
     # Standard case (including child_res == res)
     else:
-        return rhpindex[: res + 1]
+        return dggs.index_ancestor(rhpindex, res)
 
 
 def rhp_to_center_child(
@@ -180,8 +177,8 @@ def rhp_to_center_child(
         'S0014506344'
         >>> rhp_to_center_child('INVALID')
     """
-    # Stop early if the cell index is invalid
-    if not rhp_is_valid(rhpindex, dggs):
+    suid = dggs.parse_index(rhpindex)
+    if suid is None:
         return None
 
     # DGGSs with even numbers of cells on a side never have a cell at the centre
@@ -191,7 +188,7 @@ def rhp_to_center_child(
         return None
 
     # Handle mismatch between cell resolution and requested child resolution
-    parent_res = len(rhpindex) - 1
+    parent_res = len(suid) - 1
     if res is not None and res < parent_res:
         if verbose:
             warn(CHILD_RESOLUTION_WARNING)
@@ -206,10 +203,7 @@ def rhp_to_center_child(
         # NOTE: only works for odd values of N_side
         c_index = int((dggs.N_side**2 - 1) / 2)
 
-        # Append the required number of child digits to cell index
-        child_index = rhpindex + "".join(str(c_index) for _ in range(added_levels))
-
-        return child_index
+        return dggs.format_index(suid + (c_index,) * added_levels)
 
 
 def rhp_to_geo_boundary(
@@ -241,12 +235,11 @@ def rhp_to_geo_boundary(
         ((-176.26086040756147, -43.73395872598705), (-176.25612132062557, -43.73395872598705), (-176.26046658591815, -43.73913136381169), (-176.2652061719943, -43.73913136381169), (-176.26086040756147, -43.73395872598705))
         >>> rhp_to_geo_boundary('INVALID')
     """
-    # Stop early if the cell index is invalid
-    if not rhp_is_valid(rhpindex, dggs):
+    suid = dggs.parse_index(rhpindex)
+    if suid is None:
         return None
 
     # Grab the cell vertices (includes non-corner point in darts if plane == False)
-    suid = [int(d) if d.isdigit() else d for d in rhpindex]
     cell = dggs.cell(suid)
     verts = tuple(cell.vertices(plane=plane))
 
@@ -272,10 +265,10 @@ def rhp_get_resolution(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> int | N
         9
         >>> rhp_get_resolution('INVALID')
     """
-    if not rhp_is_valid(rhpindex, dggs):
+    if dggs.parse_index(rhpindex) is None:
         return None
 
-    return len(rhpindex) - 1
+    return dggs.index_resolution(rhpindex)
 
 
 def rhp_get_base_cell(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> str | None:
@@ -287,15 +280,19 @@ def rhp_get_base_cell(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> str | No
         'S'
         >>> rhp_get_base_cell('INVALID')
     """
-    if not rhp_is_valid(rhpindex, dggs):
+    suid = dggs.parse_index(rhpindex)
+    if suid is None:
         return None
 
-    return rhpindex[0]
+    return str(suid[0])
 
 
 def rhp_is_valid(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> bool:
     """
-    Checks if the given cell address is valid within the DGGS
+    Checks if the given cell address is valid within the DGGS, i.e. whether
+    ``dggs.parse_index`` accepts it. Like every function taking an index
+    string, raises ValueError if `dggs` has no index strings (``N_side``
+    other than 2 or 3).
 
     EXAMPLES::
         >>> rhp_is_valid('S001450634')
@@ -311,22 +308,10 @@ def rhp_is_valid(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> bool:
         ...
         TypeError: object of type 'int' has no len()
     """
-    # Empty strings are invalid
     if rhpindex is None or len(rhpindex) == 0:
         return False
 
-    # Addresses that don't start with the resolution 0 face are invalid
-    if rhpindex[0] not in CELLS0:
-        return False
-
-    # Addresses that have digits out of range are invalid
-    num_subcells = dggs.N_side**2
-    for d in rhpindex[1:]:
-        if not d.isdigit() or (int(d) >= num_subcells):
-            return False
-
-    # Passed all checks - must be the real thing
-    return True
+    return dggs.parse_index(rhpindex) is not None
 
 
 def cell_area(
@@ -350,11 +335,10 @@ def cell_area(
         1.9748527873706059
         >>> cell_area('INVALID', unit='km^2', plane=False)
     """
-    if not rhp_is_valid(rhpindex, dggs):
+    suid = dggs.parse_index(rhpindex)
+    if suid is None:
         return None
 
-    # Grab cell area in native unit (m^2)
-    suid = [int(d) if d.isdigit() else d for d in rhpindex]
     cell = dggs.cell(suid)
     area = float(cell.area(plane=plane))
 
@@ -396,13 +380,13 @@ def cell_ring(
         ['O', 'P', 'Q', 'R']
         >>> cell_ring('S', k=-1)
     """
-    if not rhp_is_valid(rhpindex, dggs) or (k < 0):
+    suid = dggs.parse_index(rhpindex)
+    if suid is None or k < 0:
         return None
 
     if k == 0:
         return [rhpindex]
 
-    suid = [int(d) if d.isdigit() else d for d in rhpindex]
     center = dggs.cell(suid)
     return [str(cell) for cell in _rings_up_to(center, k)[k]]
 
@@ -429,13 +413,13 @@ def k_ring(
         >>> k_ring('INVALID')
 
     """
-    if not rhp_is_valid(rhpindex, dggs) or (k < 0):
+    suid = dggs.parse_index(rhpindex)
+    if suid is None or k < 0:
         return None
 
     if k == 0:
         return [rhpindex]
 
-    suid = [int(d) if d.isdigit() else d for d in rhpindex]
     center = dggs.cell(suid)
     return [str(cell) for ring in _rings_up_to(center, k) for cell in ring]
 
@@ -554,6 +538,7 @@ def polyfill(
         >>> 'Q3330600' not in result7  # original res-7 cell absorbed
         True
     """
+    dggs._require_index_strings()
     found = _polyfill_arrays(
         geometry, res, plane, verbose, dggs, containment, compress, min_res
     )
@@ -583,8 +568,7 @@ def polyfill_array(
     The array costs about ``4 * (res + 2)`` bytes per cell against roughly a
     hundred for a set entry, and feeds array-based callers such as
     ``RHEALPixDGGS.boundary_array``, ``RHEALPixDGGS.centroids`` or a data
-    frame column directly. Like the rest of the index-string API, this is
-    for DGGSs with single-character digits, ``N_side`` 2 or 3.
+    frame column directly.
 
     EXAMPLES::
         >>> from shapely import Polygon
@@ -663,6 +647,7 @@ def _polyfill_arrays(
         )
     if not 0 <= min_res <= res:
         raise ValueError(f"min_res must be between 0 and res={res}, not {min_res!r}")
+    dggs._require_index_strings()
     N2 = dggs.N_side**2
     if 6 * N2**res >= 2**62:
         raise ValueError(f"resolution {res} is too deep for N_side={dggs.N_side}")
@@ -1096,6 +1081,7 @@ def linetrace(
     else:
         lines = list(geometry.geoms)
 
+    dggs._require_index_strings()
     cells: list[str] = []
     for linestring in lines:
         # Extract coordinate pairs along the line segments

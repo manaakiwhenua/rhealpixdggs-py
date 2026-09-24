@@ -108,7 +108,9 @@ def cell_table(
     """
     strings = _index_strings(indices)
     shapes = _check_valid(dggs, strings)
-    resolution = np.array([len(index) - 1 for index in strings], dtype=np.int64)
+    resolution = np.array(
+        [dggs.index_resolution(index) for index in strings], dtype=np.int64
+    )
     area = np.array(
         [dggs.cell_area(int(r), plane=False) for r in resolution], dtype=np.float64
     )

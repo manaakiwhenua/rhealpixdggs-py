@@ -6,7 +6,13 @@ import numpy as np
 from shapely.geometry import MultiPolygon, Point, Polygon
 
 from rhealpixdggs.cell import Cell
-from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
+from rhealpixdggs.dggs import (
+    WGS84_003,
+    RHEALPixDGGS,
+    _format_index,
+    _index_width,
+    _parse_index,
+)
 
 
 def get_finest_containing_cell(
@@ -140,6 +146,17 @@ class CellZoneFromPoly:
             self.cells_list.append(cell)
 
 
+def _parent_index(index: str, N_side: int) -> str:
+    """
+    The index string of the parent of the cell with index string `index` in
+    a grid with `N_side`, or the empty string for a resolution 0 cell.
+    """
+    suid = _parse_index(index, N_side)
+    if suid is None:
+        raise ValueError(f"invalid cell index {index!r} for N_side={N_side}")
+    return _format_index(suid[:-1], N_side) if len(suid) > 1 else ""
+
+
 def compress_order_cells(
     cells: list[str], recursive: bool = False, N_side: int = 3
 ) -> list[str]:
@@ -158,6 +175,8 @@ def compress_order_cells(
     """
     import re
 
+    _index_width(N_side)
+
     def alphanum_sort(lst: list[str]) -> list[str]:
         convert = lambda text: int(text) if text.isdigit() else text
         alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
@@ -166,7 +185,7 @@ def compress_order_cells(
     def _compress_once(cell_set: set[str]) -> set[str]:
         upper_cells: dict[str, list[str]] = {}
         for cell in cell_set:
-            upper_cells.setdefault(cell[:-1], []).append(cell)
+            upper_cells.setdefault(_parent_index(cell, N_side), []).append(cell)
         result: set[str] = set()
         for k, v in upper_cells.items():
             if len(v) == N_side**2:
@@ -201,6 +220,7 @@ def compact_cells(cells: Iterable[str], N_side: int = 3) -> set[str]:
     Raises ValueError if the input contains cells at mixed resolutions.
     Returns a set; if the caller needs ordering, sort the result separately.
     """
+    _index_width(N_side)
     cell_set = set(cells)
     if not cell_set:
         return cell_set
@@ -215,7 +235,7 @@ def compact_cells(cells: Iterable[str], N_side: int = 3) -> set[str]:
     while True:
         upper: dict[str, list[str]] = {}
         for cell in cell_set:
-            upper.setdefault(cell[:-1], []).append(cell)
+            upper.setdefault(_parent_index(cell, N_side), []).append(cell)
 
         next_set: set[str] = set()
         for parent, children in upper.items():
