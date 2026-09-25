@@ -753,7 +753,7 @@ class RhpWrappersTestCase(unittest.TestCase):
             b = geom.bounds
             candidates = dggs.cells_in_box(res, (b[0], b[3]), (b[2], b[1]), plane=False)
             rings = dggs.boundary_array(candidates, n=6, plane=False)
-            for index, ring in zip(candidates, rings):
+            for index, ring in zip(candidates, rings, strict=True):
                 # A cell whose east edge is the antimeridian reads back at
                 # longitude -180; unwrap it as polyfill does.
                 lons = ring[:, 0]
@@ -826,7 +826,7 @@ class RhpWrappersTestCase(unittest.TestCase):
         span = rings[:, :, 0].max(axis=1) - rings[:, :, 0].min(axis=1)
         self.assertTrue((span > 180).any())
         self.assertTrue(full <= over)
-        for index, s in zip(sorted(over), span):
+        for index, s in zip(sorted(over), span, strict=True):
             self.assertFalse(s > 180 and index in full, index)
 
         with self.assertRaises(ValueError):

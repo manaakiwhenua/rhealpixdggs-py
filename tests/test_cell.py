@@ -369,7 +369,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             self.assertTrue(A.successor(2) == As2)
             self.assertTrue(A.successor(3) == As3)
             A = Cell(rdggs, (S, 8, 8))
-            self.assertTrue(A.successor(1) == None)
+            self.assertTrue(A.successor(1) is None)
 
     def test_predecessor(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
@@ -383,7 +383,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             self.assertTrue(A.predecessor(2) == Ap2)
             self.assertTrue(A.predecessor(3) == Ap3)
             A = Cell(rdggs, (N, 0, 0))
-            self.assertTrue(A.predecessor(1) == None)
+            self.assertTrue(A.predecessor(1) is None)
 
     def test_subcell(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
@@ -493,7 +493,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             v = c.vertices(plane=True)
             i = v.index(c.nw_vertex(plane=True))
             planar = planar[i:] + planar[:i]
-            for got, p in zip(pushed, planar):
+            for got, p in zip(pushed, planar, strict=True):
                 want = rdggs.rhealpix(*p, inverse=True, region=c.region())
                 self.assertTrue(allclose(got, want, rtol=0, atol=1e-12), (got, want))
             self.assertNotEqual(pushed, c.vertices(plane=False))
@@ -534,9 +534,11 @@ class SCENZGridCELLTestCase(unittest.TestCase):
                             np.array([e[0] for e in expect]),
                             radians=rdggs.ellipsoid.radians,
                         )
-                        expect = list(zip(expect_lons, (e[1] for e in expect)))
+                        expect = list(
+                            zip(expect_lons, (e[1] for e in expect), strict=True)
+                        )
                         self.assertEqual(len(got), 4 * n - 4)
-                        for g, e in zip(got, expect):
+                        for g, e in zip(got, expect, strict=True):
                             self.assertTrue(
                                 allclose(g, e, rtol=0, atol=1e-12),
                                 msg=f"{c} n={n} interior={interior}: {g} != {e}",
@@ -1304,7 +1306,7 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         cells = list(rdggs.grid(1))
         colors = [c.color() for c in cells]
         # Deterministic, in-range RGB.
-        for c, rgb in zip(cells, colors):
+        for c, rgb in zip(cells, colors, strict=True):
             self.assertEqual(len(rgb), 3)
             for component in rgb:
                 self.assertGreaterEqual(component, 0)

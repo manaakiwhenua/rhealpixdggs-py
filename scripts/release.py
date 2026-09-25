@@ -732,12 +732,12 @@ def generated_release_notes(tag: str) -> str:
     )
     try:
         return json.loads(raw)["body"]
-    except (json.JSONDecodeError, KeyError):
+    except (json.JSONDecodeError, KeyError) as error:
         raise Failure(
             "could not auto-generate the release notes -- "
             "`gh api .../releases/generate-notes` said:\n"
             f"{raw or '(no output)'}"
-        )
+        ) from error
 
 
 def stage_announce(version: str, *, attach: bool) -> None:

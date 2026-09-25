@@ -26,7 +26,7 @@ class MyTestCase(unittest.TestCase):
             lam_max = 35
             phi_min = -47
             phi_max = 58
-            for i in range(100):
+            for _ in range(100):
                 p = E.random_point(lam_min, lam_max, phi_min, phi_max)
                 self.assertTrue(p[0] >= lam_min and p[0] < lam_max)
                 self.assertTrue(p[1] >= phi_min and p[0] < phi_max)

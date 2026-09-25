@@ -46,7 +46,7 @@ def get_finest_containing_cell(
     ) -> Cell | None:
         parent_cell = Cell(rdggs=rdggs, suid=suid)
         # get the children cells and polygons for these cells
-        children_cells = [cell for cell in parent_cell.subcells()]
+        children_cells = list(parent_cell.subcells())
         # function and truth list for multipolygon / polygon (polygon) contained within multipolygon / polygon (cell)
         truth = [_cell_contains(cell, polygon) for cell in children_cells]
         # if we get something back, check the next level lower
@@ -116,11 +116,11 @@ class CellZoneFromPoly:
             if bounding_cell.resolution + 1 > self.res_limit:
                 pass
             else:
-                children_cells = [cell for cell in bounding_cell.subcells()]
+                children_cells = list(bounding_cell.subcells())
                 children_poly = [
                     Polygon(cell.vertices(plane=False)) for cell in children_cells
                 ]
-                together = list(zip(children_cells, children_poly))
+                together = list(zip(children_cells, children_poly, strict=True))
                 self._process_children(together)
         return self.cells_list
 

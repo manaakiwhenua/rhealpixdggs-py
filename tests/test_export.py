@@ -107,7 +107,7 @@ class ExportTestCase(unittest.TestCase):
                 & (np.nanmax(unwrapped, axis=1) > 180 + 1e-9)
                 & (np.nanmin(unwrapped, axis=1) < 180 - 1e-9)
             )
-            for index, geom, crosses in zip(indices, geoms, crossing):
+            for index, geom, crosses in zip(indices, geoms, crossing, strict=True):
                 if crosses:
                     self.assertEqual(geom.geom_type, "MultiPolygon", index)
                     self.assertEqual(len(geom.geoms), 2, index)
@@ -122,12 +122,12 @@ class ExportTestCase(unittest.TestCase):
             }
             if (id(rdggs), resolution) in expected_crossing:
                 self.assertEqual(
-                    [i for i, c in zip(indices, crossing) if c],
+                    [i for i, c in zip(indices, crossing, strict=True) if c],
                     expected_crossing[(id(rdggs), resolution)],
                 )
             # Caps are polygons reaching the pole along both sides of the
             # antimeridian.
-            for index, geom, cap in zip(indices, geoms, caps):
+            for index, geom, cap in zip(indices, geoms, caps, strict=True):
                 if cap:
                     pole = 90.0 if index.startswith("N") else -90.0
                     points = {tuple(c) for c in shapely.get_coordinates(geom)}
@@ -189,7 +189,7 @@ class ExportTestCase(unittest.TestCase):
         indices = grid_indices(WGS84_003, 1)
         degrees = export.to_geojson(indices, dggs=WGS84_003)
         radians = export.to_geojson(indices, dggs=WGS84_003_RADIANS)
-        for a, b in zip(degrees["features"], radians["features"]):
+        for a, b in zip(degrees["features"], radians["features"], strict=True):
             assert_allclose(
                 shapely.get_coordinates(shape(a["geometry"])),
                 shapely.get_coordinates(shape(b["geometry"])),
@@ -237,7 +237,7 @@ class ExportTestCase(unittest.TestCase):
         self.assertEqual(rows[0], PROPERTIES)
         self.assertEqual(len(rows), len(indices) + 1)
         fc = export.to_geojson(indices)
-        for row, feature in zip(rows[1:], fc["features"]):
+        for row, feature in zip(rows[1:], fc["features"], strict=True):
             props = feature["properties"]
             self.assertEqual(row[0], props["index"])
             self.assertEqual(int(row[1]), props["resolution"])
@@ -252,7 +252,7 @@ class ExportTestCase(unittest.TestCase):
         indices = grid_indices(WGS84_003, 1)
         geoms = export.geometries(indices)
         fc = export.to_geojson(indices)
-        for geom, feature in zip(geoms, fc["features"]):
+        for geom, feature in zip(geoms, fc["features"], strict=True):
             self.assertTrue(shapely.equals_exact(geom, shape(feature["geometry"]), 0))
 
 
