@@ -1025,6 +1025,7 @@ def linetrace(
     verbose: bool = False,
     dggs: RHEALPixDGGS = WGS84_003,
     wrap_antimeridian: bool = False,
+    line: Literal["plane", "plate_carree", "geodesic"] | None = None,
 ) -> list[str] | None:
     """
     Returns the list of cell indices touched by a shapely linestring or multilinestring
@@ -1100,6 +1101,7 @@ def linetrace(
                 (j[0], j[1]),
                 plane,
                 wrap_antimeridian=wrap_antimeridian,
+                line=line,
             )
 
             # Convert cells to string ids and add to collection
