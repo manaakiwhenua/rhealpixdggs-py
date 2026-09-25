@@ -67,8 +67,18 @@ def get_finest_containing_cell(
     return None
 
 
-# TODO class should be a general class for collections of cells (believe the term is 'zone'?)
 class CellZoneFromPoly:
+    """
+    Cells covering a polygon, found by refining a bounding cell.
+
+    This is a producer, not a collection: it walks down from a cell that
+    contains the geometry, keeping cells the geometry contains outright and
+    recursing into ones it merely overlaps, until ``res_limit``. For a set of
+    cells to hold and operate on afterwards -- union, intersection,
+    difference, the hierarchy walks of OGC Topic 21 -- see
+    :class:`rhealpixdggs.zoneset.ZoneSet`.
+    """
+
     def __init__(
         self,
         feature: tuple[str, Polygon | MultiPolygon],
@@ -84,7 +94,6 @@ class CellZoneFromPoly:
         self.return_cells = return_cells
         if return_cells:
             self.cells_list: list[Cell] = []
-        # self.i = 0
         self.file = file
         if file:
             file.write(f"\n{self.label},")
@@ -112,12 +121,7 @@ class CellZoneFromPoly:
                     Polygon(cell.vertices(plane=False)) for cell in children_cells
                 ]
                 together = list(zip(children_cells, children_poly))
-                # print(f'processing chhildren for bounding cell {bounding_cell}')
                 self._process_children(together)
-        # print(f'*bounding cell* {bounding_cell}')
-        # for i in self.cells_list:
-        #     print(i)
-        # print('****************')
         return self.cells_list
 
     def _process_children(self, together: list[tuple[Cell, Polygon]]) -> None:
@@ -140,9 +144,7 @@ class CellZoneFromPoly:
         """
         if self.file is not None:
             self.file.write(f"{cell!s} {desc}\n ")
-            # self.file.write(f"{poly.wkt}\n")
         if self.return_cells:
-            # cell = self.add_int_suid(cell)
             self.cells_list.append(cell)
 
 
