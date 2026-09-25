@@ -494,7 +494,7 @@ def run_tests() -> None:
     ok("tests and doctests pass")
 
 
-def build(version: str) -> None:
+def build() -> None:
     say("\nBuilding")
     if DIST.exists():
         say(f"  $ rm -rf {DIST.relative_to(ROOT)}")
@@ -629,7 +629,7 @@ def stage_prepare(version: str) -> None:
             ok(f"CITATION.CFF -> {version}, released {today.isoformat()}")
 
     run_tests()
-    build(version)
+    build()
     if not _dry_run:
         verify_artifacts(version)
 
@@ -732,12 +732,12 @@ def generated_release_notes(tag: str) -> str:
     )
     try:
         return json.loads(raw)["body"]
-    except (json.JSONDecodeError, KeyError):
+    except (json.JSONDecodeError, KeyError) as error:
         raise Failure(
             "could not auto-generate the release notes -- "
             "`gh api .../releases/generate-notes` said:\n"
             f"{raw or '(no output)'}"
-        )
+        ) from error
 
 
 def stage_announce(version: str, *, attach: bool) -> None:

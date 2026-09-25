@@ -77,7 +77,9 @@ def _index_strings(indices: Iterable[str | Cell]) -> list[str]:
 def _check_valid(dggs: RHEALPixDGGS, indices: list[str]) -> np.ndarray:
     """The shapes of `indices`; raise ValueError naming invalid indices."""
     shapes = dggs.shapes(indices)
-    invalid = [index for index, shape in zip(indices, shapes) if shape == ""]
+    invalid = [
+        index for index, shape in zip(indices, shapes, strict=True) if shape == ""
+    ]
     if invalid:
         shown = ", ".join(repr(index) for index in invalid[:10])
         more = f" and {len(invalid) - 10} more" if len(invalid) > 10 else ""
@@ -287,7 +289,7 @@ def geometries(
         result[mask] = polygons
     if cap.any():
         rings = _normalise(dggs, dggs.boundary_array(np.array(strings)[cap], n=n))
-        for k, ring in zip(np.flatnonzero(cap), rings):
+        for k, ring in zip(np.flatnonzero(cap), rings, strict=True):
             result[k] = _cap_polygon(ring, north=strings[k][0] == "N")
     return result
 

@@ -1,3 +1,4 @@
+from itertools import pairwise
 from typing import Any, Literal
 from warnings import warn
 
@@ -143,7 +144,7 @@ def rhp_to_parent(
     # Handle mismatch between cell resolution and requested parent resolution
     elif res > child_res:
         if verbose:
-            warn(PARENT_RESOLUTION_WARNING)
+            warn(PARENT_RESOLUTION_WARNING, stacklevel=2)
         return rhpindex
 
     # Standard case (including child_res == res)
@@ -184,14 +185,14 @@ def rhp_to_center_child(
     # DGGSs with even numbers of cells on a side never have a cell at the centre
     if (dggs.N_side % 2) == 0:
         if verbose:
-            warn(CELL_CENTRE_WARNING)
+            warn(CELL_CENTRE_WARNING, stacklevel=2)
         return None
 
     # Handle mismatch between cell resolution and requested child resolution
     parent_res = len(suid) - 1
     if res is not None and res < parent_res:
         if verbose:
-            warn(CHILD_RESOLUTION_WARNING)
+            warn(CHILD_RESOLUTION_WARNING, stacklevel=2)
         return rhpindex
 
     # Standard case (including parent_res == res)
@@ -635,9 +636,9 @@ def _polyfill_arrays(
         if verbose:
             message = is_valid_reason(geometry)
             if not message or message == "Valid Geometry":
-                warn(POLYFILL_GEOMETRY_WARNING)
+                warn(POLYFILL_GEOMETRY_WARNING, stacklevel=3)
             else:
-                warn(str.format("WARNING: {0}. Returning None.", message))
+                warn(str.format("WARNING: {0}. Returning None.", message), stacklevel=3)
 
         return None
 
@@ -1068,9 +1069,9 @@ def linetrace(
         if verbose:
             message = is_valid_reason(geometry)
             if not message or message == "Valid Geometry":
-                warn(LINETRACE_GEOMETRY_WARNING)
+                warn(LINETRACE_GEOMETRY_WARNING, stacklevel=2)
             else:
-                warn(str.format("WARNING: {0}. Returning None.", message))
+                warn(str.format("WARNING: {0}. Returning None.", message), stacklevel=2)
 
         return None
 
@@ -1085,7 +1086,7 @@ def linetrace(
     cells: list[str] = []
     for linestring in lines:
         # Extract coordinate pairs along the line segments
-        coords = zip(linestring.coords, linestring.coords[1:])
+        coords = pairwise(linestring.coords)
 
         # Walk along line segments
         while (vertex_pair := next(coords, None)) is not None:

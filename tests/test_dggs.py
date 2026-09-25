@@ -457,7 +457,7 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
                 for c in cells:
                     expected = c.boundary(n=n, plane=False)
                     self.assertEqual(len(boundaries[c]), len(expected))
-                    for got, want in zip(boundaries[c], expected):
+                    for got, want in zip(boundaries[c], expected, strict=True):
                         self.assertTrue(
                             allclose(got, want, rtol=0, atol=1e-9),
                             msg=f"{c} n={n}: {got} != {want}",
@@ -517,7 +517,7 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         by_col = {}
         by_row = {}
         for c in block:
-            for got, p in zip(boundaries[c], c.boundary(n=4, plane=True)):
+            for got, p in zip(boundaries[c], c.boundary(n=4, plane=True), strict=True):
                 col = round((p[0] + pi * R) / pitch)
                 row = round((p[1] + 3 * pi * R / 4) / pitch)
                 by_col.setdefault(col, set()).add(got[0])
@@ -731,7 +731,7 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         def scalar(rdggs, res, xs, ys, plane):
             cells = [
                 rdggs.cell_from_point(res, (float(a), float(b)), plane=plane)
-                for a, b in zip(xs, ys)
+                for a, b in zip(xs, ys, strict=True)
             ]
             return np.array(["" if c is None else str(c) for c in cells])
 
@@ -800,17 +800,17 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
                 b = rdggs.boundary_array(indices, n=n, plane=False)
                 self.assertEqual(b.shape, (len(cells), 4 * n - 4, 2))
                 self.assertEqual(b.dtype, np.float64)
-                for row, c in zip(b, cells):
+                for row, c in zip(b, cells, strict=True):
                     assert_allclose(
                         row, c.boundary(n=n, plane=False), rtol=0, atol=1e-9
                     )
                 # Planar mode is the same arithmetic as Cell.boundary(plane=True).
                 bp = rdggs.boundary_array(indices, n=n, plane=True)
-                for row, c in zip(bp, cells):
+                for row, c in zip(bp, cells, strict=True):
                     assert_array_equal(row, np.array(c.boundary(n=n, plane=True)))
                 # cell_boundaries is this array as a dictionary of point lists.
                 d = rdggs.cell_boundaries(cells, n=n, plane=False)
-                for row, c in zip(b, cells):
+                for row, c in zip(b, cells, strict=True):
                     assert_array_equal(row, np.array(d[c]))
         # n below 2 clamps to 2, like boundary(); empty input gives an empty array.
         first = [str(c) for c in cell_sets[0]]
@@ -850,7 +850,7 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             else:
                 self.assertIn(
                     rdggs.cell((N, 4, 4)),
-                    [c for c, u in zip(block, unwrapped) if not u],
+                    [c for c, u in zip(block, unwrapped, strict=True) if not u],
                 )
 
     def test_cell_from_region(self):
@@ -1116,6 +1116,33 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
                 [rdggs.cell((S, 4))],
             ]
             self.assertEqual(get, expect)
+
+    def test_random_cell(self):
+        """
+        `random_cell` has no other test: its doctest is +SKIP because the
+        output is random. Assert the invariants instead of an exact value.
+        """
+        rdggs = WGS84_003
+        for resolution in range(4):
+            for _ in range(25):
+                cell = rdggs.random_cell(resolution)
+                self.assertEqual(cell.resolution, resolution)
+                self.assertIs(cell.rdggs, rdggs)
+                self.assertIn(cell.suid[0], CELLS0)
+                # A round trip through the index string must give it back.
+                self.assertEqual(
+                    str(rdggs.cell(rdggs.parse_index(str(cell)))), str(cell)
+                )
+
+        # resolution=None draws the resolution uniformly as well.
+        seen = set()
+        for _ in range(200):
+            cell = rdggs.random_cell()
+            self.assertIsNotNone(cell.resolution)
+            self.assertGreaterEqual(cell.resolution, 0)
+            self.assertLessEqual(cell.resolution, rdggs.max_resolution)
+            seen.add(cell.resolution)
+        self.assertGreater(len(seen), 1, "resolution looks fixed, not random")
 
 
 # ------------------------------------------------------------------------------

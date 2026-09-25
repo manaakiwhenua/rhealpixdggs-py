@@ -168,7 +168,7 @@ def from_ring_order(
         raise ValueError(
             f"expected {len(order)} values for resolution {resolution}, got {len(flat)}"
         )
-    return {index: float(value) for index, value in zip(order, flat)}
+    return {index: float(value) for index, value in zip(order, flat, strict=True)}
 
 
 def _check_alm(alm: Any, lmax: int) -> np.ndarray:

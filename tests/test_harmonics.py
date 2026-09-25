@@ -92,7 +92,7 @@ class HarmonicsTestCase(unittest.TestCase):
         self.assertEqual(flat.shape, (6 * 9,))
         geometry = harmonics.ring_geometry(rdggs, resolution)
         for i, (start, count) in enumerate(
-            zip(geometry["ringstart"], geometry["nphi"])
+            zip(geometry["ringstart"], geometry["nphi"], strict=True)
         ):
             ring_ids = rdggs.cells_on_ring(resolution, i)
             assert_array_equal(

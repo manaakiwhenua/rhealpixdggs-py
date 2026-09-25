@@ -288,7 +288,9 @@ def fill_lonlat_polygon(ax, points, **kwargs):
 
 def draw_coastlines_lonlat(ax, linewidth=0.5):
     for seg in COASTLINES:
-        ax.plot(*zip(*seg), color=COAST_COLOR, linewidth=linewidth, zorder=1)
+        ax.plot(
+            *zip(*seg, strict=True), color=COAST_COLOR, linewidth=linewidth, zorder=1
+        )
 
 
 draw_coastlines_lonlat(ax)
@@ -299,7 +301,7 @@ for face in CELLS0:
         pts = pts + [pts[0]]
         for seg in split_chart_discontinuities(pts):
             if len(seg) > 1:
-                ax.plot(*zip(*seg), color=color, linewidth=0.9)
+                ax.plot(*zip(*seg, strict=True), color=color, linewidth=0.9)
     # Face label at the resolution 0 nucleus.
     lon, lat = rdggs.cell([face]).nucleus(plane=False)
     lat = max(min(lat, 78), -78)  # nudge pole labels inward
@@ -455,7 +457,7 @@ def draw_cells_lonlat(ax, addresses, fill_alpha=0.35):
             )
         for seg in split_chart_discontinuities(pts):
             if len(seg) > 1:
-                ax.plot(*zip(*seg), color=color, linewidth=0.8)
+                ax.plot(*zip(*seg, strict=True), color=color, linewidth=0.8)
 
 
 NZ_POLYGON = [
@@ -483,12 +485,14 @@ axes[0].set_ylabel("latitude (degrees)")
 
 filled = rhp_wrappers.polyfill(Polygon(NZ_POLYGON), RESOLUTION, plane=False, dggs=rdggs)
 draw_cells_lonlat(axes[0], filled)
-axes[0].plot(*zip(*(NZ_POLYGON + [NZ_POLYGON[0]])), color="#222222", linewidth=1.6)
+axes[0].plot(
+    *zip(*(NZ_POLYGON + [NZ_POLYGON[0]]), strict=True), color="#222222", linewidth=1.6
+)
 axes[0].set_title(f"polyfill(polygon, res={RESOLUTION}, plane=False)")
 
 traced = rhp_wrappers.linetrace(LineString(LINE), RESOLUTION, plane=False, dggs=rdggs)
 draw_cells_lonlat(axes[1], traced)
-axes[1].plot(*zip(*LINE), color="#222222", linewidth=1.6)
+axes[1].plot(*zip(*LINE, strict=True), color="#222222", linewidth=1.6)
 axes[1].set_title(f"linetrace(line, res={RESOLUTION}, plane=False)")
 
 fig.tight_layout()
@@ -650,7 +654,9 @@ def to_fig(x, y):
     return (x - x0) / w0, (y - (y0 - w0)) / w0
 
 
-for suid, color, lw in zip(level_cells, level_colors, (1.2, 1.6, 2.0, 2.4)):
+for suid, color, lw in zip(
+    level_cells, level_colors, (1.2, 1.6, 2.0, 2.4), strict=True
+):
     cell = rdggs.cell(suid)
     x, y = cell.ul_vertex()
     w = cell.width()
@@ -716,7 +722,7 @@ SHAPE_EXAMPLES = [
     ("cap", ["N", 4]),
 ]
 fig, axes = plt.subplots(1, 4, figsize=(11.5, 3.1))
-for ax, (shape, suid) in zip(axes, SHAPE_EXAMPLES):
+for ax, (shape, suid) in zip(axes, SHAPE_EXAMPLES, strict=True):
     cell = rdggs.cell(suid)
     assert cell.ellipsoidal_shape == shape, (suid, cell.ellipsoidal_shape)
     lon_c, lat_c = cell.centroid(plane=False)
@@ -817,7 +823,7 @@ cases = [
     ("disjoint", {"P40": (A_COLOR, 0.55), "P48": (B_COLOR, 0.55)}),
 ]
 fig, axes = plt.subplots(1, 4, figsize=(11.5, 3.0))
-for ax, (title, highlight) in zip(axes, cases):
+for ax, (title, highlight) in zip(axes, cases, strict=True):
     draw_planar_cells(ax, P4, highlight)
     if title == "within / contains":
         # The containing cell is P4 itself: outline the whole frame.
@@ -944,7 +950,7 @@ polar_cases = [
 ]
 fig, axes = plt.subplots(1, 4, figsize=(12.5, 3.4))
 for ax, (title, highlight, context, view, radius, mark, label_at) in zip(
-    axes, polar_cases
+    axes, polar_cases, strict=True
 ):
     context = [name for name in context if name not in highlight]
     draw_ortho_cells(ax, view, context, highlight, mark=mark, label_at=label_at)
@@ -1117,13 +1123,18 @@ for face, to_cube in CUBE_FACE_POINT.items():
 # Outer silhouette and the three edges that meet at the corner vertex.
 silhouette = [(0, 1, 1), (0, 0, 1), (1, 0, 1), (1, 0, 0), (1, 1, 0), (0, 1, 0)]
 ax.plot(
-    *zip(*[iso(*v) for v in silhouette + [silhouette[0]]]),
+    *zip(*[iso(*v) for v in silhouette + [silhouette[0]]], strict=True),
     color="#444444",
     linewidth=1.4,
     zorder=5,
 )
 for far in [(0, 1, 1), (1, 0, 1), (1, 1, 0)]:
-    ax.plot(*zip(iso(1, 1, 1), iso(*far)), color="#444444", linewidth=1.0, zorder=5)
+    ax.plot(
+        *zip(iso(1, 1, 1), iso(*far), strict=True),
+        color="#444444",
+        linewidth=1.0,
+        zorder=5,
+    )
 
 vx, vy = iso(1, 1, 1)
 ax.plot([vx], [vy], marker="o", color="#222222", markersize=7, zorder=6)
@@ -1154,7 +1165,7 @@ from rhealpixdggs.dggs import RHEALPixDGGS
 from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
 
 fig, axes = plt.subplots(2, 1, figsize=(8, 6.4))
-for ax, (ns, ss) in zip(axes, [(0, 0), (1, 2)]):
+for ax, (ns, ss) in zip(axes, [(0, 0), (1, 2)], strict=True):
     rd = RHEALPixDGGS(
         ellipsoid=WGS84_ELLIPSOID, north_square=ns, south_square=ss, N_side=3
     )
@@ -1242,7 +1253,7 @@ for face in CELLS0:
         pts = pts + [pts[0]]
         for seg in split_chart_discontinuities(pts):
             if len(seg) > 1:
-                ax.plot(*zip(*seg), color=color, linewidth=0.8, zorder=2)
+                ax.plot(*zip(*seg, strict=True), color=color, linewidth=0.8, zorder=2)
 akl_cell = rd_akl.cell_from_point(1, AKL, plane=False)
 pts = akl_cell.boundary(n=40, plane=False)
 pts = pts + [pts[0]]
@@ -1374,6 +1385,7 @@ def rotated_comparison(
             (rdggs, "standard grid (lon_0=0)"),
             (dggs_rot, f"rotated grid (lon_0={lon_0:g})"),
         ],
+        strict=True,
     ):
         draw_coastlines_lonlat(ax, linewidth=0.7)
         cells = cells_in_window(dggs_i, resolution, lon_range, lat_range, step)
@@ -1552,7 +1564,7 @@ print("rings figure written")
 # The wrap_antimeridian flag: the same segment traced both ways.
 SEG = ((179.0, 10.0), (-179.0, 10.0))
 fig, axes = plt.subplots(2, 1, figsize=(9, 6.6))
-for ax, wrap in zip(axes, (False, True)):
+for ax, wrap in zip(axes, (False, True), strict=True):
     draw_coastlines_lonlat(ax, linewidth=0.5)
     traced = rdggs.cells_from_line(
         1, SEG[0], SEG[1], plane=False, wrap_antimeridian=wrap
@@ -1564,7 +1576,7 @@ for ax, wrap in zip(axes, (False, True)):
         fill_lonlat_polygon(ax, pts, color=color, alpha=0.4, linewidth=0)
         for seg in split_chart_discontinuities(pts):
             if len(seg) > 1:
-                ax.plot(*zip(*seg), color=color, linewidth=0.9)
+                ax.plot(*zip(*seg, strict=True), color=color, linewidth=0.9)
     if wrap:
         ax.plot([SEG[0][0], 180], [SEG[0][1], SEG[0][1]], color="#222222", linewidth=2)
         ax.plot([-180, SEG[1][0]], [SEG[1][1], SEG[1][1]], color="#222222", linewidth=2)
@@ -1629,7 +1641,11 @@ for ax, cells, title in (
             linewidth=0,
         )
         ax.plot([p[0] for p in pts], [p[1] for p in pts], color=color, linewidth=0.5)
-    ax.plot(*zip(*(NZ_POLYGON + [NZ_POLYGON[0]])), color="#222222", linewidth=1.4)
+    ax.plot(
+        *zip(*(NZ_POLYGON + [NZ_POLYGON[0]]), strict=True),
+        color="#222222",
+        linewidth=1.4,
+    )
     ax.set_xlim(163, 181)
     ax.set_ylim(-49, -32)
     ax.set_aspect("equal")
@@ -1786,7 +1802,9 @@ for cell in rdggs.grid(ISO_RES):
     pts = pts + [pts[0]]
     for seg in split_chart_discontinuities(pts):
         if len(seg) > 1:
-            ax_map.plot(*zip(*seg), color="#dddddd", linewidth=0.3, zorder=0)
+            ax_map.plot(
+                *zip(*seg, strict=True), color="#dddddd", linewidth=0.3, zorder=0
+            )
 for i in range(iso_rings):
     ids = rdggs.cells_on_ring(ISO_RES, i)
     lon, lat = rdggs.nuclei(ids).T
@@ -1921,7 +1939,7 @@ for ring, color in ((1, "#e5735c"), (2, "#3a9a3a"), (5, "#d97cc0")):
         arrowprops={"arrowstyle": "-|>", "color": color, "lw": 1.0},
         zorder=2,
     )
-    for k, (px, py) in enumerate(zip(x, y)):
+    for k, (px, py) in enumerate(zip(x, y, strict=True)):
         ax.text(
             px,
             py,
@@ -2028,8 +2046,8 @@ shape_handles = [
 fig, axes = plt.subplots(
     len(NSIDE_RESOLUTIONS), 2, figsize=(11.5, 4.1 * len(NSIDE_RESOLUTIONS))
 )
-for row, resolution in zip(axes, NSIDE_RESOLUTIONS):
-    for ax, (grid_, label) in zip(row, NSIDE_GRIDS):
+for row, resolution in zip(axes, NSIDE_RESOLUTIONS, strict=True):
+    for ax, (grid_, label) in zip(row, NSIDE_GRIDS, strict=True):
         Rg = grid_.ellipsoid.R_A
         cells = list(grid_.grid(resolution))
         squares = []
@@ -2122,9 +2140,9 @@ fig, axes = plt.subplots(
     len(NSIDE_RESOLUTIONS), 2, figsize=(9, 4.5 * len(NSIDE_RESOLUTIONS))
 )
 t_circle = np.linspace(0, 2 * np.pi, 400)
-for row, resolution in zip(axes, NSIDE_RESOLUTIONS):
+for row, resolution in zip(axes, NSIDE_RESOLUTIONS, strict=True):
     points_per_edge = {0: 24, 1: 12, 2: 8, 3: 4}[resolution]
-    for ax, (grid_, label) in zip(row, NSIDE_GRIDS):
+    for ax, (grid_, label) in zip(row, NSIDE_GRIDS, strict=True):
         ax.plot(np.cos(t_circle), np.sin(t_circle), color="#555555", linewidth=1.2)
         for seg in COASTLINES:
             x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], 0, 90)

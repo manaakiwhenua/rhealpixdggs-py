@@ -82,7 +82,9 @@ class ZoneSet:
             if isinstance(item, Cell) and item.rdggs != rdggs:
                 raise ValueError("Cells must belong to the ZoneSet's grid.")
             indices.append(str(item))
-        invalid = [i for i, s in zip(indices, rdggs.shapes(indices)) if s == ""]
+        invalid = [
+            i for i, s in zip(indices, rdggs.shapes(indices), strict=True) if s == ""
+        ]
         if invalid:
             raise ValueError(f"invalid cell indices: {invalid[:10]!r}")
         self._cells: frozenset[str] = frozenset(indices)

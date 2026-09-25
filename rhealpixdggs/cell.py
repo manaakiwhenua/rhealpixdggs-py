@@ -1059,7 +1059,7 @@ class Cell:
             xs = np.array([p[0] for p in result])
             ys = np.array([p[1] for p in result])
             lons, lats = self.rdggs.rhealpix(xs, ys, inverse=True, region=self.region())
-            return self._normalise_ring(list(zip(lons, lats)))
+            return self._normalise_ring(list(zip(lons, lats, strict=True)))
         return result
 
     def _quad_boundary(self, n: int, eps: float) -> list[tuple[float, float]]:
@@ -1115,7 +1115,7 @@ class Cell:
         lons = _normalise_antimeridian_rings(
             np.array([p[0] for p in ring]), radians=self.rdggs.ellipsoid.radians
         )
-        return [(lon, p[1]) for lon, p in zip(lons, ring)]
+        return [(lon, p[1]) for lon, p in zip(lons, ring, strict=True)]
 
     def interior(
         self, n: int = 2, plane: bool = True, flatten: bool = False
@@ -2594,7 +2594,7 @@ class Cell:
                 "matrix must be nine characters from 'T', 'F', '*', '0', '1', "
                 f"'2', not {matrix!r}."
             )
-        for want, have in zip(matrix, self._de9im(other)):
+        for want, have in zip(matrix, self._de9im(other), strict=True):
             if want == "*":
                 continue
             if want == "T":

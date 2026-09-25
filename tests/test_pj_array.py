@@ -36,9 +36,13 @@ def scalar_map(fn, *arrays, **kwargs):
     arrays = np.broadcast_arrays(*(np.asarray(a, dtype=float) for a in arrays))
     shape = arrays[0].shape
     flat = [a.ravel() for a in arrays]
-    outs = [fn(*(float(v) for v in point), **kwargs) for point in zip(*flat)]
+    outs = [
+        fn(*(float(v) for v in point), **kwargs) for point in zip(*flat, strict=True)
+    ]
     if isinstance(outs[0], tuple):
-        return tuple(np.array(col, dtype=float).reshape(shape) for col in zip(*outs))
+        return tuple(
+            np.array(col, dtype=float).reshape(shape) for col in zip(*outs, strict=True)
+        )
     return np.array(outs).reshape(shape)
 
 
@@ -104,7 +108,7 @@ def healpix_planar_points():
                 seams.append((xx + dx, s * pi / 2 + dy))
     sx = np.array([p[0] for p in seams])
     sy = np.array([p[1] for p in seams])
-    inside = np.array([pjh.in_healpix_image(a, b) for a, b in zip(sx, sy)])
+    inside = np.array([pjh.in_healpix_image(a, b) for a, b in zip(sx, sy, strict=True)])
     planar = (np.concatenate([x, sx[inside]]), np.concatenate([y, sy[inside]]))
     return planar, (sx[~inside], sy[~inside])
 
@@ -161,7 +165,9 @@ def rhealpix_planar_points(north_square, south_square):
     sx = np.array([q[0] for q in seams])
     sy = np.array([q[1] for q in seams])
     kw = {"north_square": north_square, "south_square": south_square}
-    inside = np.array([pjr.in_rhealpix_image(a, b, **kw) for a, b in zip(sx, sy)])
+    inside = np.array(
+        [pjr.in_rhealpix_image(a, b, **kw) for a, b in zip(sx, sy, strict=True)]
+    )
 
     def accepted(a, b):
         # Inside the rHEALPix image by its 1e-15 fuzz, yet the uncombined
@@ -172,7 +178,7 @@ def rhealpix_planar_points(north_square, south_square):
             return False
         return True
 
-    ok = inside & np.array([accepted(a, b) for a, b in zip(sx, sy)])
+    ok = inside & np.array([accepted(a, b) for a, b in zip(sx, sy, strict=True)])
     planar = (np.concatenate([x, sx[ok]]), np.concatenate([y, sy[ok]]))
     rejected = (sx[inside & ~ok], sy[inside & ~ok])
     return planar, (sx[~inside], sy[~inside]), rejected
@@ -201,7 +207,7 @@ def accepts(f, x, y, radians):
 
 def triangle_codes(x, y, north_square, south_square, inverse):
     tri, region = [], []
-    for a, b in zip(x, y):
+    for a, b in zip(x, y, strict=True):
         t, r = pjr.triangle(
             float(a),
             float(b),
@@ -218,7 +224,9 @@ class HealpixArrayTestCase(unittest.TestCase):
     def test_in_healpix_image_array_matches_scalar(self):
         for x, y in (HEALPIX_PLANAR, HEALPIX_OUTSIDE, NOT_FINITE):
             got = pjh._in_healpix_image_array(x, y)
-            want = np.array([pjh.in_healpix_image(a, b) for a, b in zip(x, y)])
+            want = np.array(
+                [pjh.in_healpix_image(a, b) for a, b in zip(x, y, strict=True)]
+            )
             assert_array_equal(got, want)
         self.assertTrue(pjh._in_healpix_image_array(*HEALPIX_PLANAR).all())
         self.assertFalse(pjh._in_healpix_image_array(*HEALPIX_OUTSIDE).any())
@@ -235,24 +243,24 @@ class HealpixArrayTestCase(unittest.TestCase):
     def test_healpix_sphere_array_matches_scalar(self):
         got = pjh._healpix_sphere_array(*LONLAT)
         want = scalar_map(pjh.healpix_sphere, *LONLAT)
-        for g, w in zip(got, want):
+        for g, w in zip(got, want, strict=True):
             assert_continuous(g, w, near_pole=LONLAT_NEAR_POLE)
 
     def test_healpix_sphere_inverse_array_matches_scalar(self):
         got = pjh._healpix_sphere_inverse_array(*HEALPIX_PLANAR)
         want = scalar_map(pjh.healpix_sphere_inverse, *HEALPIX_PLANAR)
-        for g, w in zip(got, want):
+        for g, w in zip(got, want, strict=True):
             assert_continuous(g, w, near_pole=PLANAR_NEAR_POLE)
 
     def test_healpix_ellipsoid_arrays_match_scalar(self):
         for e in E_VALUES:
             got = pjh._healpix_ellipsoid_array(*LONLAT, e=e)
             want = scalar_map(pjh.healpix_ellipsoid, *LONLAT, e=e)
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 assert_continuous(g, w, near_pole=LONLAT_NEAR_POLE)
             got = pjh._healpix_ellipsoid_inverse_array(*HEALPIX_PLANAR, e=e)
             want = scalar_map(pjh.healpix_ellipsoid_inverse, *HEALPIX_PLANAR, e=e)
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 assert_continuous(g, w, near_pole=PLANAR_NEAR_POLE)
 
     def test_healpix_factory_arrays_match_scalar(self):
@@ -263,7 +271,7 @@ class HealpixArrayTestCase(unittest.TestCase):
             lam, phi = LONLAT[0] * angle, LONLAT[1] * angle
             got = f(lam, phi, radians=radians)
             want = scalar_map(f, lam, phi, radians=radians)
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 self.assertEqual(g.dtype, np.float64)
                 assert_continuous(g, w, atol=ATOL * R_A, near_pole=LONLAT_NEAR_POLE)
             # Scaling by R_A and back can push fuzz-edge seam points out of
@@ -273,7 +281,7 @@ class HealpixArrayTestCase(unittest.TestCase):
             x, y, near_pole = x[keep], y[keep], PLANAR_NEAR_POLE[keep]
             got = f(x, y, radians=radians, inverse=True)
             want = scalar_map(f, x, y, radians=radians, inverse=True)
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 assert_continuous(g, w, atol=ATOL * angle, near_pole=near_pole)
             # Scalars still take the scalar path and come back as numpy scalars.
             out = f(float(lam[0]), float(phi[0]), radians=radians)
@@ -287,7 +295,7 @@ class HealpixArrayTestCase(unittest.TestCase):
         phi = np.repeat([0.0, pi / 2, -pi / 2], 5)
         got = pjh._healpix_sphere_array(lam, phi)
         want = scalar_map(pjh.healpix_sphere, lam, phi)
-        for g, w in zip(got, want):
+        for g, w in zip(got, want, strict=True):
             assert_array_equal(g, w)
         band_x = [k * pi / 2 for k in range(-2, 3)]
         apex_x = [-3 * pi / 4, -pi / 4, pi / 4, 3 * pi / 4]
@@ -301,7 +309,7 @@ class HealpixArrayTestCase(unittest.TestCase):
         )
         got = pjh._healpix_sphere_inverse_array(x, y)
         want = scalar_map(pjh.healpix_sphere_inverse, x, y)
-        for g, w in zip(got, want):
+        for g, w in zip(got, want, strict=True):
             assert_array_equal(g, w)
         # The two seam points invert to exactly -pi, not pi - epsilon.
         self.assertEqual(got[0][-1], -pi)
@@ -344,7 +352,12 @@ class HealpixArrayTestCase(unittest.TestCase):
         assert_allclose(x, x_ref, rtol=1e-12, atol=1e-12 * R_A)
         assert_allclose(y, y_ref, rtol=1e-12, atol=1e-12 * R_A)
         lon2, lat2 = Proj(proj="healpix", a=a, e=e)(x, y, inverse=True)
-        gaps = [geo_gap_deg(p, q) for p, q in zip(zip(lon, lat), zip(lon2, lat2))]
+        gaps = [
+            geo_gap_deg(p, q)
+            for p, q in zip(
+                zip(lon, lat, strict=True), zip(lon2, lat2, strict=True), strict=True
+            )
+        ]
         self.assertLess(max(gaps), 1e-5)
 
     def test_value_error_parity(self):
@@ -407,7 +420,10 @@ class RhealpixArrayTestCase(unittest.TestCase):
             for x, y in (RHEALPIX_PLANAR[pair], RHEALPIX_OUTSIDE[pair], NOT_FINITE):
                 got = pjr._in_rhealpix_image_array(x, y, *pair)
                 want = np.array(
-                    [pjr.in_rhealpix_image(a, b, *pair) for a, b in zip(x, y)]
+                    [
+                        pjr.in_rhealpix_image(a, b, *pair)
+                        for a, b in zip(x, y, strict=True)
+                    ]
                 )
                 assert_array_equal(got, want)
             self.assertTrue(
@@ -444,7 +460,7 @@ class RhealpixArrayTestCase(unittest.TestCase):
                 north_square=pair[0],
                 south_square=pair[1],
             )
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 assert_array_equal(g, w)
             planar = RHEALPIX_PLANAR[pair]
             got = pjr._combine_triangles_array(*planar, *pair, inverse=True)
@@ -455,14 +471,14 @@ class RhealpixArrayTestCase(unittest.TestCase):
                 south_square=pair[1],
                 inverse=True,
             )
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 assert_array_equal(g, w)
             # Round trip through the rearrangement on interior points (seam
             # points within the fuzz can come back through another triangle).
             hx, hy = (a[:N_INTERIOR_HEALPIX] for a in HEALPIX_PLANAR)
             fx, fy = pjr._combine_triangles_array(hx, hy, *pair)
             back = pjr._combine_triangles_array(fx, fy, *pair, inverse=True)
-            for b, h in zip(back, (hx, hy)):
+            for b, h in zip(back, (hx, hy), strict=True):
                 assert_allclose(b, h, rtol=0, atol=1e-15)
 
     def test_rhealpix_sphere_arrays_match_scalar(self):
@@ -471,13 +487,13 @@ class RhealpixArrayTestCase(unittest.TestCase):
             got = pjr._rhealpix_sphere_array(*LONLAT_SMALL, **kw)
             want = scalar_map(pjr.rhealpix_sphere, *LONLAT_SMALL, **kw)
             near = np.abs(np.abs(LONLAT_SMALL[1]) - pi / 2) < 1e-6
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 assert_continuous(g, w, near_pole=near)
             planar = RHEALPIX_PLANAR[pair]
             got = pjr._rhealpix_sphere_inverse_array(*planar, **kw)
             want = scalar_map(pjr.rhealpix_sphere_inverse, *planar, **kw)
             near = np.abs(np.abs(want[1]) - pi / 2) < 1e-6
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 assert_continuous(g, w, near_pole=near)
 
     def test_rhealpix_ellipsoid_arrays_match_scalar(self):
@@ -487,13 +503,13 @@ class RhealpixArrayTestCase(unittest.TestCase):
                 got = pjr._rhealpix_ellipsoid_array(*LONLAT_SMALL, e=e, **kw)
                 want = scalar_map(pjr.rhealpix_ellipsoid, *LONLAT_SMALL, e=e, **kw)
                 near = np.abs(np.abs(LONLAT_SMALL[1]) - pi / 2) < 1e-6
-                for g, w in zip(got, want):
+                for g, w in zip(got, want, strict=True):
                     assert_continuous(g, w, near_pole=near)
                 planar = RHEALPIX_PLANAR[pair]
                 got = pjr._rhealpix_ellipsoid_inverse_array(*planar, e=e, **kw)
                 want = scalar_map(pjr.rhealpix_ellipsoid_inverse, *planar, e=e, **kw)
                 near = np.abs(np.abs(want[1]) - pi / 2) < 1e-6
-                for g, w in zip(got, want):
+                for g, w in zip(got, want, strict=True):
                     assert_continuous(g, w, near_pole=near)
 
     def test_rhealpix_region_hint_arrays(self):
@@ -507,11 +523,11 @@ class RhealpixArrayTestCase(unittest.TestCase):
             }
             hinted = pjr._rhealpix_sphere_array(lam, phi, **kw)
             plain = pjh._healpix_sphere_array(lam, phi)
-            for h, q in zip(hinted, plain):
+            for h, q in zip(hinted, plain, strict=True):
                 assert_array_equal(h, q)
             hinted = pjr._rhealpix_ellipsoid_array(lam, phi, e=WGS84_E, **kw)
             plain = pjh._healpix_ellipsoid_array(lam, phi, e=WGS84_E)
-            for h, q in zip(hinted, plain):
+            for h, q in zip(hinted, plain, strict=True):
                 assert_array_equal(h, q)
             # Inverse with the hint on equatorial planar points equals the
             # unhinted inverse there.
@@ -521,7 +537,7 @@ class RhealpixArrayTestCase(unittest.TestCase):
             plain = pjr._rhealpix_sphere_inverse_array(
                 x[band], y[band], north_square=pair[0], south_square=pair[1]
             )
-            for h, q in zip(hinted, plain):
+            for h, q in zip(hinted, plain, strict=True):
                 assert_array_equal(h, q)
 
     def test_rhealpix_factory_arrays_match_scalar(self):
@@ -536,19 +552,21 @@ class RhealpixArrayTestCase(unittest.TestCase):
             near = np.abs(np.abs(LONLAT_SMALL[1]) - pi / 2) < 1e-6
             got = f(lam, phi, radians=radians)
             want = scalar_map(f, lam, phi, radians=radians)
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 self.assertEqual(g.dtype, np.float64)
                 assert_continuous(g, w, atol=ATOL * R_A, near_pole=near)
             # Scaling by R_A and back moves fuzz-edge seam points by an ulp,
             # which can flip their triangle; keep the points the scalar
             # closure accepts, as the array closure sees the same values.
             x, y = RHEALPIX_PLANAR[pair][0] * R_A, RHEALPIX_PLANAR[pair][1] * R_A
-            keep = np.array([accepts(f, a, b, radians) for a, b in zip(x, y)])
+            keep = np.array(
+                [accepts(f, a, b, radians) for a, b in zip(x, y, strict=True)]
+            )
             x, y = x[keep], y[keep]
             got = f(x, y, radians=radians, inverse=True)
             want = scalar_map(f, x, y, radians=radians, inverse=True)
             near = np.abs(np.abs(want[1]) - pi / 2 * angle) < 1e-6 * angle
-            for g, w in zip(got, want):
+            for g, w in zip(got, want, strict=True):
                 assert_continuous(g, w, atol=ATOL * angle, near_pole=near)
             out = f(float(lam[0]), float(phi[0]), radians=radians)
             self.assertIsInstance(out[0], np.float64)
@@ -586,7 +604,12 @@ class RhealpixArrayTestCase(unittest.TestCase):
         lon2, lat2 = Proj(
             proj="rhealpix", a=a, e=e, north_square=pair[0], south_square=pair[1]
         )(x, y, inverse=True)
-        gaps = [geo_gap_deg(p, q) for p, q in zip(zip(lon, lat), zip(lon2, lat2))]
+        gaps = [
+            geo_gap_deg(p, q)
+            for p, q in zip(
+                zip(lon, lat, strict=True), zip(lon2, lat2, strict=True), strict=True
+            )
+        ]
         self.assertLess(max(gaps), 1e-5)
 
     def test_rhealpix_value_error_parity(self):
@@ -625,7 +648,7 @@ class RhealpixArrayTestCase(unittest.TestCase):
             with self.assertRaises(ValueError) as cm:
                 pjr._rhealpix_sphere_inverse_array(*rejected, **kw)
             self.assertIn("HEALPix projection", str(cm.exception))
-            for a, b in zip(*rejected):
+            for a, b in zip(*rejected, strict=True):
                 with self.assertRaises(ValueError):
                     pjr.rhealpix_sphere_inverse(float(a), float(b), **kw)
 

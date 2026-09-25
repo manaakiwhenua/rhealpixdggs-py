@@ -75,6 +75,27 @@ matplotlib = "3.11.1"
 [tool.poetry]
 include = ["tests/", "docs/"]
 
+[tool.ruff.lint]
+# Beyond ruff's defaults, the rule families that catch defects rather than
+# style. B905 is the one that motivated this: zip() without `strict`
+# silently truncates to its shortest argument, which in a library that zips
+# coordinate sequences means dropping points and returning a plausible wrong
+# answer with no exception.
+extend-select = [
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "W",   # pycodestyle warnings
+    "E711",
+    "E712",
+    "E713",
+    "E714",
+]
+ignore = [
+    "E501",  # line length is black's job
+    "E741",  # `O` is a face, `l` a harmonic degree: domain names, not ambiguity
+]
+
 [tool.mypy]
 files = ["rhealpixdggs"]
 check_untyped_defs = true

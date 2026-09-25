@@ -1127,7 +1127,7 @@ class RHEALPixDGGS:
         ]
         codes = [0, 5, 1, 2, 3, 4]
         face = np.full(count, -1, dtype=np.int64)
-        for test, code in zip(reversed(tests), reversed(codes)):
+        for test, code in zip(reversed(tests), reversed(codes), strict=True):
             face[test] = code
         valid = face >= 0
         digits = np.zeros((count, max(resolution, 1)), dtype=np.int64)
@@ -1831,7 +1831,7 @@ class RHEALPixDGGS:
         crossings: set[float] = set()
         brackets: list[tuple[float, float, float, float, int, float]] = []
         N_SCAN = 64
-        for pa, pb in zip(sorted(breakpoints), sorted(breakpoints)[1:]):
+        for pa, pb in pairwise(sorted(breakpoints)):
             if pb - pa < 1e-14:
                 continue
             # Evaluate strictly inside the piece, clear of its kinks.
@@ -2734,8 +2734,8 @@ class RHEALPixDGGS:
         cell_list = list(cells)
         boundaries = self.boundary_array([str(cell) for cell in cell_list], n=n)
         return {
-            cell: list(zip(row[:, 0], row[:, 1]))
-            for cell, row in zip(cell_list, boundaries)
+            cell: list(zip(row[:, 0], row[:, 1], strict=True))
+            for cell, row in zip(cell_list, boundaries, strict=True)
         }
 
     def cells_from_region(
@@ -2926,11 +2926,11 @@ class RHEALPixDGGS:
             S480586367780080
 
         """
-        if resolution == None:
+        if resolution is None:
             resolution = randint(0, self.max_resolution)
         suid: list[str | int] = []
         suid.append(CELLS0[randint(0, 5)])
-        for i in range(1, resolution + 1):
+        for _ in range(1, resolution + 1):
             suid.append(randint(0, self.N_side**2 - 1))
         return Cell(self, suid)
 

@@ -149,7 +149,7 @@ class GridInvariantsTestCase(unittest.TestCase):
         for name, rdggs in GRIDS.items():
             cells = list(rdggs.grid(2))
             rows = rdggs.boundary_array([str(c) for c in cells], n=3)
-            for row, cell in zip(rows, cells):
+            for row, cell in zip(rows, cells, strict=True):
                 expected = np.array(cell.boundary(n=3, plane=False))
                 self.assertTrue(np.allclose(row, expected, atol=1e-9), f"{name} {cell}")
 
