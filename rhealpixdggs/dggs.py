@@ -2180,9 +2180,27 @@ class RHEALPixDGGS:
         ell = self.ellipsoid
         geod = _geod(ell.a, ell.f)
         to_deg = 180 / pi if ell.radians else 1.0
-        points = [
-            trace.lonlat_at(t0 + (t1 - t0) * i / (steps - 1)) for i in range(steps)
+        # A run's ends sit exactly on cell edges, and where an edge is the
+        # boundary of the grid's planar image the inverse projection has no
+        # answer on it. Nudge such a sample towards the middle of the run
+        # until it lands inside; how far is needed depends on how steeply
+        # the curve meets the boundary, so a fixed inset will not do.
+        middle = 0.5 * (t0 + t1)
+
+        def lonlat_inside(t: float) -> tuple[float, float] | None:
+            for nudge in (0.0, 1e-9, 1e-7, 1e-5, 1e-3):
+                try:
+                    return trace.lonlat_at(t + (middle - t) * nudge)
+                except ValueError:
+                    continue
+            return None
+
+        sampled = [
+            lonlat_inside(t0 + (t1 - t0) * i / (steps - 1)) for i in range(steps)
         ]
+        points = [point for point in sampled if point is not None]
+        if len(points) < 2:
+            return 0.0
         return fsum(
             geod.inv(a[0] * to_deg, a[1] * to_deg, b[0] * to_deg, b[1] * to_deg)[2]
             for a, b in pairwise(points)

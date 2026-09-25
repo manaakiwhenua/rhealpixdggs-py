@@ -1366,6 +1366,31 @@ class LineCrossingsTestCase(unittest.TestCase):
             for share in shares:
                 self.assertGreater(share, 0.0)
 
+    def test_planar_lines_never_raise_on_the_grid_boundary(self):
+        # A run's ends lie exactly on cell edges, and an edge that is also
+        # the boundary of the grid's planar image is outside the inverse
+        # projection's domain. Sampling there used to raise.
+        import random
+
+        R = self.rdggs.ellipsoid.R_A
+        random.seed(99)
+        checked = 0
+        for _ in range(1500):
+            start = (
+                random.uniform(-3.4 * R, 3.4 * R),
+                random.uniform(-2.5 * R, 2.5 * R),
+            )
+            end = (random.uniform(-3.4 * R, 3.4 * R), random.uniform(-2.5 * R, 2.5 * R))
+            if (
+                self.rdggs.cell_from_point(1, start, plane=True) is None
+                or self.rdggs.cell_from_point(1, end, plane=True) is None
+            ):
+                continue
+            checked += 1
+            crossings = self.rdggs.line_crossings(1, start, end, plane=True)
+            self.assertAlmostEqual(sum(f for _, f in crossings), 1.0, places=9)
+        self.assertGreater(checked, 100, "not enough planar lines were exercised")
+
     def test_off_grid_endpoints_give_nothing(self):
         R = self.rdggs.ellipsoid.R_A
         self.assertEqual(
