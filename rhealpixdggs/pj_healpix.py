@@ -24,14 +24,12 @@ from typing import cast
 import numpy as np
 from numpy import arcsin, array, deg2rad, floor, pi, rad2deg, sign, sin, sqrt
 
-# my_round is doctest-only: the doctests use it from the module globals.
-from rhealpixdggs.utils import (  # noqa: F401
+from rhealpixdggs.utils import (
     FloatArray,
     ProjectionFunction,
     _auth_lat_array,
     auth_lat,
     auth_rad,
-    my_round,
 )
 
 _PHI0 = arcsin(2.0 / 3)
@@ -212,6 +210,7 @@ def healpix_ellipsoid(lam: float, phi: float, e: float = 0) -> tuple[float, floa
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> print(tuple(x if type(x) is int else x.tolist() for x in my_round(healpix_ellipsoid(0, pi/7), 15)))
         (0, 0.511157237746422)
         >>> print(tuple(x if type(x) is int else x.tolist() for x in my_round(healpix_ellipsoid(0, pi/7, e=0.8), 15)))
@@ -228,6 +227,7 @@ def healpix_ellipsoid_inverse(x: float, y: float, e: float = 0) -> tuple[float, 
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> p = (0, pi/7)
         >>> q = healpix_ellipsoid(*p)
         >>> print(tuple(x if type(x) is int else x.tolist() for x in my_round(healpix_ellipsoid_inverse(*q), 15)))
@@ -341,6 +341,7 @@ def healpix(a: float = 1, e: float = 0) -> ProjectionFunction:
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> f = healpix(a=2, e=0)
         >>> print(tuple(x.tolist() for x in my_round(f(0, pi/3, radians=True), 15)))
         (0.574951359778215, 2.145747686573111)

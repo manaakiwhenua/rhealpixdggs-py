@@ -24,14 +24,11 @@ import numpy as np
 import pyproj
 
 from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID, Ellipsoid
-
-# my_round is doctest-only: the doctests use it from the module globals.
-from rhealpixdggs.utils import (  # noqa: F401
+from rhealpixdggs.utils import (
     FloatArray,
     ProjectionFunction,
     _wrap_latitude_array,
     _wrap_longitude_array,
-    my_round,
     wrap_latitude,
     wrap_longitude,
 )
@@ -59,6 +56,7 @@ class Projection:
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
         >>> f = Projection(ellipsoid=WGS84_ELLIPSOID, proj='rhealpix', north_square=1, south_square=0)
         >>> print(tuple(x.tolist() for x in my_round(f(0, 30), 15)))
