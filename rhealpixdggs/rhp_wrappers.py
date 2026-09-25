@@ -17,7 +17,7 @@ from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon,
 import rhealpixdggs.dggs as rhp_dggs
 
 # List of resolution 0 cell addresses (i.e. cube faces)
-from rhealpixdggs.cell import Cell
+from rhealpixdggs.cell import Cell, _ring_step_neighbors
 from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
 
 # Warnings
@@ -1113,40 +1113,6 @@ def linetrace(
 
 
 # ======== Helper functions ======== #
-
-
-# Fixed clockwise order for a cell's up-to-8 edge/corner neighbors, paired
-# with whether that direction is an edge step (neighbor()) or a corner-only
-# step (diagonal_neighbor()).
-_RING_STEP_DIRECTIONS = [
-    ("up", False),
-    ("up_right", True),
-    ("right", False),
-    ("down_right", True),
-    ("down", False),
-    ("down_left", True),
-    ("left", False),
-    ("up_left", True),
-]
-
-
-def _ring_step_neighbors(cell: Cell) -> list[Cell]:
-    """
-    Return this cell's up to 8 distinct edge- and corner-adjacent
-    neighbors, in a fixed clockwise order starting from "up". Skips any
-    direction with no neighbor: a genuine cube corner, where exactly 3
-    cells meet rather than 4 (see Cell.diagonal_neighbor()).
-    """
-    neighbors = []
-    for direction, diagonal in _RING_STEP_DIRECTIONS:
-        neighbor = (
-            cell.diagonal_neighbor(direction)
-            if diagonal
-            else cell.neighbor(direction, plane=True)
-        )
-        if neighbor is not None:
-            neighbors.append(neighbor)
-    return neighbors
 
 
 def _rings_up_to(center: Cell, k: int) -> list[list[Cell]]:

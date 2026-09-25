@@ -128,6 +128,21 @@ class RelativePosition(enum.Enum):
         return self in (RelativePosition.BEFORE, RelativePosition.AFTER)
 
 
+def _as_zoneset(cell: "Cell") -> "ZoneSet":
+    """
+    Wrap a single cell as a ZoneSet.
+
+    A ZoneSet is a collection of Cells, so zoneset imports cell; Cell's
+    convenience forms of the Table 53 operations make the edge run the
+    other way too. Deferring that import to call time keeps it from being
+    an import cycle, and doing it here keeps the deferral in one place
+    instead of repeating it in each of the eight methods.
+    """
+    from rhealpixdggs.zoneset import ZoneSet
+
+    return ZoneSet(cell.rdggs, [cell])
+
+
 @total_ordering
 class Cell:
     """
@@ -2680,9 +2695,7 @@ class Cell:
         max_res: int | None = None,
     ) -> "ZoneSet":
         """The ``union`` of Table 53: see ``ZoneSet.union``."""
-        from rhealpixdggs.zoneset import ZoneSet
-
-        return ZoneSet(self.rdggs, [self]).union(other, min_res, max_res)
+        return _as_zoneset(self).union(other, min_res, max_res)
 
     def intersection(
         self,
@@ -2691,9 +2704,7 @@ class Cell:
         max_res: int | None = None,
     ) -> "ZoneSet":
         """The ``intersection`` of Table 53: see ``ZoneSet.intersection``."""
-        from rhealpixdggs.zoneset import ZoneSet
-
-        return ZoneSet(self.rdggs, [self]).intersection(other, min_res, max_res)
+        return _as_zoneset(self).intersection(other, min_res, max_res)
 
     def difference(
         self,
@@ -2702,9 +2713,7 @@ class Cell:
         max_res: int | None = None,
     ) -> "ZoneSet":
         """The ``difference`` of Table 53: see ``ZoneSet.difference``."""
-        from rhealpixdggs.zoneset import ZoneSet
-
-        return ZoneSet(self.rdggs, [self]).difference(other, min_res, max_res)
+        return _as_zoneset(self).difference(other, min_res, max_res)
 
     def sym_difference(
         self,
@@ -2713,33 +2722,23 @@ class Cell:
         max_res: int | None = None,
     ) -> "ZoneSet":
         """The ``symDifference`` of Table 53: see ``ZoneSet.sym_difference``."""
-        from rhealpixdggs.zoneset import ZoneSet
-
-        return ZoneSet(self.rdggs, [self]).sym_difference(other, min_res, max_res)
+        return _as_zoneset(self).sym_difference(other, min_res, max_res)
 
     def buffer(self, dist: float, plane: bool = True, n: int = 8) -> "ZoneSet":
         """The ``buffer`` of Table 53: see ``ZoneSet.buffer``."""
-        from rhealpixdggs.zoneset import ZoneSet
-
-        return ZoneSet(self.rdggs, [self]).buffer(dist, plane, n)
+        return _as_zoneset(self).buffer(dist, plane, n)
 
     def parent(self, levels: int = 1, inherit_id: bool = False) -> "ZoneSet":
         """The ``parent`` of Table 53: see ``ZoneSet.parent``."""
-        from rhealpixdggs.zoneset import ZoneSet
-
-        return ZoneSet(self.rdggs, [self]).parent(levels, inherit_id)
+        return _as_zoneset(self).parent(levels, inherit_id)
 
     def child(self, levels: int = 1, inherit_id: bool = False) -> "ZoneSet":
         """The ``child`` of Table 53: see ``ZoneSet.child``."""
-        from rhealpixdggs.zoneset import ZoneSet
-
-        return ZoneSet(self.rdggs, [self]).child(levels, inherit_id)
+        return _as_zoneset(self).child(levels, inherit_id)
 
     def sibling(self, levels: int = 1, inherit_id: bool = False) -> "ZoneSet":
         """The ``sibling`` of Table 53: see ``ZoneSet.sibling``."""
-        from rhealpixdggs.zoneset import ZoneSet
-
-        return ZoneSet(self.rdggs, [self]).sibling(levels, inherit_id)
+        return _as_zoneset(self).sibling(levels, inherit_id)
 
     def random_point(self, plane: bool = True) -> tuple[float, float]:
         """
@@ -2798,3 +2797,41 @@ class Cell:
             #             for i in range(resolution)])/\
             #        float(6*N**(2*resolution))
         return hsv_to_rgb(hue, saturation, 1)
+
+
+# Neighbour stepping, used by rhp_wrappers' rings and by ZoneSet.buffer.
+# It lives here because it is a function of a Cell and nothing else:
+# keeping it in rhp_wrappers meant zoneset had to import a private name
+# from a module it otherwise has no business knowing about.
+# Fixed clockwise order for a cell's up-to-8 edge/corner neighbors, paired
+# with whether that direction is an edge step (neighbor()) or a corner-only
+# step (diagonal_neighbor()).
+_RING_STEP_DIRECTIONS = [
+    ("up", False),
+    ("up_right", True),
+    ("right", False),
+    ("down_right", True),
+    ("down", False),
+    ("down_left", True),
+    ("left", False),
+    ("up_left", True),
+]
+
+
+def _ring_step_neighbors(cell: Cell) -> list[Cell]:
+    """
+    Return this cell's up to 8 distinct edge- and corner-adjacent
+    neighbors, in a fixed clockwise order starting from "up". Skips any
+    direction with no neighbor: a genuine cube corner, where exactly 3
+    cells meet rather than 4 (see Cell.diagonal_neighbor()).
+    """
+    neighbors = []
+    for direction, diagonal in _RING_STEP_DIRECTIONS:
+        neighbor = (
+            cell.diagonal_neighbor(direction)
+            if diagonal
+            else cell.neighbor(direction, plane=True)
+        )
+        if neighbor is not None:
+            neighbors.append(neighbor)
+    return neighbors
