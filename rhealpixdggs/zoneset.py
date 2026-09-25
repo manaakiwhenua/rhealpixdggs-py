@@ -23,9 +23,8 @@ from typing import Any
 import shapely
 
 from rhealpixdggs import export
-from rhealpixdggs.cell import Cell
+from rhealpixdggs.cell import Cell, _ring_step_neighbors
 from rhealpixdggs.dggs import RHEALPixDGGS
-from rhealpixdggs.rhp_wrappers import _ring_step_neighbors
 
 
 class BoundaryType(enum.Enum):
