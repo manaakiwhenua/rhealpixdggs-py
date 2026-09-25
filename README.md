@@ -11,6 +11,8 @@
   <img src="https://raw.githubusercontent.com/manaakiwhenua/rhealpixdggs-py/master/docs/source/images/hero.svg"
        width="820"
        alt="The same rHEALPix grid shown three ways: on the globe, on the cube whose faces it defines, and on the net that cube unfolds into. Coastlines are projected through the library's own projection in all three. Dots mark the cell nuclei of the north polar face, which lie on rings of constant latitude on the globe and on concentric squares once projected.">
+  <br>
+  <em>One grid three ways: on the ellipsoid, on the cube its six faces define, and on the net that cube unfolds into. Origin longitude <code>lon_0 = 51.8</code> puts the northern cube corners out at sea; the polar squares unfold at <code>north_square=1</code>, <code>south_square=0</code>.</em>
 </p>
 
 ## Introduction

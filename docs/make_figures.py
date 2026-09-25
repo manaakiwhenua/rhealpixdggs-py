@@ -2209,13 +2209,29 @@ print("N_side polar figure written")
 # It uses a non-default unfolding (north_square 2, south_square 1): the
 # offset polar squares make a livelier shape than the default's T, and show
 # that the two are placed independently.
-HERO_NS, HERO_SS = 2, 1
+HERO_NS, HERO_SS = 1, 0
+# lon_0 rotates the grid about the polar axis, which moves the eight cube
+# corners -- the awkward points where only three cells meet instead of four.
+# They sit at latitude +-41.94 on the meridians lon_0 + k * 90, and at 51.8
+# the four northern ones fall in the Caspian Sea, the Sea of Japan, the
+# eastern Pacific and the north Atlantic, each about 52 km from the nearest
+# land. That is as far offshore as any rotation puts them: the Caspian is
+# only about 8 degrees wide and the Sea of Japan corner is 90 degrees from
+# it, so the two together pin the choice, and the Pacific and Atlantic
+# corners have hundreds of kilometres of slack at every lon_0. Measured
+# against Natural Earth 1:10m land; the figure is not sensitive enough to
+# justify a third significant figure.
+HERO_LON_0 = 51.8
 hero_dggs = RHEALPixDGGS(
-    ellipsoid=WGS84_ELLIPSOID, N_side=3, north_square=HERO_NS, south_square=HERO_SS
+    ellipsoid=Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=HERO_LON_0),
+    N_side=3,
+    north_square=HERO_NS,
+    south_square=HERO_SS,
 )
 HERO_R = hero_dggs.ellipsoid.R_A
-HERO_VIEW = (90.0, 35.0)  # centred on the Q/R boundary, so the globe shows
-# the same three faces the cube does
+# Centred on the Q/R boundary, so the globe shows the same three faces the
+# cube does. Both follow lon_0.
+HERO_VIEW = (HERO_LON_0 + 90.0, 35.0)
 HERO_ISO_RES = 2
 
 
@@ -2281,7 +2297,11 @@ def hero_globe(ax):
     )
     ax.plot(np.cos(ring), np.sin(ring), color="#4a4a4a", linewidth=1.4, zorder=4)
     # Only N, Q and R face the viewer, which is exactly what the cube shows.
-    for face, (lon, lat) in (("N", (90, 90)), ("Q", (45, 0)), ("R", (135, 0))):
+    for face, (lon, lat) in (
+        ("N", (lon0, 90)),
+        ("Q", (HERO_LON_0 + 45, 0)),
+        ("R", (HERO_LON_0 + 135, 0)),
+    ):
         lx, ly, vis = ortho(lon, lat, lon0, lat0)
         if not vis:
             raise AssertionError(f"the {face} label is on the far side")
