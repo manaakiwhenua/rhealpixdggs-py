@@ -1117,6 +1117,33 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             ]
             self.assertEqual(get, expect)
 
+    def test_random_cell(self):
+        """
+        `random_cell` has no other test: its doctest is +SKIP because the
+        output is random. Assert the invariants instead of an exact value.
+        """
+        rdggs = WGS84_003
+        for resolution in range(4):
+            for _ in range(25):
+                cell = rdggs.random_cell(resolution)
+                self.assertEqual(cell.resolution, resolution)
+                self.assertIs(cell.rdggs, rdggs)
+                self.assertIn(cell.suid[0], CELLS0)
+                # A round trip through the index string must give it back.
+                self.assertEqual(
+                    str(rdggs.cell(rdggs.parse_index(str(cell)))), str(cell)
+                )
+
+        # resolution=None draws the resolution uniformly as well.
+        seen = set()
+        for _ in range(200):
+            cell = rdggs.random_cell()
+            self.assertIsNotNone(cell.resolution)
+            self.assertGreaterEqual(cell.resolution, 0)
+            self.assertLessEqual(cell.resolution, rdggs.max_resolution)
+            seen.add(cell.resolution)
+        self.assertGreater(len(seen), 1, "resolution looks fixed, not random")
+
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
