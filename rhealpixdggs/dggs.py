@@ -24,6 +24,7 @@ EXAMPLES:
 
 Create the (1, 2)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellipsoid. Use degrees instead of the default radians for angular measurements ::
 
+    >>> from numpy.testing import assert_allclose
     >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
     >>> E = WGS84_ELLIPSOID
     >>> rdggs = RHEALPixDGGS(ellipsoid=E, north_square=1, south_square=2, N_side=3)
@@ -164,9 +165,6 @@ from typing import Literal, NamedTuple, cast, overload
 
 import numpy as np
 
-# assert_allclose is doctest-only: the doctests use it from the module globals.
-from numpy.testing import assert_allclose  # noqa: F401
-
 # Cells per chunk when enumerating the lattice cells of a planar box
 # (``RHEALPixDGGS._lattice_cells``), bounding the working set of callers such
 # as ``rhp_wrappers.polyfill`` however many cells a box holds.
@@ -188,14 +186,11 @@ from rhealpixdggs.ellipsoids import (
     WGS84_ELLIPSOID_RADIANS,
     Ellipsoid,
 )
-
-# my_round is doctest-only: the doctests use it from the module globals.
-from rhealpixdggs.utils import (  # noqa: F401
+from rhealpixdggs.utils import (
     FloatArray,
     _auth_lat_array,
     _normalise_antimeridian_rings,
     auth_lat,
-    my_round,
 )
 
 
@@ -490,6 +485,7 @@ class RHEALPixDGGS:
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
             >>> rdggs = UNIT_003_RADIANS
             >>> print(tuple(x.tolist() for x in my_round(rdggs.healpix(-pi, pi/2), 14)))
             (-2.35619449019234, 1.5707963267949)
@@ -536,6 +532,7 @@ class RHEALPixDGGS:
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
             >>> rdggs = UNIT_003_RADIANS
             >>> print(tuple(x.tolist() for x in my_round(rdggs.rhealpix(0, pi/3), 14)))
             (-1.858272006684, 2.06871881030324)
@@ -570,6 +567,7 @@ class RHEALPixDGGS:
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
             >>> rdggs = UNIT_003
             >>> p = (0, 0)
             >>> q = (-pi/4, pi/2)
@@ -655,6 +653,7 @@ class RHEALPixDGGS:
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
             >>> rdggs = UNIT_003_RADIANS
             >>> print(tuple(x.tolist() for x in my_round(rdggs.xyz(0, pi/4, lonlat=True), 14)))
             (0.70710678118655, 0.0, 0.70710678118655)
@@ -677,6 +676,7 @@ class RHEALPixDGGS:
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
             >>> rdggs = UNIT_003
             >>> print(tuple(x.tolist() for x in my_round(rdggs.xyz_cube(0, 0), 14)))
             (0.78539816339745, 0.0, -0.78539816339745)
@@ -1459,6 +1459,7 @@ class RHEALPixDGGS:
 
         EXAMPLES::
 
+            >>> from rhealpixdggs.utils import my_round
             >>> rdggs = WGS84_003_RADIANS
             >>> for phi in rdggs.cell_latitudes(1, -pi/2, pi/2, plane=False):
             ...     print(my_round(phi, 14))

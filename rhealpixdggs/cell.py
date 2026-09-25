@@ -13,10 +13,9 @@ if TYPE_CHECKING:
     from rhealpixdggs.dggs import RHEALPixDGGS
     from rhealpixdggs.zoneset import ZoneSet
 
-# pi is doctest-only: the doctests use it from the module globals.
 import numpy as np
 import pyproj
-from numpy import base_repr, pi  # noqa: F401
+from numpy import base_repr
 from scipy import integrate, optimize
 
 from rhealpixdggs.utils import (
@@ -470,6 +469,7 @@ class Cell:
 
         EXAMPLES::
 
+            >>> from numpy import pi
             >>> from rhealpixdggs.dggs import UNIT_003
             >>> c = Cell(UNIT_003, ('N', 8))
             >>> print(c)
@@ -677,6 +677,7 @@ class Cell:
 
         EXAMPLES::
 
+            >>> from numpy import pi
             >>> from rhealpixdggs.dggs import UNIT_003
             >>> c = Cell(UNIT_003, ['N', 0])
             >>> print(c.ul_vertex() == (-pi, 3*pi/4))
@@ -932,6 +933,7 @@ class Cell:
 
         EXAMPLES::
 
+            >>> from numpy import pi
             >>> from rhealpixdggs.dggs import UNIT_003
             >>> rdggs = UNIT_003
             >>> c = rdggs.cell(['N'])
@@ -1180,6 +1182,7 @@ class Cell:
 
         EXAMPLES::
 
+            >>> from numpy import pi
             >>> from rhealpixdggs.dggs import WGS84_003_RADIANS
             >>> rdggs = WGS84_003_RADIANS
             >>> p = (pi/4, 0)
@@ -1205,6 +1208,7 @@ class Cell:
 
         EXAMPLES::
 
+            >>> from numpy import pi
             >>> from rhealpixdggs.dggs import WGS84_003_RADIANS
             >>> rdggs = WGS84_003_RADIANS
             >>> c = rdggs.cell(['N', 6])

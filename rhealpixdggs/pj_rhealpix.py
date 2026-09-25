@@ -34,13 +34,10 @@ from rhealpixdggs.pj_healpix import (
     healpix_sphere,
     healpix_sphere_inverse,
 )
-
-# my_round is doctest-only: the doctests use it from the module globals.
-from rhealpixdggs.utils import (  # noqa: F401
+from rhealpixdggs.utils import (
     FloatArray,
     ProjectionFunction,
     auth_rad,
-    my_round,
 )
 
 _IMAGE_EPS = 1e-15
@@ -90,6 +87,7 @@ def combine_triangles(
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> u, v = -pi/4, pi/3
         >>> x, y = combine_triangles(u, v)
         >>> print(tuple(x.tolist() for x in my_round((x, y), 15)))
@@ -390,6 +388,7 @@ def rhealpix_sphere(
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> print(tuple(x.tolist() for x in my_round(rhealpix_sphere(0, pi/4), 15)))
         (-1.619978633413937, 2.307012183573304)
 
@@ -444,6 +443,7 @@ def rhealpix_sphere_inverse(
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> p = (0, pi/4)
         >>> q = rhealpix_sphere(*p)
         >>> print(tuple(x.tolist() for x in my_round(rhealpix_sphere_inverse(*q), 15)))
@@ -519,6 +519,7 @@ def rhealpix_ellipsoid(
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> from numpy import arcsin
         >>> print(tuple(x if type(x) is int else x.tolist() for x in my_round(rhealpix_ellipsoid(0, arcsin(2.0/3)), 15)))
         (0, 0.785398163397448)
@@ -565,6 +566,7 @@ def rhealpix_ellipsoid_inverse(
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> p = (0, pi/4)
         >>> q = rhealpix_ellipsoid(*p)
         >>> print(tuple(x.tolist() for x in my_round(rhealpix_ellipsoid_inverse(*q), 15)))
@@ -696,6 +698,7 @@ def rhealpix(
 
     EXAMPLES::
 
+        >>> from rhealpixdggs.utils import my_round
         >>> f = rhealpix(a=2, e=0, north_square=1, south_square=2)
         >>> print(tuple(x.tolist() for x in my_round(f(0, pi/3, radians=True), 15)))
         (-0.574951359778215, 2.145747686573111)
