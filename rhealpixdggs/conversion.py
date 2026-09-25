@@ -110,7 +110,7 @@ class CellZoneFromPoly:
         if self.geometry.contains(
             bounding_poly
         ):  # edge case where the polygon is the same as the bounding cell
-            self._write_cells(bounding_cell, bounding_poly, "bounding poly")
+            self._write_cells(bounding_cell, "bounding poly")
         else:
             assert bounding_cell.resolution is not None
             if bounding_cell.resolution + 1 > self.res_limit:
@@ -128,19 +128,20 @@ class CellZoneFromPoly:
         for child_cell, child_poly in together:
             # 1: add contained cells
             if self.geometry.contains(child_poly):
-                self._write_cells(child_cell, child_poly, "fully contained")
+                self._write_cells(child_cell, "fully contained")
             # 2: check we're not at the limit, if we are, check centroids
             elif child_cell.resolution == self.res_limit:
                 if self.geometry.contains(Point(child_cell.centroid(plane=False))):
-                    self._write_cells(child_cell, child_poly, "centroid")
+                    self._write_cells(child_cell, "centroid")
             # 3: check the children (call this same function on the children)
             else:
                 if self.geometry.overlaps(child_poly):
                     self._get_dggs_poly(child_cell)
 
-    def _write_cells(self, cell: Cell, poly: Polygon, desc: str) -> None:
+    def _write_cells(self, cell: Cell, desc: str) -> None:
         """
-        Writes cell / polygon details to either or both of a list or a file.
+        Record a cell on the list, the file, or both. `desc` says which test
+        the cell passed, and is written to the file alongside it.
         """
         if self.file is not None:
             self.file.write(f"{cell!s} {desc}\n ")

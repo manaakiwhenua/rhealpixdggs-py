@@ -494,7 +494,7 @@ def run_tests() -> None:
     ok("tests and doctests pass")
 
 
-def build(version: str) -> None:
+def build() -> None:
     say("\nBuilding")
     if DIST.exists():
         say(f"  $ rm -rf {DIST.relative_to(ROOT)}")
@@ -629,7 +629,7 @@ def stage_prepare(version: str) -> None:
             ok(f"CITATION.CFF -> {version}, released {today.isoformat()}")
 
     run_tests()
-    build(version)
+    build()
     if not _dry_run:
         verify_artifacts(version)
 
