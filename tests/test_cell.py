@@ -1673,3 +1673,45 @@ class SCENZGridCELLTestCase(unittest.TestCase):
                 self.assertTrue(
                     c.contains(p, plane=plane)
                 )  # ------------------------------------------------------------------------------
+
+
+class CellZoneOperationsTestCase(unittest.TestCase):
+    """
+    Cell's eight Table 53 operations are conveniences that wrap the cell in a
+    ZoneSet and delegate. None of them had a test, so this pins the property
+    that makes them conveniences: each must agree with the ZoneSet operation
+    it stands for.
+    """
+
+    def setUp(self):
+        from rhealpixdggs.zoneset import ZoneSet
+
+        self.ZoneSet = ZoneSet
+        self.rdggs = WGS84_003
+        self.a = self.rdggs.cell(["N", 0])
+        self.b = self.rdggs.cell(["N", 1])
+
+    def as_zoneset(self, cell):
+        return self.ZoneSet(self.rdggs, [cell])
+
+    def test_binary_operations_match_zoneset(self):
+        for name in ("union", "intersection", "difference", "sym_difference"):
+            with self.subTest(op=name):
+                viaCell = getattr(self.a, name)(self.b)
+                viaSet = getattr(self.as_zoneset(self.a), name)(self.b)
+                self.assertEqual(set(viaCell.cells), set(viaSet.cells))
+                self.assertIsInstance(viaCell, self.ZoneSet)
+
+    def test_hierarchy_and_buffer_match_zoneset(self):
+        for name, arg in (("parent", 1), ("child", 1), ("sibling", 1), ("buffer", 1)):
+            with self.subTest(op=name):
+                viaCell = getattr(self.a, name)(arg)
+                viaSet = getattr(self.as_zoneset(self.a), name)(arg)
+                self.assertEqual(set(viaCell.cells), set(viaSet.cells))
+                self.assertIsInstance(viaCell, self.ZoneSet)
+
+    def test_union_is_not_empty_and_contains_both(self):
+        # A sanity anchor, so the comparison above cannot pass by both sides
+        # being equally wrong.
+        result = set(self.a.union(self.b).cells)
+        self.assertEqual(result, {str(self.a), str(self.b)})
