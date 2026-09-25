@@ -12,6 +12,7 @@ Keep adding tests!
 # *****************************************************************************
 
 import unittest
+import warnings
 
 import shapely as sh
 
@@ -1192,3 +1193,63 @@ class RhpWrappersTestCase(unittest.TestCase):
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
     unittest.main()
+
+
+class WarningStacklevelTestCase(unittest.TestCase):
+    """
+    Every warning these wrappers emit is about the caller's input, so it must
+    be attributed to the caller's line rather than to a line inside
+    ``rhp_wrappers``. That is what ``stacklevel`` controls, and getting it
+    wrong is invisible except to whoever reads the warning, so pin it: the
+    recorded filename must be this file.
+    """
+
+    def assert_blames_caller(self, call):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            call()
+        self.assertTrue(caught, "expected a warning, got none")
+        self.assertEqual(
+            caught[0].filename,
+            __file__,
+            f"warning blamed {caught[0].filename}:{caught[0].lineno}, "
+            "not the caller",
+        )
+
+    def test_parent_resolution_warning_blames_caller(self):
+        # A parent finer than the cell itself: nonsense, and warned about.
+        self.assert_blames_caller(lambda: rhpw.rhp_to_parent("N1", res=5, verbose=True))
+
+    def test_cell_centre_warning_blames_caller(self):
+        # An even N_side has no cell at the centre of its parent.
+        self.assert_blames_caller(
+            lambda: rhpw.rhp_to_center_child("N1", verbose=True, dggs=gs.WGS84_002)
+        )
+
+    def test_child_resolution_warning_blames_caller(self):
+        # A centre child coarser than the cell itself.
+        self.assert_blames_caller(
+            lambda: rhpw.rhp_to_center_child("N123", res=1, verbose=True)
+        )
+
+    def test_polyfill_geometry_warnings_blame_caller(self):
+        # Empty geometry is malformed but shapely calls it valid, so this
+        # takes the branch that reports our own message; the bowtie is
+        # self-intersecting, so it takes the branch that reports shapely's.
+        # polyfill warns from a private helper, so its stacklevel differs.
+        self.assert_blames_caller(
+            lambda: rhpw.polyfill(sh.Polygon(), res=3, verbose=True)
+        )
+        bowtie = sh.Polygon([(0, 0), (2, 2), (2, 0), (0, 2)])
+        self.assert_blames_caller(lambda: rhpw.polyfill(bowtie, res=3, verbose=True))
+
+    def test_linetrace_geometry_warnings_blame_caller(self):
+        self.assert_blames_caller(
+            lambda: rhpw.linetrace(sh.LineString(), res=3, verbose=True)
+        )
+        # A line collapsed onto a single point is invalid to shapely, which
+        # takes the branch that reports shapely's own reason.
+        degenerate = sh.LineString([(0, 0), (0, 0)])
+        self.assert_blames_caller(
+            lambda: rhpw.linetrace(degenerate, res=3, verbose=True)
+        )
