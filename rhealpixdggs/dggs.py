@@ -161,7 +161,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import pairwise, product
 from math import asin, copysign, floor, pi
 from random import randint
-from typing import Literal, NamedTuple, cast, overload
+from typing import Any, Literal, NamedTuple, cast, overload
 
 import numpy as np
 
@@ -178,6 +178,7 @@ from rhealpixdggs.cell import (
     CELLS0,
     Cell,
     _gauss_legendre_unit,
+    _geod,
 )
 from rhealpixdggs.ellipsoids import (
     UNIT_SPHERE,
@@ -1630,15 +1631,27 @@ class RHEALPixDGGS:
         lend: tuple[float, float],
         plane: bool = True,
         wrap_antimeridian: bool = False,
+        line: Literal["plane", "plate_carree", "geodesic"] | None = None,
     ) -> list[Cell]:
         """
         Return the ordered list of resolution `resolution` cells that the
         line segment from `lstart` to `lend` passes through.
 
-        The segment is straight in the given coordinate space: planar
-        coordinates if `plane` = True, longitude-latitude coordinates
-        otherwise (so it is a plate carree straight line, not a geodesic;
-        to trace a geodesic, densify it into short segments first). In
+        `line` names the curve the endpoints describe:
+
+        - ``"plane"``: straight in planar coordinates.
+        - ``"plate_carree"``: straight in longitude-latitude coordinates.
+        - ``"geodesic"``: the shortest path on the grid's ellipsoid, which
+          is what a linestring digitised in a geographic CRS usually
+          means. `wrap_antimeridian` is ignored, a geodesic already taking
+          the short way, and an antipodal pair raises ValueError, its
+          shortest path not being unique.
+
+        `plane` is the older spelling of the first two and is used when
+        `line` is not given: True for ``"plane"``, False for
+        ``"plate_carree"``.
+
+        A plate carree segment is not a geodesic. In
         particular, a longitude-latitude segment spanning more than half
         a turn of longitude does not, by default, wrap around the
         antimeridian: a segment from longitude 179 to longitude -179 runs
@@ -1675,8 +1688,35 @@ class RHEALPixDGGS:
             >>> print([str(cell) for cell in cells])
             ['N448', 'N447']
 
+        The same endpoints under the two longitude-latitude semantics: the
+        geodesic from Europe to Siberia passes north of the plate carree
+        line and misses Q0 entirely::
+
+            >>> print([str(c) for c in rdggs.cells_from_line(1, (-20, 35), (60, 52), line="plate_carree")])
+            ['P2', 'Q0', 'N2', 'N1']
+            >>> print([str(c) for c in rdggs.cells_from_line(1, (-20, 35), (60, 52), line="geodesic")])
+            ['P2', 'N2', 'N1']
+
         """
-        if wrap_antimeridian and not plane:
+        if line is None:
+            line = "plane" if plane else "plate_carree"
+        if line not in ("plane", "plate_carree", "geodesic"):
+            raise ValueError(
+                "line must be 'plane', 'plate_carree' or 'geodesic', " f"not {line!r}"
+            )
+        # `plane` remains the flag the rest of the method and
+        # `cell_from_point` take: a geodesic is given in longitude-latitude
+        # like a plate carree line, it is only a different curve between
+        # the same endpoints.
+        plane = line == "plane"
+
+        if line == "geodesic" and self._antipodal(lstart, lend):
+            raise ValueError(
+                "the shortest path between antipodal points is not unique: "
+                f"{lstart} and {lend}"
+            )
+
+        if wrap_antimeridian and line == "plate_carree":
             # Take the short way in longitude: shift the end longitude by
             # a full turn so the segment crosses the antimeridian. The
             # projection wraps longitudes, so the out-of-range value
@@ -1707,6 +1747,50 @@ class RHEALPixDGGS:
                 lstart[0] + ts * (lend[0] - lstart[0]),
                 lstart[1] + ts * (lend[1] - lstart[1]),
             )
+
+        if line == "geodesic":
+            # Parametrise by fraction of arc length: t = 0 at the start,
+            # t = 1 at the end, so the parameter means the same thing as
+            # it does for the straight cases and the crossing parameters
+            # are directly usable as length fractions.
+            ell = self.ellipsoid
+            geod = _geod(ell.a, ell.f)
+            to_deg = 180 / pi if ell.radians else 1.0
+            from_deg = pi / 180 if ell.radians else 1.0
+            lon1, lat1 = lstart[0] * to_deg, lstart[1] * to_deg
+            lon2, lat2 = lend[0] * to_deg, lend[1] * to_deg
+            azimuth, _, length = geod.inv(lon1, lat1, lon2, lat2)
+
+            # Geod wraps longitude into (-180, 180], which puts a jump in
+            # the middle of any geodesic crossing the antimeridian. The
+            # sweep needs a continuous parametrisation, and the scalar and
+            # array forms must agree, so both undo the wrap the same way:
+            # relative to the start. A shortest geodesic spans at most half
+            # a turn of longitude, so the branch is unambiguous.
+            def unwrap(lon: Any) -> Any:
+                return lon - 360.0 * np.round((lon - lon1) / 360.0)
+
+            def point_at(t: float) -> tuple[float, float]:
+                lon, lat, _ = geod.fwd(lon1, lat1, azimuth, t * length)
+                return (float(unwrap(lon)) * from_deg, lat * from_deg)
+
+            def points_at(ts: FloatArray) -> tuple[FloatArray, FloatArray]:
+                n = ts.shape[0]
+                if n == 1:
+                    # pyproj dispatches a one-element array to its scalar
+                    # path and then scalarises it, which numpy deprecates.
+                    lon, lat = point_at(float(ts[0]))
+                    return (
+                        np.array([lon], dtype=np.float64),
+                        np.array([lat], dtype=np.float64),
+                    )
+                lons, lats, _ = geod.fwd(
+                    np.full(n, lon1),
+                    np.full(n, lat1),
+                    np.full(n, azimuth),
+                    ts * length,
+                )
+                return (unwrap(lons) * from_deg, lats * from_deg)
 
         if plane:
             q = point_at
@@ -1739,7 +1823,7 @@ class RHEALPixDGGS:
                     if 0.0 < t < 1.0:
                         breakpoints.add(t)
 
-        if not plane:
+        if line == "plate_carree":
             ell = self.ellipsoid
             half = pi if ell.radians else 180.0
             quarter = half / 2
@@ -1780,7 +1864,10 @@ class RHEALPixDGGS:
             return [anchor + i * w for i in range(i0, i1 + 1)]
 
         def monotone_cuts(
-            axis: int, scan_ts: list[float], scan_vs: list[float]
+            axis: int,
+            scan_ts: list[float],
+            scan_vs: list[float],
+            at: Callable[[float], tuple[float, float]] | None = None,
         ) -> list[tuple[float, float]]:
             # Split the scanned piece into runs on which q(t)[axis] is
             # monotone, returning the run boundaries as (t, q(t)[axis]):
@@ -1793,6 +1880,7 @@ class RHEALPixDGGS:
             # the coordinate is flat there, varying with the square of the
             # offset, so its value at the cut is already exact to the
             # floating-point floor whatever the piece's length.
+            evaluate = q if at is None else at
             inv_phi = (5**0.5 - 1) / 2
             tol = 1e-8 * (scan_ts[-1] - scan_ts[0])
             cuts = [(scan_ts[0], scan_vs[0])]
@@ -1808,22 +1896,74 @@ class RHEALPixDGGS:
                     lo, hi = scan_ts[max(i - 2, 0)], scan_ts[i]
                     m1 = hi - inv_phi * (hi - lo)
                     m2 = lo + inv_phi * (hi - lo)
-                    g1 = direction * float(q(m1)[axis])
-                    g2 = direction * float(q(m2)[axis])
+                    g1 = direction * float(evaluate(m1)[axis])
+                    g2 = direction * float(evaluate(m2)[axis])
                     while hi - lo > tol:
                         if g1 < g2:
                             lo, m1, g1 = m1, m2, g2
                             m2 = lo + inv_phi * (hi - lo)
-                            g2 = direction * float(q(m2)[axis])
+                            g2 = direction * float(evaluate(m2)[axis])
                         else:
                             hi, m2, g2 = m2, m1, g1
                             m1 = hi - inv_phi * (hi - lo)
-                            g1 = direction * float(q(m1)[axis])
+                            g1 = direction * float(evaluate(m1)[axis])
                     tc = 0.5 * (lo + hi)
-                    cuts.append((tc, float(q(tc)[axis])))
+                    cuts.append((tc, float(evaluate(tc)[axis])))
                     direction = d
             cuts.append((scan_ts[-1], scan_vs[-1]))
             return cuts
+
+        if line == "geodesic":
+            # Same boundaries as a plate carree line, but longitude and
+            # latitude are no longer linear in the parameter, so they are
+            # found the same way the planar crossings are: scan, split into
+            # monotone runs, bracket each sign change and solve. Along a
+            # geodesic longitude is monotone and latitude has at most one
+            # extremum (its vertex), so the runs are few and a coarse scan
+            # brackets every crossing.
+            ell = self.ellipsoid
+            half = pi if ell.radians else 180.0
+            quarter = half / 2
+            phi_reg = auth_lat(asin(2.0 / 3), ell.e, inverse=True, radians=True)
+            if not ell.radians:
+                phi_reg = phi_reg * 180 / pi
+            lat_targets = [
+                ell.lat_0 + phi_reg,
+                ell.lat_0 - phi_reg,
+                ell.lat_0 + quarter,
+                ell.lat_0 - quarter,
+            ]
+            scan_ts = [i / 256 for i in range(257)]
+            scan_lon, scan_lat = points_at(np.array(scan_ts, dtype=np.float64))
+            scan_lon, scan_lat = scan_lon.tolist(), scan_lat.tolist()
+            lo = min(scan_lon) - ell.lon_0
+            hi = max(scan_lon) - ell.lon_0
+            lon_targets = [
+                ell.lon_0 + k * quarter
+                for k in range(floor(lo / quarter), int(np.ceil(hi / quarter)) + 1)
+            ]
+            geo_brackets: list[tuple[float, float, float, float, int, float]] = []
+            for axis, scan_vs, targets in (
+                (1, scan_lat, lat_targets),
+                (0, scan_lon, lon_targets),
+            ):
+                for (ra, va), (rb, vb) in pairwise(
+                    monotone_cuts(axis, scan_ts, scan_vs, point_at)
+                ):
+                    for target in targets:
+                        fa, fb = va - target, vb - target
+                        if fa == 0.0:
+                            breakpoints.add(ra)
+                        elif fb == 0.0:
+                            breakpoints.add(rb)
+                        elif (fa < 0.0) != (fb < 0.0):
+                            geo_brackets.append((ra, rb, fa, fb, axis, target))
+            if geo_brackets:
+                breakpoints.update(
+                    root
+                    for root in self._solve_brackets(geo_brackets, points_at)
+                    if 0.0 < root < 1.0
+                )
 
         # Sweep the pieces, projecting each piece's 65-point scan as one
         # array, and gather every lattice-line crossing as a bracket
@@ -1844,14 +1984,14 @@ class RHEALPixDGGS:
                 anchor = x_anchor if axis == 0 else y_anchor
                 cuts = monotone_cuts(axis, scan_ts, scan_vs)
                 for (ra, va), (rb, vb) in pairwise(cuts):
-                    for line in lattice_lines_between(va, vb, anchor):
-                        fa, fb = va - line, vb - line
+                    for edge in lattice_lines_between(va, vb, anchor):
+                        fa, fb = va - edge, vb - edge
                         if fa == 0:
                             crossings.add(ra)
                         elif fb == 0:
                             crossings.add(rb)
                         else:
-                            brackets.append((ra, rb, fa, fb, axis, line))
+                            brackets.append((ra, rb, fa, fb, axis, edge))
             if pb < 1.0:
                 # The piece boundary itself may be a cell change (a face
                 # jump, or a kink lying exactly on a cell edge).
@@ -1869,6 +2009,74 @@ class RHEALPixDGGS:
         if line_cells[-1] != end:
             line_cells.append(end)
         return line_cells
+
+    def geodesic_points(
+        self,
+        start: tuple[float, float],
+        end: tuple[float, float],
+        n: int = 2,
+    ) -> list[tuple[float, float]]:
+        """
+        Return `n` longitude-latitude points evenly spaced by arc length
+        along the geodesic from `start` to `end` on this grid's ellipsoid,
+        including both endpoints. `n` must be at least 2.
+
+        This is the densifier that tracing a geodesic as a chain of short
+        straight segments needs; `cells_from_line(..., line="geodesic")`
+        traces one exactly and needs no densification.
+
+        Raise ValueError for `n` < 2, or if the endpoints are antipodal,
+        where no single geodesic between them is shortest.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> pts = rdggs.geodesic_points((0, 0), (90, 0), 3)
+            >>> print([(round(lon, 9), round(lat, 9)) for lon, lat in pts])
+            [(0.0, 0.0), (45.0, 0.0), (90.0, 0.0)]
+
+        """
+        if n < 2:
+            raise ValueError(f"n must be at least 2, not {n}")
+        if self._antipodal(start, end):
+            raise ValueError(
+                "the shortest path between antipodal points is not unique: "
+                f"{start} and {end}"
+            )
+        ell = self.ellipsoid
+        geod = _geod(ell.a, ell.f)
+        to_deg = 180 / pi if ell.radians else 1.0
+        from_deg = pi / 180 if ell.radians else 1.0
+        lon1, lat1 = start[0] * to_deg, start[1] * to_deg
+        azimuth, _, length = geod.inv(lon1, lat1, end[0] * to_deg, end[1] * to_deg)
+        distances = np.linspace(0.0, length, n)
+        lons, lats, _ = geod.fwd(
+            np.full(n, lon1), np.full(n, lat1), np.full(n, azimuth), distances
+        )
+        points = [
+            (float(lon) * from_deg, float(lat) * from_deg)
+            for lon, lat in zip(lons, lats, strict=True)
+        ]
+        # Give back the endpoints exactly as passed: the round trip through
+        # fwd() is accurate to a fraction of a nanometre but not exact, and
+        # a densifier that moves its own endpoints is a nuisance to chain.
+        points[0] = (float(start[0]), float(start[1]))
+        points[-1] = (float(end[0]), float(end[1]))
+        return points
+
+    def _antipodal(
+        self, p: tuple[float, float], q: tuple[float, float], tol: float = 1e-9
+    ) -> bool:
+        """
+        Whether `p` and `q` are antipodal, so that no single geodesic
+        between them is shortest. Both are longitude-latitude pairs in the
+        ellipsoid's angular unit.
+        """
+        half = pi if self.ellipsoid.radians else 180.0
+        if abs(p[1] + q[1]) > tol:
+            return False
+        dlon = abs(q[0] - p[0]) % (2 * half)
+        return abs(dlon - half) <= tol
 
     @staticmethod
     def _solve_brackets(

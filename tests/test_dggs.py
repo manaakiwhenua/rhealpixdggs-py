@@ -22,7 +22,7 @@ import numpy as np
 from numpy import array, pi
 
 # import rhealpixdggs.dggs as dggs
-from rhealpixdggs.cell import CELLS0
+from rhealpixdggs.cell import CELLS0, _geod
 from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
 from rhealpixdggs.ellipsoids import (
     WGS84_ELLIPSOID,
@@ -1148,3 +1148,121 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
     unittest.main()
+
+
+class GeodesicLineTestCase(unittest.TestCase):
+    """
+    `cells_from_line(..., line="geodesic")` traces the shortest path on the
+    ellipsoid. The reference it is checked against is the thing the
+    docstring used to tell callers to build for themselves: the same
+    geodesic densified into many short plate carree segments.
+    """
+
+    def setUp(self):
+        self.rdggs = WGS84_003
+
+    def densified(self, resolution, start, end, n):
+        """The geodesic traced as a chain of `n` short plate carree steps."""
+        points = self.rdggs.geodesic_points(start, end, n + 1)
+        cells = []
+        for a, b in itertools.pairwise(points):
+            # Each step is short, so the short way across the antimeridian
+            # is the one that approximates the geodesic; the plate carree
+            # default would send a straddling step the long way round.
+            for cell in self.rdggs.cells_from_line(
+                resolution, a, b, plane=False, wrap_antimeridian=True
+            ):
+                if not cells or cells[-1] != cell:
+                    cells.append(cell)
+        return [str(c) for c in cells]
+
+    def test_matches_a_densified_trace(self):
+        cases = [
+            ("equatorial", (-20.0, 5.0), (40.0, -3.0)),
+            ("mid-latitude", (-20.0, 35.0), (60.0, 52.0)),
+            ("over a polar face", (10.0, 70.0), (-170.0, 72.0)),
+            ("across the antimeridian", (150.0, -20.0), (-150.0, -30.0)),
+        ]
+        for name, start, end in cases:
+            with self.subTest(case=name):
+                exact = [
+                    str(c)
+                    for c in self.rdggs.cells_from_line(3, start, end, line="geodesic")
+                ]
+                self.assertEqual(exact, self.densified(3, start, end, 2000))
+
+    def test_densification_converges_on_the_exact_trace(self):
+        # The approximation the exact sweep replaces: as the step shrinks,
+        # the densified trace must stop changing and equal the exact one.
+        start, end = (-20.0, 35.0), (60.0, 52.0)
+        exact = [
+            str(c) for c in self.rdggs.cells_from_line(4, start, end, line="geodesic")
+        ]
+        previous_wrong = None
+        for n in (4, 32, 512, 4000):
+            got = self.densified(4, start, end, n)
+            if n == 4000:
+                self.assertEqual(got, exact, "did not converge at the finest step")
+            elif got != exact:
+                previous_wrong = n
+        self.assertIsNotNone(
+            previous_wrong, "a coarse densification should differ from the exact trace"
+        )
+
+    def test_meridian_and_equator_agree_under_both_semantics(self):
+        # A meridian and the equator are geodesics and plate carree lines at
+        # once, so the two semantics must give the very same cells.
+        for name, start, end in (
+            ("meridian", (25.0, -40.0), (25.0, 78.0)),
+            ("equator", (-30.0, 0.0), (55.0, 0.0)),
+        ):
+            with self.subTest(case=name):
+                geodesic = self.rdggs.cells_from_line(4, start, end, line="geodesic")
+                flat = self.rdggs.cells_from_line(4, start, end, line="plate_carree")
+                self.assertEqual(geodesic, flat)
+
+    def test_consecutive_cells_touch(self):
+        # The contract the other semantics keep: the sequence is a path.
+        cells = self.rdggs.cells_from_line(
+            4, (-60.0, -25.0), (100.0, 65.0), line="geodesic"
+        )
+        self.assertGreater(len(cells), 10)
+        for a, b in itertools.pairwise(cells):
+            self.assertTrue(
+                a.touches(b) or a.overlaps(b), f"{a} and {b} are not adjacent"
+            )
+
+    def test_antipodal_raises(self):
+        for start, end in (((10.0, 20.0), (-170.0, -20.0)), ((0.0, 0.0), (180.0, 0.0))):
+            with self.subTest(pair=(start, end)):
+                with self.assertRaises(ValueError):
+                    self.rdggs.cells_from_line(3, start, end, line="geodesic")
+                with self.assertRaises(ValueError):
+                    self.rdggs.geodesic_points(start, end, 5)
+
+    def test_unknown_semantics_raises(self):
+        with self.assertRaises(ValueError):
+            self.rdggs.cells_from_line(3, (0.0, 0.0), (1.0, 1.0), line="great_circle")
+
+    def test_plane_flag_still_selects_the_old_semantics(self):
+        start, end = (-20.0, 35.0), (60.0, 52.0)
+        self.assertEqual(
+            self.rdggs.cells_from_line(3, start, end, plane=False),
+            self.rdggs.cells_from_line(3, start, end, line="plate_carree"),
+        )
+
+    def test_geodesic_points(self):
+        start, end = (-20.0, 35.0), (150.0, 62.0)
+        points = self.rdggs.geodesic_points(start, end, 9)
+        self.assertEqual(len(points), 9)
+        self.assertEqual(points[0], start)
+        self.assertEqual(points[-1], end)
+        # Evenly spaced by arc length, so consecutive gaps agree.
+        geod = _geod(self.rdggs.ellipsoid.a, self.rdggs.ellipsoid.f)
+        gaps = [
+            geod.inv(a[0], a[1], b[0], b[1])[2] for a, b in itertools.pairwise(points)
+        ]
+        for gap in gaps:
+            self.assertAlmostEqual(gap, gaps[0], delta=gaps[0] * 1e-9)
+        with self.assertRaises(ValueError):
+            self.rdggs.geodesic_points(start, end, 1)
