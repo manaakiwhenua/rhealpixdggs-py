@@ -63,6 +63,57 @@ The rhp_wrappers Module
    who split their geometries at the antimeridian beforehand never need
    the flag.
 
+Line semantics
+--------------
+
+Two points do not by themselves say which line joins them, and the three
+answers give different cells. ``line`` names the one wanted:
+``"geodesic"`` for the shortest path on the ellipsoid, ``"plate_carree"``
+for a line straight in longitude and latitude, and ``"plane"`` for one
+straight in the rHEALPix plane. The older ``plane`` flag still selects
+between the last two.
+
+A linestring digitised in a geographic CRS usually means geodesic
+segments between its vertices, which is what ``line="geodesic"`` traces,
+exactly and without densifying. ``wrap_antimeridian`` does not apply to a
+geodesic, which already takes the short way, and an antipodal pair raises
+``ValueError`` because no single geodesic between them is shortest.
+
+.. figure:: images/line_semantics.*
+   :alt: Nine panels. The top row shows one pair of points near 47
+         degrees north joined three ways, drawn on the ellipsoid seen
+         from above the pole, in plate carree, and in the north polar
+         square of the plane. The middle row shows the cells each
+         reading traces, in the plane. The bottom row shows the same
+         cells back on the ellipsoid.
+   :width: 100%
+
+   Each line is straight in exactly one of the three spaces, and the
+   panels are those spaces. The plate carree line stays flat near 47
+   degrees north while the geodesic and the planar line arc over the
+   pole. All three trace sixteen cells here, but not the same sixteen.
+
+.. figure:: images/line_semantics_faces.*
+   :alt: Nine panels laid out as the previous figure, for a line from
+         Sao Paulo to Berlin. The planar reading leaves the grid part
+         way and its cells fall in two disconnected groups.
+   :width: 100%
+
+   Once a line crosses faces the readings separate further. The
+   geodesic and the plate carree line stay close; the straight planar
+   line does not, and part of it leaves the grid's cross-shaped planar
+   image altogether, so the cells it returns are not a connected path.
+   ``cells_from_line`` warns when that happens.
+
+Attributing length to cells
+---------------------------
+
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.line_crossings` takes the same
+arguments and returns, per cell in the order ``cells_from_line`` gives
+them, the fraction of the line's length on the ellipsoid lying in that
+cell, so a feature's length can be shared out among the cells it crosses.
+A cell visited twice gets an entry per visit, and the fractions sum to 1.
+
 .. currentmodule:: rhealpixdggs.rhp_wrappers
 
 .. autosummary::

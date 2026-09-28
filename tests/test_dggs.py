@@ -16,6 +16,7 @@ Keep adding tests!
 
 import itertools
 import unittest
+import warnings
 from random import randint  # , uniform
 
 import numpy as np
@@ -1399,3 +1400,53 @@ class LineCrossingsTestCase(unittest.TestCase):
             ),
             [],
         )
+
+
+class DiscontinuousPlanarLineTestCase(unittest.TestCase):
+    """
+    The grid's planar image is a cross, so a straight planar line can leave
+    it. `cells_from_line` still returns the cells on both sides, which is
+    the honest answer to the question asked, but the result is not a
+    connected path and the caller is told so.
+    """
+
+    def setUp(self):
+        self.rdggs = WGS84_003
+        # Sao Paulo to Berlin: a fifth of the planar line is off the grid.
+        self.start = self.rdggs.rhealpix(-46.63, -23.55)
+        self.end = self.rdggs.rhealpix(13.40, 52.52)
+
+    def test_warns_and_the_path_is_broken(self):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            cells = self.rdggs.cells_from_line(2, self.start, self.end, plane=True)
+        self.assertEqual(len(caught), 1)
+        self.assertIn("not a connected path", str(caught[0].message))
+        self.assertEqual(caught[0].filename, __file__, "should blame the caller")
+        # The warning is earned: some consecutive pair really does not touch.
+        broken = [
+            (a, b)
+            for a, b in itertools.pairwise(cells)
+            if not (a.touches(b) or a.overlaps(b))
+        ]
+        self.assertTrue(broken, "expected a break in the returned path")
+
+    def test_line_crossings_warns_too(self):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            crossings = self.rdggs.line_crossings(2, self.start, self.end, plane=True)
+        self.assertEqual(len(caught), 1)
+        # The fractions still sum to 1: the stretch off the grid has no
+        # counterpart on the ellipsoid, so it is no length at all.
+        self.assertAlmostEqual(sum(f for _, f in crossings), 1.0, places=9)
+
+    def test_no_warning_when_the_line_stays_on_the_grid(self):
+        for line, start, end in (
+            ("geodesic", (-46.63, -23.55), (13.40, 52.52)),
+            ("plate_carree", (-46.63, -23.55), (13.40, 52.52)),
+        ):
+            with self.subTest(line=line):
+                with warnings.catch_warnings(record=True) as caught:
+                    warnings.simplefilter("always")
+                    self.rdggs.cells_from_line(2, start, end, line=line)
+                self.assertEqual(caught, [])

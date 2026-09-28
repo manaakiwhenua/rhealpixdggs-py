@@ -161,7 +161,8 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import pairwise, product
 from math import asin, copysign, floor, fsum, pi
 from random import randint
-from typing import Any, Literal, NamedTuple, cast, overload
+from typing import Any, Literal, NamedTuple, cast, get_args, overload
+from warnings import warn
 
 import numpy as np
 
@@ -171,7 +172,27 @@ import numpy as np
 _LATTICE_CHUNK = 250_000
 # Samples across a whole line when measuring the length of a curve that
 # is not parametrised by arc length.
+# The line semantics `cells_from_line` and `line_crossings` accept. Named
+# once: the annotation and the runtime check are otherwise two sources of
+# truth for the same set, and a fourth value would have to be added to
+# both. Literal rather than an Enum because this is an argument a caller
+# passes, which is what `containment` and `unit` in rhp_wrappers also use;
+# the Enums in this package (RelativePosition, BoundaryType) are values it
+# returns, each implementing a named OGC code list.
+LineSemantics = Literal["plane", "plate_carree", "geodesic"]
+LINE_SEMANTICS: tuple[str, ...] = get_args(LineSemantics)
+
 _ARC_LENGTH_SAMPLES = 4096
+# A straight planar line can pass through part of the plane that belongs to
+# no cell, the grid's planar image being a cross rather than a rectangle.
+# The cells either side are still returned, so the result is a real answer
+# to the question asked, but it is not a connected path and a caller
+# walking it as one would be misled.
+DISCONTINUOUS_LINE_WARNING = (
+    "the planar line leaves the grid's planar image: the cells returned "
+    "are those it passes through, but consecutive cells in the list need "
+    "not touch, so the result is not a connected path"
+)
 from scipy.special import roots_legendre
 
 import rhealpixdggs.pj_rhealpix as pjr
@@ -1667,7 +1688,7 @@ class RHEALPixDGGS:
         lend: tuple[float, float],
         plane: bool = True,
         wrap_antimeridian: bool = False,
-        line: Literal["plane", "plate_carree", "geodesic"] | None = None,
+        line: LineSemantics | None = None,
     ) -> "_LineTrace | None":
         """
         Sweep the segment from `lstart` to `lend` once, returning the
@@ -1686,6 +1707,13 @@ class RHEALPixDGGS:
           means. `wrap_antimeridian` is ignored, a geodesic already taking
           the short way, and an antipodal pair raises ValueError, its
           shortest path not being unique.
+
+        The longitude-latitude readings take geographic coordinates on this
+        grid's ellipsoid, not a projected coordinate reference system.
+        Coordinates from a projected CRS are not rejected: an easting of
+        1748736 is read as that many degrees of longitude and wrapped into
+        range, so a short line can come back as a million cells rather than
+        as an error. Transform to longitude and latitude first.
 
         The boolean `plane` flag predates `line` and chooses between the
         two straight cases. It applies only when `line` is not given:
@@ -1742,10 +1770,9 @@ class RHEALPixDGGS:
         """
         if line is None:
             line = "plane" if plane else "plate_carree"
-        if line not in ("plane", "plate_carree", "geodesic"):
-            raise ValueError(
-                "line must be 'plane', 'plate_carree' or 'geodesic', " f"not {line!r}"
-            )
+        if line not in LINE_SEMANTICS:
+            allowed = ", ".join(repr(value) for value in LINE_SEMANTICS)
+            raise ValueError(f"line must be one of {allowed}, not {line!r}")
         # `plane` remains the flag the rest of the method and
         # `cell_from_point` take: a geodesic is given in longitude-latitude
         # like a plate carree line, it is only a different curve between
@@ -2067,6 +2094,10 @@ class RHEALPixDGGS:
             if plane
             else point_at
         )
+        if any(cell is None for cell, _, _ in runs):
+            # Only a planar line can do this: every point of the ellipsoid
+            # lies in some cell, so the other two semantics never leave.
+            warn(DISCONTINUOUS_LINE_WARNING, stacklevel=3)
         return _LineTrace(start, end, runs, point_at, lonlat_at, geodesic_length)
 
     def cells_from_line(
@@ -2076,7 +2107,7 @@ class RHEALPixDGGS:
         lend: tuple[float, float],
         plane: bool = True,
         wrap_antimeridian: bool = False,
-        line: Literal["plane", "plate_carree", "geodesic"] | None = None,
+        line: LineSemantics | None = None,
     ) -> list[Cell]:
         """
         Return the ordered list of resolution `resolution` cells that the
@@ -2095,7 +2126,7 @@ class RHEALPixDGGS:
         lend: tuple[float, float],
         plane: bool = True,
         wrap_antimeridian: bool = False,
-        line: Literal["plane", "plate_carree", "geodesic"] | None = None,
+        line: LineSemantics | None = None,
     ) -> list[tuple[Cell, float]]:
         """
         Return, per cell in the order `cells_from_line` gives them, the

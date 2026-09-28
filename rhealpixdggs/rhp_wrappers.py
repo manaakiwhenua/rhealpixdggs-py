@@ -18,7 +18,7 @@ import rhealpixdggs.dggs as rhp_dggs
 
 # List of resolution 0 cell addresses (i.e. cube faces)
 from rhealpixdggs.cell import Cell, _ring_step_neighbors
-from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
+from rhealpixdggs.dggs import WGS84_003, LineSemantics, RHEALPixDGGS
 
 # Warnings
 PARENT_RESOLUTION_WARNING = "WARNING: You requested a parent resolution that is higher than the cell resolution. Returning the cell address itself."
@@ -1025,7 +1025,7 @@ def linetrace(
     verbose: bool = False,
     dggs: RHEALPixDGGS = WGS84_003,
     wrap_antimeridian: bool = False,
-    line: Literal["plane", "plate_carree", "geodesic"] | None = None,
+    line: LineSemantics | None = None,
 ) -> list[str] | None:
     """
     Returns the list of cell indices touched by a shapely linestring or multilinestring
