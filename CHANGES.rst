@@ -1,3 +1,56 @@
+0.11.0
+^^^^^^
+``RHEALPixDGGS.cells_from_line`` and ``rhp_wrappers.linetrace`` take a
+``line`` argument naming the curve the endpoints describe: ``"plane"``
+straight in planar coordinates, ``"plate_carree"`` straight in
+longitude-latitude, and the new ``"geodesic"``, the shortest path on the
+grid's ellipsoid. The ``plane`` flag still selects between the first two
+and is unchanged for callers who do not pass ``line``. A linestring
+digitised in a geographic CRS usually means geodesic segments between its
+vertices, which the docstring previously told callers to densify for
+themselves; ``"geodesic"`` traces one exactly, by the same sweep the other
+two use, and ``wrap_antimeridian`` does not apply to it because a geodesic
+already takes the short way. An antipodal pair raises ``ValueError``, no
+single geodesic between them being shortest (issue #167).
+
+Added ``RHEALPixDGGS.line_crossings``, which takes the same arguments and
+returns, per cell in the order ``cells_from_line`` gives them, the
+fraction of the line's length on the ellipsoid lying in that cell, so a
+feature's length can be attributed to the cells it crosses. A cell a line
+leaves and re-enters, as polar paths do, gets an entry per visit, and the
+fractions sum to 1. Added ``RHEALPixDGGS.geodesic_points``, the densifier
+callers were being told to write.
+
+``cells_from_line`` now warns when a planar line leaves the grid's
+cross-shaped planar image. The cells either side are still returned, as
+before, but they are not a connected path: between São Paulo and Berlin,
+``P01`` and ``N58`` are neighbours in the list and an ocean apart on the
+ground. Only a planar line can do this, every point of the ellipsoid lying
+in some cell. Two documentation figures show one pair of points read all
+three ways, the cells each reading traces, and those cells back on the
+ellipsoid, and the ``linetrace`` page gained sections on the line
+semantics and on attributing length to cells.
+
+Figures that show geography now shade the land rather than outlining it,
+on globes and in plate carree. Panels drawn in the plane keep outlines: a
+land polygon that wraps in longitude projects into a ring sweeping across
+the whole face, and filling it leaves wedges following no coastline.
+
+Maintenance, with no change in behaviour: ``pyproject.toml`` gained a
+``[tool.ruff.lint]`` section selecting the rule families that catch
+defects, which found 93 ``zip()`` calls with no ``strict`` argument --
+``zip`` truncates to its shortest argument, so a length mismatch returned
+a plausible wrong answer rather than raising -- and seven warnings with no
+``stacklevel``, which blamed a line inside ``rhp_wrappers`` rather than the
+caller (issue #177). ``rhealpixdggs.dggs``, ``cell``, ``pj_healpix``,
+``pj_rhealpix`` and ``projection_wrapper`` no longer carry ``my_round``,
+``assert_allclose`` or ``pi`` in their namespaces; those were imported
+only so their doctests could reach them, and each doctest now imports what
+it uses (issue #179). ``_ring_step_neighbors`` moved from ``rhp_wrappers``
+to ``cell``, where both its callers can import it, leaving the
+module-level import graph acyclic (issue #178).
+
+
 0.10.0
 ^^^^^^
 A new documentation page, Choosing N_side, compares the ``N_side`` 2 and 3
