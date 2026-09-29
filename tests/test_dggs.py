@@ -1369,9 +1369,9 @@ class LineCrossingsTestCase(unittest.TestCase):
                 self.assertGreater(share, 0.0)
 
     def test_planar_lines_never_raise_on_the_grid_boundary(self):
-        # A run's ends lie exactly on cell edges, and an edge that is also
-        # the boundary of the grid's planar image is outside the inverse
-        # projection's domain. Sampling there used to raise.
+        # A run's ends lie exactly on cell edges, and an edge that is
+        # also the boundary of the grid's planar image lies outside the
+        # inverse projection's domain.
         import random
 
         R = self.rdggs.ellipsoid.R_A
@@ -1395,9 +1395,7 @@ class LineCrossingsTestCase(unittest.TestCase):
 
     def test_a_line_of_no_length(self):
         # Both endpoints in the same place: one cell, and no length to
-        # share out. The refactor that gave cells_from_line and
-        # line_crossings a common sweep removed an early return here, so
-        # this pins the behaviour it used to short-circuit to.
+        # share out.
         point = (174.0, -41.0)
         for line in ("geodesic", "plate_carree"):
             with self.subTest(line=line):
@@ -1477,9 +1475,8 @@ class GeodesicSweepEdgeCaseTestCase(unittest.TestCase):
         self.rdggs = WGS84_003
 
     def test_a_geodesic_along_a_face_meridian(self):
-        # Due north along longitude 90, which is a face boundary. Every
-        # point of it is exactly on that boundary in floating point, so the
-        # sweep takes its exact-crossing branch rather than bracketing.
+        # Due north along longitude 90, a face boundary: every point is
+        # exactly on it, so the sweep takes its exact-crossing branch.
         trace = self.rdggs._trace_line(
             3, (90.0, -30.0), (90.0, 60.0), False, False, "geodesic"
         )
@@ -1502,10 +1499,8 @@ class GeodesicSweepEdgeCaseTestCase(unittest.TestCase):
         )
 
     def test_arc_length_gives_up_gracefully(self):
-        # If no sample of a run can be nudged inside the projection's
-        # domain, the run contributes no length rather than raising. Force
-        # it by handing _arc_length a curve with no longitude and latitude
-        # anywhere.
+        # A run whose samples cannot be nudged inside the projection's
+        # domain contributes no length rather than raising.
         def nowhere(_t):
             raise ValueError("outside the projection's domain")
 

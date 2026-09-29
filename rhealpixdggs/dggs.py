@@ -170,24 +170,16 @@ import numpy as np
 # (``RHEALPixDGGS._lattice_cells``), bounding the working set of callers such
 # as ``rhp_wrappers.polyfill`` however many cells a box holds.
 _LATTICE_CHUNK = 250_000
-# Samples across a whole line when measuring the length of a curve that
-# is not parametrised by arc length.
-# The line semantics `cells_from_line` and `line_crossings` accept. Named
-# once: the annotation and the runtime check are otherwise two sources of
-# truth for the same set, and a fourth value would have to be added to
-# both. Literal rather than an Enum because this is an argument a caller
-# passes, which is what `containment` and `unit` in rhp_wrappers also use;
-# the Enums in this package (RelativePosition, BoundaryType) are values it
-# returns, each implementing a named OGC code list.
+# Samples across a line whose parameter is not arc length.
+# Named once so the annotation and the runtime check cannot drift apart.
+# Literal, not Enum: this package uses Literal for arguments a caller
+# passes and Enum for values it returns that implement an OGC code list.
 LineSemantics = Literal["plane", "plate_carree", "geodesic"]
 LINE_SEMANTICS: tuple[str, ...] = get_args(LineSemantics)
 
 _ARC_LENGTH_SAMPLES = 4096
-# A straight planar line can pass through part of the plane that belongs to
-# no cell, the grid's planar image being a cross rather than a rectangle.
-# The cells either side are still returned, so the result is a real answer
-# to the question asked, but it is not a connected path and a caller
-# walking it as one would be misled.
+# The grid's planar image is a cross, so a straight planar line can cross
+# part of the plane belonging to no cell.
 DISCONTINUOUS_LINE_WARNING = (
     "the planar line leaves the grid's planar image: the cells returned "
     "are those it passes through, but consecutive cells in the list need "
@@ -294,10 +286,8 @@ class _LineTrace(NamedTuple):
     # stretch lying off the grid, which only a planar segment can have.
     runs: list[tuple["Cell | None", float, float]]
     point_at: Callable[[float], tuple[float, float]]
-    # The curve in longitude-latitude, whatever space point_at works in:
-    # for a planar line that means inverting the projection, which has no
-    # answer off the grid, so it is only ever called on a run that lies in
-    # a cell.
+    # The curve in longitude-latitude. For a planar line this inverts the
+    # projection, so it is only called on a run lying in a cell.
     lonlat_at: Callable[[float], tuple[float, float]]
     # The geodesic's length, when the parameter is arc length; None for the
     # straight cases, whose length has to be measured.
@@ -1773,10 +1763,8 @@ class RHEALPixDGGS:
         if line not in LINE_SEMANTICS:
             allowed = ", ".join(repr(value) for value in LINE_SEMANTICS)
             raise ValueError(f"line must be one of {allowed}, not {line!r}")
-        # `plane` remains the flag the rest of the method and
-        # `cell_from_point` take: a geodesic is given in longitude-latitude
-        # like a plate carree line, it is only a different curve between
-        # the same endpoints.
+        # `plane` is still the flag `cell_from_point` takes: a geodesic is
+        # given in longitude-latitude, like a plate carree line.
         plane = line == "plane"
 
         if line == "geodesic" and self._antipodal(lstart, lend):
@@ -1820,10 +1808,8 @@ class RHEALPixDGGS:
             )
 
         if line == "geodesic":
-            # Parametrise by fraction of arc length: t = 0 at the start,
-            # t = 1 at the end, so the parameter means the same thing as
-            # it does for the straight cases and the crossing parameters
-            # are directly usable as length fractions.
+            # By fraction of arc length, so the crossing parameters are
+            # length fractions directly.
             ell = self.ellipsoid
             geod = _geod(ell.a, ell.f)
             to_deg = 180 / pi if ell.radians else 1.0
@@ -1833,12 +1819,8 @@ class RHEALPixDGGS:
             azimuth, _, length = geod.inv(lon1, lat1, lon2, lat2)
             geodesic_length = float(length)
 
-            # Geod wraps longitude into (-180, 180], which puts a jump in
-            # the middle of any geodesic crossing the antimeridian. The
-            # sweep needs a continuous parametrisation, and the scalar and
-            # array forms must agree, so both undo the wrap the same way:
-            # relative to the start. A shortest geodesic spans at most half
-            # a turn of longitude, so the branch is unambiguous.
+            # Undo Geod's (-180, 180] wrap relative to the start, so the
+            # parametrisation stays continuous and both forms agree.
             def unwrap(lon: Any) -> Any:
                 return lon - 360.0 * np.round((lon - lon1) / 360.0)
 
@@ -1986,13 +1968,8 @@ class RHEALPixDGGS:
             return cuts
 
         if line == "geodesic":
-            # Same boundaries as a plate carree line, but longitude and
-            # latitude are no longer linear in the parameter, so they are
-            # found the same way the planar crossings are: scan, split into
-            # monotone runs, bracket each sign change and solve. Along a
-            # geodesic longitude is monotone and latitude has at most one
-            # extremum (its vertex), so the runs are few and a coarse scan
-            # brackets every crossing.
+            # The same boundaries as a plate carree line, but found by
+            # scanning and bracketing: they vary non-linearly with t.
             ell = self.ellipsoid
             half = pi if ell.radians else 180.0
             quarter = half / 2
@@ -2024,11 +2001,8 @@ class RHEALPixDGGS:
                 ):
                     for target in targets:
                         fa, fb = va - target, vb - target
-                        # The cuts chain, so this run's end is the next
-                        # run's start: an exact crossing at the end is
-                        # caught as an exact crossing at the start of the
-                        # next, and the last run ends at 1.0, which is a
-                        # breakpoint already. Only the start needs testing.
+                        # The cuts chain, so a crossing at a run's end is
+                        # caught at the next run's start.
                         if fa == 0.0:
                             breakpoints.add(ra)
                         elif (fa < 0.0) != (fb < 0.0):
@@ -2075,11 +2049,8 @@ class RHEALPixDGGS:
         if brackets:
             crossings.update(self._solve_brackets(brackets, q_array))
 
-        # Each interval between consecutive crossings lies in one cell,
-        # identified by its midpoint; merge neighbouring intervals that
-        # share a cell, and keep the intervals so that line_crossings can
-        # measure them. A None cell is a stretch off the grid, which only
-        # a planar segment can have.
+        # One cell per interval, found from its midpoint. A None cell is
+        # a stretch off the grid, which only a planar segment can have.
         ts = [0.0] + sorted(crossings) + [1.0]
         runs: list[tuple[Cell | None, float, float]] = []
         for a, b in pairwise(ts):
@@ -2170,11 +2141,8 @@ class RHEALPixDGGS:
         )
         if trace is None:
             return []
-        # A run in no cell is off the grid entirely, which only a planar
-        # line can be. Those planar points have no counterpart on the
-        # ellipsoid -- the inverse projection has no answer there -- so
-        # they contribute no ground length at all, rather than length that
-        # goes unattributed.
+        # Points off the grid have no counterpart on the ellipsoid, so
+        # they contribute no ground length at all.
         lengths = [
             0.0 if cell is None else self._arc_length(trace, t0, t1)
             for cell, t0, t1 in trace.runs
@@ -2183,9 +2151,8 @@ class RHEALPixDGGS:
         if total == 0.0:
             return [(cell, 0.0) for cell in trace.cells()]
 
-        # Walk the runs in step with the cells, so the two calls line up
-        # entry for entry; a cell forced in by an endpoint but holding no
-        # run of its own gets a zero share rather than going missing.
+        # In step with the cells, so a cell holding no run of its own gets
+        # a zero share rather than going missing.
         shares: dict[int, float] = {}
         ordered = trace.cells()
         position = 0
@@ -2214,11 +2181,9 @@ class RHEALPixDGGS:
         ell = self.ellipsoid
         geod = _geod(ell.a, ell.f)
         to_deg = 180 / pi if ell.radians else 1.0
-        # A run's ends sit exactly on cell edges, and where an edge is the
-        # boundary of the grid's planar image the inverse projection has no
-        # answer on it. Nudge such a sample towards the middle of the run
-        # until it lands inside; how far is needed depends on how steeply
-        # the curve meets the boundary, so a fixed inset will not do.
+        # A run's ends sit on cell edges, which at the grid's boundary are
+        # outside the inverse projection's domain. Nudge inward until they
+        # are not; how far depends on how steeply the curve meets it.
         middle = 0.5 * (t0 + t1)
 
         def lonlat_inside(t: float) -> tuple[float, float] | None:
@@ -2287,9 +2252,8 @@ class RHEALPixDGGS:
             (float(lon) * from_deg, float(lat) * from_deg)
             for lon, lat in zip(lons, lats, strict=True)
         ]
-        # Give back the endpoints exactly as passed: the round trip through
-        # fwd() is accurate to a fraction of a nanometre but not exact, and
-        # a densifier that moves its own endpoints is a nuisance to chain.
+        # Exactly as passed: fwd() round trips to a fraction of a
+        # nanometre, and a densifier that moves its endpoints is a nuisance.
         points[0] = (float(start[0]), float(start[1]))
         points[-1] = (float(end[0]), float(end[1]))
         return points

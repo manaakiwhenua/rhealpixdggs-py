@@ -226,11 +226,9 @@ def draw_coastlines_plane(ax, dggs=None, linewidth=0.5, zorder=1):
     Draw the coastlines in the plane, projected through the grid's own
     projection and split where a segment jumps between faces.
 
-    Outlines rather than the shading `shade_land_ortho` does: a land
-    polygon that wraps in longitude, as the Arctic ones do, projects into
-    a ring that sweeps across the whole image, and filling that leaves
-    wedges lying across the figure. Splitting on the jumps is right for a
-    line and meaningless for a fill.
+    Outlines rather than shading: a land polygon that wraps in longitude
+    projects into a ring sweeping across the whole image, and filling that
+    leaves wedges over the figure.
     """
     grid = dggs if dggs is not None else rdggs
     radius = grid.ellipsoid.R_A
@@ -2665,11 +2663,8 @@ plt.close(fig)
 print("hero figure written")
 
 # --------------------------------------------------------------- figure 20
-# The three line semantics between one pair of points. Both endpoints sit
-# just inside the north polar square, so the whole comparison happens on
-# one face: on the left the sphere, where the geodesic is the straight
-# one; on the right the same square in the plane, where the planar line is
-# straight instead. The plate carree line is straight in neither.
+# The three line semantics between one pair of points, both just inside
+# the north polar square, so the comparison happens on one face.
 LINE_P = (2.1044, 46.9852)
 LINE_Q = (-166.3103, 47.8104)
 LINE_RES = 2
@@ -2902,12 +2897,8 @@ def draw_traced_cells(ax, cells, color, faces=None, resolution=None):
                 zorder=2,
             )
         )
-    # Outlines, not shading. Land shaded in the plane comes out as slabs
-    # with straight edges that follow no coastline: a filled ring has to be
-    # cut wherever the projection is discontinuous, and cutting it leaves
-    # edges that project to lines across the face. The globe and plate
-    # carree panels above shade their land; here the coastline is the most
-    # that can be drawn honestly.
+    # Outlines here, shading on the globe and plate carree panels: see
+    # draw_coastlines_plane.
     draw_coastlines_plane(ax, linewidth=0.55, zorder=3)
 
 
@@ -3083,21 +3074,14 @@ plt.close(fig)
 print("line semantics figure written")
 
 # --------------------------------------------------------------- figure 21
-# The same comparison where the line crosses faces. São Paulo to Berlin
-# runs from face P up into the north polar square, and the planar reading
-# does not merely bend: a fifth of it lies outside the grid's cross-shaped
-# image altogether, so the cells it returns are a broken path, P01 and N58
-# being neighbours in the list and nowhere near each other on the ground.
-# The polar figure above shows the three semantics within one square; this
-# shows what happens once a line leaves one.
+# The same comparison where the line crosses faces. A fifth of the planar
+# reading lies outside the grid's cross-shaped image, so its cells are a
+# broken path: P01 and N58 are neighbours in the list and an ocean apart.
 FACES_P = (-46.63, -23.55)
 FACES_Q = (13.40, 52.52)
 FACES_RES = 2
-# Off the route on purpose. A great circle whose plane contains the
-# viewing axis projects to a straight line, so centring the globe on the
-# route itself hides the very curvature the panel is there to show: from
-# (-28, 12), 193 km off the geodesic, it bows by 0.009 of a radius; from
-# here, by 0.114.
+# Off the route on purpose: a great circle whose plane holds the viewing
+# axis projects to a straight line, hiding the curvature.
 FACES_VIEW = (-45.0, 25.0)
 
 fig, axes = plt.subplots(
