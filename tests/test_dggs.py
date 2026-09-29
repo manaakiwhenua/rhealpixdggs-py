@@ -16,13 +16,15 @@ Keep adding tests!
 
 import itertools
 import unittest
+import warnings
 from random import randint  # , uniform
 
 import numpy as np
 from numpy import array, pi
 
 # import rhealpixdggs.dggs as dggs
-from rhealpixdggs.cell import CELLS0
+import rhealpixdggs.dggs as dggs_module
+from rhealpixdggs.cell import CELLS0, _geod
 from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
 from rhealpixdggs.ellipsoids import (
     WGS84_ELLIPSOID,
@@ -1148,3 +1150,367 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
     unittest.main()
+
+
+class GeodesicLineTestCase(unittest.TestCase):
+    """
+    `cells_from_line(..., line="geodesic")` traces the shortest path on the
+    ellipsoid. The reference it is checked against is the thing the
+    docstring used to tell callers to build for themselves: the same
+    geodesic densified into many short plate carree segments.
+    """
+
+    def setUp(self):
+        self.rdggs = WGS84_003
+
+    def densified(self, resolution, start, end, n):
+        """The geodesic traced as a chain of `n` short plate carree steps."""
+        points = self.rdggs.geodesic_points(start, end, n + 1)
+        cells = []
+        for a, b in itertools.pairwise(points):
+            # Each step is short, so the short way across the antimeridian
+            # is the one that approximates the geodesic; the plate carree
+            # default would send a straddling step the long way round.
+            for cell in self.rdggs.cells_from_line(
+                resolution, a, b, plane=False, wrap_antimeridian=True
+            ):
+                if not cells or cells[-1] != cell:
+                    cells.append(cell)
+        return [str(c) for c in cells]
+
+    def test_matches_a_densified_trace(self):
+        cases = [
+            ("equatorial", (-20.0, 5.0), (40.0, -3.0)),
+            ("mid-latitude", (-20.0, 35.0), (60.0, 52.0)),
+            ("over a polar face", (10.0, 70.0), (-170.0, 72.0)),
+            ("across the antimeridian", (150.0, -20.0), (-150.0, -30.0)),
+        ]
+        for name, start, end in cases:
+            with self.subTest(case=name):
+                exact = [
+                    str(c)
+                    for c in self.rdggs.cells_from_line(3, start, end, line="geodesic")
+                ]
+                self.assertEqual(exact, self.densified(3, start, end, 2000))
+
+    def test_densification_converges_on_the_exact_trace(self):
+        # The approximation the exact sweep replaces: as the step shrinks,
+        # the densified trace must stop changing and equal the exact one.
+        start, end = (-20.0, 35.0), (60.0, 52.0)
+        exact = [
+            str(c) for c in self.rdggs.cells_from_line(4, start, end, line="geodesic")
+        ]
+        previous_wrong = None
+        for n in (4, 32, 512, 4000):
+            got = self.densified(4, start, end, n)
+            if n == 4000:
+                self.assertEqual(got, exact, "did not converge at the finest step")
+            elif got != exact:
+                previous_wrong = n
+        self.assertIsNotNone(
+            previous_wrong, "a coarse densification should differ from the exact trace"
+        )
+
+    def test_meridian_and_equator_agree_under_both_semantics(self):
+        # A meridian and the equator are geodesics and plate carree lines at
+        # once, so the two semantics must give the very same cells.
+        for name, start, end in (
+            ("meridian", (25.0, -40.0), (25.0, 78.0)),
+            ("equator", (-30.0, 0.0), (55.0, 0.0)),
+        ):
+            with self.subTest(case=name):
+                geodesic = self.rdggs.cells_from_line(4, start, end, line="geodesic")
+                flat = self.rdggs.cells_from_line(4, start, end, line="plate_carree")
+                self.assertEqual(geodesic, flat)
+
+    def test_consecutive_cells_touch(self):
+        # The contract the other semantics keep: the sequence is a path.
+        cells = self.rdggs.cells_from_line(
+            4, (-60.0, -25.0), (100.0, 65.0), line="geodesic"
+        )
+        self.assertGreater(len(cells), 10)
+        for a, b in itertools.pairwise(cells):
+            self.assertTrue(
+                a.touches(b) or a.overlaps(b), f"{a} and {b} are not adjacent"
+            )
+
+    def test_antipodal_raises(self):
+        for start, end in (((10.0, 20.0), (-170.0, -20.0)), ((0.0, 0.0), (180.0, 0.0))):
+            with self.subTest(pair=(start, end)):
+                with self.assertRaises(ValueError):
+                    self.rdggs.cells_from_line(3, start, end, line="geodesic")
+                with self.assertRaises(ValueError):
+                    self.rdggs.geodesic_points(start, end, 5)
+
+    def test_unknown_semantics_raises(self):
+        with self.assertRaises(ValueError):
+            self.rdggs.cells_from_line(3, (0.0, 0.0), (1.0, 1.0), line="great_circle")
+
+    def test_plane_flag_still_selects_the_old_semantics(self):
+        start, end = (-20.0, 35.0), (60.0, 52.0)
+        self.assertEqual(
+            self.rdggs.cells_from_line(3, start, end, plane=False),
+            self.rdggs.cells_from_line(3, start, end, line="plate_carree"),
+        )
+
+    def test_geodesic_points(self):
+        start, end = (-20.0, 35.0), (150.0, 62.0)
+        points = self.rdggs.geodesic_points(start, end, 9)
+        self.assertEqual(len(points), 9)
+        self.assertEqual(points[0], start)
+        self.assertEqual(points[-1], end)
+        # Evenly spaced by arc length, so consecutive gaps agree.
+        geod = _geod(self.rdggs.ellipsoid.a, self.rdggs.ellipsoid.f)
+        gaps = [
+            geod.inv(a[0], a[1], b[0], b[1])[2] for a, b in itertools.pairwise(points)
+        ]
+        for gap in gaps:
+            self.assertAlmostEqual(gap, gaps[0], delta=gaps[0] * 1e-9)
+        with self.assertRaises(ValueError):
+            self.rdggs.geodesic_points(start, end, 1)
+
+
+class LineCrossingsTestCase(unittest.TestCase):
+    """
+    `line_crossings` reports how much of a line's length on the ellipsoid
+    falls in each cell. The reference is a brute-force walk: step along the
+    line, ask which cell each step is in, and accumulate.
+    """
+
+    def setUp(self):
+        self.rdggs = WGS84_003
+        self.geod = _geod(self.rdggs.ellipsoid.a, self.rdggs.ellipsoid.f)
+
+    def brute_force(self, resolution, start, end, steps=100000):
+        total = self.geod.inv(start[0], start[1], end[0], end[1])[2]
+        points = self.rdggs.geodesic_points(start, end, steps + 1)
+        order, shares, previous = [], {}, None
+        for a, b in itertools.pairwise(points):
+            middle = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+            cell = str(self.rdggs.cell_from_point(resolution, middle, plane=False))
+            if cell != previous:
+                order.append(cell)
+                previous = cell
+            shares[len(order) - 1] = shares.get(len(order) - 1, 0.0) + total / steps
+        return [(order[i], shares[i] / total) for i in range(len(order))]
+
+    def test_matches_a_brute_force_walk(self):
+        for name, start, end in (
+            ("mid-latitude", (-20.0, 35.0), (60.0, 52.0)),
+            ("polar", (10.0, 70.0), (-170.0, 72.0)),
+            ("equatorial", (-33.0, 4.0), (41.0, -7.0)),
+        ):
+            with self.subTest(case=name):
+                got = [
+                    (str(cell), fraction)
+                    for cell, fraction in self.rdggs.line_crossings(
+                        3, start, end, line="geodesic"
+                    )
+                    if fraction > 0
+                ]
+                want = self.brute_force(3, start, end)
+                self.assertEqual([c for c, _ in got], [c for c, _ in want])
+                for (_, a), (_, b) in zip(got, want, strict=True):
+                    # The reference is only as good as its step, 1e-5 of
+                    # the line.
+                    self.assertAlmostEqual(a, b, delta=2e-5)
+
+    def test_fractions_sum_to_one(self):
+        for line in ("geodesic", "plate_carree"):
+            with self.subTest(line=line):
+                crossings = self.rdggs.line_crossings(
+                    4, (-60.0, -25.0), (100.0, 65.0), line=line
+                )
+                self.assertAlmostEqual(sum(f for _, f in crossings), 1.0, places=12)
+
+    def test_planar_line_off_the_grid_still_sums_to_one(self):
+        # The grid's planar image is a cross, so this line leaves it in the
+        # middle. That stretch has no counterpart on the ellipsoid, so it
+        # is not length that goes missing -- it is no length at all.
+        R = self.rdggs.ellipsoid.R_A
+        start, end = (-2.2 * R, -1.1 * R), (2.2 * R, 0.4 * R)
+        off_grid = [
+            i
+            for i in range(1, 200)
+            if self.rdggs.cell_from_point(
+                1,
+                (
+                    start[0] + (end[0] - start[0]) * i / 200,
+                    start[1] + (end[1] - start[1]) * i / 200,
+                ),
+                plane=True,
+            )
+            is None
+        ]
+        self.assertTrue(off_grid, "this line was supposed to leave the grid")
+        crossings = self.rdggs.line_crossings(1, start, end, plane=True)
+        self.assertAlmostEqual(sum(f for _, f in crossings), 1.0, places=12)
+
+    def test_entries_line_up_with_cells_from_line(self):
+        start, end = (-20.0, 35.0), (60.0, 52.0)
+        for line in ("geodesic", "plate_carree"):
+            with self.subTest(line=line):
+                cells = self.rdggs.cells_from_line(3, start, end, line=line)
+                crossings = self.rdggs.line_crossings(3, start, end, line=line)
+                self.assertEqual([c for c, _ in crossings], cells)
+
+    def test_a_revisited_cell_gets_an_entry_per_visit(self):
+        # Polar paths can leave a cell and come back; each visit is its own
+        # entry, which a dict keyed by cell could not express.
+        start, end = (-109.18578116, 61.94869435), (44.66390308, 85.61048349)
+        crossings = self.rdggs.line_crossings(3, start, end, line="geodesic")
+        names = [str(c) for c, _ in crossings]
+        repeated = {n for n in names if names.count(n) > 1}
+        self.assertTrue(repeated, "expected this line to revisit a cell")
+        for name in repeated:
+            shares = [f for c, f in crossings if str(c) == name]
+            self.assertEqual(len(shares), names.count(name))
+            for share in shares:
+                self.assertGreater(share, 0.0)
+
+    def test_planar_lines_never_raise_on_the_grid_boundary(self):
+        # A run's ends lie exactly on cell edges, and an edge that is
+        # also the boundary of the grid's planar image lies outside the
+        # inverse projection's domain.
+        import random
+
+        R = self.rdggs.ellipsoid.R_A
+        random.seed(99)
+        checked = 0
+        for _ in range(1500):
+            start = (
+                random.uniform(-3.4 * R, 3.4 * R),
+                random.uniform(-2.5 * R, 2.5 * R),
+            )
+            end = (random.uniform(-3.4 * R, 3.4 * R), random.uniform(-2.5 * R, 2.5 * R))
+            if (
+                self.rdggs.cell_from_point(1, start, plane=True) is None
+                or self.rdggs.cell_from_point(1, end, plane=True) is None
+            ):
+                continue
+            checked += 1
+            crossings = self.rdggs.line_crossings(1, start, end, plane=True)
+            self.assertAlmostEqual(sum(f for _, f in crossings), 1.0, places=9)
+        self.assertGreater(checked, 100, "not enough planar lines were exercised")
+
+    def test_a_line_of_no_length(self):
+        # Both endpoints in the same place: one cell, and no length to
+        # share out.
+        point = (174.0, -41.0)
+        for line in ("geodesic", "plate_carree"):
+            with self.subTest(line=line):
+                cells = self.rdggs.cells_from_line(5, point, point, line=line)
+                self.assertEqual(len(cells), 1)
+                crossings = self.rdggs.line_crossings(5, point, point, line=line)
+                self.assertEqual([c for c, _ in crossings], cells)
+                self.assertEqual([f for _, f in crossings], [0.0])
+
+    def test_off_grid_endpoints_give_nothing(self):
+        R = self.rdggs.ellipsoid.R_A
+        self.assertEqual(
+            self.rdggs.line_crossings(
+                1, (0.0, 1.2 * R), (0.1 * R, 1.3 * R), plane=True
+            ),
+            [],
+        )
+
+
+class DiscontinuousPlanarLineTestCase(unittest.TestCase):
+    """
+    The grid's planar image is a cross, so a straight planar line can leave
+    it. `cells_from_line` still returns the cells on both sides, which is
+    the honest answer to the question asked, but the result is not a
+    connected path and the caller is told so.
+    """
+
+    def setUp(self):
+        self.rdggs = WGS84_003
+        # Sao Paulo to Berlin: a fifth of the planar line is off the grid.
+        self.start = self.rdggs.rhealpix(-46.63, -23.55)
+        self.end = self.rdggs.rhealpix(13.40, 52.52)
+
+    def test_warns_and_the_path_is_broken(self):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            cells = self.rdggs.cells_from_line(2, self.start, self.end, plane=True)
+        self.assertEqual(len(caught), 1)
+        self.assertIn("not a connected path", str(caught[0].message))
+        self.assertEqual(caught[0].filename, __file__, "should blame the caller")
+        # The warning is earned: some consecutive pair really does not touch.
+        broken = [
+            (a, b)
+            for a, b in itertools.pairwise(cells)
+            if not (a.touches(b) or a.overlaps(b))
+        ]
+        self.assertTrue(broken, "expected a break in the returned path")
+
+    def test_line_crossings_warns_too(self):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            crossings = self.rdggs.line_crossings(2, self.start, self.end, plane=True)
+        self.assertEqual(len(caught), 1)
+        # The fractions still sum to 1: the stretch off the grid has no
+        # counterpart on the ellipsoid, so it is no length at all.
+        self.assertAlmostEqual(sum(f for _, f in crossings), 1.0, places=9)
+
+    def test_no_warning_when_the_line_stays_on_the_grid(self):
+        for line, start, end in (
+            ("geodesic", (-46.63, -23.55), (13.40, 52.52)),
+            ("plate_carree", (-46.63, -23.55), (13.40, 52.52)),
+        ):
+            with self.subTest(line=line):
+                with warnings.catch_warnings(record=True) as caught:
+                    warnings.simplefilter("always")
+                    self.rdggs.cells_from_line(2, start, end, line=line)
+                self.assertEqual(caught, [])
+
+
+class GeodesicSweepEdgeCaseTestCase(unittest.TestCase):
+    """
+    The branches the sweep takes only for exact or degenerate input, which
+    ordinary traces never reach.
+    """
+
+    def setUp(self):
+        self.rdggs = WGS84_003
+
+    def test_a_geodesic_along_a_face_meridian(self):
+        # Due north along longitude 90, a face boundary: every point is
+        # exactly on it, so the sweep takes its exact-crossing branch.
+        trace = self.rdggs._trace_line(
+            3, (90.0, -30.0), (90.0, 60.0), False, False, "geodesic"
+        )
+        self.assertTrue(
+            all(trace.point_at(t / 8)[0] == 90.0 for t in range(9)),
+            "this test needs the longitudes to be exactly on the boundary",
+        )
+        cells = self.rdggs.cells_from_line(
+            3, (90.0, -30.0), (90.0, 60.0), line="geodesic"
+        )
+        self.assertGreater(len(cells), 10)
+        for a, b in itertools.pairwise(cells):
+            self.assertTrue(a.touches(b) or a.overlaps(b))
+        # A meridian is a geodesic and a plate carree line at once.
+        self.assertEqual(
+            cells,
+            self.rdggs.cells_from_line(
+                3, (90.0, -30.0), (90.0, 60.0), line="plate_carree"
+            ),
+        )
+
+    def test_arc_length_gives_up_gracefully(self):
+        # A run whose samples cannot be nudged inside the projection's
+        # domain contributes no length rather than raising.
+        def nowhere(_t):
+            raise ValueError("outside the projection's domain")
+
+        cell = self.rdggs.cell(["N", 0])
+        trace = dggs_module._LineTrace(
+            start=cell,
+            end=cell,
+            runs=[(cell, 0.0, 1.0)],
+            point_at=lambda t: (0.0, 0.0),
+            lonlat_at=nowhere,
+            geodesic_length=None,
+        )
+        self.assertEqual(self.rdggs._arc_length(trace, 0.0, 1.0), 0.0)

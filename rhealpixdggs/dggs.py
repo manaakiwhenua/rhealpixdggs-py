@@ -159,9 +159,10 @@ destroy the equal-area property.) ::
 # *****************************************************************************
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import pairwise, product
-from math import asin, copysign, floor, pi
+from math import asin, copysign, floor, fsum, pi
 from random import randint
-from typing import Literal, NamedTuple, cast, overload
+from typing import Any, Literal, NamedTuple, cast, get_args, overload
+from warnings import warn
 
 import numpy as np
 
@@ -169,6 +170,21 @@ import numpy as np
 # (``RHEALPixDGGS._lattice_cells``), bounding the working set of callers such
 # as ``rhp_wrappers.polyfill`` however many cells a box holds.
 _LATTICE_CHUNK = 250_000
+# Samples across a line whose parameter is not arc length.
+# Named once so the annotation and the runtime check cannot drift apart.
+# Literal, not Enum: this package uses Literal for arguments a caller
+# passes and Enum for values it returns that implement an OGC code list.
+LineSemantics = Literal["plane", "plate_carree", "geodesic"]
+LINE_SEMANTICS: tuple[str, ...] = get_args(LineSemantics)
+
+_ARC_LENGTH_SAMPLES = 4096
+# The grid's planar image is a cross, so a straight planar line can cross
+# part of the plane belonging to no cell.
+DISCONTINUOUS_LINE_WARNING = (
+    "the planar line leaves the grid's planar image: the cells returned "
+    "are those it passes through, but consecutive cells in the list need "
+    "not touch, so the result is not a connected path"
+)
 from scipy.special import roots_legendre
 
 import rhealpixdggs.pj_rhealpix as pjr
@@ -178,6 +194,7 @@ from rhealpixdggs.cell import (
     CELLS0,
     Cell,
     _gauss_legendre_unit,
+    _geod,
 )
 from rhealpixdggs.ellipsoids import (
     UNIT_SPHERE,
@@ -254,6 +271,37 @@ def _format_index(suid: Sequence[str | int], N_side: int) -> str:
     """The index string for `suid` in a grid with `N_side`; see ``RHEALPixDGGS.format_index``."""
     _index_width(N_side)
     return str(suid[0]) + "".join(str(d) for d in suid[1:])
+
+
+class _LineTrace(NamedTuple):
+    """
+    One sweep of a line: the cells it passes through and the parameter
+    interval each occupies, shared by `cells_from_line` and
+    `line_crossings` so the sweep runs once for either.
+    """
+
+    start: Cell
+    end: Cell
+    # (cell, t0, t1) per run of the parameter, in order. A None cell is a
+    # stretch lying off the grid, which only a planar segment can have.
+    runs: list[tuple["Cell | None", float, float]]
+    point_at: Callable[[float], tuple[float, float]]
+    # The curve in longitude-latitude. For a planar line this inverts the
+    # projection, so it is only called on a run lying in a cell.
+    lonlat_at: Callable[[float], tuple[float, float]]
+    # The geodesic's length, when the parameter is arc length; None for the
+    # straight cases, whose length has to be measured.
+    geodesic_length: float | None
+
+    def cells(self) -> list[Cell]:
+        """The ordered cells, with the endpoints' own cells guaranteed."""
+        out = [self.start]
+        for cell, _, _ in self.runs:
+            if cell is not None and cell != out[-1]:
+                out.append(cell)
+        if out[-1] != self.end:
+            out.append(self.end)
+        return out
 
 
 class RHEALPixDGGS:
@@ -1623,22 +1671,47 @@ class RHEALPixDGGS:
         result.append(end)
         return result
 
-    def cells_from_line(
+    def _trace_line(
         self,
         resolution: int,
         lstart: tuple[float, float],
         lend: tuple[float, float],
         plane: bool = True,
         wrap_antimeridian: bool = False,
-    ) -> list[Cell]:
+        line: LineSemantics | None = None,
+    ) -> "_LineTrace | None":
         """
-        Return the ordered list of resolution `resolution` cells that the
-        line segment from `lstart` to `lend` passes through.
+        Sweep the segment from `lstart` to `lend` once, returning the
+        cells it passes through together with the parameter interval each
+        occupies, or None if an endpoint is off the grid.
 
-        The segment is straight in the given coordinate space: planar
-        coordinates if `plane` = True, longitude-latitude coordinates
-        otherwise (so it is a plate carree straight line, not a geodesic;
-        to trace a geodesic, densify it into short segments first). In
+        `cells_from_line` and `line_crossings` are the public faces of
+        this; the docstring of the former documents the arguments.
+
+        `line` names the curve the endpoints describe:
+
+        - ``"plane"``: straight in planar coordinates.
+        - ``"plate_carree"``: straight in longitude-latitude coordinates.
+        - ``"geodesic"``: the shortest path on the grid's ellipsoid, which
+          is what a linestring digitised in a geographic CRS usually
+          means. `wrap_antimeridian` is ignored, a geodesic already taking
+          the short way, and an antipodal pair raises ValueError, its
+          shortest path not being unique.
+
+        The longitude-latitude readings take geographic coordinates on this
+        grid's ellipsoid, not a projected coordinate reference system.
+        Coordinates from a projected CRS are not rejected: an easting of
+        1748736 is read as that many degrees of longitude and wrapped into
+        range, so a short line can come back as a million cells rather than
+        as an error. Transform to longitude and latitude first.
+
+        The boolean `plane` flag predates `line` and chooses between the
+        two straight cases. It applies only when `line` is not given:
+        `plane` = True means ``"plane"`` and False means
+        ``"plate_carree"``. There is no `plane` value for a geodesic, so
+        that one is reachable only through `line`.
+
+        A plate carree segment is not a geodesic. In
         particular, a longitude-latitude segment spanning more than half
         a turn of longitude does not, by default, wrap around the
         antimeridian: a segment from longitude 179 to longitude -179 runs
@@ -1675,8 +1748,32 @@ class RHEALPixDGGS:
             >>> print([str(cell) for cell in cells])
             ['N448', 'N447']
 
+        The same endpoints under the two longitude-latitude semantics: the
+        geodesic from Europe to Siberia passes north of the plate carree
+        line and misses Q0 entirely::
+
+            >>> print([str(c) for c in rdggs.cells_from_line(1, (-20, 35), (60, 52), line="plate_carree")])
+            ['P2', 'Q0', 'N2', 'N1']
+            >>> print([str(c) for c in rdggs.cells_from_line(1, (-20, 35), (60, 52), line="geodesic")])
+            ['P2', 'N2', 'N1']
+
         """
-        if wrap_antimeridian and not plane:
+        if line is None:
+            line = "plane" if plane else "plate_carree"
+        if line not in LINE_SEMANTICS:
+            allowed = ", ".join(repr(value) for value in LINE_SEMANTICS)
+            raise ValueError(f"line must be one of {allowed}, not {line!r}")
+        # `plane` is still the flag `cell_from_point` takes: a geodesic is
+        # given in longitude-latitude, like a plate carree line.
+        plane = line == "plane"
+
+        if line == "geodesic" and self._antipodal(lstart, lend):
+            raise ValueError(
+                "the shortest path between antipodal points is not unique: "
+                f"{lstart} and {lend}"
+            )
+
+        if wrap_antimeridian and line == "plate_carree":
             # Take the short way in longitude: shift the end longitude by
             # a full turn so the segment crosses the antimeridian. The
             # projection wraps longitudes, so the out-of-range value
@@ -1689,12 +1786,14 @@ class RHEALPixDGGS:
         start = self.cell_from_point(resolution, lstart, plane)
         end = self.cell_from_point(resolution, lend, plane)
         if start is None or end is None:
-            return []
-        if start == end:
-            return [start]
+            return None
 
         R = self.ellipsoid.R_A
         w = self.cell_width(resolution)
+        # Known in closed form for a geodesic, where the parameter is arc
+        # length; measured by densifying for the two straight cases, whose
+        # parameter is not proportional to distance on the ellipsoid.
+        geodesic_length: float | None = None
 
         def point_at(t: float) -> tuple[float, float]:
             return (
@@ -1707,6 +1806,45 @@ class RHEALPixDGGS:
                 lstart[0] + ts * (lend[0] - lstart[0]),
                 lstart[1] + ts * (lend[1] - lstart[1]),
             )
+
+        if line == "geodesic":
+            # By fraction of arc length, so the crossing parameters are
+            # length fractions directly.
+            ell = self.ellipsoid
+            geod = _geod(ell.a, ell.f)
+            to_deg = 180 / pi if ell.radians else 1.0
+            from_deg = pi / 180 if ell.radians else 1.0
+            lon1, lat1 = lstart[0] * to_deg, lstart[1] * to_deg
+            lon2, lat2 = lend[0] * to_deg, lend[1] * to_deg
+            azimuth, _, length = geod.inv(lon1, lat1, lon2, lat2)
+            geodesic_length = float(length)
+
+            # Undo Geod's (-180, 180] wrap relative to the start, so the
+            # parametrisation stays continuous and both forms agree.
+            def unwrap(lon: Any) -> Any:
+                return lon - 360.0 * np.round((lon - lon1) / 360.0)
+
+            def point_at(t: float) -> tuple[float, float]:
+                lon, lat, _ = geod.fwd(lon1, lat1, azimuth, t * length)
+                return (float(unwrap(lon)) * from_deg, lat * from_deg)
+
+            def points_at(ts: FloatArray) -> tuple[FloatArray, FloatArray]:
+                n = ts.shape[0]
+                if n == 1:
+                    # pyproj dispatches a one-element array to its scalar
+                    # path and then scalarises it, which numpy deprecates.
+                    lon, lat = point_at(float(ts[0]))
+                    return (
+                        np.array([lon], dtype=np.float64),
+                        np.array([lat], dtype=np.float64),
+                    )
+                lons, lats, _ = geod.fwd(
+                    np.full(n, lon1),
+                    np.full(n, lat1),
+                    np.full(n, azimuth),
+                    ts * length,
+                )
+                return (unwrap(lons) * from_deg, lats * from_deg)
 
         if plane:
             q = point_at
@@ -1739,7 +1877,7 @@ class RHEALPixDGGS:
                     if 0.0 < t < 1.0:
                         breakpoints.add(t)
 
-        if not plane:
+        if line == "plate_carree":
             ell = self.ellipsoid
             half = pi if ell.radians else 180.0
             quarter = half / 2
@@ -1780,7 +1918,10 @@ class RHEALPixDGGS:
             return [anchor + i * w for i in range(i0, i1 + 1)]
 
         def monotone_cuts(
-            axis: int, scan_ts: list[float], scan_vs: list[float]
+            axis: int,
+            scan_ts: list[float],
+            scan_vs: list[float],
+            at: Callable[[float], tuple[float, float]] | None = None,
         ) -> list[tuple[float, float]]:
             # Split the scanned piece into runs on which q(t)[axis] is
             # monotone, returning the run boundaries as (t, q(t)[axis]):
@@ -1793,6 +1934,7 @@ class RHEALPixDGGS:
             # the coordinate is flat there, varying with the square of the
             # offset, so its value at the cut is already exact to the
             # floating-point floor whatever the piece's length.
+            evaluate = q if at is None else at
             inv_phi = (5**0.5 - 1) / 2
             tol = 1e-8 * (scan_ts[-1] - scan_ts[0])
             cuts = [(scan_ts[0], scan_vs[0])]
@@ -1808,22 +1950,69 @@ class RHEALPixDGGS:
                     lo, hi = scan_ts[max(i - 2, 0)], scan_ts[i]
                     m1 = hi - inv_phi * (hi - lo)
                     m2 = lo + inv_phi * (hi - lo)
-                    g1 = direction * float(q(m1)[axis])
-                    g2 = direction * float(q(m2)[axis])
+                    g1 = direction * float(evaluate(m1)[axis])
+                    g2 = direction * float(evaluate(m2)[axis])
                     while hi - lo > tol:
                         if g1 < g2:
                             lo, m1, g1 = m1, m2, g2
                             m2 = lo + inv_phi * (hi - lo)
-                            g2 = direction * float(q(m2)[axis])
+                            g2 = direction * float(evaluate(m2)[axis])
                         else:
                             hi, m2, g2 = m2, m1, g1
                             m1 = hi - inv_phi * (hi - lo)
-                            g1 = direction * float(q(m1)[axis])
+                            g1 = direction * float(evaluate(m1)[axis])
                     tc = 0.5 * (lo + hi)
-                    cuts.append((tc, float(q(tc)[axis])))
+                    cuts.append((tc, float(evaluate(tc)[axis])))
                     direction = d
             cuts.append((scan_ts[-1], scan_vs[-1]))
             return cuts
+
+        if line == "geodesic":
+            # The same boundaries as a plate carree line, but found by
+            # scanning and bracketing: they vary non-linearly with t.
+            ell = self.ellipsoid
+            half = pi if ell.radians else 180.0
+            quarter = half / 2
+            phi_reg = auth_lat(asin(2.0 / 3), ell.e, inverse=True, radians=True)
+            if not ell.radians:
+                phi_reg = phi_reg * 180 / pi
+            lat_targets = [
+                ell.lat_0 + phi_reg,
+                ell.lat_0 - phi_reg,
+                ell.lat_0 + quarter,
+                ell.lat_0 - quarter,
+            ]
+            scan_ts = [i / 256 for i in range(257)]
+            scan_lon, scan_lat = points_at(np.array(scan_ts, dtype=np.float64))
+            scan_lon, scan_lat = scan_lon.tolist(), scan_lat.tolist()
+            lo = min(scan_lon) - ell.lon_0
+            hi = max(scan_lon) - ell.lon_0
+            lon_targets = [
+                ell.lon_0 + k * quarter
+                for k in range(floor(lo / quarter), int(np.ceil(hi / quarter)) + 1)
+            ]
+            geo_brackets: list[tuple[float, float, float, float, int, float]] = []
+            for axis, scan_vs, targets in (
+                (1, scan_lat, lat_targets),
+                (0, scan_lon, lon_targets),
+            ):
+                for (ra, va), (rb, vb) in pairwise(
+                    monotone_cuts(axis, scan_ts, scan_vs, point_at)
+                ):
+                    for target in targets:
+                        fa, fb = va - target, vb - target
+                        # The cuts chain, so a crossing at a run's end is
+                        # caught at the next run's start.
+                        if fa == 0.0:
+                            breakpoints.add(ra)
+                        elif (fa < 0.0) != (fb < 0.0):
+                            geo_brackets.append((ra, rb, fa, fb, axis, target))
+            if geo_brackets:
+                breakpoints.update(
+                    root
+                    for root in self._solve_brackets(geo_brackets, points_at)
+                    if 0.0 < root < 1.0
+                )
 
         # Sweep the pieces, projecting each piece's 65-point scan as one
         # array, and gather every lattice-line crossing as a bracket
@@ -1844,14 +2033,14 @@ class RHEALPixDGGS:
                 anchor = x_anchor if axis == 0 else y_anchor
                 cuts = monotone_cuts(axis, scan_ts, scan_vs)
                 for (ra, va), (rb, vb) in pairwise(cuts):
-                    for line in lattice_lines_between(va, vb, anchor):
-                        fa, fb = va - line, vb - line
+                    for edge in lattice_lines_between(va, vb, anchor):
+                        fa, fb = va - edge, vb - edge
                         if fa == 0:
                             crossings.add(ra)
                         elif fb == 0:
                             crossings.add(rb)
                         else:
-                            brackets.append((ra, rb, fa, fb, axis, line))
+                            brackets.append((ra, rb, fa, fb, axis, edge))
             if pb < 1.0:
                 # The piece boundary itself may be a cell change (a face
                 # jump, or a kink lying exactly on a cell edge).
@@ -1860,15 +2049,228 @@ class RHEALPixDGGS:
         if brackets:
             crossings.update(self._solve_brackets(brackets, q_array))
 
+        # One cell per interval, found from its midpoint. A None cell is
+        # a stretch off the grid, which only a planar segment can have.
         ts = [0.0] + sorted(crossings) + [1.0]
-        line_cells = [start]
+        runs: list[tuple[Cell | None, float, float]] = []
         for a, b in pairwise(ts):
             cell = self.cell_from_point(resolution, point_at(0.5 * (a + b)), plane)
-            if cell is not None and cell != line_cells[-1]:
-                line_cells.append(cell)
-        if line_cells[-1] != end:
-            line_cells.append(end)
-        return line_cells
+            if runs and runs[-1][0] == cell:
+                runs[-1] = (cell, runs[-1][1], b)
+            else:
+                runs.append((cell, a, b))
+        lonlat_at = (
+            (
+                lambda s: cast(
+                    tuple[float, float], self.rhealpix(*point_at(s), inverse=True)
+                )
+            )
+            if plane
+            else point_at
+        )
+        if any(cell is None for cell, _, _ in runs):
+            # Only a planar line can do this: every point of the ellipsoid
+            # lies in some cell, so the other two semantics never leave.
+            warn(DISCONTINUOUS_LINE_WARNING, stacklevel=3)
+        return _LineTrace(start, end, runs, point_at, lonlat_at, geodesic_length)
+
+    def cells_from_line(
+        self,
+        resolution: int,
+        lstart: tuple[float, float],
+        lend: tuple[float, float],
+        plane: bool = True,
+        wrap_antimeridian: bool = False,
+        line: LineSemantics | None = None,
+    ) -> list[Cell]:
+        """
+        Return the ordered list of resolution `resolution` cells that the
+        line from `lstart` to `lend` passes through. See `_trace_line` for
+        the arguments; this is its cells alone.
+        """
+        trace = self._trace_line(
+            resolution, lstart, lend, plane, wrap_antimeridian, line
+        )
+        return [] if trace is None else trace.cells()
+
+    def line_crossings(
+        self,
+        resolution: int,
+        lstart: tuple[float, float],
+        lend: tuple[float, float],
+        plane: bool = True,
+        wrap_antimeridian: bool = False,
+        line: LineSemantics | None = None,
+    ) -> list[tuple[Cell, float]]:
+        """
+        Return, per cell in the order `cells_from_line` gives them, the
+        fraction of the line's length on the ellipsoid that lies in that
+        cell -- what a feature's length has to be multiplied by to
+        attribute it to cells. The arguments are `cells_from_line`'s.
+
+        A cell may appear more than once: a line can leave a cell and come
+        back, which polar paths do, and each visit is its own entry.
+
+        The fractions sum to 1. A cell touched at a single point only --
+        an endpoint sitting exactly on a cell edge, say -- is reported
+        with a fraction of 0, keeping the entries in step with
+        `cells_from_line`.
+
+        The grid's planar image is a cross, so a straight ``"plane"`` line
+        can pass through a region belonging to no cell. Those planar
+        points have no counterpart on the ellipsoid at all -- the inverse
+        projection has no answer there -- so that stretch contributes no
+        length to attribute, and the fractions still sum to 1 rather than
+        falling short.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> crossings = rdggs.line_crossings(1, (-20, 35), (60, 52), line="geodesic")
+            >>> for cell, fraction in crossings:
+            ...     print(cell, round(fraction, 6))
+            P2 0.184176
+            N2 0.45492
+            N1 0.360904
+            >>> print(round(sum(f for _, f in crossings), 12))
+            1.0
+
+        """
+        trace = self._trace_line(
+            resolution, lstart, lend, plane, wrap_antimeridian, line
+        )
+        if trace is None:
+            return []
+        # Points off the grid have no counterpart on the ellipsoid, so
+        # they contribute no ground length at all.
+        lengths = [
+            0.0 if cell is None else self._arc_length(trace, t0, t1)
+            for cell, t0, t1 in trace.runs
+        ]
+        total = fsum(lengths)
+        if total == 0.0:
+            return [(cell, 0.0) for cell in trace.cells()]
+
+        # In step with the cells, so a cell holding no run of its own gets
+        # a zero share rather than going missing.
+        shares: dict[int, float] = {}
+        ordered = trace.cells()
+        position = 0
+        for (cell, _, _), length in zip(trace.runs, lengths, strict=True):
+            if cell is None:
+                continue
+            while position < len(ordered) and ordered[position] != cell:
+                position += 1
+            if position == len(ordered):  # pragma: no cover - defensive
+                position = ordered.index(cell)
+            shares[position] = shares.get(position, 0.0) + length
+        return [(cell, shares.get(i, 0.0) / total) for i, cell in enumerate(ordered)]
+
+    def _arc_length(self, trace: "_LineTrace", t0: float, t1: float) -> float:
+        """
+        The length on the ellipsoid of the traced line between parameters
+        `t0` and `t1`.
+        """
+        if trace.geodesic_length is not None:
+            # The geodesic is parametrised by arc length already.
+            return (t1 - t0) * trace.geodesic_length
+        # Otherwise the curve is straight in some other space, so measure
+        # it: sample at a density set by the whole line, not by the piece,
+        # so short pieces are not sampled more finely than long ones.
+        steps = max(2, int(np.ceil((t1 - t0) * _ARC_LENGTH_SAMPLES)) + 1)
+        ell = self.ellipsoid
+        geod = _geod(ell.a, ell.f)
+        to_deg = 180 / pi if ell.radians else 1.0
+        # A run's ends sit on cell edges, which at the grid's boundary are
+        # outside the inverse projection's domain. Nudge inward until they
+        # are not; how far depends on how steeply the curve meets it.
+        middle = 0.5 * (t0 + t1)
+
+        def lonlat_inside(t: float) -> tuple[float, float] | None:
+            for nudge in (0.0, 1e-9, 1e-7, 1e-5, 1e-3):
+                try:
+                    return trace.lonlat_at(t + (middle - t) * nudge)
+                except ValueError:
+                    continue
+            return None
+
+        sampled = [
+            lonlat_inside(t0 + (t1 - t0) * i / (steps - 1)) for i in range(steps)
+        ]
+        points = [point for point in sampled if point is not None]
+        if len(points) < 2:
+            return 0.0
+        return fsum(
+            geod.inv(a[0] * to_deg, a[1] * to_deg, b[0] * to_deg, b[1] * to_deg)[2]
+            for a, b in pairwise(points)
+        )
+
+    def geodesic_points(
+        self,
+        start: tuple[float, float],
+        end: tuple[float, float],
+        n: int = 2,
+    ) -> list[tuple[float, float]]:
+        """
+        Return `n` longitude-latitude points evenly spaced by arc length
+        along the geodesic from `start` to `end` on this grid's ellipsoid,
+        including both endpoints. `n` must be at least 2.
+
+        This is the densifier that tracing a geodesic as a chain of short
+        straight segments needs; `cells_from_line(..., line="geodesic")`
+        traces one exactly and needs no densification.
+
+        Raise ValueError for `n` < 2, or if the endpoints are antipodal,
+        where no single geodesic between them is shortest.
+
+        EXAMPLES::
+
+            >>> rdggs = WGS84_003
+            >>> pts = rdggs.geodesic_points((0, 0), (90, 0), 3)
+            >>> print([(round(lon, 9), round(lat, 9)) for lon, lat in pts])
+            [(0.0, 0.0), (45.0, 0.0), (90.0, 0.0)]
+
+        """
+        if n < 2:
+            raise ValueError(f"n must be at least 2, not {n}")
+        if self._antipodal(start, end):
+            raise ValueError(
+                "the shortest path between antipodal points is not unique: "
+                f"{start} and {end}"
+            )
+        ell = self.ellipsoid
+        geod = _geod(ell.a, ell.f)
+        to_deg = 180 / pi if ell.radians else 1.0
+        from_deg = pi / 180 if ell.radians else 1.0
+        lon1, lat1 = start[0] * to_deg, start[1] * to_deg
+        azimuth, _, length = geod.inv(lon1, lat1, end[0] * to_deg, end[1] * to_deg)
+        distances = np.linspace(0.0, length, n)
+        lons, lats, _ = geod.fwd(
+            np.full(n, lon1), np.full(n, lat1), np.full(n, azimuth), distances
+        )
+        points = [
+            (float(lon) * from_deg, float(lat) * from_deg)
+            for lon, lat in zip(lons, lats, strict=True)
+        ]
+        # Exactly as passed: fwd() round trips to a fraction of a
+        # nanometre, and a densifier that moves its endpoints is a nuisance.
+        points[0] = (float(start[0]), float(start[1]))
+        points[-1] = (float(end[0]), float(end[1]))
+        return points
+
+    def _antipodal(
+        self, p: tuple[float, float], q: tuple[float, float], tol: float = 1e-9
+    ) -> bool:
+        """
+        Whether `p` and `q` are antipodal, so that no single geodesic
+        between them is shortest. Both are longitude-latitude pairs in the
+        ellipsoid's angular unit.
+        """
+        half = pi if self.ellipsoid.radians else 180.0
+        if abs(p[1] + q[1]) > tol:
+            return False
+        dlon = abs(q[0] - p[0]) % (2 * half)
+        return abs(dlon - half) <= tol
 
     @staticmethod
     def _solve_brackets(

@@ -147,6 +147,116 @@ def coastline_segments():
 COASTLINES = coastline_segments()
 
 
+# Natural Earth 1:110m land polygons, from the same pinned commit as the
+# coastlines. Outlines alone read as a tangle of lines once a figure also
+# carries a cell grid and several traced curves, so figures that show
+# geography shade it instead.
+LAND_URL = (
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/"
+    "ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_110m_land.geojson"
+)
+LAND_CACHE = pathlib.Path(__file__).parents[1] / ".cache" / "ne_110m_land.geojson"
+LAND_COLOR = "#e8e6e1"
+LAND_EDGE = "#c9c5bd"
+
+
+def land_rings():
+    """
+    Return the land as a list of (exterior, holes) rings, each ring a list
+    of (longitude, latitude) pairs.
+    """
+    if not LAND_CACHE.exists():
+        LAND_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        with urllib.request.urlopen(LAND_URL, timeout=60) as response:
+            LAND_CACHE.write_bytes(response.read())
+    collection = json.loads(LAND_CACHE.read_text())
+    out = []
+    for feature in collection["features"]:
+        geometry = feature["geometry"]
+        polygons = (
+            [geometry["coordinates"]]
+            if geometry["type"] == "Polygon"
+            else geometry["coordinates"]
+        )
+        for rings in polygons:
+            out.append(
+                (
+                    [tuple(p) for p in rings[0]],
+                    [[tuple(p) for p in hole] for hole in rings[1:]],
+                )
+            )
+    return out
+
+
+LAND = land_rings()
+
+
+def densify_ring(ring, step=0.5):
+    """Subdivide a ring so no edge spans more than `step` degrees: a
+    straight edge in longitude-latitude is a curve once projected."""
+    out = []
+    for (x1, y1), (x2, y2) in itertools.pairwise(ring):
+        n = max(1, int(max(abs(x2 - x1), abs(y2 - y1)) / step))
+        for i in range(n):
+            out.append((x1 + (x2 - x1) * i / n, y1 + (y2 - y1) * i / n))
+    out.append(ring[-1])
+    return out
+
+
+def shade_land_ortho(ax, lon0, lat0, zorder=1):
+    """Shade the land on an orthographic panel centred on (lon0, lat0)."""
+    for exterior, _holes in LAND:
+        ring = densify_ring(exterior)
+        x, y, vis = ortho([p[0] for p in ring], [p[1] for p in ring], lon0, lat0)
+        if not vis.any():
+            continue
+        fx, fy = to_limb(x, y, vis)
+        ax.fill(
+            fx,
+            fy,
+            facecolor=LAND_COLOR,
+            edgecolor=LAND_EDGE,
+            linewidth=0.4,
+            zorder=zorder,
+        )
+
+
+def draw_coastlines_plane(ax, dggs=None, linewidth=0.5, zorder=1):
+    """
+    Draw the coastlines in the plane, projected through the grid's own
+    projection and split where a segment jumps between faces.
+
+    Outlines rather than shading: a land polygon that wraps in longitude
+    projects into a ring sweeping across the whole image, and filling that
+    leaves wedges over the figure.
+    """
+    grid = dggs if dggs is not None else rdggs
+    radius = grid.ellipsoid.R_A
+
+    def flush(run):
+        if len(run) > 1:
+            ax.plot(
+                [point[0] / radius for point in run],
+                [point[1] / radius for point in run],
+                color=COAST_COLOR,
+                linewidth=linewidth,
+                zorder=zorder,
+            )
+
+    for seg in COASTLINES:
+        xy = [grid.rhealpix(lon, lat) for lon, lat in seg]
+        run = [xy[0]]
+        for previous, current in itertools.pairwise(xy):
+            if (
+                abs(current[0] - previous[0]) > 0.15 * radius
+                or abs(current[1] - previous[1]) > 0.15 * radius
+            ):
+                flush(run)
+                run = []
+            run.append(current)
+        flush(run)
+
+
 # ---------------------------------------------------------------- figure 1
 # Planar grid: the (0,0)-rHEALPix cube unfolding, resolution 0 faces
 # labeled, resolution 1 sub-grid drawn, and one face's children labeled
@@ -287,9 +397,19 @@ def fill_lonlat_polygon(ax, points, **kwargs):
 
 
 def draw_coastlines_lonlat(ax, linewidth=0.5):
-    for seg in COASTLINES:
-        ax.plot(
-            *zip(*seg, strict=True), color=COAST_COLOR, linewidth=linewidth, zorder=1
+    """
+    Shade the land on a longitude-latitude panel. Straight in this space,
+    so the polygons need no projecting; `fill_lonlat_polygon` keeps the
+    ones straddling the antimeridian whole.
+    """
+    for exterior, _holes in LAND:
+        fill_lonlat_polygon(
+            ax,
+            exterior,
+            facecolor=LAND_COLOR,
+            edgecolor=LAND_EDGE,
+            linewidth=linewidth,
+            zorder=1,
         )
 
 
@@ -358,12 +478,7 @@ def draw_globe(ax, lon0, lat0, title):
     t = np.linspace(0, 2 * np.pi, 400)
     ax.plot(np.cos(t), np.sin(t), color="#555555", linewidth=1.2)
     # Coastlines on the front hemisphere.
-    for seg in COASTLINES:
-        lons = [p[0] for p in seg]
-        lats = [p[1] for p in seg]
-        x, y, vis = ortho(lons, lats, lon0, lat0)
-        x, y = np.where(vis, x, np.nan), np.where(vis, y, np.nan)
-        ax.plot(x, y, color=COAST_COLOR, linewidth=0.5, zorder=1)
+    shade_land_ortho(ax, lon0, lat0, zorder=1)
     # Light graticule for orientation.
     for glat in range(-60, 90, 30):
         lons = np.linspace(-180, 180, 361)
@@ -523,17 +638,7 @@ VIEW = (0.0, 90.0)  # straight down onto the north pole
 
 # Arctic coastlines for context (northern Greenland, Svalbard, Franz
 # Josef Land reach into this view).
-for seg in COASTLINES:
-    lons = [p[0] for p in seg]
-    lats = [p[1] for p in seg]
-    x, y, vis = ortho(lons, lats, *VIEW)
-    ax.plot(
-        np.where(vis, x, np.nan),
-        np.where(vis, y, np.nan),
-        color=COAST_COLOR,
-        linewidth=0.7,
-        zorder=1,
-    )
+shade_land_ortho(ax, *VIEW, zorder=1)
 
 # Graticule: parallels and meridians in the window.
 for glat in (82, 84, 86, 88):
@@ -729,15 +834,7 @@ for ax, (shape, suid) in zip(axes, SHAPE_EXAMPLES, strict=True):
     view = (lon_c, min(lat_c, 55.0))  # keep some horizon context for the cap
     t = np.linspace(0, 2 * np.pi, 400)
     ax.plot(np.cos(t), np.sin(t), color="#555555", linewidth=1.0)
-    for seg in COASTLINES:
-        x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], *view)
-        ax.plot(
-            np.where(vis, x, np.nan),
-            np.where(vis, y, np.nan),
-            color=COAST_COLOR,
-            linewidth=0.4,
-            zorder=1,
-        )
+    shade_land_ortho(ax, *view, zorder=1)
     # Neighboring resolution 1 cells for context.
     for face in CELLS0:
         for other in rdggs.cell([face]).subcells():
@@ -971,15 +1068,7 @@ corner_lon, corner_lat = n0.ul_vertex(plane=False)
 view = (corner_lon, corner_lat)
 t = np.linspace(0, 2 * np.pi, 400)
 ax.plot(np.cos(t), np.sin(t), color="#555555", linewidth=1.0)
-for seg in COASTLINES:
-    x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], *view)
-    ax.plot(
-        np.where(vis, x, np.nan),
-        np.where(vis, y, np.nan),
-        color=COAST_COLOR,
-        linewidth=0.5,
-        zorder=1,
-    )
+shade_land_ortho(ax, *view, zorder=1)
 meeting = {"N0": "the cell", "Q2": "neighbor('up')", "R0": "neighbor('left')"}
 context = ["N1", "N3", "N4", "Q1", "Q5", "R1", "R3"]
 for name in list(meeting) + context:
@@ -1521,15 +1610,7 @@ membership = {"N00": 0}
 for k in (1, 2, 3):
     for nm in rhp_wrappers.cell_ring("N00", k):
         membership[nm] = k
-for seg in COASTLINES:
-    x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], *view)
-    ax.plot(
-        np.where(vis, x, np.nan),
-        np.where(vis, y, np.nan),
-        color=COAST_COLOR,
-        linewidth=0.5,
-        zorder=1,
-    )
+shade_land_ortho(ax, *view, zorder=1)
 for face in ("N", "Q", "R"):
     for cell1 in rdggs.cell([face]).subcells():
         for cell in cell1.subcells():
@@ -1753,15 +1834,7 @@ ax_plane.set_title(
 # equator are drawn.
 t_circle = np.linspace(0, 2 * np.pi, 400)
 ax_pole.plot(np.cos(t_circle), np.sin(t_circle), color="#555555", linewidth=1.2)
-for seg in COASTLINES:
-    x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], 0, 90)
-    ax_pole.plot(
-        np.where(vis, x, np.nan),
-        np.where(vis, y, np.nan),
-        color=COAST_COLOR,
-        linewidth=0.4,
-        zorder=1,
-    )
+shade_land_ortho(ax_pole, 0, 90, zorder=1)
 for i in range(iso_rings):
     if iso_table.latitude[i] <= 0:
         break
@@ -2144,15 +2217,7 @@ for row, resolution in zip(axes, NSIDE_RESOLUTIONS, strict=True):
     points_per_edge = {0: 24, 1: 12, 2: 8, 3: 4}[resolution]
     for ax, (grid_, label) in zip(row, NSIDE_GRIDS, strict=True):
         ax.plot(np.cos(t_circle), np.sin(t_circle), color="#555555", linewidth=1.2)
-        for seg in COASTLINES:
-            x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], 0, 90)
-            ax.plot(
-                np.where(vis, x, np.nan),
-                np.where(vis, y, np.nan),
-                color=COAST_COLOR,
-                linewidth=0.4,
-                zorder=1,
-            )
+        shade_land_ortho(ax, 0, 90, zorder=1)
         width = 0.8 if resolution < 3 else 0.4
         filled, outlines, outline_colors = [], [], []
         for cell in grid_.grid(resolution):
@@ -2273,15 +2338,7 @@ def hero_globe(ax):
     lon0, lat0 = HERO_VIEW
     ring = np.linspace(0, 2 * np.pi, 400)
     ax.fill(np.cos(ring), np.sin(ring), color="#ffffff", zorder=0)
-    for seg in COASTLINES:
-        x, y, vis = ortho([p[0] for p in seg], [p[1] for p in seg], lon0, lat0)
-        ax.plot(
-            np.where(vis, x, np.nan),
-            np.where(vis, y, np.nan),
-            color=COAST_COLOR,
-            linewidth=0.55,
-            zorder=2,
-        )
+    shade_land_ortho(ax, lon0, lat0, zorder=2)
     for face in CELLS0:
         color = FACE_COLORS[face]
         for cell in hero_dggs.cell([face]).subcells():
@@ -2604,6 +2661,647 @@ fig.subplots_adjust(left=0.005, right=0.995, top=0.995, bottom=0.005)
 save(fig, "hero", pdf=False)  # README only; the manual does not include it
 plt.close(fig)
 print("hero figure written")
+
+# --------------------------------------------------------------- figure 20
+# The three line semantics between one pair of points, both just inside
+# the north polar square, so the comparison happens on one face.
+LINE_P = (2.1044, 46.9852)
+LINE_Q = (-166.3103, 47.8104)
+LINE_RES = 2
+LINE_STYLES = {
+    "geodesic": ("#c1272d", "shortest path on the ellipsoid"),
+    "plate_carree": ("#1f6fb4", "straight in plate carrée"),
+    "plane": ("#2e8b3d", "straight in the plane"),
+}
+
+
+def line_semantics_paths(start, end, n=600):
+    """The three curves as dense longitude-latitude point sequences."""
+    geodesic = rdggs.geodesic_points(start, end, n)
+    plate_carree = [
+        (
+            start[0] + (end[0] - start[0]) * i / (n - 1),
+            start[1] + (end[1] - start[1]) * i / (n - 1),
+        )
+        for i in range(n)
+    ]
+    a, b = rdggs.rhealpix(*start), rdggs.rhealpix(*end)
+    plane = []
+    for i in range(n):
+        try:
+            plane.append(
+                rdggs.rhealpix(
+                    a[0] + (b[0] - a[0]) * i / (n - 1),
+                    a[1] + (b[1] - a[1]) * i / (n - 1),
+                    inverse=True,
+                )
+            )
+        except ValueError:
+            # Off the grid's cross-shaped planar image, so this stretch of
+            # the straight planar line has no place on the ellipsoid at
+            # all. None breaks the curve where it leaves.
+            plane.append(None)
+    return {"geodesic": geodesic, "plate_carree": plate_carree, "plane": plane}
+
+
+def path_runs(points):
+    """Split a path at the gaps where it has no longitude and latitude."""
+    runs, run = [], []
+    for point in points:
+        if point is None:
+            if len(run) > 1:
+                runs.append(run)
+            run = []
+        else:
+            run.append(point)
+    if len(run) > 1:
+        runs.append(run)
+    return runs
+
+
+def plot_path_ortho(ax, points, view, color, linewidth=2.0, zorder=4):
+    """Draw a path on an orthographic panel, broken at any gap."""
+    for run in path_runs(points):
+        x, y, vis = ortho([q[0] for q in run], [q[1] for q in run], *view)
+        ax.plot(
+            np.where(vis, x, np.nan),
+            np.where(vis, y, np.nan),
+            color=color,
+            linewidth=linewidth,
+            zorder=zorder,
+        )
+
+
+def plot_path_lonlat(ax, points, color, linewidth=2.0, zorder=4):
+    """Draw a path on a plate carree panel, broken at any gap."""
+    for run in path_runs(points):
+        ax.plot(
+            [q[0] for q in run],
+            [q[1] for q in run],
+            color=color,
+            linewidth=linewidth,
+            zorder=zorder,
+        )
+
+
+def plot_path_plane(ax, points, color, linewidth=2.0, zorder=4):
+    """
+    Draw a path in the plane, broken at any gap and wherever the projection
+    jumps from one face to another.
+    """
+    for run in path_runs(points):
+        xy = [rdggs.rhealpix(lon, lat) for lon, lat in run]
+        piece = [xy[0]]
+        for previous, current in itertools.pairwise(xy):
+            if (
+                abs(current[0] - previous[0]) > 0.15 * R
+                or abs(current[1] - previous[1]) > 0.15 * R
+            ):
+                if len(piece) > 1:
+                    ax.plot(
+                        [q[0] / R for q in piece],
+                        [q[1] / R for q in piece],
+                        color=color,
+                        linewidth=linewidth,
+                        zorder=zorder,
+                    )
+                piece = []
+            piece.append(current)
+        if len(piece) > 1:
+            ax.plot(
+                [q[0] / R for q in piece],
+                [q[1] / R for q in piece],
+                color=color,
+                linewidth=linewidth,
+                zorder=zorder,
+            )
+
+
+def plot_planar_segment(ax, start, end, color, linewidth=2.0, zorder=4):
+    """
+    The straight planar line itself, drawn whole. Unlike the other two it
+    is straight in this space by definition, and drawing it whole is the
+    point: the stretch crossing the empty part of the cross is exactly the
+    stretch that has no counterpart on the ellipsoid.
+    """
+    a, b = rdggs.rhealpix(*start), rdggs.rhealpix(*end)
+    ax.plot(
+        [a[0] / R, b[0] / R],
+        [a[1] / R, b[1] / R],
+        color=color,
+        linewidth=linewidth,
+        zorder=zorder,
+    )
+
+
+def line_semantics_cells(name, start, end, resolution):
+    """The cells one semantics traces between the two points."""
+    if name == "plane":
+        return rdggs.cells_from_line(
+            resolution, rdggs.rhealpix(*start), rdggs.rhealpix(*end), plane=True
+        )
+    return rdggs.cells_from_line(resolution, start, end, line=name)
+
+
+def draw_traced_cells_ortho(ax, cells, color, view, context=None, resolution=None):
+    """
+    Shade a traced run of cells on an orthographic panel, so the cells can
+    be seen in their true shapes: squares in the plane, but caps, darts and
+    skew quads once they are back on the ellipsoid.
+    """
+    ring = np.linspace(0, 2 * np.pi, 400)
+    ax.fill(np.cos(ring), np.sin(ring), color="#ffffff", zorder=0)
+    shade_land_ortho(ax, *view, zorder=1)
+    for face in context if context is not None else CELLS0:
+        for cell in rdggs.cell([face]).subcells(resolution):
+            pts = cell.boundary(n=40, plane=False)
+            pts = pts + [pts[0]]
+            x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
+            ax.plot(
+                np.where(vis, x, np.nan),
+                np.where(vis, y, np.nan),
+                color="#cfccc6",
+                linewidth=0.3,
+                zorder=2,
+            )
+    for index in dict.fromkeys(str(c) for c in cells):
+        traced = rdggs.cell(rdggs.parse_index(index))
+        pts = traced.boundary(n=40, plane=False)
+        pts = pts + [pts[0]]
+        x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
+        if not vis.any():
+            continue
+        fx, fy = to_limb(x, y, vis)
+        ax.fill(fx, fy, color=color, alpha=0.5, linewidth=0, zorder=3)
+        ax.plot(
+            np.where(vis, x, np.nan),
+            np.where(vis, y, np.nan),
+            color=color,
+            linewidth=0.5,
+            zorder=4,
+        )
+
+
+def draw_traced_cells(ax, cells, color, faces=None, resolution=None):
+    """
+    Shade a traced run of cells in the plane. A line can leave a cell and
+    come back, so shade each cell once however many times it is visited.
+    """
+    for face in faces if faces is not None else CELLS0:
+        cell0 = rdggs.cell([face])
+        fx, fy = cell0.ul_vertex()
+        fw = cell0.width()
+        ax.add_patch(
+            Rectangle(
+                (fx / R, (fy - fw) / R),
+                fw / R,
+                fw / R,
+                facecolor="#ffffff",
+                edgecolor="#bdbab4",
+                linewidth=0.7,
+                zorder=0,
+            )
+        )
+    # The whole grid at the resolution being traced, faintly, so the
+    # traced cells can be read as a selection from it rather than as
+    # shapes floating on a map.
+    if resolution is not None:
+        for face in faces if faces is not None else CELLS0:
+            for cell in rdggs.cell([face]).subcells(resolution):
+                gx, gy = cell.ul_vertex()
+                gw = cell.width()
+                ax.add_patch(
+                    Rectangle(
+                        (gx / R, (gy - gw) / R),
+                        gw / R,
+                        gw / R,
+                        facecolor="none",
+                        edgecolor="#cfccc6",
+                        linewidth=0.3,
+                        zorder=1,
+                    )
+                )
+    for cell in dict.fromkeys(str(c) for c in cells):
+        traced = rdggs.cell(rdggs.parse_index(cell))
+        cx, cy = traced.ul_vertex()
+        cw = traced.width()
+        ax.add_patch(
+            Rectangle(
+                (cx / R, (cy - cw) / R),
+                cw / R,
+                cw / R,
+                facecolor=color,
+                alpha=0.55,
+                edgecolor=color,
+                linewidth=0.5,
+                zorder=2,
+            )
+        )
+    # Outlines here, shading on the globe and plate carree panels: see
+    # draw_coastlines_plane.
+    draw_coastlines_plane(ax, linewidth=0.55, zorder=3)
+
+
+fig, axes = plt.subplots(
+    3,
+    3,
+    figsize=(15.0, 12.6),
+    gridspec_kw={
+        "width_ratios": [1.0, 1.5, 1.0],
+        "height_ratios": [1.25, 1.0, 1.0],
+    },
+)
+paths = line_semantics_paths(LINE_P, LINE_Q)
+
+# --- left: looking down on the north pole
+ax = axes[0][0]
+# Straight down on the pole, cropped to the polar square: the cap
+# boundary at 41.94 degrees sits at cos(41.94) = 0.74 of the globe.
+view = (-82.0, 90.0)
+ring = np.linspace(0, 2 * np.pi, 400)
+ax.fill(np.cos(ring), np.sin(ring), color="#ffffff", zorder=0)
+shade_land_ortho(ax, *view, zorder=1)
+for cell in rdggs.cell(["N"]).subcells(LINE_RES):
+    pts = cell.boundary(n=30, plane=False)
+    pts = pts + [pts[0]]
+    x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *view)
+    ax.plot(
+        np.where(vis, x, np.nan),
+        np.where(vis, y, np.nan),
+        color=FACE_COLORS["N"],
+        linewidth=0.5,
+        alpha=0.65,
+        zorder=2,
+    )
+for name, (color, _) in LINE_STYLES.items():
+    plot_path_ortho(ax, paths[name], view, color)
+for point in (LINE_P, LINE_Q):
+    x, y, _ = ortho(point[0], point[1], *view)
+    ax.plot([x], [y], "o", color="#222222", markersize=5, zorder=5)
+# No globe outline: the view is cropped well inside the limb, so drawing
+# it would only leave two stray arcs in the corners.
+ax.set_xlim(-0.80, 0.80)
+ax.set_ylim(-0.80, 0.80)
+ax.set_aspect("equal")
+ax.axis("off")
+ax.set_title("on the ellipsoid, looking down on the pole", fontsize=11)
+
+# --- middle: plate carree, where the plate carree line is straight
+ax = axes[0][1]
+draw_coastlines_lonlat(ax, linewidth=0.4)
+for cell in rdggs.cell(["N"]).subcells(LINE_RES):
+    pts = cell.boundary(n=30, plane=False)
+    pts = pts + [pts[0]]
+    fill_lonlat_polygon(
+        ax,
+        pts,
+        facecolor="none",
+        edgecolor=FACE_COLORS["N"],
+        linewidth=0.4,
+        alpha=0.3,
+    )
+for name, (color, _) in LINE_STYLES.items():
+    plot_path_lonlat(ax, paths[name], color)
+for point in (LINE_P, LINE_Q):
+    ax.plot([point[0]], [point[1]], "o", color="#222222", markersize=5, zorder=5)
+ax.set_xlim(-180, 180)
+ax.set_ylim(40, 90)
+ax.set_aspect("auto")
+# No axes here either: the other two panels have none, and what this one
+# has to say is the shape of the lines, not the numbers.
+ax.axis("off")
+ax.set_title("in plate carrée", fontsize=11)
+
+# --- right: the same square in the plane
+ax = axes[0][2]
+north = rdggs.cell(["N"])
+x0, y0 = north.ul_vertex()
+w = north.width()
+# The same geography as the left panel, projected into the square, so the
+# two panels can be read against each other.
+draw_coastlines_plane(ax, zorder=1)
+for cell in rdggs.cell(["N"]).subcells(LINE_RES):
+    cx, cy = cell.ul_vertex()
+    cw = cell.width()
+    ax.add_patch(
+        Rectangle(
+            (cx / R, (cy - cw) / R),
+            cw / R,
+            cw / R,
+            facecolor="none",
+            edgecolor=FACE_COLORS["N"],
+            linewidth=0.5,
+            alpha=0.65,
+        )
+    )
+ax.add_patch(
+    Rectangle(
+        (x0 / R, (y0 - w) / R),
+        w / R,
+        w / R,
+        facecolor=FACE_COLORS["N"],
+        alpha=0.10,
+        edgecolor="#5c5c5c",
+        linewidth=1.1,
+    )
+)
+for name, (color, _) in LINE_STYLES.items():
+    if name == "plane":
+        plot_planar_segment(ax, LINE_P, LINE_Q, color)
+    else:
+        plot_path_plane(ax, paths[name], color)
+for point in (LINE_P, LINE_Q):
+    px, py = rdggs.rhealpix(*point)
+    ax.plot([px / R], [py / R], "o", color="#222222", markersize=5, zorder=5)
+ax.set_xlim(x0 / R - 0.06, (x0 + w) / R + 0.06)
+ax.set_ylim((y0 - w) / R - 0.06, y0 / R + 0.06)
+ax.set_aspect("equal")
+ax.axis("off")
+ax.set_title("the same square in the plane", fontsize=11)
+
+# --- second row: what each reading actually returns
+for column, (name, (color, _blurb)) in enumerate(LINE_STYLES.items()):
+    ax = axes[1][column]
+    cells = line_semantics_cells(name, LINE_P, LINE_Q, LINE_RES)
+    draw_traced_cells(ax, cells, color, faces=["N"], resolution=LINE_RES)
+    if name == "plane":
+        plot_planar_segment(ax, LINE_P, LINE_Q, "#333333", linewidth=1.0, zorder=3)
+    else:
+        plot_path_plane(ax, paths[name], "#333333", linewidth=1.0, zorder=3)
+    ax.set_xlim(x0 / R - 0.04, (x0 + w) / R + 0.04)
+    ax.set_ylim((y0 - w) / R - 0.04, y0 / R + 0.04)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.set_title(f"{name}: {len(cells)} cells", fontsize=10, color=color)
+
+    # --- third row: the same cells in their true shapes on the ellipsoid
+    ax = axes[2][column]
+    draw_traced_cells_ortho(ax, cells, color, view, context=["N"], resolution=LINE_RES)
+    plot_path_ortho(ax, paths[name], view, "#333333", linewidth=1.0, zorder=5)
+    ax.set_xlim(-0.80, 0.80)
+    ax.set_ylim(-0.80, 0.80)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+handles = [
+    plt.Line2D([], [], color=color, linewidth=2.0, label=f'line="{name}"  —  {blurb}')
+    for name, (color, blurb) in LINE_STYLES.items()
+]
+fig.legend(
+    handles=handles,
+    loc="lower center",
+    ncol=3,
+    frameon=False,
+    fontsize=9,
+    bbox_to_anchor=(0.5, -0.01),
+)
+fig.suptitle(
+    "One pair of points, three readings of the line, and the cells each traces",
+    fontsize=12,
+)
+fig.text(
+    0.5,
+    0.955,
+    f"rdggs.cells_from_line({LINE_RES}, start, end, line=...)",
+    ha="center",
+    fontsize=9.5,
+    color="#444444",
+    family="monospace",
+)
+fig.tight_layout(rect=(0, 0.035, 1, 0.97))
+save(fig, "line_semantics")
+plt.close(fig)
+print("line semantics figure written")
+
+# --------------------------------------------------------------- figure 21
+# The same comparison where the line crosses faces. A fifth of the planar
+# reading lies outside the grid's cross-shaped image, so its cells are a
+# broken path: P01 and N58 are neighbours in the list and an ocean apart.
+FACES_P = (-46.63, -23.55)
+FACES_Q = (13.40, 52.52)
+FACES_RES = 2
+# Off the route on purpose: a great circle whose plane holds the viewing
+# axis projects to a straight line, hiding the curvature.
+FACES_VIEW = (-45.0, 25.0)
+
+fig, axes = plt.subplots(
+    3,
+    3,
+    figsize=(15.0, 12.2),
+    gridspec_kw={
+        "width_ratios": [1.0, 1.15, 1.5],
+        "height_ratios": [1.2, 1.0, 1.0],
+    },
+)
+paths = line_semantics_paths(FACES_P, FACES_Q)
+
+# --- left: the ellipsoid
+ax = axes[0][0]
+ring = np.linspace(0, 2 * np.pi, 400)
+ax.fill(np.cos(ring), np.sin(ring), color="#ffffff", zorder=0)
+shade_land_ortho(ax, *FACES_VIEW, zorder=1)
+for face in CELLS0:
+    # The grid at the resolution being traced, faintly, with the
+    # resolution 1 boundaries over it so the faces stay legible.
+    for cell in rdggs.cell([face]).subcells(FACES_RES):
+        pts = cell.boundary(n=20, plane=False)
+        pts = pts + [pts[0]]
+        x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *FACES_VIEW)
+        ax.plot(
+            np.where(vis, x, np.nan),
+            np.where(vis, y, np.nan),
+            color="#cfccc6",
+            linewidth=0.25,
+            zorder=2,
+        )
+    for cell in rdggs.cell([face]).subcells():
+        pts = cell.boundary(n=40, plane=False)
+        pts = pts + [pts[0]]
+        x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *FACES_VIEW)
+        ax.plot(
+            np.where(vis, x, np.nan),
+            np.where(vis, y, np.nan),
+            color=FACE_COLORS[face],
+            linewidth=0.5,
+            alpha=0.7,
+            zorder=3,
+        )
+for name, (color, _) in LINE_STYLES.items():
+    plot_path_ortho(ax, paths[name], FACES_VIEW, color)
+for point in (FACES_P, FACES_Q):
+    x, y, _ = ortho(point[0], point[1], *FACES_VIEW)
+    ax.plot([x], [y], "o", color="#222222", markersize=5, zorder=5)
+ax.plot(np.cos(ring), np.sin(ring), color="#4a4a4a", linewidth=1.0, zorder=3)
+ax.set_xlim(-1.06, 1.06)
+ax.set_ylim(-1.06, 1.06)
+ax.set_aspect("equal")
+ax.axis("off")
+ax.set_title("on the ellipsoid", fontsize=11)
+
+# --- middle: plate carree
+ax = axes[0][1]
+draw_coastlines_lonlat(ax, linewidth=0.4)
+for face in CELLS0:
+    for cell in rdggs.cell([face]).subcells(FACES_RES):
+        pts = cell.boundary(n=16, plane=False)
+        fill_lonlat_polygon(
+            ax,
+            pts + [pts[0]],
+            facecolor="none",
+            edgecolor="#cfccc6",
+            linewidth=0.25,
+            zorder=1,
+        )
+    for cell in rdggs.cell([face]).subcells():
+        pts = cell.boundary(n=30, plane=False)
+        fill_lonlat_polygon(
+            ax,
+            pts + [pts[0]],
+            facecolor="none",
+            edgecolor=FACE_COLORS[face],
+            linewidth=0.4,
+            alpha=0.35,
+            zorder=2,
+        )
+for name, (color, _) in LINE_STYLES.items():
+    plot_path_lonlat(ax, paths[name], color)
+for point in (FACES_P, FACES_Q):
+    ax.plot([point[0]], [point[1]], "o", color="#222222", markersize=5, zorder=5)
+ax.set_xlim(-95, 40)
+ax.set_ylim(-50, 70)
+ax.set_aspect("auto")
+ax.axis("off")
+ax.set_title("in plate carrée", fontsize=11)
+
+# --- right: the whole net
+ax = axes[0][2]
+for face in CELLS0:
+    cell0 = rdggs.cell([face])
+    fx, fy = cell0.ul_vertex()
+    fw = cell0.width()
+    ax.add_patch(
+        Rectangle(
+            (fx / R, (fy - fw) / R),
+            fw / R,
+            fw / R,
+            facecolor=FACE_COLORS[face],
+            alpha=0.18,
+            edgecolor="none",
+            zorder=0,
+        )
+    )
+    for child in cell0.subcells(FACES_RES):
+        cx, cy = child.ul_vertex()
+        cw = child.width()
+        ax.add_patch(
+            Rectangle(
+                (cx / R, (cy - cw) / R),
+                cw / R,
+                cw / R,
+                facecolor="none",
+                edgecolor="#cfccc6",
+                linewidth=0.25,
+                zorder=1,
+            )
+        )
+    for child in cell0.subcells():
+        cx, cy = child.ul_vertex()
+        cw = child.width()
+        ax.add_patch(
+            Rectangle(
+                (cx / R, (cy - cw) / R),
+                cw / R,
+                cw / R,
+                facecolor="none",
+                edgecolor=FACE_COLORS[face],
+                linewidth=0.45,
+                alpha=0.8,
+                zorder=2,
+            )
+        )
+    ax.add_patch(
+        Rectangle(
+            (fx / R, (fy - fw) / R),
+            fw / R,
+            fw / R,
+            facecolor="none",
+            edgecolor="#5c5c5c",
+            linewidth=1.0,
+            zorder=3,
+        )
+    )
+draw_coastlines_plane(ax, zorder=1)
+for name, (color, _) in LINE_STYLES.items():
+    if name == "plane":
+        plot_planar_segment(ax, FACES_P, FACES_Q, color)
+    else:
+        plot_path_plane(ax, paths[name], color)
+for point in (FACES_P, FACES_Q):
+    px, py = rdggs.rhealpix(*point)
+    ax.plot([px / R], [py / R], "o", color="#222222", markersize=5, zorder=5)
+ax.set_xlim(-3.3, 3.3)
+ax.set_ylim(-2.45, 2.45)
+ax.set_aspect("equal")
+ax.axis("off")
+ax.set_title("in the plane", fontsize=11)
+
+# --- second and third rows: the cells each reading returns, in the plane
+# and back on the ellipsoid
+for column, (name, (color, _blurb)) in enumerate(LINE_STYLES.items()):
+    cells = line_semantics_cells(name, FACES_P, FACES_Q, FACES_RES)
+
+    ax = axes[1][column]
+    draw_traced_cells(ax, cells, color, resolution=FACES_RES)
+    if name == "plane":
+        plot_planar_segment(ax, FACES_P, FACES_Q, "#333333", linewidth=0.9, zorder=4)
+    else:
+        plot_path_plane(ax, paths[name], "#333333", linewidth=0.9, zorder=4)
+    ax.set_xlim(-3.3, 3.3)
+    ax.set_ylim(-2.45, 2.45)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.set_title(f"{name}: {len(cells)} cells", fontsize=10, color=color)
+
+    ax = axes[2][column]
+    draw_traced_cells_ortho(ax, cells, color, FACES_VIEW, resolution=FACES_RES)
+    plot_path_ortho(ax, paths[name], FACES_VIEW, "#333333", linewidth=1.0, zorder=5)
+    ring = np.linspace(0, 2 * np.pi, 400)
+    ax.plot(np.cos(ring), np.sin(ring), color="#4a4a4a", linewidth=1.0, zorder=6)
+    ax.set_xlim(-1.06, 1.06)
+    ax.set_ylim(-1.06, 1.06)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+
+handles = [
+    plt.Line2D([], [], color=color, linewidth=2.0, label=f'line="{name}"  —  {blurb}')
+    for name, (color, blurb) in LINE_STYLES.items()
+]
+fig.legend(
+    handles=handles,
+    loc="lower center",
+    ncol=3,
+    frameon=False,
+    fontsize=9,
+    bbox_to_anchor=(0.5, -0.02),
+)
+fig.suptitle(
+    "São Paulo to Berlin: three readings of the line, and the cells each traces",
+    fontsize=12,
+)
+fig.text(
+    0.5,
+    0.955,
+    f"rdggs.cells_from_line({FACES_RES}, start, end, line=...)",
+    ha="center",
+    fontsize=9.5,
+    color="#444444",
+    family="monospace",
+)
+fig.tight_layout(rect=(0, 0.035, 1, 0.97))
+save(fig, "line_semantics_faces")
+plt.close(fig)
+print("line semantics (faces) figure written")
 
 # Drop matplotlib's six decimal places of coordinate precision, which is
 # around a nanometre on the page and about a third of every SVG's bytes.
