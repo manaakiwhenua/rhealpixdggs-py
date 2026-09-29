@@ -23,6 +23,7 @@ import numpy as np
 from numpy import array, pi
 
 # import rhealpixdggs.dggs as dggs
+import rhealpixdggs.dggs as dggs_module
 from rhealpixdggs.cell import CELLS0, _geod
 from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
 from rhealpixdggs.ellipsoids import (
@@ -1392,6 +1393,20 @@ class LineCrossingsTestCase(unittest.TestCase):
             self.assertAlmostEqual(sum(f for _, f in crossings), 1.0, places=9)
         self.assertGreater(checked, 100, "not enough planar lines were exercised")
 
+    def test_a_line_of_no_length(self):
+        # Both endpoints in the same place: one cell, and no length to
+        # share out. The refactor that gave cells_from_line and
+        # line_crossings a common sweep removed an early return here, so
+        # this pins the behaviour it used to short-circuit to.
+        point = (174.0, -41.0)
+        for line in ("geodesic", "plate_carree"):
+            with self.subTest(line=line):
+                cells = self.rdggs.cells_from_line(5, point, point, line=line)
+                self.assertEqual(len(cells), 1)
+                crossings = self.rdggs.line_crossings(5, point, point, line=line)
+                self.assertEqual([c for c, _ in crossings], cells)
+                self.assertEqual([f for _, f in crossings], [0.0])
+
     def test_off_grid_endpoints_give_nothing(self):
         R = self.rdggs.ellipsoid.R_A
         self.assertEqual(
@@ -1450,3 +1465,57 @@ class DiscontinuousPlanarLineTestCase(unittest.TestCase):
                     warnings.simplefilter("always")
                     self.rdggs.cells_from_line(2, start, end, line=line)
                 self.assertEqual(caught, [])
+
+
+class GeodesicSweepEdgeCaseTestCase(unittest.TestCase):
+    """
+    The branches the sweep takes only for exact or degenerate input, which
+    ordinary traces never reach.
+    """
+
+    def setUp(self):
+        self.rdggs = WGS84_003
+
+    def test_a_geodesic_along_a_face_meridian(self):
+        # Due north along longitude 90, which is a face boundary. Every
+        # point of it is exactly on that boundary in floating point, so the
+        # sweep takes its exact-crossing branch rather than bracketing.
+        trace = self.rdggs._trace_line(
+            3, (90.0, -30.0), (90.0, 60.0), False, False, "geodesic"
+        )
+        self.assertTrue(
+            all(trace.point_at(t / 8)[0] == 90.0 for t in range(9)),
+            "this test needs the longitudes to be exactly on the boundary",
+        )
+        cells = self.rdggs.cells_from_line(
+            3, (90.0, -30.0), (90.0, 60.0), line="geodesic"
+        )
+        self.assertGreater(len(cells), 10)
+        for a, b in itertools.pairwise(cells):
+            self.assertTrue(a.touches(b) or a.overlaps(b))
+        # A meridian is a geodesic and a plate carree line at once.
+        self.assertEqual(
+            cells,
+            self.rdggs.cells_from_line(
+                3, (90.0, -30.0), (90.0, 60.0), line="plate_carree"
+            ),
+        )
+
+    def test_arc_length_gives_up_gracefully(self):
+        # If no sample of a run can be nudged inside the projection's
+        # domain, the run contributes no length rather than raising. Force
+        # it by handing _arc_length a curve with no longitude and latitude
+        # anywhere.
+        def nowhere(_t):
+            raise ValueError("outside the projection's domain")
+
+        cell = self.rdggs.cell(["N", 0])
+        trace = dggs_module._LineTrace(
+            start=cell,
+            end=cell,
+            runs=[(cell, 0.0, 1.0)],
+            point_at=lambda t: (0.0, 0.0),
+            lonlat_at=nowhere,
+            geodesic_length=None,
+        )
+        self.assertEqual(self.rdggs._arc_length(trace, 0.0, 1.0), 0.0)

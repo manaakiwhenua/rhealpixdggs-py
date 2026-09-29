@@ -2024,10 +2024,13 @@ class RHEALPixDGGS:
                 ):
                     for target in targets:
                         fa, fb = va - target, vb - target
+                        # The cuts chain, so this run's end is the next
+                        # run's start: an exact crossing at the end is
+                        # caught as an exact crossing at the start of the
+                        # next, and the last run ends at 1.0, which is a
+                        # breakpoint already. Only the start needs testing.
                         if fa == 0.0:
                             breakpoints.add(ra)
-                        elif fb == 0.0:
-                            breakpoints.add(rb)
                         elif (fa < 0.0) != (fb < 0.0):
                             geo_brackets.append((ra, rb, fa, fb, axis, target))
             if geo_brackets:
