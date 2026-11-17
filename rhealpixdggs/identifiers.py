@@ -7,6 +7,7 @@ squares and ``max_resolution``), not on its ellipsoid or projection. The
 supported API is the ``RHEALPixDGGS`` and ``Cell`` methods built on it.
 """
 
+import functools
 import re
 from collections.abc import Iterable, Sequence
 from math import isqrt
@@ -496,3 +497,111 @@ def _format_level_row_col(
         c = (col[group] % p)[:, None] // weights % N
         result[group] = _format_indices(face[group], r * N + c, int(L), N)
     return result.tolist()
+
+
+# Grid distance ------------------------------------------------------------
+
+_STEPS = {"up": (-1, 0), "right": (0, 1), "down": (1, 0), "left": (0, -1)}
+
+# Quarter turns of a polar face's rows and columns seen from the face across
+# each of its edges: the net attaches it unturned to one band face, and each
+# band face further round meets it a quarter turn on.
+_POLAR_TURNS = {
+    "N": {"down": 0, "right": 3, "up": 2, "left": 1},
+    "S": {"up": 0, "left": 3, "down": 2, "right": 1},
+}
+
+
+def _face_neighbors(north_square: int, south_square: int) -> dict[str, dict[str, str]]:
+    """The face across each edge of each face, as ``RHEALPixDGGS.atomic_neighbors``."""
+    N, O, P, Q, R, S = CELLS0
+    band = [O, P, Q, R]
+    faces = {
+        face: {"left": band[i - 1], "right": band[(i + 1) % 4], "up": N, "down": S}
+        for i, face in enumerate(band)
+    }
+    for pole, square, around in (
+        (N, north_square, ("down", "right", "up", "left")),
+        (S, south_square, ("up", "right", "down", "left")),
+    ):
+        faces[pole] = {d: band[(square + k) % 4] for k, d in enumerate(around)}
+    return faces
+
+
+def _rotate_rc(turns: int, row: int, col: int, p: int) -> tuple[int, int]:
+    """(row, col) of a p x p block after `turns` clockwise quarter turns."""
+    for _ in range(turns % 4):
+        row, col = col, p - 1 - row
+    return row, col
+
+
+@functools.cache
+def _developments(
+    north_square: int, south_square: int
+) -> dict[tuple[str, str], tuple[tuple[int, int, int], ...]]:
+    """
+    For each ordered pair of faces, where the second lies in the plane of
+    the first when the cube is unfolded along each simple path of at most
+    three edges between them: the clockwise quarter turns of its rows and
+    columns, and its row and column offsets in face widths.
+    """
+    faces = _face_neighbors(north_square, south_square)
+
+    def crossing(face: str, direction: str) -> tuple[int, int, int]:
+        across = faces[face][direction]
+        if face in _POLAR_TURNS:
+            turns = _POLAR_TURNS[face][direction]
+        elif across in _POLAR_TURNS:
+            back = next(d for d, f in faces[across].items() if f == face)
+            turns = -_POLAR_TURNS[across][back] % 4
+        else:
+            turns = 0
+        return turns, *_STEPS[direction]
+
+    result: dict[tuple[str, str], list[tuple[int, int, int]]] = {
+        (face, face): [(0, 0, 0)] for face in CELLS0
+    }
+
+    def extend(start: str, path: list[str], turns: int, dr: int, dc: int) -> None:
+        face = path[-1]
+        for direction in _STEPS:
+            across = faces[face][direction]
+            if across in path:
+                continue
+            t, ur, uc = crossing(face, direction)
+            # Compose: the offset turns with the faces before it.
+            for _ in range(turns):
+                ur, uc = uc, -ur
+            placed = ((turns + t) % 4, dr + ur, dc + uc)
+            result.setdefault((start, across), []).append(placed)
+            if len(path) < 3:
+                extend(start, [*path, across], *placed)
+
+    for face in CELLS0:
+        extend(face, [face], 0, 0, 0)
+    return {pair: tuple(placements) for pair, placements in result.items()}
+
+
+def _grid_distance(
+    grid: _GridLayout, a: Sequence[str | int], b: Sequence[str | int], diagonals: bool
+) -> int:
+    """
+    Hops between the cells with suids `a` and `b` at the coarser one's
+    resolution; see ``Cell.grid_distance``. A path unfolds into the plane
+    along the faces it crosses, where it is no shorter than the planar hop
+    count between its ends, and a shortest path crosses at most three edges.
+    """
+    N = grid.N_side
+    level = min(len(a), len(b)) - 1
+    p = N**level
+    ra, ca = _digits_to_rc(N, [int(d) for d in a[1 : level + 1]])
+    rb, cb = _digits_to_rc(N, [int(d) for d in b[1 : level + 1]])
+    placements = _developments(grid.north_square, grid.south_square)
+    best = None
+    for turns, ur, uc in placements[str(a[0]), str(b[0])]:
+        r, c = _rotate_rc(turns, rb, cb, p)
+        dr, dc = abs(r + ur * p - ra), abs(c + uc * p - ca)
+        hops = max(dr, dc) if diagonals else dr + dc
+        best = hops if best is None else min(best, hops)
+    assert best is not None
+    return best

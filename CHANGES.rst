@@ -1,3 +1,13 @@
+0.13.0
+^^^^^^
+Added ``Cell.grid_distance``, the number of hops between two cells over
+the cube: the smallest ``k`` whose k-ring around one holds the other.
+With ``diagonals`` (the default) a hop may cross an edge or a corner of a
+cell, without it only an edge. The count is exact and computed from the
+identifiers alone, by unfolding the cube along the faces between the
+cells; cells of different resolutions are compared at the coarser one
+(issue #197).
+
 0.12.1
 ^^^^^^
 The identifiers page of the documentation listed nothing but the module's
