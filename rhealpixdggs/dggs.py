@@ -2980,6 +2980,125 @@ class RHEALPixDGGS:
             x, y = self.rhealpix(x, y, inverse=True)
         return np.stack([x, y], axis=1)
 
+    def nucleus_distances(
+        self, indices_a: Iterable[str], indices_b: Iterable[str], exact: bool = False
+    ) -> FloatArray:
+        """
+        Return the distance between the nuclei of the cells with index
+        strings `indices_a` and `indices_b`, pair by pair, as a float64
+        array; one of the two may hold a single index to pair with every
+        index of the other. The distance is in the ellipsoid's length
+        units: metres on the WGS84 grids, and on the unit sphere the
+        central angle in radians. A pair with an invalid index gives NaN.
+
+        By default the distance is the great circle between the nuclei on
+        the authalic sphere (see ``nuclei``), from a closed form in a few
+        trigonometric operations: within 0.112 percent (``a / R_A - 1``)
+        of the geodesic on the ellipsoid, at every distance. With `exact` =
+        True it is that geodesic, from ``pyproj.Geod``, which takes about
+        twenty times as long. Both measure nucleus to nucleus; the least
+        distance between the cells' boundaries is ``Cell.distance``.
+
+        EXAMPLES::
+
+            >>> WGS84_003.nucleus_distances(['P4'], ['P1', 'P5']).round(1).tolist()
+            [2934192.8, 3335851.6]
+            >>> WGS84_003.nucleus_distances(['P4'], ['P1', 'P5'], exact=True).round(1).tolist()
+            [2931135.7, 3339584.7]
+
+        """
+        return self._nucleus_inverse(indices_a, indices_b, exact)[0]
+
+    def bearings(
+        self, indices_a: Iterable[str], indices_b: Iterable[str], exact: bool = False
+    ) -> FloatArray:
+        """
+        Return the initial bearing from the nucleus of each cell of
+        `indices_a` to the nucleus of the corresponding cell of
+        `indices_b`, pair by pair as ``nucleus_distances`` pairs them:
+        clockwise from north, from -180 to 180 degrees (radians on a
+        grid in radians). A pair with an invalid index gives NaN.
+
+        By default the bearing is on the authalic sphere, within 0.064
+        degrees of the geodesic's azimuth at short range and 0.1 degrees
+        up to 5,000 km, more beyond, and with no meaningful value between
+        near-antipodal nuclei, where the geodesic's own azimuth is
+        unstable. With `exact` = True it is the geodesic's azimuth, from
+        ``pyproj.Geod``.
+
+        EXAMPLES::
+
+            >>> WGS84_003.bearings(['P4'], ['P1', 'P5']).round(3).tolist()
+            [0.0, 90.0]
+            >>> WGS84_003.bearings(['P1'], ['P2'], exact=True).round(3).tolist()
+            [83.184]
+
+        """
+        return self._nucleus_inverse(indices_a, indices_b, exact)[1]
+
+    def _nucleus_inverse(
+        self, indices_a: Iterable[str], indices_b: Iterable[str], exact: bool
+    ) -> tuple[FloatArray, FloatArray]:
+        """Distances and bearings between paired nuclei; see
+        ``nucleus_distances``."""
+        a = self.nuclei(indices_a, authalic=not exact)
+        b = self.nuclei(indices_b, authalic=not exact)
+        if len(a) != len(b) and 1 not in (len(a), len(b)):
+            raise ValueError(
+                f"{len(a)} and {len(b)} indices cannot be paired; give equal "
+                "numbers, or one index against many"
+            )
+        a, b = np.broadcast_arrays(a, b)
+        return self._inverse(a[:, 0], a[:, 1], b[:, 0], b[:, 1], exact)
+
+    def _inverse(
+        self,
+        lon_a: Any,
+        lat_a: Any,
+        lon_b: Any,
+        lat_b: Any,
+        exact: bool,
+    ) -> tuple[Any, Any]:
+        """
+        The distance and initial bearing from each point `a` to its `b`,
+        floats or arrays, in the grid's angular unit: the geodesic on the
+        ellipsoid when `exact`, where the latitudes are geodetic, else
+        the great circle on the authalic sphere, where they are authalic.
+        """
+        E = self.ellipsoid
+        if exact:
+            geod = _geod(E.a, E.f)
+            if np.ndim(lon_a) and np.size(lon_a) == 1:
+                # pyproj probes a one-element array as a scalar, which numpy
+                # deprecates; give it the scalar.
+                azimuth, _, distance = geod.inv(
+                    float(lon_a[0]),
+                    float(lat_a[0]),
+                    float(lon_b[0]),
+                    float(lat_b[0]),
+                    radians=E.radians,
+                )
+                return np.array([distance]), np.array([azimuth])
+            azimuth, _, distance = geod.inv(
+                lon_a, lat_a, lon_b, lat_b, radians=E.radians
+            )
+            return distance, azimuth
+        if not E.radians:
+            lon_a, lat_a, lon_b, lat_b = (
+                np.radians(v) for v in (lon_a, lat_a, lon_b, lat_b)
+            )
+        dl = lon_b - lon_a
+        cos_a, cos_b = np.cos(lat_a), np.cos(lat_b)
+        h = np.sin((lat_b - lat_a) / 2) ** 2 + cos_a * cos_b * np.sin(dl / 2) ** 2
+        distance = 2 * E.R_A * np.arcsin(np.sqrt(np.clip(h, 0, 1)))
+        bearing = np.arctan2(
+            np.sin(dl) * cos_b,
+            cos_a * np.sin(lat_b) - np.sin(lat_a) * cos_b * np.cos(dl),
+        )
+        if not E.radians:
+            bearing = np.degrees(bearing)
+        return distance, bearing
+
     def rings(self, indices: Iterable[str]) -> np.ndarray:
         """
         Return the isolatitude ring of each cell with index strings `indices`

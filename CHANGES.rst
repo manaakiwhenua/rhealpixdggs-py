@@ -15,6 +15,14 @@ the ellipsoid, and the new ``nuclei_from_level_row_col`` gives nuclei
 for cells named by position, so for every grid, index strings or not
 (issue #198).
 
+Added ``Cell.nucleus_distance`` and ``Cell.bearing``, and over arrays of
+index strings ``RHEALPixDGGS.nucleus_distances`` and ``bearings``: the
+distance and initial bearing between two cells' nuclei. By default they
+are the great circle on the authalic sphere, a closed form within 0.112
+percent of the ellipsoidal geodesic in distance and within 0.1 degree in
+bearing up to 5,000 km; ``exact=True`` gives the geodesic itself from
+pyproj, about twenty times slower (issue #199).
+
 0.12.1
 ^^^^^^
 The identifiers page of the documentation listed nothing but the module's
