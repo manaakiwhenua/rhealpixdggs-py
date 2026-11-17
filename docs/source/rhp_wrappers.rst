@@ -124,6 +124,7 @@ A cell visited twice gets an entry per visit, and the fractions sum to 1.
     k_ring
     linetrace
     polyfill
+    rhp_from_uint64
     rhp_get_base_cell
     rhp_get_resolution
     rhp_is_valid
@@ -131,6 +132,7 @@ A cell visited twice gets an entry per visit, and the fractions sum to 1.
     rhp_to_geo
     rhp_to_geo_boundary
     rhp_to_parent
+    rhp_to_uint64
 
 .. automodule:: rhealpixdggs.rhp_wrappers
     :members:
