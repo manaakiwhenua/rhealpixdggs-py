@@ -1,3 +1,15 @@
+Unreleased
+^^^^^^^^^^
+Grids that differ only in their central meridian or angular unit no longer
+compare equal. ``Ellipsoid`` equality compared only the axes, so a grid
+rotated to a different ``lon_0`` equalled the unrotated one although the
+two give a point different identifiers, and their cells compared equal
+and could be mixed in one ``ZoneSet``. Equality now follows PROJ's for
+CRSs: ``lon_0`` is compared as an angle, so 410 equals 50, and degrees and
+radians are different grids, so ``WGS84_003 != WGS84_003_RADIANS``. Code
+that compared cells across such grids to mean "same identifier" should
+compare their ``suid`` instead (issue #186).
+
 0.11.0
 ^^^^^^
 ``RHEALPixDGGS.cells_from_line`` and ``rhp_wrappers.linetrace`` take a
