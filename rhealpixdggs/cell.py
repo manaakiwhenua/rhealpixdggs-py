@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from colorsys import hsv_to_rgb
 from functools import cache, cached_property, total_ordering
 from itertools import product
-from math import fsum, hypot
+from math import degrees, fsum, hypot
 from random import uniform
 from typing import TYPE_CHECKING, ClassVar, Literal, cast, overload
 
@@ -18,6 +18,7 @@ import pyproj
 from numpy import base_repr
 from scipy import integrate, optimize
 
+import rhealpixdggs.pj_rhealpix as pjr
 from rhealpixdggs.identifiers import (
     _SUB_ZONE_AT,
     _SUB_ZONE_INDEX,
@@ -2643,6 +2644,105 @@ class Cell:
         """
         self._check_comparable(other, "grid distance")
         return _grid_distance(self.rdggs, self.suid, other.suid, diagonals)
+
+    def nucleus_distance(self, other: "Cell", exact: bool = False) -> float:
+        """
+        Return the distance from this cell's nucleus to `other`'s, in the
+        ellipsoid's length units: by default the great circle on the
+        authalic sphere, within 0.112 percent of the geodesic on the
+        ellipsoid; with `exact` = True that geodesic. See
+        ``RHEALPixDGGS.nucleus_distances``, which does the same for
+        arrays of cells, for the details. The least distance between the
+        cells' boundaries is ``distance``.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> p4 = Cell(WGS84_003, ['P', 4])
+            >>> round(p4.nucleus_distance(Cell(WGS84_003, ['P', 1])), 1)
+            2934192.8
+            >>> round(p4.nucleus_distance(Cell(WGS84_003, ['P', 1]), exact=True), 1)
+            2931135.7
+            >>> round(p4.nucleus_distance(Cell(WGS84_003, ['P', 2])), 1)
+            4350304.8
+
+        Across faces, over the edge into the north polar face and over
+        the corner into ``S``::
+
+            >>> round(p4.nucleus_distance(Cell(WGS84_003, ['N', 6])), 1)
+            12424764.0
+            >>> round(p4.nucleus_distance(Cell(WGS84_003, ['S', 1])), 1)
+            10007554.7
+
+        Neighbouring cells at resolution 9, about 500 m wide, in the
+        Chatham Islands: the planar neighbour to the right and the one
+        diagonally below it::
+
+            >>> a = WGS84_003.cell(WGS84_003.parse_index('S001450634'))
+            >>> round(a.nucleus_distance(a.neighbor('right')), 1)
+            381.6
+            >>> round(a.nucleus_distance(a.diagonal_neighbor('down_right')), 1)
+            575.9
+
+        """
+        self._check_comparable(other, "nucleus distance")
+        return self._nucleus_inverse(other, exact)[0]
+
+    def bearing(self, other: "Cell", exact: bool = False) -> float:
+        """
+        Return the initial bearing from this cell's nucleus to `other`'s,
+        clockwise from north, from -180 to 180 degrees (radians on a grid
+        in radians): by default on the authalic sphere, with `exact` =
+        True the geodesic's azimuth on the ellipsoid. See
+        ``RHEALPixDGGS.bearings`` for the error bounds.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> p4 = Cell(WGS84_003, ['P', 4])
+            >>> round(p4.bearing(Cell(WGS84_003, ['P', 1])), 3)
+            0.0
+            >>> round(p4.bearing(Cell(WGS84_003, ['P', 2])), 3)
+            45.222
+            >>> round(p4.bearing(Cell(WGS84_003, ['P', 2]), exact=True), 3)
+            45.271
+
+        A nucleus on another face, north-west of ``P4`` over the edge
+        into the north polar face, and south-west over the corner into
+        ``S``::
+
+            >>> round(p4.bearing(Cell(WGS84_003, ['N', 6])), 3)
+            -23.499
+            >>> round(p4.bearing(Cell(WGS84_003, ['S', 1])), 3)
+            -148.414
+
+        """
+        self._check_comparable(other, "bearing")
+        return self._nucleus_inverse(other, exact)[1]
+
+    def _authalic_nucleus(self) -> tuple[float, float]:
+        """The nucleus on the authalic sphere: longitude and authalic
+        latitude, as ``RHEALPixDGGS.nuclei(authalic=True)`` gives them."""
+        E = self.ellipsoid
+        x, y = self.nucleus(plane=True)
+        lon, beta = pjr.rhealpix_sphere_inverse(
+            x / E.R_A,
+            y / E.R_A,
+            north_square=self.rdggs.north_square,
+            south_square=self.rdggs.south_square,
+            region=self.region(),
+        )
+        if not E.radians:
+            lon, beta = degrees(lon), degrees(beta)
+        return wrap_longitude(lon + E.lon_0, radians=E.radians), beta
+
+    def _nucleus_inverse(self, other: "Cell", exact: bool) -> tuple[float, float]:
+        if exact:
+            a, b = self.nucleus(plane=False), other.nucleus(plane=False)
+        else:
+            a, b = self._authalic_nucleus(), other._authalic_nucleus()
+        distance, bearing = self.rdggs._inverse(a[0], a[1], b[0], b[1], exact)
+        return float(distance), float(bearing)
 
     def relative_position(
         self, other: "Cell", direction: tuple[float, float] = (1.0, 0.0)
