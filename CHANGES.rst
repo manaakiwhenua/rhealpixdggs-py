@@ -1,5 +1,20 @@
-Unreleased
-^^^^^^^^^^
+0.12.0
+^^^^^^
+Added the presets ``WGS84_003_OGC`` and ``WGS84_003_OGC_RADIANS``, the
+rHEALPix DGGRS registered by OGC
+(https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix) in degrees and in
+radians. Each is ``WGS84_003`` with its central meridian at 50 degrees
+east, so they give different identifiers from ``WGS84_003`` for the same
+point. ``WGS84_003`` and the default grid are unchanged. Their identifiers
+match those of Ecere's DGGAL, which implements the registered grid.
+
+Added ``RHEALPixDGGS.uri``, the registered URI of a grid, or None for a
+grid that is not registered. It is read from the grid's parameters, so a
+grid built by hand with the registered parameters has it too, in degrees
+or radians. ``RHEALPixDGGS.from_uri`` goes the other way, building the
+registered grid from its URI in either unit, and raises ValueError for a
+URI it does not know (issue #184).
+
 Grids that differ only in their central meridian or angular unit no longer
 compare equal. ``Ellipsoid`` equality compared only the axes, so a grid
 rotated to a different ``lon_0`` equalled the unrotated one although the

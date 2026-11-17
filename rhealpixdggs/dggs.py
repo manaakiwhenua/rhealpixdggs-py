@@ -159,7 +159,7 @@ destroy the equal-area property.) ::
 # *****************************************************************************
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import pairwise, product
-from math import asin, copysign, floor, fsum, pi
+from math import asin, copysign, degrees, floor, fsum, isclose, pi
 from random import randint
 from typing import Any, Literal, NamedTuple, cast, get_args, overload
 from warnings import warn
@@ -199,8 +199,10 @@ from rhealpixdggs.cell import (
 from rhealpixdggs.ellipsoids import (
     UNIT_SPHERE,
     UNIT_SPHERE_RADIANS,
+    WGS84_A,
     WGS84_ELLIPSOID,
     WGS84_ELLIPSOID_RADIANS,
+    WGS84_F,
     Ellipsoid,
 )
 from rhealpixdggs.utils import (
@@ -209,6 +211,22 @@ from rhealpixdggs.utils import (
     _normalise_antimeridian_rings,
     auth_lat,
 )
+
+
+class _RegisteredGrid(NamedTuple):
+    a: float
+    f: float
+    lon_0: float  # degrees
+    N_side: int
+    north_square: int
+    south_square: int
+
+
+_OGC_RHEALPIX_URI = "https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix"
+# Registered DGGRSs by URI; `uri` and `from_uri` both read this.
+_REGISTERED_GRIDS = {
+    _OGC_RHEALPIX_URI: _RegisteredGrid(WGS84_A, WGS84_F, 50, 3, 0, 0),
+}
 
 
 class RingTable(NamedTuple):
@@ -321,6 +339,7 @@ class RHEALPixDGGS:
     - `max_resolution` - A nonnegative integer that is the maximum grid
       resolution needed to have ellipsoidal cells of area at most
       `max_areal_resolution`.
+    - `uri` - The OGC URI of this grid if it is a registered DGGRS, else None.
     - `child_order` - A dictionary of the ordering (Morton order) of child
       cells of a cell in terms of the row-column coordinates in the matrix
       of child cells.  Child cell are numbered 0 to `N_side**2 -1` from
@@ -511,6 +530,71 @@ class RHEALPixDGGS:
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
+
+    @property
+    def uri(self) -> str | None:
+        """
+        The URI of the registered DGGRS this grid is, or None if it is not
+        a registered one. The only rHEALPix DGGRS OGC registers is WGS84,
+        ``N_side`` 3, both polar squares 0, central meridian 50 degrees
+        east, whatever the angular unit or ``max_areal_resolution``.
+
+        EXAMPLES::
+
+            >>> WGS84_003_OGC.uri
+            'https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix'
+            >>> WGS84_003.uri is None
+            True
+
+        """
+        e = self.ellipsoid
+        lon_0 = e.lon_0 if not e.radians else degrees(e.lon_0)
+        for uri, g in _REGISTERED_GRIDS.items():
+            if (
+                not e.sphere
+                and isclose(e.a, g.a, rel_tol=1e-12)
+                and isclose(e.f, g.f, rel_tol=1e-12)
+                and isclose((lon_0 - g.lon_0 + 180) % 360 - 180, 0, abs_tol=1e-9)
+                and self.N_side == g.N_side
+                and self.north_square == g.north_square
+                and self.south_square == g.south_square
+            ):
+                return uri
+        return None
+
+    @classmethod
+    def from_uri(
+        cls, uri: str, radians: bool = False, max_areal_resolution: float = 1
+    ) -> "RHEALPixDGGS":
+        """
+        The registered DGGRS with URI `uri`, in degrees or, if `radians`,
+        radians. The ``http`` form of the URI is accepted too. Raise
+        ValueError for a URI that names no registered rHEALPix DGGRS.
+
+        EXAMPLES::
+
+            >>> rdggs = RHEALPixDGGS.from_uri(
+            ...     "https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix"
+            ... )
+            >>> rdggs.ellipsoid.lon_0, rdggs.N_side
+            (50, 3)
+
+        """
+        key = "https://" + uri.removeprefix("http://").removeprefix("https://")
+        if key not in _REGISTERED_GRIDS:
+            raise ValueError(
+                f"{uri!r} is not a registered rHEALPix DGGRS; "
+                f"known: {', '.join(_REGISTERED_GRIDS)}"
+            )
+        g = _REGISTERED_GRIDS[key]
+        lon_0 = np.deg2rad(g.lon_0) if radians else g.lon_0
+        return cls(
+            Ellipsoid(a=g.a, f=g.f, lon_0=lon_0, radians=radians),
+            N_side=g.N_side,
+            north_square=g.north_square,
+            south_square=g.south_square,
+            max_areal_resolution=max_areal_resolution,
+        )
 
     @overload
     def healpix(
@@ -3388,6 +3472,10 @@ WGS84_003 = RHEALPixDGGS(
 WGS84_003_RADIANS = RHEALPixDGGS(
     ellipsoid=WGS84_ELLIPSOID_RADIANS, north_square=0, south_square=0, N_side=3
 )
+# The OGC-registered rHEALPix DGGRS: WGS84_003 rotated so that 50 degrees
+# east is the central meridian.
+WGS84_003_OGC = RHEALPixDGGS.from_uri(_OGC_RHEALPIX_URI)
+WGS84_003_OGC_RADIANS = RHEALPixDGGS.from_uri(_OGC_RHEALPIX_URI, radians=True)
 UNIT_003 = RHEALPixDGGS(ellipsoid=UNIT_SPHERE, north_square=0, south_square=0, N_side=3)
 UNIT_003_RADIANS = RHEALPixDGGS(
     ellipsoid=UNIT_SPHERE_RADIANS, north_square=0, south_square=0, N_side=3
