@@ -1,5 +1,5 @@
-Unreleased
-^^^^^^^^^^
+0.12.0
+^^^^^^
 Added the presets ``WGS84_003_OGC`` and ``WGS84_003_OGC_RADIANS``, the
 rHEALPix DGGRS registered by OGC
 (https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix) in degrees and in
