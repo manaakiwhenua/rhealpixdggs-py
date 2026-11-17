@@ -156,6 +156,44 @@ class Uint64TestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = rdggs.cell(["S", *[48] * 10]).uint64
 
+    def test_level_row_col_arrays(self):
+        for rdggs in (WGS84_003_OGC, WGS84_002, SQUARES_12, SQUARES_31):
+            cells = [c for r in range(4) for c in rdggs.grid(r)]
+            indices = [str(c) for c in cells]
+            with self.subTest(N_side=rdggs.N_side, squares=rdggs.north_square):
+                level, row, col = rdggs.level_row_col_from_indices(indices)
+                self.assertEqual(level.dtype, np.int64)
+                self.assertEqual(
+                    list(zip(level.tolist(), row.tolist(), col.tolist(), strict=True)),
+                    [c.level_row_col for c in cells],
+                )
+                self.assertEqual(
+                    rdggs.indices_from_level_row_col(level, row, col), indices
+                )
+
+    def test_level_row_col_arrays_broadcast(self):
+        # One level for a run of positions: the nine children of P4.
+        rows, cols = np.mgrid[12:15, 12:15]
+        self.assertEqual(
+            WGS84_003.indices_from_level_row_col(2, rows, cols),
+            [f"P4{d}" for d in range(9)],
+        )
+
+    def test_level_row_col_arrays_reject(self):
+        g = WGS84_003
+        for level, row, col in [(0, 0, 1), (1, 9, 0), (-1, 0, 0), (1, -1, 0)]:
+            with (
+                self.subTest(level=level, row=row, col=col),
+                self.assertRaises(ValueError),
+            ):
+                g.indices_from_level_row_col([level], [row], [col])
+        with self.assertRaises(ValueError):
+            g.indices_from_level_row_col([1.0], [4], [4])
+        with self.assertRaises(ValueError):
+            g.level_row_col_from_indices(["P4", "Z"])
+        with self.assertRaises(ValueError):
+            RHEALPixDGGS(N_side=5).indices_from_level_row_col([0], [0], [0])
+
     def test_wrappers(self):
         self.assertEqual(rhp_to_uint64("R553110"), 3458765673461713695)
         self.assertEqual(rhp_from_uint64(3458765673461713695), "R553110")

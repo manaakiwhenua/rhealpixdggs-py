@@ -2620,6 +2620,71 @@ class RHEALPixDGGS:
         level, row, col = (int(v, 16) for v in match.groups())
         return self.cell_from_level_row_col(level, row, col)
 
+    def level_row_col_from_indices(
+        self, indices: Iterable[str]
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        The positions (see ``Cell.level_row_col``) of cells given by index
+        strings, as three int64 arrays: level, row and column. Raise
+        ValueError for an invalid index, or if the grid has no index
+        strings.
+
+        EXAMPLES::
+
+            >>> level, row, col = WGS84_003.level_row_col_from_indices(["P4", "P44"])
+            >>> level.tolist(), row.tolist(), col.tolist()
+            ([1, 2], [4, 13], [4, 13])
+
+        """
+        strings = list(indices)
+        valid, face, digits, resolution = self._parse_indices(strings)
+        if not valid.all():
+            raise ValueError(f"invalid index {strings[int(np.argmin(valid))]!r}")
+        N = self.N_side
+        level = resolution.astype(np.int64)
+        row = np.zeros(len(strings), dtype=np.int64)
+        col = np.zeros(len(strings), dtype=np.int64)
+        for k in range(digits.shape[1]):
+            active = k < level
+            row = np.where(active, row * N + digits[:, k] // N, row)
+            col = np.where(active, col * N + digits[:, k] % N, col)
+        blocks = np.array(_face_blocks(self.north_square, self.south_square))
+        p = N**level
+        return level, row + blocks[face, 0] * p, col + blocks[face, 1] * p
+
+    def indices_from_level_row_col(
+        self,
+        level: Iterable[int] | np.ndarray,
+        row: Iterable[int] | np.ndarray,
+        col: Iterable[int] | np.ndarray,
+    ) -> list[str]:
+        """
+        The index strings of the cells at the positions (see
+        ``Cell.level_row_col``) given by arrays of level, row and column,
+        broadcast together. Raise ValueError for a position naming no cell
+        of this grid, or if the grid has no index strings.
+
+        EXAMPLES::
+
+            >>> WGS84_003.indices_from_level_row_col([1, 2], [4, 13], [4, 13])
+            ['P4', 'P44']
+
+        """
+        self._require_index_strings()
+        arrays = [np.asarray(a) for a in (level, row, col)]
+        if any(a.size and a.dtype.kind not in "iu" for a in arrays):
+            raise ValueError("level, row and column must be integers")
+        level_, row_, col_ = (
+            a.astype(np.int64).ravel() for a in np.broadcast_arrays(*arrays)
+        )
+        face = self._face_of_level_row_col(level_, row_, col_)
+        if (face < 0).any():
+            k = int(np.argmax(face < 0))
+            raise ValueError(
+                f"no level {level_[k]} cell at row {row_[k]}, column {col_[k]}"
+            )
+        return self._format_level_row_col(face, level_, row_, col_)
+
     def uint64_from_indices(self, indices: Iterable[str]) -> np.ndarray:
         """
         The uint64 zone identifiers (see ``Cell.uint64``) of cells given by
@@ -2632,25 +2697,11 @@ class RHEALPixDGGS:
             [0, 3458765673461713695]
 
         """
-        strings = list(indices)
-        valid, face, digits, resolution = self._parse_indices(strings)
-        if not valid.all():
-            raise ValueError(f"invalid index {strings[int(np.argmin(valid))]!r}")
-        N = self.N_side
-        row = np.zeros(len(strings), dtype=np.int64)
-        col = np.zeros(len(strings), dtype=np.int64)
-        for k in range(digits.shape[1]):
-            active = k < resolution
-            row = np.where(active, row * N + digits[:, k] // N, row)
-            col = np.where(active, col * N + digits[:, k] % N, col)
-        blocks = np.array(_face_blocks(self.north_square, self.south_square))
-        p = N ** resolution.astype(np.int64)
-        row += blocks[face, 0] * p
-        col += blocks[face, 1] * p
+        level, row, col = self.level_row_col_from_indices(indices)
         if (row >= _UINT64_ROW_LIMIT).any() or (col >= _UINT64_COL_LIMIT).any():
             raise ValueError("cells too fine for a uint64 identifier")
         return (
-            resolution.astype(np.uint64) << np.uint64(_UINT64_LEVEL_SHIFT)
+            level.astype(np.uint64) << np.uint64(_UINT64_LEVEL_SHIFT)
             | row.astype(np.uint64) << np.uint64(_UINT64_ROW_SHIFT)
             | col.astype(np.uint64)
         )
@@ -2676,28 +2727,41 @@ class RHEALPixDGGS:
         row = z >> np.uint64(_UINT64_ROW_SHIFT) & np.uint64(_UINT64_ROW_LIMIT - 1)
         col = z & np.uint64(_UINT64_COL_LIMIT - 1)
         row, col = row.astype(np.int64), col.astype(np.int64)
-        N = self.N_side
-        ok = level <= self.max_resolution
-        p = N ** np.where(ok, level, 0)
-        # Face code of each block of the 3 x 4 frame, -1 where there is none.
+        face = self._face_of_level_row_col(level, row, col)
+        if (face < 0).any():
+            raise ValueError(
+                f"{int(z[np.argmax(face < 0)])} names no cell of this grid"
+            )
+        return self._format_level_row_col(face, level, row, col)
+
+    def _face_of_level_row_col(
+        self, level: np.ndarray, row: np.ndarray, col: np.ndarray
+    ) -> np.ndarray:
+        """The face code (position in ``CELLS0``) of each position, -1 where
+        it names no cell: a level outside 0 to ``max_resolution``, or a row
+        and column outside the frame or in one of its empty blocks."""
+        ok = (level >= 0) & (level <= self.max_resolution) & (row >= 0) & (col >= 0)
+        p = self.N_side ** np.where(ok, level, 0)
+        ok &= (row < 3 * p) & (col < 4 * p)
         face_of_block = np.full((3, 4), -1)
         for k, (r, c) in enumerate(_face_blocks(self.north_square, self.south_square)):
             face_of_block[r, c] = k
-        ok &= (row < 3 * p) & (col < 4 * p)
-        face = np.where(
-            ok, face_of_block[np.where(ok, row // p, 0), np.where(ok, col // p, 0)], -1
-        )
-        ok &= face >= 0
-        if not ok.all():
-            raise ValueError(f"{int(z[np.argmin(ok)])} names no cell of this grid")
-        result = np.empty(len(z), dtype=object)
+        block = face_of_block[np.where(ok, row // p, 0), np.where(ok, col // p, 0)]
+        return np.where(ok, block, -1)
+
+    def _format_level_row_col(
+        self, face: np.ndarray, level: np.ndarray, row: np.ndarray, col: np.ndarray
+    ) -> list[str]:
+        """The index strings of valid positions with face codes `face`."""
+        N = self.N_side
+        result = np.empty(len(face), dtype=object)
         for L in np.unique(level):
             group = level == L
+            p = N**L
             weights = N ** np.arange(L - 1, -1, -1, dtype=np.int64)
-            r = (row[group] % p[group])[:, None] // weights % N
-            c = (col[group] % p[group])[:, None] // weights % N
-            digits = r * N + c
-            result[group] = self._format_indices(face[group], digits, int(L))
+            r = (row[group] % p)[:, None] // weights % N
+            c = (col[group] % p)[:, None] // weights % N
+            result[group] = self._format_indices(face[group], r * N + c, int(L))
         return result.tolist()
 
     def _parse_indices(
