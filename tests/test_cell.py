@@ -5,7 +5,7 @@ from math import pi
 import numpy as np
 from scipy.spatial.distance import euclidean, norm
 
-from rhealpixdggs.cell import CELLS0, Cell
+from rhealpixdggs.cell import CELLS0, Cell, _ring_step_neighbors
 from rhealpixdggs.dggs import (
     WGS84_003,
     WGS84_003_OGC,
@@ -1864,3 +1864,96 @@ class SubZoneOrderTestCase(unittest.TestCase):
                 face.sub_zone_at(index, depth)
         with self.assertRaises(ValueError):
             face.sub_zone_at(0, 1, order="hilbertCurve")
+
+
+class GridDistanceTestCase(unittest.TestCase):
+    # Grids with the polar squares in every kind of position; the deepest
+    # resolution of each is checked from a sample of its cells.
+    GRIDS = (
+        (WGS84_003, 2),
+        (RHEALPixDGGS(N_side=3, north_square=1, south_square=2), 1),
+        (RHEALPixDGGS(N_side=3, north_square=2, south_square=3), 1),
+        (RHEALPixDGGS(N_side=2, north_square=3, south_square=1), 3),
+        (RHEALPixDGGS(N_side=2), 2),
+    )
+
+    @staticmethod
+    def hops_by_search(cells, sources, diagonals):
+        # Breadth-first search over the grid's own neighbour relation.
+        index = {cell: i for i, cell in enumerate(cells)}
+        adjacent = [
+            [
+                index[n]
+                for n in (
+                    _ring_step_neighbors(cell)
+                    if diagonals
+                    else cell.neighbors().values()
+                )
+            ]
+            for cell in cells
+        ]
+        hops = {}
+        for start in sources:
+            found = {start: 0}
+            frontier = [start]
+            while frontier:
+                reached = []
+                for i in frontier:
+                    for n in adjacent[i]:
+                        if n not in found:
+                            found[n] = found[i] + 1
+                            reached.append(n)
+                frontier = reached
+            hops[start] = found
+        return hops
+
+    def test_matches_breadth_first_search(self):
+        for rdggs, deepest in self.GRIDS:
+            for resolution in range(1, deepest + 1):
+                cells = list(rdggs.grid(resolution))
+                step = 1 if resolution < deepest else 7
+                sources = range(0, len(cells), step)
+                for diagonals in (True, False):
+                    with self.subTest(
+                        N_side=rdggs.N_side,
+                        squares=(rdggs.north_square, rdggs.south_square),
+                        resolution=resolution,
+                        diagonals=diagonals,
+                    ):
+                        hops = self.hops_by_search(cells, sources, diagonals)
+                        for i in sources:
+                            for j, b in enumerate(cells):
+                                self.assertEqual(
+                                    cells[i].grid_distance(b, diagonals),
+                                    hops[i][j],
+                                    (cells[i], b),
+                                )
+
+    def test_is_the_smallest_ring_holding_the_other(self):
+        from rhealpixdggs.rhp_wrappers import k_ring
+
+        a = "N012"
+        for b in ("N012", "N020", "O888", "S444", "R002"):
+            with self.subTest(b=b):
+                k = WGS84_003.cell(WGS84_003.parse_index(a)).grid_distance(
+                    WGS84_003.cell(WGS84_003.parse_index(b))
+                )
+                self.assertIn(b, k_ring(a, k))
+                if k > 0:
+                    self.assertNotIn(b, k_ring(a, k - 1))
+
+    def test_mixed_resolutions_compare_at_the_coarser(self):
+        a = Cell(WGS84_003, ["N", 0])
+        b = Cell(WGS84_003, ["S", 4])
+        for child in b.subcells(2):
+            self.assertEqual(a.grid_distance(child), a.grid_distance(b))
+            self.assertEqual(child.grid_distance(a), a.grid_distance(b))
+        self.assertEqual(b.grid_distance(next(b.subcells(1))), 0)
+        self.assertEqual(a.grid_distance(a), 0)
+
+    def test_rejects_incomparable_cells(self):
+        a = Cell(WGS84_003, ["N", 0])
+        with self.assertRaises(ValueError):
+            a.grid_distance(Cell(WGS84_003_OGC, ["N", 0]))
+        with self.assertRaises(ValueError):
+            a.grid_distance(Cell(WGS84_003, []))

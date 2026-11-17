@@ -26,6 +26,7 @@ from rhealpixdggs.identifiers import (
     _check_sub_zone_order,
     _digits_to_rc,
     _fits_uint64,
+    _grid_distance,
     _level_row_col,
     _level_row_col_text,
     _pack_uint64,
@@ -2604,6 +2605,44 @@ class Cell:
 
         """
         return self.distance(other, plane=plane, n=n) < dist
+
+    def grid_distance(self, other: "Cell", diagonals: bool = True) -> int:
+        """
+        Return the number of hops from this cell to `other` over the
+        cube: the fewest steps between neighbouring cells of their
+        resolution, which is the smallest `k` whose k-ring around one
+        (``rhp_wrappers.k_ring``) holds the other. With `diagonals` =
+        True a step may cross an edge or a corner of a cell, with
+        `diagonals` = False only an edge. Cells of different resolutions
+        are compared at the coarser one, so the count is 0 when one
+        contains the other.
+
+        The count is exact and computed from the identifiers alone, by
+        integer arithmetic. It is a grid measure, not a length: a step
+        is a cell width along a row or column but longer along a
+        diagonal, and the plane itself stretches surface distances
+        unevenly, so the count times the cell width only approximates
+        the distance on the ellipsoid.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> rdggs = WGS84_003
+            >>> n0 = Cell(rdggs, ['N', 0])
+            >>> n0.grid_distance(n0)
+            0
+            >>> n0.grid_distance(Cell(rdggs, ['N', 8]))
+            2
+            >>> n0.grid_distance(Cell(rdggs, ['N', 8]), diagonals=False)
+            4
+            >>> n0.grid_distance(Cell(rdggs, ['S', 4]))
+            5
+            >>> Cell(rdggs, ['N']).grid_distance(Cell(rdggs, ['S', 4]))
+            2
+
+        """
+        self._check_comparable(other, "grid distance")
+        return _grid_distance(self.rdggs, self.suid, other.suid, diagonals)
 
     def relative_position(
         self, other: "Cell", direction: tuple[float, float] = (1.0, 0.0)
