@@ -14,7 +14,7 @@ from typing import Literal, Protocol, get_args
 
 import numpy as np
 
-# Level 0 cell IDs, which are anomalous.
+#: The resolution 0 cells, the faces of the cube, which begin every identifier.
 CELLS0 = ["N", "O", "P", "Q", "R", "S"]
 
 
@@ -29,6 +29,7 @@ class _GridLayout(Protocol):
 
 # Index strings ------------------------------------------------------------
 
+#: The ``N_side`` values whose grids have index strings (issue #146).
 INDEX_STRING_N_SIDES = (2, 3)
 
 
@@ -122,11 +123,14 @@ def _format_indices(
 
 # Sub-zone orders ----------------------------------------------------------
 
-# Sub-zone orders for Cell.subcells, by their names in OGC's DGGRS
-# definition schema. Each maps a position in the order to the (row, col)
-# of a subcell in the n x n block of an ancestor's subcells, n = N**depth,
-# rows counted from the top and columns from the left, and back.
+# Each order maps a position to the (row, col) of a subcell in the n x n
+# block of an ancestor's subcells, n = N**depth, rows counted from the top
+# and columns from the left, and back.
+
+#: The orders of a cell's subcells, by their names in OGC's DGGRS definition
+#: schema; see ``Cell.subcells``.
 SubZoneOrder = Literal["mortonCurve", "scanline", "hilbertCurve", "spiralFromCenter"]
+#: The names in ``SubZoneOrder``.
 SUB_ZONE_ORDERS: tuple[str, ...] = get_args(SubZoneOrder)
 
 
