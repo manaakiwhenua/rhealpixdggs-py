@@ -141,7 +141,11 @@ DGGS Core — reference system
      - Met
      - Suids are hierarchy-based (resolution 0 letter plus one base-
        N_side² digit per refinement); uniqueness is structural. A
-       formal grammar is to be published with A.5 (v1.0).
+       formal grammar is to be published with A.5 (v1.0). Both zone
+       identifier reference systems the OGC-registered rHEALPix DGGRS
+       declares are supported: the text one (index strings) and the
+       uint64 one (:attr:`~rhealpixdggs.cell.Cell.uint64`,
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cell_from_uint64`).
    * - A.14 discrete global grid
      - Grids defined as the aggregation of all cells at one level.
      - Met

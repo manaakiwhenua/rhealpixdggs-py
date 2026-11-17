@@ -173,6 +173,20 @@ def _check_sub_zone_order(order: str, N: int) -> None:
         raise ValueError(f"spiralFromCenter needs odd N_side, not {N}")
 
 
+# The uint64 zone identifier of OGC's 2D tile matrix set form: level in the
+# top 5 bits, row in the next 29, column in the low 30.
+_UINT64_LEVEL_SHIFT = 59
+_UINT64_ROW_SHIFT = 30
+_UINT64_ROW_LIMIT = 1 << 29
+_UINT64_COL_LIMIT = 1 << 30
+
+
+def _face_blocks(north_square: int, south_square: int) -> list[tuple[int, int]]:
+    """(row, col) of each resolution 0 cell, in ``CELLS0`` order, in the 3 x 4
+    frame of the planar grid."""
+    return [(0, north_square), (1, 0), (1, 1), (1, 2), (1, 3), (2, south_square)]
+
+
 @cache
 def _gauss_legendre_unit(n: int) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -917,6 +931,77 @@ class Cell:
             )
         row, col = _SUB_ZONE_AT[order](N, depth, index)
         return Cell(self.rdggs, [*self.suid, *_rc_to_digits(N, depth, row, col)])
+
+    @property
+    def level_row_col(self) -> tuple[int, int, int]:
+        """
+        This cell's resolution and its row and column among all the cells
+        of that resolution in the planar grid: a frame of
+        ``3 * N_side**resolution`` rows, counted from the top, by
+        ``4 * N_side**resolution`` columns, counted from the left, with the
+        equatorial cells O, P, Q, R side by side in the middle band and N
+        and S above and below in the columns of ``north_square`` and
+        ``south_square``. It does not depend on any sub-zone order.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> WGS84_003.cell(('P', 4)).level_row_col
+            (1, 4, 4)
+            >>> WGS84_003.cell(('P', 4, 4)).level_row_col
+            (2, 13, 13)
+
+        """
+        N = self.N_side
+        L = len(self.suid) - 1
+        p = N**L
+        block_row, block_col = _face_blocks(
+            self.rdggs.north_square, self.rdggs.south_square
+        )[CELLS0.index(str(self.suid[0]))]
+        row, col = _digits_to_rc(N, [int(d) for d in self.suid[1:]])
+        return L, block_row * p + row, block_col * p + col
+
+    @property
+    def uint64(self) -> int:
+        """
+        This cell's uint64 zone identifier, the uint64 ZIRS the
+        OGC-registered rHEALPix DGGRS declares: ``level_row_col`` packed as
+        level << 59 | row << 30 | column. It names a cell only together
+        with its grid, as an index string does, and 0 is a cell (N). Write
+        it in hexadecimal with ``format(cell.uint64, "016X")`` and read it
+        back with ``int(text, 16)``.
+
+        Raise ValueError if the row or column overflows its field, which
+        no grid with ``N_side`` 2 or 3 reaches by its ``max_resolution``.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003_OGC
+            >>> WGS84_003_OGC.cell(('R', 5, 5, 3, 1, 1, 0)).uint64
+            3458765673461713695
+
+        """
+        L, row, col = self.level_row_col
+        if row >= _UINT64_ROW_LIMIT or col >= _UINT64_COL_LIMIT:
+            raise ValueError(f"{self} is too fine for a uint64 identifier")
+        return L << _UINT64_LEVEL_SHIFT | row << _UINT64_ROW_SHIFT | col
+
+    @property
+    def level_row_col_text(self) -> str:
+        """
+        ``level_row_col`` as three uppercase hexadecimal numbers joined by
+        hyphens, the text form OGC's 2D tile matrix set identifiers use.
+        It is not a zone identifier the registered rHEALPix DGGRS declares:
+        its text identifiers are index strings such as ``'R553110'``.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003_OGC
+            >>> WGS84_003_OGC.cell(('R', 5, 5, 3, 1, 1, 0)).level_row_col_text
+            '6-438-B1F'
+
+        """
+        return "-".join(f"{v:X}" for v in self.level_row_col)
 
     def ul_vertex(self, plane: bool = True) -> tuple[float, float]:
         """

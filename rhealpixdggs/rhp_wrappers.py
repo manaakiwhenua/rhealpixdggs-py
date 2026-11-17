@@ -288,6 +288,43 @@ def rhp_get_base_cell(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> str | No
     return str(suid[0])
 
 
+def rhp_to_uint64(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> int | None:
+    """
+    Returns the uint64 zone identifier of a cell index (or None if invalid);
+    see ``Cell.uint64``.
+
+    EXAMPLES::
+
+        >>> rhp_to_uint64('R553110')
+        3458765673461713695
+        >>> rhp_to_uint64('INVALID')
+    """
+    suid = dggs.parse_index(rhpindex)
+    if suid is None:
+        return None
+
+    return dggs.cell(suid).uint64
+
+
+def rhp_from_uint64(value: int, dggs: RHEALPixDGGS = WGS84_003) -> str | None:
+    """
+    Returns the cell index with a uint64 zone identifier (or None if it names
+    no cell); see ``Cell.uint64``.
+
+    EXAMPLES::
+
+        >>> rhp_from_uint64(3458765673461713695)
+        'R553110'
+        >>> rhp_from_uint64(1 << 30)
+        'O'
+        >>> rhp_from_uint64(1)
+    """
+    try:
+        return str(dggs.cell_from_uint64(value))
+    except ValueError:
+        return None
+
+
 def rhp_is_valid(rhpindex: str, dggs: RHEALPixDGGS = WGS84_003) -> bool:
     """
     Checks if the given cell address is valid within the DGGS, i.e. whether
