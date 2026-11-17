@@ -171,6 +171,29 @@ class Uint64TestCase(unittest.TestCase):
                     rdggs.indices_from_level_row_col(level, row, col), indices
                 )
 
+    def test_uint64_level_row_col_arrays(self):
+        # No index strings involved, so every grid has them, N_side 5 too.
+        for rdggs in (WGS84_003_OGC, WGS84_002, SQUARES_31, RHEALPixDGGS(N_side=5)):
+            cells = [c for r in range(3) for c in rdggs.grid(r)]
+            with self.subTest(N_side=rdggs.N_side):
+                values = [c.uint64 for c in cells]
+                level, row, col = rdggs.level_row_col_from_uint64(values)
+                self.assertEqual(
+                    list(zip(level.tolist(), row.tolist(), col.tolist(), strict=True)),
+                    [c.level_row_col for c in cells],
+                )
+                packed = rdggs.uint64_from_level_row_col(level, row, col)
+                self.assertEqual(packed.dtype, np.uint64)
+                self.assertEqual(packed.tolist(), values)
+        g = WGS84_003
+        with self.assertRaises(ValueError):
+            g.level_row_col_from_uint64([1])  # level 0, beside N
+        with self.assertRaises(ValueError):
+            g.uint64_from_level_row_col([0], [0], [1])
+        rdggs = RHEALPixDGGS(N_side=7, max_areal_resolution=1e-3)
+        with self.assertRaises(ValueError):
+            rdggs.uint64_from_level_row_col([10], [3 * 7**10 - 1], [0])
+
     def test_level_row_col_arrays_broadcast(self):
         # One level for a run of positions: the nine children of P4.
         rows, cols = np.mgrid[12:15, 12:15]
@@ -193,6 +216,30 @@ class Uint64TestCase(unittest.TestCase):
             g.level_row_col_from_indices(["P4", "Z"])
         with self.assertRaises(ValueError):
             RHEALPixDGGS(N_side=5).indices_from_level_row_col([0], [0], [0])
+
+    def test_level_row_col_text_arrays(self):
+        for rdggs in (WGS84_003_OGC, WGS84_002, SQUARES_12, SQUARES_31):
+            cells = [c for r in range(4) for c in rdggs.grid(r)]
+            indices = [str(c) for c in cells]
+            with self.subTest(N_side=rdggs.N_side, squares=rdggs.north_square):
+                texts = rdggs.level_row_col_text_from_indices(indices)
+                self.assertEqual(texts, [c.level_row_col_text for c in cells])
+                self.assertEqual(rdggs.indices_from_level_row_col_text(texts), indices)
+        self.assertEqual(
+            WGS84_003_OGC.indices_from_level_row_col_text(["6-438-b1f"]), ["R553110"]
+        )
+        self.assertEqual(WGS84_003.indices_from_level_row_col_text([]), [])
+
+    def test_level_row_col_text_arrays_reject(self):
+        g = WGS84_003
+        for text in ("1-4", "1-4-G", "0-0-1", "1-9-0", "F" * 20 + "-0-0", None):
+            with (
+                self.subTest(text=text),
+                self.assertRaisesRegex(ValueError, repr(text).replace("(", r"\(")),
+            ):
+                g.indices_from_level_row_col_text(["1-4-4", text])
+        with self.assertRaises(ValueError):
+            RHEALPixDGGS(N_side=5).indices_from_level_row_col_text(["0-0-0"])
 
     def test_wrappers(self):
         self.assertEqual(rhp_to_uint64("R553110"), 3458765673461713695)

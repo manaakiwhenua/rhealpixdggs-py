@@ -50,14 +50,18 @@ level, row and column in the planar grid (``Cell.level_row_col``) as
 ``RHEALPixDGGS.cell_from_uint64`` reads it back.
 ``RHEALPixDGGS.uint64_from_indices`` and ``indices_from_uint64`` convert
 arrays, as do ``level_row_col_from_indices`` and
-``indices_from_level_row_col`` for positions, and
-``rhp_wrappers.rhp_to_uint64`` and ``rhp_from_uint64`` single indices.
-Like an index string, the identifier names a cell only together with its
-grid. Every grid has it, including those with ``N_side`` above 3, which
-have no index strings. ``Cell.level_row_col_text`` and
+``indices_from_level_row_col`` for positions and
+``level_row_col_from_uint64`` and ``uint64_from_level_row_col`` between
+the two, the last pair for every grid, and ``rhp_wrappers.rhp_to_uint64``
+and ``rhp_from_uint64`` single indices. Like an index string, the
+identifier names a cell only together with its grid. Every grid has it,
+including those with ``N_side`` above 3, which have no index strings.
+``Cell.level_row_col_text`` and
 ``RHEALPixDGGS.cell_from_level_row_col_text`` give the position as
 hexadecimal level-row-col text, the form OGC's 2D tile matrix sets use,
-which the registered DGGRS does not declare as an identifier (issue #190).
+which the registered DGGRS does not declare as an identifier, and
+``level_row_col_text_from_indices`` and
+``indices_from_level_row_col_text`` convert arrays of it (issue #190).
 
 0.11.0
 ^^^^^^

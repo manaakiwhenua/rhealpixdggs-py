@@ -238,6 +238,9 @@ _REGISTERED_GRIDS = {
     _OGC_RHEALPIX_URI: _RegisteredGrid(WGS84_A, WGS84_F, 50, 3, 0, 0, "scanline"),
 }
 
+# Cell.level_row_col_text: level, row and column in hexadecimal.
+_LEVEL_ROW_COL_TEXT = re.compile(r"([0-9A-Fa-f]+)-([0-9A-Fa-f]+)-([0-9A-Fa-f]+)")
+
 
 class RingTable(NamedTuple):
     """
@@ -2614,7 +2617,7 @@ class RHEALPixDGGS:
             R553110
 
         """
-        match = re.fullmatch(r"([0-9A-Fa-f]+)-([0-9A-Fa-f]+)-([0-9A-Fa-f]+)", text)
+        match = _LEVEL_ROW_COL_TEXT.fullmatch(text)
         if match is None:
             raise ValueError(f"{text!r} is not level-row-col in hexadecimal")
         level, row, col = (int(v, 16) for v in match.groups())
@@ -2671,19 +2674,120 @@ class RHEALPixDGGS:
 
         """
         self._require_index_strings()
-        arrays = [np.asarray(a) for a in (level, row, col)]
-        if any(a.size and a.dtype.kind not in "iu" for a in arrays):
-            raise ValueError("level, row and column must be integers")
-        level_, row_, col_ = (
-            a.astype(np.int64).ravel() for a in np.broadcast_arrays(*arrays)
+        return self._format_level_row_col(*self._checked_level_row_col(level, row, col))
+
+    def uint64_from_level_row_col(
+        self,
+        level: Iterable[int] | np.ndarray,
+        row: Iterable[int] | np.ndarray,
+        col: Iterable[int] | np.ndarray,
+    ) -> np.ndarray:
+        """
+        The uint64 zone identifiers (see ``Cell.uint64``) of the cells at the
+        positions given by arrays of level, row and column, broadcast
+        together, as a uint64 array. Unlike the conversions from index
+        strings, this works for every grid. Raise ValueError for a position
+        naming no cell of this grid or too fine for the identifier's fields.
+
+        EXAMPLES::
+
+            >>> WGS84_003_OGC.uint64_from_level_row_col([0, 6], [0, 1080], [0, 2847]).tolist()
+            [0, 3458765673461713695]
+
+        """
+        _, level_, row_, col_ = self._checked_level_row_col(level, row, col)
+        if (row_ >= _UINT64_ROW_LIMIT).any() or (col_ >= _UINT64_COL_LIMIT).any():
+            raise ValueError("cells too fine for a uint64 identifier")
+        return (
+            level_.astype(np.uint64) << np.uint64(_UINT64_LEVEL_SHIFT)
+            | row_.astype(np.uint64) << np.uint64(_UINT64_ROW_SHIFT)
+            | col_.astype(np.uint64)
         )
-        face = self._face_of_level_row_col(level_, row_, col_)
+
+    def level_row_col_from_uint64(
+        self, values: Iterable[int] | np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        The positions (see ``Cell.level_row_col``) of the cells whose uint64
+        zone identifiers are `values`, as three int64 arrays: level, row and
+        column. Unlike the conversions to index strings, this works for
+        every grid. Raise ValueError for a value naming no cell of this
+        grid.
+
+        EXAMPLES::
+
+            >>> level, row, col = WGS84_003_OGC.level_row_col_from_uint64(
+            ...     [0, 3458765673461713695]
+            ... )
+            >>> level.tolist(), row.tolist(), col.tolist()
+            ([0, 6], [0, 1080], [0, 2847])
+
+        """
+        z = np.asarray(values)
+        if z.size and (z.dtype.kind not in "iu" or (z < 0).any()):
+            raise ValueError("values must be non-negative integers")
+        z = z.astype(np.uint64).ravel()
+        level = (z >> np.uint64(_UINT64_LEVEL_SHIFT)).astype(np.int64)
+        row = z >> np.uint64(_UINT64_ROW_SHIFT) & np.uint64(_UINT64_ROW_LIMIT - 1)
+        col = z & np.uint64(_UINT64_COL_LIMIT - 1)
+        row, col = row.astype(np.int64), col.astype(np.int64)
+        face = self._face_of_level_row_col(level, row, col)
         if (face < 0).any():
-            k = int(np.argmax(face < 0))
             raise ValueError(
-                f"no level {level_[k]} cell at row {row_[k]}, column {col_[k]}"
+                f"{int(z[np.argmax(face < 0)])} names no cell of this grid"
             )
-        return self._format_level_row_col(face, level_, row_, col_)
+        return level, row, col
+
+    def level_row_col_text_from_indices(self, indices: Iterable[str]) -> list[str]:
+        """
+        The positions as hexadecimal level-row-col text (see
+        ``Cell.level_row_col_text``) of cells given by index strings. Raise
+        ValueError for an invalid index, or if the grid has no index
+        strings.
+
+        EXAMPLES::
+
+            >>> WGS84_003_OGC.level_row_col_text_from_indices(["N", "R553110"])
+            ['0-0-0', '6-438-B1F']
+
+        """
+        level, row, col = self.level_row_col_from_indices(indices)
+        return [
+            f"{L:X}-{r:X}-{c:X}"
+            for L, r, c in zip(level.tolist(), row.tolist(), col.tolist(), strict=True)
+        ]
+
+    def indices_from_level_row_col_text(self, texts: Iterable[str]) -> list[str]:
+        """
+        The index strings of the cells whose hexadecimal level-row-col text
+        (see ``Cell.level_row_col_text``) is `texts`, in either case. Raise
+        ValueError for text that is malformed or names no cell of this
+        grid, or if the grid has no index strings.
+
+        EXAMPLES::
+
+            >>> WGS84_003_OGC.indices_from_level_row_col_text(["0-0-0", "6-438-b1f"])
+            ['N', 'R553110']
+
+        """
+        self._require_index_strings()
+        strings = list(texts)
+        positions = np.zeros((len(strings), 3), dtype=np.int64)
+        for k, text in enumerate(strings):
+            match = (
+                _LEVEL_ROW_COL_TEXT.fullmatch(text) if isinstance(text, str) else None
+            )
+            values = [int(v, 16) for v in match.groups()] if match else []
+            # Anything this large names no cell, and would overflow int64.
+            if not values or max(values) >= 1 << 62:
+                raise ValueError(f"{text!r} is not the level-row-col of a cell")
+            positions[k] = values
+        level, row, col = positions.T
+        face = self._face_of_level_row_col(level, row, col)
+        if (face < 0).any():
+            text = strings[int(np.argmax(face < 0))]
+            raise ValueError(f"{text!r} names no cell of this grid")
+        return self._format_level_row_col(face, level, row, col)
 
     def uint64_from_indices(self, indices: Iterable[str]) -> np.ndarray:
         """
@@ -2697,14 +2801,7 @@ class RHEALPixDGGS:
             [0, 3458765673461713695]
 
         """
-        level, row, col = self.level_row_col_from_indices(indices)
-        if (row >= _UINT64_ROW_LIMIT).any() or (col >= _UINT64_COL_LIMIT).any():
-            raise ValueError("cells too fine for a uint64 identifier")
-        return (
-            level.astype(np.uint64) << np.uint64(_UINT64_LEVEL_SHIFT)
-            | row.astype(np.uint64) << np.uint64(_UINT64_ROW_SHIFT)
-            | col.astype(np.uint64)
-        )
+        return self.uint64_from_level_row_col(*self.level_row_col_from_indices(indices))
 
     def indices_from_uint64(self, values: Iterable[int] | np.ndarray) -> list[str]:
         """
@@ -2719,20 +2816,30 @@ class RHEALPixDGGS:
 
         """
         self._require_index_strings()
-        z = np.asarray(values)
-        if z.size and (z.dtype.kind not in "iu" or (z < 0).any()):
-            raise ValueError("values must be non-negative integers")
-        z = z.astype(np.uint64).ravel()
-        level = (z >> np.uint64(_UINT64_LEVEL_SHIFT)).astype(np.int64)
-        row = z >> np.uint64(_UINT64_ROW_SHIFT) & np.uint64(_UINT64_ROW_LIMIT - 1)
-        col = z & np.uint64(_UINT64_COL_LIMIT - 1)
-        row, col = row.astype(np.int64), col.astype(np.int64)
-        face = self._face_of_level_row_col(level, row, col)
+        return self.indices_from_level_row_col(*self.level_row_col_from_uint64(values))
+
+    def _checked_level_row_col(
+        self,
+        level: Iterable[int] | np.ndarray,
+        row: Iterable[int] | np.ndarray,
+        col: Iterable[int] | np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Face codes and flat int64 level, row and column arrays of
+        positions broadcast together; raise ValueError if any is not
+        integral or names no cell of this grid."""
+        arrays = [np.asarray(a) for a in (level, row, col)]
+        if any(a.size and a.dtype.kind not in "iu" for a in arrays):
+            raise ValueError("level, row and column must be integers")
+        level_, row_, col_ = (
+            a.astype(np.int64).ravel() for a in np.broadcast_arrays(*arrays)
+        )
+        face = self._face_of_level_row_col(level_, row_, col_)
         if (face < 0).any():
+            k = int(np.argmax(face < 0))
             raise ValueError(
-                f"{int(z[np.argmax(face < 0)])} names no cell of this grid"
+                f"no level {level_[k]} cell at row {row_[k]}, column {col_[k]}"
             )
-        return self._format_level_row_col(face, level, row, col)
+        return face, level_, row_, col_
 
     def _face_of_level_row_col(
         self, level: np.ndarray, row: np.ndarray, col: np.ndarray
