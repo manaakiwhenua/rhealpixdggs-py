@@ -25,6 +25,24 @@ radians are different grids, so ``WGS84_003 != WGS84_003_RADIANS``. Code
 that compared cells across such grids to mean "same identifier" should
 compare their ``suid`` instead (issue #186).
 
+``Cell.subcells`` takes an ``order``, named as in OGC's DGGRS definitions:
+``"mortonCurve"``, the order it has always used (each child followed by
+its own subcells); ``"scanline"``, rows across the whole cell, which is
+the order of the OGC-registered rHEALPix DGGRS and which OGC API - DGGS
+and DGGS-JSON use to lay out data without identifiers; ``"hilbertCurve"``,
+for ``N_side`` a power of 2; and ``"spiralFromCenter"``, for odd
+``N_side``. An order the grid lacks raises ``ValueError``. Scanline agrees
+with Morton for children and differs from grandchildren on; it matches
+Ecere's DGGAL on all six faces. ``RHEALPixDGGS.sub_zone_order`` is the
+order a grid's DGGRS declares, ``"scanline"`` for the registered grid and
+``"mortonCurve"`` otherwise, and is the default order, so ``subcells`` is
+unchanged for every grid except one with the registered grid's parameters,
+built by hand, whose subcells now come in scanline order from
+grandchildren on. ``Cell.sub_zone_index`` gives a cell's position among an
+ancestor's subcells in any of these orders, and ``Cell.sub_zone_at`` the
+subcell at a position, each computed directly rather than by listing the
+subcells (issue #188).
+
 0.11.0
 ^^^^^^
 ``RHEALPixDGGS.cells_from_line`` and ``rhp_wrappers.linetrace`` take a

@@ -193,6 +193,7 @@ from rhealpixdggs.cell import (
     _CENTROID_QUADRATURE_ORDER,
     CELLS0,
     Cell,
+    SubZoneOrder,
     _gauss_legendre_unit,
     _geod,
 )
@@ -220,12 +221,13 @@ class _RegisteredGrid(NamedTuple):
     N_side: int
     north_square: int
     south_square: int
+    sub_zone_order: SubZoneOrder
 
 
 _OGC_RHEALPIX_URI = "https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix"
-# Registered DGGRSs by URI; `uri` and `from_uri` both read this.
+# Registered DGGRSs by URI; `uri`, `from_uri` and `sub_zone_order` read this.
 _REGISTERED_GRIDS = {
-    _OGC_RHEALPIX_URI: _RegisteredGrid(WGS84_A, WGS84_F, 50, 3, 0, 0),
+    _OGC_RHEALPIX_URI: _RegisteredGrid(WGS84_A, WGS84_F, 50, 3, 0, 0, "scanline"),
 }
 
 
@@ -561,6 +563,27 @@ class RHEALPixDGGS:
             ):
                 return uri
         return None
+
+    @property
+    def sub_zone_order(self) -> SubZoneOrder:
+        """
+        The order of the subcells of a cell that this grid's DGGRS
+        definition declares: the registered one's for a registered grid,
+        else ``"mortonCurve"``, the order of the digits. It is the default
+        order of ``Cell.subcells``, ``Cell.sub_zone_index`` and
+        ``Cell.sub_zone_at``, and data laid out by position, as in
+        DGGS-JSON, must use it.
+
+        EXAMPLES::
+
+            >>> WGS84_003_OGC.sub_zone_order
+            'scanline'
+            >>> WGS84_003.sub_zone_order
+            'mortonCurve'
+
+        """
+        uri = self.uri
+        return _REGISTERED_GRIDS[uri].sub_zone_order if uri else "mortonCurve"
 
     @classmethod
     def from_uri(

@@ -1,13 +1,13 @@
 # from rhealpixdggs.dggs import WGS84_003
 
 import enum
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from colorsys import hsv_to_rgb
 from functools import cache, cached_property, total_ordering
 from itertools import product
-from math import fsum, hypot
+from math import fsum, hypot, isqrt
 from random import uniform
-from typing import TYPE_CHECKING, ClassVar, Literal, cast, overload
+from typing import TYPE_CHECKING, ClassVar, Literal, cast, get_args, overload
 
 if TYPE_CHECKING:
     from rhealpixdggs.dggs import RHEALPixDGGS
@@ -33,6 +33,144 @@ CELLS0 = ["N", "O", "P", "Q", "R", "S"]
 # exponentially: 20 points agree with 40 to about 1e-14 degrees, the
 # projection's own floating-point floor.
 _CENTROID_QUADRATURE_ORDER = 20
+
+
+# Sub-zone orders for Cell.subcells, by their names in OGC's DGGRS
+# definition schema. Each maps a position in the order to the (row, col)
+# of a subcell in the n x n block of an ancestor's subcells, n = N**depth,
+# rows counted from the top and columns from the left, and back.
+SubZoneOrder = Literal["mortonCurve", "scanline", "hilbertCurve", "spiralFromCenter"]
+SUB_ZONE_ORDERS: tuple[str, ...] = get_args(SubZoneOrder)
+
+
+def _digits_to_rc(N: int, digits: Sequence[int]) -> tuple[int, int]:
+    row = col = 0
+    for d in digits:
+        row, col = row * N + d // N, col * N + d % N
+    return row, col
+
+
+def _rc_to_digits(N: int, depth: int, row: int, col: int) -> list[int]:
+    weights = [N ** (depth - 1 - i) for i in range(depth)]
+    return [(row // w % N) * N + col // w % N for w in weights]
+
+
+def _morton_at(N: int, depth: int, i: int) -> tuple[int, int]:
+    digits = [i // (N * N) ** (depth - 1 - k) % (N * N) for k in range(depth)]
+    return _digits_to_rc(N, digits)
+
+
+def _morton_index(N: int, depth: int, row: int, col: int) -> int:
+    index = 0
+    for d in _rc_to_digits(N, depth, row, col):
+        index = index * N * N + d
+    return index
+
+
+def _scanline_at(N: int, depth: int, i: int) -> tuple[int, int]:
+    return divmod(i, N**depth)
+
+
+def _scanline_index(N: int, depth: int, row: int, col: int) -> int:
+    return row * N**depth + col
+
+
+def _hilbert_at(N: int, depth: int, i: int) -> tuple[int, int]:
+    # The iterative d-to-xy conversion, with x the column and y the row, so
+    # the curve runs from the top left corner to the top right.
+    n = N**depth
+    x = y = 0
+    s = 1
+    while s < n:
+        rx = 1 & (i // 2)
+        ry = 1 & (i ^ rx)
+        if ry == 0:
+            if rx == 1:
+                x, y = s - 1 - x, s - 1 - y
+            x, y = y, x
+        x += s * rx
+        y += s * ry
+        i //= 4
+        s *= 2
+    return y, x
+
+
+def _hilbert_index(N: int, depth: int, row: int, col: int) -> int:
+    n = N**depth
+    x, y, index = col, row, 0
+    s = n // 2
+    while s > 0:
+        rx = 1 if x & s else 0
+        ry = 1 if y & s else 0
+        index += s * s * ((3 * rx) ^ ry)
+        if ry == 0:
+            if rx == 1:
+                x, y = n - 1 - x, n - 1 - y
+            x, y = y, x
+        s //= 2
+    return index
+
+
+# The spiral starts at the centre and goes right 1, down 1, left 2, up 2,
+# right 3, ..., so ring k (cells k steps from the centre) starts at index
+# (2k - 1)**2, k - 1 rows above the centre on its right side, and runs down
+# its right side, left along its bottom, up its left side and right along
+# its top, 2k cells each.
+def _spiral_at(N: int, depth: int, i: int) -> tuple[int, int]:
+    m = N**depth // 2
+    if i == 0:
+        return m, m
+    k = (isqrt(i) + 1) // 2
+    side, t = divmod(i - (2 * k - 1) ** 2, 2 * k)
+    dr, dc = [
+        (t - (k - 1), k),
+        (k, k - 1 - t),
+        (k - 1 - t, -k),
+        (-k, t - (k - 1)),
+    ][side]
+    return m + dr, m + dc
+
+
+def _spiral_index(N: int, depth: int, row: int, col: int) -> int:
+    m = N**depth // 2
+    dr, dc = row - m, col - m
+    k = max(abs(dr), abs(dc))
+    if k == 0:
+        return 0
+    if dc == k and dr > -k:
+        offset = dr + k - 1
+    elif dr == k:
+        offset = 2 * k + k - 1 - dc
+    elif dc == -k:
+        offset = 4 * k + k - 1 - dr
+    else:
+        offset = 6 * k + dc + k - 1
+    return (2 * k - 1) ** 2 + offset
+
+
+_SUB_ZONE_AT = {
+    "mortonCurve": _morton_at,
+    "scanline": _scanline_at,
+    "hilbertCurve": _hilbert_at,
+    "spiralFromCenter": _spiral_at,
+}
+_SUB_ZONE_INDEX = {
+    "mortonCurve": _morton_index,
+    "scanline": _scanline_index,
+    "hilbertCurve": _hilbert_index,
+    "spiralFromCenter": _spiral_index,
+}
+
+
+def _check_sub_zone_order(order: str, N: int) -> None:
+    if order not in SUB_ZONE_ORDERS:
+        raise ValueError(
+            f"order must be one of {', '.join(SUB_ZONE_ORDERS)}, not {order!r}"
+        )
+    if order == "hilbertCurve" and N & (N - 1):
+        raise ValueError(f"hilbertCurve needs N_side a power of 2, not {N}")
+    if order == "spiralFromCenter" and N % 2 == 0:
+        raise ValueError(f"spiralFromCenter needs odd N_side, not {N}")
 
 
 @cache
@@ -649,12 +787,28 @@ class Cell:
         # descendant.
         return self.suid[: len(other.suid)] == other.suid
 
-    def subcells(self, resolution: int | None = None) -> Iterator["Cell"]:
+    def subcells(
+        self, resolution: int | None = None, order: SubZoneOrder | None = None
+    ) -> Iterator["Cell"]:
         """
-        Generator function for the set of all resolution `resolution` subcells
-        of this cell.
-        If `resolution=None`, then return a generator function for the children
-        of this cell.
+        Iterate over the resolution `resolution` subcells of this cell, or
+        its children if `resolution` is None, in sub-zone order `order`,
+        named as in OGC's DGGRS definitions, or by default the order the
+        grid declares, ``rdggs.sub_zone_order``. Seen in the plane:
+
+        - ``"mortonCurve"`` - children row by row from the top left, each
+          followed by all of its own subcells: the order of the digits, and
+          of every grid but a registered one.
+        - ``"scanline"`` - rows top to bottom across the whole cell, each
+          left to right; the order of the OGC-registered rHEALPix DGGRS.
+        - ``"hilbertCurve"`` - a Hilbert curve from the top left corner to
+          the top right, each subcell sharing an edge with the next. Needs
+          ``N_side`` a power of 2.
+        - ``"spiralFromCenter"`` - from the centre subcell clockwise in
+          square rings, first step to the right, ending top right. Needs
+          odd ``N_side``, for a centre subcell.
+
+        Raise ValueError for any other order, or one this grid lacks.
 
         EXAMPLES::
 
@@ -662,20 +816,107 @@ class Cell:
             >>> c = Cell(RHEALPixDGGS(), ['N'])
             >>> print([str(cell) for cell in c.subcells()])
             ['N0', 'N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8']
+            >>> print([str(cell) for cell in c.subcells(2)][:6])
+            ['N00', 'N01', 'N02', 'N03', 'N04', 'N05']
+            >>> print([str(cell) for cell in c.subcells(2, order="scanline")][:6])
+            ['N00', 'N01', 'N02', 'N10', 'N11', 'N12']
+            >>> print([str(cell) for cell in c.subcells(order="spiralFromCenter")])
+            ['N4', 'N5', 'N8', 'N7', 'N6', 'N3', 'N0', 'N1', 'N2']
 
         """
+        order = self._sub_zone_order(order)
         L = self.resolution
         assert L is not None  # the empty cell has no subcells
         if resolution is None:
             resolution = L + 1
-        if resolution < L:
-            return  # Stop iteration
-        if resolution == L:
-            yield self
+        return self._subcells(resolution - L, order)
+
+    def _sub_zone_order(self, order: SubZoneOrder | None) -> SubZoneOrder:
+        """`order`, or the grid's declared order if None, checked."""
+        if order is None:
+            order = self.rdggs.sub_zone_order
+        _check_sub_zone_order(order, self.N_side)
+        return order
+
+    def _subcells(self, depth: int, order: SubZoneOrder) -> Iterator["Cell"]:
+        if depth < 0:
             return
         N = self.N_side
-        for t in product(list(range(N**2)), repeat=resolution - L):
-            yield Cell(self.rdggs, list(self.suid) + list(t))
+        prefix = list(self.suid)
+        if order == "mortonCurve":
+            # The digits themselves, without the round trip through (row, col).
+            for t in product(range(N**2), repeat=depth):
+                yield Cell(self.rdggs, prefix + list(t))
+            return
+        at = _SUB_ZONE_AT[order]
+        for i in range(N ** (2 * depth)):
+            row, col = at(N, depth, i)
+            yield Cell(self.rdggs, [*prefix, *_rc_to_digits(N, depth, row, col)])
+
+    def sub_zone_index(
+        self, ancestor: "Cell", order: SubZoneOrder | None = None
+    ) -> int:
+        """
+        The position of this cell among the subcells of `ancestor` at this
+        cell's resolution, in sub-zone order `order`, by default the grid's
+        (see ``subcells``), so that
+        ``list(ancestor.subcells(self.resolution, order))[i]`` is this cell
+        for ``i = self.sub_zone_index(ancestor, order)``.
+
+        Raise ValueError if `ancestor` is not this cell or one of its
+        ancestors in the same grid, or for an order the grid lacks.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> rdggs = RHEALPixDGGS()
+            >>> cell = Cell(rdggs, ['N', 1, 0])
+            >>> cell.sub_zone_index(Cell(rdggs, ['N']))
+            9
+            >>> cell.sub_zone_index(Cell(rdggs, ['N']), order="scanline")
+            3
+
+        """
+        order = self._sub_zone_order(order)
+        depth = len(self.suid) - len(ancestor.suid)
+        if (
+            self.rdggs != ancestor.rdggs
+            or depth < 0
+            or self.suid[: len(ancestor.suid)] != ancestor.suid
+        ):
+            raise ValueError(f"{ancestor} is not an ancestor of {self}")
+        digits = [int(d) for d in self.suid[len(ancestor.suid) :]]
+        row, col = _digits_to_rc(self.N_side, digits)
+        return _SUB_ZONE_INDEX[order](self.N_side, depth, row, col)
+
+    def sub_zone_at(
+        self, index: int, depth: int, order: SubZoneOrder | None = None
+    ) -> "Cell":
+        """
+        The subcell `depth` levels below this cell at position `index` in
+        sub-zone order `order`, by default the grid's (see ``subcells``):
+        the inverse of ``sub_zone_index``.
+
+        Raise ValueError for a negative depth, an index outside
+        ``0 <= index < N_side**(2 * depth)``, or an order the grid lacks.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import RHEALPixDGGS
+            >>> c = Cell(RHEALPixDGGS(), ['N'])
+            >>> print(c.sub_zone_at(3, 2, order="scanline"))
+            N10
+
+        """
+        N = self.N_side
+        order = self._sub_zone_order(order)
+        if depth < 0 or not 0 <= index < N ** (2 * depth):
+            raise ValueError(
+                f"need depth >= 0 and 0 <= index < {N}**(2 * depth), "
+                f"got depth {depth} and index {index}"
+            )
+        row, col = _SUB_ZONE_AT[order](N, depth, index)
+        return Cell(self.rdggs, [*self.suid, *_rc_to_digits(N, depth, row, col)])
 
     def ul_vertex(self, plane: bool = True) -> tuple[float, float]:
         """

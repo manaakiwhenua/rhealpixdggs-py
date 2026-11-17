@@ -1637,6 +1637,25 @@ class OGCPresetTestCase(unittest.TestCase):
             with self.subTest(uri=uri), self.assertRaises(ValueError):
                 RHEALPixDGGS.from_uri(uri)
 
+    def test_sub_zone_order(self):
+        cases = {
+            "WGS84_003_OGC": (WGS84_003_OGC, "scanline"),
+            "WGS84_003_OGC_RADIANS": (WGS84_003_OGC_RADIANS, "scanline"),
+            "built by hand": (RHEALPixDGGS(Ellipsoid(lon_0=50)), "scanline"),
+            "WGS84_003": (WGS84_003, "mortonCurve"),
+            "WGS84_002": (dggs_module.WGS84_002, "mortonCurve"),
+            "UNIT_003": (dggs_module.UNIT_003, "mortonCurve"),
+        }
+        for name, (rdggs, expected) in cases.items():
+            with self.subTest(name):
+                self.assertEqual(rdggs.sub_zone_order, expected)
+                # Every grid supports its own order.
+                cell = rdggs.cell(["N"])
+                self.assertEqual(
+                    len(list(cell.subcells(1, order=rdggs.sub_zone_order))),
+                    rdggs.N_side**2,
+                )
+
 
 class GridEqualityTestCase(unittest.TestCase):
     # Grids differing only in lon_0 or angular unit used to compare equal.

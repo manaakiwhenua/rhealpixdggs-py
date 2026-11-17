@@ -6,7 +6,12 @@ import numpy as np
 from scipy.spatial.distance import euclidean, norm
 
 from rhealpixdggs.cell import CELLS0, Cell
-from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
+from rhealpixdggs.dggs import (
+    WGS84_003,
+    WGS84_003_OGC,
+    WGS84_003_RADIANS,
+    RHEALPixDGGS,
+)
 from rhealpixdggs.ellipsoids import (
     WGS84_ASPHERE_RADIANS,
     WGS84_ELLIPSOID,
@@ -1715,3 +1720,147 @@ class CellZoneOperationsTestCase(unittest.TestCase):
         # being equally wrong.
         result = set(self.a.union(self.b).cells)
         self.assertEqual(result, {str(self.a), str(self.b)})
+
+
+class SubZoneOrderTestCase(unittest.TestCase):
+    # DGGAL 0.0.7's rHEALPix getSubZones at depth 2, the digits after the
+    # face letter, which DGGAL gives identically on all six faces.
+    DGGAL_SCANLINE_DEPTH_2 = (
+        "00 01 02 10 11 12 20 21 22 03 04 05 13 14 15 23 24 25 06 07 08 16 17 18 26 27 28 "
+        "30 31 32 40 41 42 50 51 52 33 34 35 43 44 45 53 54 55 36 37 38 46 47 48 56 57 58 "
+        "60 61 62 70 71 72 80 81 82 63 64 65 73 74 75 83 84 85 66 67 68 76 77 78 86 87 88"
+    )
+
+    def test_scanline_matches_dggal(self):
+        for face in CELLS0:
+            with self.subTest(face=face):
+                cells = WGS84_003.cell([face]).subcells(2, order="scanline")
+                self.assertEqual(
+                    [str(c) for c in cells],
+                    [face + d for d in self.DGGAL_SCANLINE_DEPTH_2.split()],
+                )
+        # DGGAL's S7 at depth 3, first 27.
+        cells = WGS84_003.cell(["S", 7]).subcells(4, order="scanline")
+        self.assertEqual(
+            [str(c)[2:] for c in cells][:27],
+            [f"{a}{b}{c}" for a in "012" for b in "012" for c in "012"],
+        )
+
+    def test_morton_is_default_and_digit_order(self):
+        cell = WGS84_003.cell(["P", 4])
+        morton = [c.suid for c in cell.subcells(3)]
+        self.assertEqual(morton, [c.suid for c in cell.subcells(3, "mortonCurve")])
+        self.assertEqual(morton, sorted(morton))
+
+    def test_default_is_the_grids_declared_order(self):
+        # Scanline for the registered grid, Morton for the rest.
+        for rdggs, order in ((WGS84_003_OGC, "scanline"), (WGS84_003, "mortonCurve")):
+            with self.subTest(order=order):
+                face = rdggs.cell(["N"])
+                default = list(face.subcells(2))
+                self.assertEqual(default, list(face.subcells(2, order=order)))
+                for i, cell in enumerate(default):
+                    self.assertEqual(cell.sub_zone_index(face), i)
+                    self.assertEqual(face.sub_zone_at(i, 2), cell)
+        self.assertEqual(
+            [str(c) for c in WGS84_003_OGC.cell(["N"]).subcells(2)][:4],
+            ["N00", "N01", "N02", "N10"],
+        )
+
+    def test_orders_are_permutations(self):
+        cases = [
+            (WGS84_003, ("mortonCurve", "scanline", "spiralFromCenter")),
+            (WGS84_122, ("mortonCurve", "scanline", "hilbertCurve")),
+        ]
+        for rdggs, orders in cases:
+            cell = rdggs.cell(["Q", 1])
+            expected = {c.suid for c in cell.subcells(3)}
+            for order in orders:
+                with self.subTest(N_side=rdggs.N_side, order=order):
+                    got = [c.suid for c in cell.subcells(3, order=order)]
+                    self.assertEqual(len(got), len(expected))
+                    self.assertEqual(set(got), expected)
+
+    def test_curves_step_to_an_edge_neighbour(self):
+        for rdggs, order in (
+            (WGS84_122, "hilbertCurve"),
+            (WGS84_003, "spiralFromCenter"),
+        ):
+            cell = rdggs.cell(["O", 1])
+            cells = list(cell.subcells(3, order=order))
+            width = cells[0].width()
+            for a, b in pairwise(cells):
+                with self.subTest(order=order, a=str(a), b=str(b)):
+                    self.assertAlmostEqual(
+                        euclidean(a.nucleus(), b.nucleus()), width, delta=width * 1e-9
+                    )
+
+    def test_curve_ends(self):
+        n = WGS84_003.cell(["N"])
+        spiral = [str(c) for c in n.subcells(2, order="spiralFromCenter")]
+        self.assertEqual((spiral[0], spiral[-1]), ("N44", "N22"))
+        hilbert = [
+            str(c) for c in WGS84_122.cell(["N"]).subcells(2, order="hilbertCurve")
+        ]
+        self.assertEqual((hilbert[0], hilbert[-1]), ("N00", "N11"))
+
+    def test_depth_zero_and_coarser(self):
+        cell = WGS84_003.cell(["R", 2])
+        for order in ("mortonCurve", "scanline", "spiralFromCenter"):
+            with self.subTest(order=order):
+                self.assertEqual(list(cell.subcells(1, order=order)), [cell])
+                self.assertEqual(list(cell.subcells(0, order=order)), [])
+
+    def test_rejects_undefined_orders(self):
+        # Raised when called, before any cell is drawn.
+        cases = [
+            (WGS84_003, "hilbertCurve"),
+            (WGS84_122, "spiralFromCenter"),
+            (WGS84_003, "zigzag"),
+        ]
+        for rdggs, order in cases:
+            with (
+                self.subTest(N_side=rdggs.N_side, order=order),
+                self.assertRaises(ValueError),
+            ):
+                rdggs.cell(["N"]).subcells(order=order)
+
+    def test_index_and_at_agree_with_subcells(self):
+        cases = [
+            (WGS84_003, ("mortonCurve", "scanline", "spiralFromCenter")),
+            (WGS84_122, ("mortonCurve", "scanline", "hilbertCurve")),
+        ]
+        for rdggs, orders in cases:
+            parent = rdggs.cell(["S", 2])
+            for order, depth in product(orders, (0, 1, 2)):
+                with self.subTest(N_side=rdggs.N_side, order=order, depth=depth):
+                    cells = list(parent.subcells(parent.resolution + depth, order))
+                    for i, cell in enumerate(cells):
+                        self.assertEqual(cell.sub_zone_index(parent, order), i)
+                        self.assertEqual(parent.sub_zone_at(i, depth, order), cell)
+
+    def test_index_from_a_further_ancestor(self):
+        cell = WGS84_003.cell(["N", 1, 0])
+        face = WGS84_003.cell(["N"])
+        self.assertEqual(cell.sub_zone_index(face), 9)
+        self.assertEqual(cell.sub_zone_index(face, "scanline"), 3)
+        self.assertEqual(cell.sub_zone_index(cell, "scanline"), 0)
+
+    def test_index_and_at_reject_bad_input(self):
+        cell = WGS84_003.cell(["N", 1, 0])
+        for ancestor in (
+            WGS84_003.cell(["N", 2]),  # not an ancestor
+            WGS84_003.cell(["N", 1, 0, 4]),  # a descendant
+            WGS84_122.cell(["N"]),  # another grid
+        ):
+            with self.subTest(ancestor=str(ancestor)), self.assertRaises(ValueError):
+                cell.sub_zone_index(ancestor)
+        face = WGS84_003.cell(["N"])
+        for index, depth in ((81, 2), (-1, 2), (0, -1)):
+            with (
+                self.subTest(index=index, depth=depth),
+                self.assertRaises(ValueError),
+            ):
+                face.sub_zone_at(index, depth)
+        with self.assertRaises(ValueError):
+            face.sub_zone_at(0, 1, order="hilbertCurve")
