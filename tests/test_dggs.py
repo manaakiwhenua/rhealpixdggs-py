@@ -1610,9 +1610,11 @@ class OGCPresetTestCase(unittest.TestCase):
                 self.assertEqual(rdggs.uri, _OGC_RHEALPIX_URI)
                 self.assertEqual(rdggs.ellipsoid.radians, radians)
                 self.assertAlmostEqual(
-                    np.rad2deg(rdggs.ellipsoid.lon_0)
-                    if radians
-                    else rdggs.ellipsoid.lon_0,
+                    (
+                        np.rad2deg(rdggs.ellipsoid.lon_0)
+                        if radians
+                        else rdggs.ellipsoid.lon_0
+                    ),
                     50,
                 )
                 for point, resolution, expected in self.DGGAL:
