@@ -23,6 +23,13 @@ percent of the ellipsoidal geodesic in distance and within 0.1 degree in
 bearing up to 5,000 km; ``exact=True`` gives the geodesic itself from
 pyproj, about twenty times slower (issue #199).
 
+The documentation has a page on measuring proximity between cells: what
+``grid_distance``, ``nucleus_distance``, ``bearing`` and ``distance``
+each measure, which to use, their cost, and their error against the
+ellipsoidal geodesic, with the figures from the measurements behind the
+bounds. ``Cell.distance`` with ``plane=True`` now says how far the plane
+stretches surface distance (issue #200).
+
 0.12.1
 ^^^^^^
 The identifiers page of the documentation listed nothing but the module's

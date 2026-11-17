@@ -57,6 +57,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
 
+import proximity_error
 import svg_shrink
 
 from rhealpixdggs.dggs import CELLS0, WGS84_003
@@ -3302,6 +3303,490 @@ fig.tight_layout(rect=(0, 0.035, 1, 0.97))
 save(fig, "line_semantics_faces")
 plt.close(fig)
 print("line semantics (faces) figure written")
+
+# --------------------------------------------------------------- figure 21
+# Proximity measures between two cells, in the plane: hops over the grid
+# (grid_distance), the great circle between nuclei (nucleus_distance) and
+# the gap between boundaries (distance). Left, within one face; right,
+# the whole net, with a pair over a face edge and a pair over a seam of
+# the unfolding, where the plane puts cells that are two hops apart on the
+# cube at opposite ends of the net.
+PROX_RES = 2
+PROX_A, PROX_B, PROX_PATH = "#7c8fe0", "#e5735c", "#c9d3f2"
+
+
+def prox_cells(face):
+    return [sub for cell in rdggs.cell([face]).subcells() for sub in cell.subcells()]
+
+
+def draw_prox_faces(ax, faces, shade):
+    """Every resolution 2 cell of `faces`, those in `shade` coloured."""
+    for face in faces:
+        for sub in prox_cells(face):
+            x, y = sub.ul_vertex()
+            w = sub.width()
+            color = shade.get(str(sub))
+            ax.add_patch(
+                Rectangle(
+                    (x, y - w),
+                    w,
+                    w,
+                    facecolor=color or "#ffffff",
+                    alpha=0.7 if color else 1.0,
+                    edgecolor="#c8c8c8",
+                    linewidth=0.3,
+                )
+            )
+        c0 = rdggs.cell([face])
+        x, y = c0.ul_vertex()
+        w = c0.width()
+        ax.add_patch(
+            Rectangle(
+                (x, y - w), w, w, facecolor="none", edgecolor="#444444", linewidth=1.0
+            )
+        )
+        ax.text(
+            x + 0.04 * w,
+            y - 0.04 * w,
+            face,
+            ha="left",
+            va="top",
+            fontsize=11,
+            fontweight="bold",
+            color="#444444",
+        )
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+
+def prox_king_path(a, b):
+    """The cells of one shortest diagonal-stepping path from `a` to `b`,
+    both in the plane's frame at PROX_RES, excluding the ends."""
+    _, ra, ca = a.level_row_col
+    _, rb, cb = b.level_row_col
+    cells = []
+    r, c = ra, ca
+    while (r, c) != (rb, cb):
+        r += (rb > r) - (rb < r)
+        c += (cb > c) - (cb < c)
+        if (r, c) != (rb, cb):
+            cells.append(rdggs.cell_from_level_row_col(PROX_RES, r, c))
+    return cells
+
+
+def prox_row(a, b):
+    """One table row of the measures between `a` and `b`."""
+    return [
+        f"{a} → {b}",
+        str(a.grid_distance(b)),
+        str(a.grid_distance(b, diagonals=False)),
+        f"{a.nucleus_distance(b) / 1e3:,.0f}",
+        f"{a.distance(b, plane=False) / 1e3:,.0f}",
+        f"{a.distance(b) / 1e3:,.0f}",
+    ]
+
+
+def prox_nucleus_line(ax, a, b, **kwargs):
+    (xa, ya), (xb, yb) = a.nucleus(), b.nucleus()
+    ax.plot([xa, xb], [ya, yb], color="#333333", linewidth=1.2, **kwargs)
+    ax.plot([xa, xb], [ya, yb], "o", color="#333333", markersize=3)
+
+
+fig = plt.figure(figsize=(11.5, 5.6))
+gs = fig.add_gridspec(
+    2, 2, width_ratios=[1.0, 1.75], height_ratios=[4.2, 1.0], wspace=0.04, hspace=0.12
+)
+ax = fig.add_subplot(gs[0, 0])
+a = rdggs.cell(["P", 0, 4])
+b = rdggs.cell(["P", 8, 1])
+shade = {str(c): PROX_PATH for c in prox_king_path(a, b)}
+shade[str(a)], shade[str(b)] = PROX_A, PROX_B
+draw_prox_faces(ax, ["P"], shade)
+prox_nucleus_line(ax, a, b)
+# The gap between the boundaries: lower-right corner of a to upper-left of b.
+(ax0, ax1), (ay0, ay1) = a.xy_range()
+(bx0, bx1), (by0, by1) = b.xy_range()
+ax.plot([ax1, bx0], [ay0, by1], color=PROX_B, linewidth=1.6, linestyle=(0, (3, 2)))
+ax.annotate(
+    "nucleus_distance",
+    xy=(
+        0.5 * (a.nucleus()[0] + b.nucleus()[0]),
+        0.5 * (a.nucleus()[1] + b.nucleus()[1]),
+    ),
+    xytext=(-8, 10),
+    textcoords="offset points",
+    fontsize=8.5,
+    ha="right",
+)
+ax.annotate(
+    "distance",
+    xy=(0.5 * (ax1 + bx0), 0.5 * (ay0 + by1)),
+    xytext=(8, -10),
+    textcoords="offset points",
+    fontsize=8.5,
+    color=PROX_B,
+)
+for cell, color in ((a, PROX_A), (b, PROX_B)):
+    x, y = cell.nucleus()
+    ax.text(
+        x,
+        y + 0.34 * cell.width(),
+        str(cell),
+        ha="center",
+        fontsize=8.5,
+        color=color,
+        fontweight="bold",
+    )
+ax.set_title(
+    f"{a} → {b}, within a face: {a.grid_distance(b)} hops shaded", fontsize=10.5
+)
+
+ax = fig.add_subplot(gs[0, 1])
+# Over the edge between N and O, which the net keeps together.
+e1 = rdggs.cell(["N", 3, 7])
+e2 = rdggs.cell(["O", 1, 6])
+# Over N's left edge, which the cube glues to R: two hops on the cube.
+s1 = rdggs.cell(["N", 3, 0])
+across = s1.neighbor("left")
+s2 = next(
+    c
+    for c in across.neighbors().values()
+    if str(c)[0] == str(across)[0] and s1.grid_distance(c) == 2
+)
+shade = {str(c): PROX_PATH for c in prox_king_path(e1, e2)}
+shade.update(
+    {
+        str(e1): PROX_A,
+        str(e2): PROX_B,
+        str(s1): PROX_A,
+        str(across): PROX_PATH,
+        str(s2): PROX_B,
+    }
+)
+draw_prox_faces(ax, CELLS0, shade)
+prox_nucleus_line(ax, e1, e2)
+prox_nucleus_line(ax, s1, s2, linestyle=(0, (2, 3)))
+w0 = rdggs.cell(["N"]).width()
+for cell, color, dx, dy in (
+    (e1, PROX_A, 0.1, 0.0),
+    (e2, PROX_B, 0.1, -0.1),
+    (s1, PROX_A, -0.1, 0.12),
+    (s2, PROX_B, 0.0, 0.14),
+):
+    x, y = cell.nucleus()
+    ax.text(
+        x + dx * w0,
+        y + dy * w0,
+        str(cell),
+        ha="left" if dx > 0 else "right" if dx < 0 else "center",
+        va="center",
+        fontsize=8.5,
+        color=color,
+        fontweight="bold",
+    )
+ax.set_title(
+    f"{e1} → {e2} over the edge N | O, and {s1} → {s2} over N | R, which the net cuts",
+    fontsize=10.5,
+)
+
+# The measures, as a table under both panels.
+ax = fig.add_subplot(gs[1, :])
+ax.axis("off")
+columns = [
+    "cells",
+    "grid_distance",
+    "grid_distance\n(diagonals=False)",
+    "nucleus_distance\n(km)",
+    "distance\n(km, ellipsoid)",
+    "distance\n(km, plane)",
+]
+table = ax.table(
+    cellText=[prox_row(a, b), prox_row(e1, e2), prox_row(s1, s2)],
+    colLabels=columns,
+    loc="center",
+    cellLoc="center",
+    colLoc="center",
+)
+table.auto_set_font_size(False)
+table.set_fontsize(9)
+table.scale(1.0, 1.55)
+for (row, _col), cell in table.get_celld().items():
+    cell.set_edgecolor("#dddddd")
+    cell.set_linewidth(0.6)
+    cell.get_text().set_color("#333333")
+    if row == 0:
+        cell.set_height(cell.get_height() * 1.6)
+        cell.set_text_props(color="#555555")
+save(fig, "proximity_measures")
+plt.close(fig)
+print("proximity measures figure written")
+
+# --------------------------------------------------------------- figure 22
+# The error of the cheap measures against the ellipsoidal geodesic, from
+# docs/proximity_error.py: the authalic sphere's distance and bearing, and
+# the planar distance within a face that hop counts stand in for.
+
+
+def tidy_chart(ax, y_axis=True):
+    """A light chart: no top or right spine, grey axes, few ticks."""
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_color("#999999")
+    ax.tick_params(colors="#555555", labelsize=8.5, length=3)
+    ax.xaxis.label.set_color("#444444")
+    ax.yaxis.label.set_color("#444444")
+    ax.title.set_color("#333333")
+    if not y_axis:
+        ax.yaxis.set_visible(False)
+        ax.spines["left"].set_visible(False)
+
+
+sample = proximity_error.sample()
+d_km = sample["distance"] / 1e3
+pick = np.random.default_rng(3).permutation(len(d_km))[:40000]
+fig, axes = plt.subplots(1, 3, figsize=(11.5, 3.5))
+ax = axes[0]
+sc = ax.scatter(
+    d_km[pick],
+    (sample["sphere_ratio"][pick] - 1) * 100,
+    c=np.abs(sample["latitude"][pick]),
+    cmap="viridis",
+    s=1.5,
+    alpha=0.6,
+    linewidths=0,
+    rasterized=True,
+)
+for bound in (0.112, -0.112):
+    ax.axhline(bound, color="#c1272d", linewidth=0.8)
+ax.set_yticks([-0.112, 0, 0.112])
+ax.set_yticklabels(["−0.112 %", "0", "+0.112 %"])
+ax.set_xscale("log")
+ax.set_xticks([1e-2, 1, 100, 1e4])
+ax.set_xticklabels(["10 m", "1 km", "100 km", "10,000 km"])
+ax.set_xlabel("geodesic distance")
+ax.set_ylabel("sphere distance − geodesic")
+ax.set_title("nucleus_distance: error", fontsize=10.5)
+tidy_chart(ax)
+cb = fig.colorbar(sc, ax=ax, fraction=0.05, pad=0.02, label="|latitude| of one end (°)")
+cb.outline.set_visible(False)
+cb.ax.yaxis.label.set_color("#444444")
+cb.ax.tick_params(colors="#555555", labelsize=8, length=0)
+
+ax = axes[1]
+error = np.abs(sample["bearing_error"][pick])
+ax.scatter(
+    d_km[pick],
+    np.maximum(error, 1e-4),
+    c=np.abs(sample["latitude"][pick]),
+    cmap="viridis",
+    s=1.5,
+    alpha=0.6,
+    linewidths=0,
+    rasterized=True,
+)
+ax.axhline(0.064, color="#c1272d", linewidth=0.8)
+ax.text(0.012, 0.075, "0.064°", color="#c1272d", fontsize=8, va="bottom")
+ax.axvline(5000, color="#aaaaaa", linewidth=0.8, linestyle=(0, (3, 2)))
+ax.text(4300, 40, "5,000 km", color="#888888", fontsize=8, ha="right")
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.set_ylim(1e-4, 200)
+ax.set_xticks([1e-2, 1, 100, 1e4])
+ax.set_xticklabels(["10 m", "1 km", "100 km", "10,000 km"])
+ax.set_xlabel("geodesic distance")
+ax.set_ylabel("|sphere bearing − geodesic azimuth| (°)")
+ax.set_yticks([1e-4, 1e-2, 1, 100])
+ax.set_title("bearing: error", fontsize=10.5)
+tidy_chart(ax)
+
+ax = axes[2]
+ratio = sample["plane_ratio"]
+polar = sample["polar"]
+bins = np.linspace(0.65, 1.75, 56)
+for mask, label, color in (
+    (~polar, "equatorial faces", FACE_COLORS["P"]),
+    (polar, "polar faces", FACE_COLORS["N"]),
+):
+    values = ratio[mask]
+    values = values[~np.isnan(values)]
+    ax.hist(
+        values,
+        bins=bins,
+        density=True,
+        histtype="stepfilled",
+        alpha=0.55,
+        color=color,
+        label=label,
+    )
+ax.axvline(1, color="#999999", linewidth=0.8)
+ax.set_xlabel("planar distance / geodesic, same face")
+ax.set_xticks([0.7, 1.0, 1.37, 1.69])
+ax.set_title("the plane: what hop counts measure", fontsize=10.5)
+ax.legend(frameon=False, fontsize=8.5)
+tidy_chart(ax, y_axis=False)
+fig.tight_layout()
+save(fig, "proximity_error")
+plt.close(fig)
+print("proximity error figure written")
+
+# --------------------------------------------------------------- figure 23
+# Ranking a k-ring by nucleus_distance: hop count orders the candidates
+# only coarsely. Around a cell near the edge of the north polar face, ring
+# 3 holds cells closer than some of ring 2, and ring 2 closer than some
+# of ring 1, because the plane's scale varies across a polar face.
+RANK_CENTRE = "N674"
+RANK_K = 3
+RANK_WITHIN_KM = 800
+
+rank_ring = rhp_wrappers.k_ring(RANK_CENTRE, RANK_K)
+rank_k = np.array(
+    [0]
+    + [k for k in range(1, RANK_K + 1) for _ in rhp_wrappers.cell_ring(RANK_CENTRE, k)]
+)
+rank_km = rdggs.nucleus_distances([RANK_CENTRE], rank_ring) / 1e3
+rank_cells = [rdggs.cell(rdggs.parse_index(name)) for name in rank_ring]
+
+fig, (ax_plane, ax_globe, ax_rank) = plt.subplots(
+    1, 3, figsize=(11.5, 4.0), gridspec_kw={"width_ratios": [1, 1, 1.3]}
+)
+norm = plt.Normalize(0, rank_km.max())
+cmap = plt.get_cmap("viridis_r")
+for cell, km, k in zip(rank_cells, rank_km, rank_k, strict=True):
+    x, y = cell.ul_vertex()
+    w = cell.width()
+    ax_plane.add_patch(
+        Rectangle(
+            (x, y - w),
+            w,
+            w,
+            facecolor=cmap(norm(km)) if k else "#ffffff",
+            edgecolor="#c1272d" if km < RANK_WITHIN_KM and k else "#ffffff",
+            linewidth=1.4 if km < RANK_WITHIN_KM and k else 0.4,
+            zorder=2 if km < RANK_WITHIN_KM else 1,
+        )
+    )
+    ax_plane.text(
+        x + w / 2,
+        y - w / 2,
+        str(k) if k else RANK_CENTRE,
+        ha="center",
+        va="center",
+        fontsize=7 if k else 6.5,
+        color="#ffffff" if (k and norm(km) > 0.45) else "#222222",
+    )
+# The N | O edge through the ring.
+n_face = rdggs.cell(["N"])
+nx, ny = n_face.ul_vertex()
+nw = n_face.width()
+ax_plane.plot(
+    [nx, nx + nw], [ny - nw, ny - nw], color="#444444", linewidth=1.2, zorder=3
+)
+cw = rdggs.cell_width(3)
+cx, cy = rank_cells[0].nucleus()
+ax_plane.text(
+    cx - 4.0 * cw,
+    ny - nw + 0.15 * cw,
+    "N",
+    fontsize=11,
+    fontweight="bold",
+    color="#444444",
+    va="bottom",
+)
+ax_plane.text(
+    cx - 4.0 * cw,
+    ny - nw - 0.15 * cw,
+    "O",
+    fontsize=11,
+    fontweight="bold",
+    color="#444444",
+    va="top",
+)
+ax_plane.set_xlim(cx - 4.4 * cw, cx + 3.6 * cw)
+ax_plane.set_ylim(cy - 3.6 * cw, cy + 3.6 * cw)
+ax_plane.set_aspect("equal")
+ax_plane.axis("off")
+ax_plane.set_title(
+    f"{RANK_CENTRE} and its k={RANK_K} ring, by ring number", fontsize=10.5
+)
+# The same cells on the globe, looking down on N674's nucleus.
+rank_view = rank_cells[0].nucleus(plane=False)
+shade_land_ortho(ax_globe, *rank_view, zorder=0)
+for cell, km, k in zip(rank_cells, rank_km, rank_k, strict=True):
+    pts = cell.boundary(n=12, plane=False)
+    x, y, vis = ortho([p[0] for p in pts], [p[1] for p in pts], *rank_view)
+    within = k and km < RANK_WITHIN_KM
+    ax_globe.fill(
+        x,
+        y,
+        facecolor=cmap(norm(km)) if k else "#ffffff",
+        edgecolor="#c1272d" if within else "#ffffff",
+        linewidth=1.4 if within else 0.4,
+        zorder=2 if within else 1,
+    )
+    if not k:
+        lx, ly, _ = ortho(*cell.nucleus(plane=False), *rank_view)
+        ax_globe.text(
+            lx, ly, RANK_CENTRE, ha="center", va="center", fontsize=6.5, zorder=4
+        )
+edge = rdggs.cell(["N"]).boundary(n=60, plane=False)
+ex, ey, evis = ortho([p[0] for p in edge], [p[1] for p in edge], *rank_view)
+ax_globe.plot(
+    np.where(evis, ex, np.nan),
+    np.where(evis, ey, np.nan),
+    color="#444444",
+    linewidth=1.2,
+    zorder=3,
+)
+rank_radius = 5.5 * cw / rdggs.ellipsoid.R_A
+ax_globe.set_xlim(-rank_radius, rank_radius)
+ax_globe.set_ylim(-rank_radius, rank_radius)
+ax_globe.set_aspect("equal")
+ax_globe.axis("off")
+ax_globe.set_title(
+    f"Orthographic view, {abs(rank_view[1]):.0f}°N {abs(rank_view[0]):.0f}°W",
+    fontsize=10.5,
+)
+sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+cb = fig.colorbar(
+    sm, ax=ax_globe, fraction=0.046, pad=0.02, label="nucleus_distance (km)"
+)
+cb.outline.set_visible(False)
+cb.ax.yaxis.label.set_color("#444444")
+cb.ax.tick_params(colors="#555555", labelsize=8, length=0)
+
+order = np.argsort(rank_km)[1:]
+ax_rank.bar(
+    np.arange(len(order)),
+    rank_km[order],
+    color=[RING_COLORS[k] for k in rank_k[order]],
+    width=0.85,
+)
+ax_rank.axhline(RANK_WITHIN_KM, color="#c1272d", linewidth=0.8)
+ax_rank.text(
+    len(order) - 0.5,
+    RANK_WITHIN_KM + 25,
+    f"{RANK_WITHIN_KM} km",
+    color="#c1272d",
+    fontsize=8,
+    ha="right",
+    va="bottom",
+)
+handles = [
+    plt.Rectangle((0, 0), 1, 1, color=RING_COLORS[k], label=f"ring {k}")
+    for k in range(1, RANK_K + 1)
+]
+ax_rank.legend(handles=handles, frameon=False, fontsize=8.5, loc="upper left")
+ax_rank.set_xlabel("rank by nucleus_distance")
+ax_rank.set_ylabel("nucleus_distance (km)")
+ax_rank.set_yticks([0, 500, 1000, 1500])
+ax_rank.set_xticks([0, 12, 24, 36, 48])
+ax_rank.set_title(f"k={RANK_K} ring cells ranked by distance", fontsize=10.5)
+tidy_chart(ax_rank)
+fig.tight_layout()
+save(fig, "proximity_ranking")
+plt.close(fig)
+print("proximity ranking figure written")
 
 # Drop matplotlib's six decimal places of coordinate precision, which is
 # around a nanometre on the page and about a third of every SVG's bytes.
