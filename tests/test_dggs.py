@@ -610,6 +610,42 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
         self.assertTrue(np.isnan(nuclei[~valid]).all())
         self.assertFalse(np.isnan(nuclei[valid]).any())
 
+    def test_authalic_nuclei_and_positions(self):
+        from rhealpixdggs.utils import _auth_lat_array
+
+        for rdggs in (WGS84_003, WGS84_003_OGC, WGS84_003_RADIANS, WGS84_122):
+            with self.subTest(rdggs=str(rdggs).splitlines()[0]):
+                indices = [str(c) for res in range(3) for c in rdggs.grid(res)]
+                nuclei = rdggs.nuclei(indices)
+                authalic = rdggs.nuclei(indices, authalic=True)
+                # Same longitude; the latitude is the nucleus latitude's
+                # authalic latitude.
+                np.testing.assert_array_equal(authalic[:, 0], nuclei[:, 0])
+                radians = rdggs.ellipsoid.radians
+                beta = _auth_lat_array(nuclei[:, 1], rdggs.ellipsoid.e, radians=radians)
+                self.assertTrue(np.allclose(authalic[:, 1], beta, rtol=0, atol=1e-10))
+                # Positions give the same floats as index strings.
+                level, row, col = rdggs.level_row_col_from_indices(indices)
+                for kw in ({}, {"authalic": True}, {"plane": True}):
+                    np.testing.assert_array_equal(
+                        rdggs.nuclei_from_level_row_col(level, row, col, **kw),
+                        rdggs.nuclei(indices, **kw),
+                    )
+        # Grids without index strings have positions, and so nuclei.
+        rdggs = RHEALPixDGGS(N_side=5)
+        cells = list(rdggs.grid(1))
+        positions = np.array([c.level_row_col for c in cells])
+        nuclei = rdggs.nuclei_from_level_row_col(*positions.T)
+        want = np.array([c.nucleus(plane=False) for c in cells])
+        self.assertTrue(np.allclose(nuclei, want, rtol=0, atol=1e-12))
+        self.assertEqual(
+            WGS84_003.nuclei_from_level_row_col(1, [4, 3], 4).shape, (2, 2)
+        )
+        with self.assertRaises(ValueError):
+            WGS84_003.nuclei_from_level_row_col(0, 0, 1)
+        with self.assertRaises(ValueError):
+            WGS84_003.nuclei(["N"], plane=True, authalic=True)
+
     def test_rings_match_cell_ring(self):
         # rings() reads the ring number off the index digits for all cells
         # at once, agreeing with Cell.ring. Invalid indices give -1, and

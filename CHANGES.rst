@@ -8,6 +8,13 @@ identifiers alone, by unfolding the cube along the faces between the
 cells; cells of different resolutions are compared at the coarser one
 (issue #197).
 
+``RHEALPixDGGS.nuclei`` takes ``authalic=True`` to give the nuclei on the
+authalic sphere, the longitude with the authalic latitude, straight from
+the projection's closed-form inverse without the series that converts to
+the ellipsoid, and the new ``nuclei_from_level_row_col`` gives nuclei
+for cells named by position, so for every grid, index strings or not
+(issue #198).
+
 0.12.1
 ^^^^^^
 The identifiers page of the documentation listed nothing but the module's

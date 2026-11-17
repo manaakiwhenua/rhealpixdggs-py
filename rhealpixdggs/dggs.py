@@ -220,6 +220,7 @@ from rhealpixdggs.identifiers import (
     _parse_index,
     _parse_indices,
     _parse_level_row_col_text,
+    _position_rc,
     _suid_from_level_row_col,
     _uint64_from_level_row_col,
     _unpack_uint64,
@@ -228,6 +229,7 @@ from rhealpixdggs.utils import (
     FloatArray,
     _auth_lat_array,
     _normalise_antimeridian_rings,
+    _wrap_longitude_array,
     auth_lat,
 )
 
@@ -2878,7 +2880,9 @@ class RHEALPixDGGS:
             )
         return names[code]
 
-    def nuclei(self, indices: Iterable[str], plane: bool = False) -> FloatArray:
+    def nuclei(
+        self, indices: Iterable[str], plane: bool = False, authalic: bool = False
+    ) -> FloatArray:
         """
         Return the nuclei of the cells with index strings `indices` as one
         float64 array of shape ``(len(indices), 2)``: row `k` is
@@ -2886,11 +2890,24 @@ class RHEALPixDGGS:
         ``indices[k]``, as `x`, `y` or longitude, latitude. An invalid index
         gives a row of NaN.
 
+        With `authalic` = True the latitude is the authalic latitude: the
+        nuclei on the sphere of radius ``ellipsoid.R_A`` that has the
+        ellipsoid's area, where the rHEALPix projection is equal-area and
+        its inverse is closed form. That is where the projection's inverse
+        naturally lands, so this skips the series that converts to the
+        ellipsoid and is what spherical formulas between nuclei should use.
+        `authalic` with `plane` raises ValueError. See
+        ``nuclei_from_level_row_col`` for cells given as positions.
+
         EXAMPLES::
 
             >>> rdggs = WGS84_003
             >>> rdggs.nuclei(['N4', 'P44', 'bad']).round(9).tolist()
             [[-180.0, 90.0], [-45.0, 0.0], [nan, nan]]
+            >>> rdggs.nuclei(['P4', 'P1']).round(6).tolist()
+            [[-45.0, 0.0], [-45.0, 26.490119]]
+            >>> rdggs.nuclei(['P4', 'P1'], authalic=True).round(6).tolist()
+            [[-45.0, 0.0], [-45.0, 26.3878]]
 
         """
         valid, face, digits, resolution = self._parse_indices(indices)
@@ -2899,12 +2916,69 @@ class RHEALPixDGGS:
             x, y, width, _ = self._index_geometry(
                 face[valid], digits[valid], resolution[valid]
             )
-            x, y = x + width / 2, y - width / 2
-            if not plane:
-                x, y = self.rhealpix(x, y, inverse=True)
-            result[valid, 0] = x
-            result[valid, 1] = y
+            result[valid] = self._nuclei_from_corners(x, y, width, plane, authalic)
         return result
+
+    def nuclei_from_level_row_col(
+        self,
+        level: Iterable[int] | np.ndarray,
+        row: Iterable[int] | np.ndarray,
+        col: Iterable[int] | np.ndarray,
+        plane: bool = False,
+        authalic: bool = False,
+    ) -> FloatArray:
+        """
+        Return the nuclei of the cells at positions `level`, `row` and
+        `col` (see ``Cell.level_row_col``; the three broadcast together)
+        as ``nuclei`` returns them, one row per position. Every grid has
+        positions, so this serves grids without index strings too. Raise
+        ValueError if a position names no cell.
+
+        EXAMPLES::
+
+            >>> WGS84_003.nuclei_from_level_row_col(1, [4, 3], 4).round(6).tolist()
+            [[-45.0, 0.0], [-45.0, 26.490119]]
+
+        """
+        face, level_, row_, col_ = _position_rc(self, level, row, col)
+        corners = np.array([self.ul_vertex[letter] for letter in CELLS0])
+        scale = np.power(float(self.N_side), -level_.astype(np.float64))
+        w0 = self.cell_width(0)
+        x = corners[face, 0] + w0 * (col_ * scale)
+        y = corners[face, 1] - w0 * (row_ * scale)
+        width = self.ellipsoid.R_A * (pi / 2) * scale
+        return self._nuclei_from_corners(x, y, width, plane, authalic)
+
+    def _nuclei_from_corners(
+        self,
+        x: FloatArray,
+        y: FloatArray,
+        width: FloatArray,
+        plane: bool,
+        authalic: bool,
+    ) -> FloatArray:
+        """The nuclei of cells with planar upper-left corners and widths, as
+        an (n, 2) array in the plane, on the ellipsoid or on the authalic
+        sphere."""
+        if plane and authalic:
+            raise ValueError("authalic nuclei are on the sphere, not in the plane")
+        x, y = x + width / 2, y - width / 2
+        if authalic:
+            R = self.ellipsoid.R_A
+            radians = self.ellipsoid.radians
+            lon, beta = pjr._rhealpix_sphere_inverse_array(
+                x / R,
+                y / R,
+                north_square=self.north_square,
+                south_square=self.south_square,
+            )
+            if not radians:
+                lon, beta = np.degrees(lon), np.degrees(beta)
+            x = _wrap_longitude_array(lon + self.ellipsoid.lon_0, radians=radians)
+            y = beta
+        elif not plane:
+            x, y = self.rhealpix(x, y, inverse=True)
+        return np.stack([x, y], axis=1)
 
     def rings(self, indices: Iterable[str]) -> np.ndarray:
         """

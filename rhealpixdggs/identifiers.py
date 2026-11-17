@@ -479,6 +479,17 @@ def _face_of_level_row_col(
     return np.where(ok, block, -1)
 
 
+def _position_rc(
+    grid: _GridLayout, level: _Ints, row: _Ints, col: _Ints
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Face codes, levels, and rows and columns within the face of checked
+    positions, as fractions of the face in ``[0, 1)`` times ``N**level``:
+    integer arrays, with the frame's block offsets removed."""
+    face, level_, row_, col_ = _checked_level_row_col(grid, level, row, col)
+    p = grid.N_side**level_
+    return face, level_, row_ % p, col_ % p
+
+
 def _format_level_row_col(
     grid: _GridLayout,
     face: np.ndarray,
