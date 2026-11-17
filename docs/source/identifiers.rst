@@ -5,7 +5,9 @@ A cell can be named in several ways. Each names a cell only together with
 its grid: the same identifier names different cells in grids with a
 different ``N_side`` or different polar squares, so data exchanged by
 identifier should say which grid it uses, for instance by its
-:attr:`~rhealpixdggs.dggs.RHEALPixDGGS.uri`.
+:attr:`~rhealpixdggs.dggs.RHEALPixDGGS.uri`. The rHEALPix DGGRS that OGC
+registers (`OGC rHEALPix <https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix>`_,
+the preset ``WGS84_003_OGC``) declares two of them as its identifiers.
 
 Representations
 ---------------
@@ -20,10 +22,10 @@ Representations
    * - Index string
      - ``'R553110'``
      - A face letter and one digit per resolution, for ``N_side`` 2 and 3
-       only. The registered rHEALPix DGGRS's text identifier.
+       only. The text identifier of OGC rHEALPix.
    * - suid
      - ``('R', 5, 5, 3, 1, 1, 0)``
-     - The same as a tuple, for every grid.
+     - The same as a tuple. Every grid has one.
    * - Position
      - ``(6, 1080, 2847)``
      - Level, row and column among all cells of that level in the planar
@@ -31,11 +33,11 @@ Representations
    * - uint64
      - ``3458765673461713695``
      - The position packed as ``level << 59 | row << 30 | column``. The
-       registered rHEALPix DGGRS's integer identifier, for every grid.
+       integer identifier of OGC rHEALPix. Every grid has one.
    * - Level-row-col text
      - ``'6-438-B1F'``
      - The position in hexadecimal, the text form of OGC 2D tile matrix
-       sets. Not an identifier the registered DGGRS declares.
+       sets. OGC rHEALPix does not declare it as an identifier.
 
 Converting between them
 -----------------------
@@ -74,7 +76,7 @@ int64 arrays of level, row and column:
 - index strings and positions:
   :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.level_row_col_from_indices`,
   :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.indices_from_level_row_col`;
-- positions and uint64, for every grid:
+- positions and uint64, which every grid supports:
   :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.uint64_from_level_row_col`,
   :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.level_row_col_from_uint64`;
 - index strings and uint64 directly:
@@ -96,9 +98,10 @@ and DGGS-JSON, depends on the order of a cell's subcells. The orders take
 their names from OGC's DGGRS definitions: ``"mortonCurve"`` (the order of
 the digits), ``"scanline"`` (rows across the whole cell), ``"hilbertCurve"``
 (``N_side`` a power of 2) and ``"spiralFromCenter"`` (odd ``N_side``).
-:attr:`~rhealpixdggs.dggs.RHEALPixDGGS.sub_zone_order` is the order a grid
-declares, scanline for the registered grid and Morton for every other, and
-the default of :meth:`~rhealpixdggs.cell.Cell.subcells`,
+Each grid declares one order, given by
+:attr:`~rhealpixdggs.dggs.RHEALPixDGGS.sub_zone_order`: OGC rHEALPix
+declares ``"scanline"``, and other grids use ``"mortonCurve"``. That order
+is the default of :meth:`~rhealpixdggs.cell.Cell.subcells`,
 :meth:`~rhealpixdggs.cell.Cell.sub_zone_index` (a cell's position among an
 ancestor's subcells) and :meth:`~rhealpixdggs.cell.Cell.sub_zone_at` (the
 subcell at a position).
