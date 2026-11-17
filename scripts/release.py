@@ -61,6 +61,8 @@ COPYRIGHT_FILES = ("LICENSE", "LICENSE-MIT")
 # pyproject.toml's [tool.poetry] section.
 SDIST_MUST_INCLUDE = ("tests/", "docs/source/")
 SDIST_MUST_NOT_INCLUDE = (
+    "docs/build/",
+    "__pycache__/",
     ".doctrees",
     "_build/",
     ".cache/",
@@ -68,6 +70,7 @@ SDIST_MUST_NOT_INCLUDE = (
     ".idx",
     ".toc",
     ".png",
+    ".pyc",
 )
 
 VERSION_RE = re.compile(r"^\d+\.\d+(\.\d+)?((a|b|rc)\d+)?$")

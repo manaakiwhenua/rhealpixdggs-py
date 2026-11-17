@@ -73,7 +73,9 @@ optional = true
 matplotlib = "3.11.1"
 
 [tool.poetry]
-include = ["tests/", "docs/"]
+# include overrides gitignore and exclude, so name the docs inputs rather
+# than docs/, or Sphinx's docs/build would ship in the sdist.
+include = ["tests/", "docs/source/", "docs/Makefile", "docs/*.py"]
 
 [tool.ruff.lint]
 # Beyond ruff's defaults, the rule families that catch defects rather than
