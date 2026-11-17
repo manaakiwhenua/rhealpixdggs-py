@@ -25,10 +25,21 @@ from numpy import array, pi
 # import rhealpixdggs.dggs as dggs
 import rhealpixdggs.dggs as dggs_module
 from rhealpixdggs.cell import CELLS0, _geod
-from rhealpixdggs.dggs import WGS84_003, WGS84_003_RADIANS, RHEALPixDGGS
+from rhealpixdggs.dggs import (
+    _OGC_RHEALPIX_URI,
+    WGS84_003,
+    WGS84_003_OGC,
+    WGS84_003_OGC_RADIANS,
+    WGS84_003_RADIANS,
+    RHEALPixDGGS,
+)
 from rhealpixdggs.ellipsoids import (
+    WGS84_A,
+    WGS84_B,
     WGS84_ELLIPSOID,
     WGS84_ELLIPSOID_RADIANS,
+    WGS84_F,
+    WGS84_R_A,
     Ellipsoid,
 )
 
@@ -1514,3 +1525,114 @@ class GeodesicSweepEdgeCaseTestCase(unittest.TestCase):
             geodesic_length=None,
         )
         self.assertEqual(self.rdggs._arc_length(trace, 0.0, 1.0), 0.0)
+
+
+class OGCPresetTestCase(unittest.TestCase):
+    # Identifiers from Ecere's DGGAL 0.0.7, which implements the registered DGGRS.
+    DGGAL = (
+        ((-138.503878, 1.354785), 6, "R553110"),
+        ((-52.236093, -8.820946), 10, "O5753828785"),
+        ((-156.539501, 83.82695), 6, "N438261"),
+        ((-24.240294, 84.476058), 14, "N45633856162200"),
+        ((-11.031765, -88.971972), 6, "S444513"),
+        ((6.665386, -84.032342), 10, "S4533800712"),
+        ((33.324094, 41.9), 6, "P210222"),
+        ((153.942207, 10.712561), 1, "R3"),
+    )
+
+    def test_matches_dggal(self):
+        for point, resolution, expected in self.DGGAL:
+            with self.subTest(point=point):
+                cell = WGS84_003_OGC.cell_from_point(resolution, point, plane=False)
+                self.assertEqual(str(cell), expected)
+
+    def test_radians_matches_degrees(self):
+        for point, resolution, _ in self.DGGAL:
+            with self.subTest(point=point):
+                degrees = WGS84_003_OGC.cell_from_point(resolution, point, plane=False)
+                radians = WGS84_003_OGC_RADIANS.cell_from_point(
+                    resolution, tuple(np.deg2rad(point)), plane=False
+                )
+                self.assertEqual(str(radians), str(degrees))
+
+    def test_differs_from_wgs84_003(self):
+        point = (174, -37)
+        self.assertEqual(
+            str(WGS84_003_OGC.cell_from_point(1, point, plane=False)), "R7"
+        )
+        self.assertNotEqual(str(WGS84_003.cell_from_point(1, point, plane=False)), "R7")
+
+    def test_uri(self):
+        def grid(lon_0=50, N_side=3, north_square=0, radians=False, **ellipsoid):
+            ellipsoid.setdefault("a", WGS84_A)
+            if "R" not in ellipsoid and "b" not in ellipsoid:
+                ellipsoid.setdefault("f", WGS84_F)
+            return RHEALPixDGGS(
+                Ellipsoid(lon_0=lon_0, radians=radians, **ellipsoid),
+                N_side=N_side,
+                north_square=north_square,
+            )
+
+        registered = {
+            "degrees preset": WGS84_003_OGC,
+            "radians preset": WGS84_003_OGC_RADIANS,
+            "built by hand": grid(),
+            "wrapped lon_0": grid(lon_0=410),
+            "WGS84 from b": grid(b=WGS84_B),
+            "coarser max_areal_resolution": RHEALPixDGGS(
+                WGS84_003_OGC.ellipsoid, max_areal_resolution=1e6
+            ),
+        }
+        for name, rdggs in registered.items():
+            with self.subTest(name):
+                self.assertEqual(rdggs.uri, _OGC_RHEALPIX_URI)
+
+        unregistered = {
+            "WGS84_003": WGS84_003,
+            "WGS84_003_RADIANS": WGS84_003_RADIANS,
+            "WGS84_002": dggs_module.WGS84_002,
+            "UNIT_003": dggs_module.UNIT_003,
+            "lon_0 0": grid(lon_0=0),
+            "50 radians": grid(lon_0=50, radians=True),
+            "N_side 2": grid(N_side=2),
+            "north_square 1": grid(north_square=1),
+            "sphere": grid(R=WGS84_R_A),
+            "GRS80": grid(f=1 / 298.257222101),
+        }
+        for name, rdggs in unregistered.items():
+            with self.subTest(name):
+                self.assertIsNone(rdggs.uri)
+
+    def test_from_uri(self):
+        for radians in (False, True):
+            with self.subTest(radians=radians):
+                rdggs = RHEALPixDGGS.from_uri(_OGC_RHEALPIX_URI, radians=radians)
+                self.assertEqual(rdggs.uri, _OGC_RHEALPIX_URI)
+                self.assertEqual(rdggs.ellipsoid.radians, radians)
+                self.assertAlmostEqual(
+                    (
+                        np.rad2deg(rdggs.ellipsoid.lon_0)
+                        if radians
+                        else rdggs.ellipsoid.lon_0
+                    ),
+                    50,
+                )
+                for point, resolution, expected in self.DGGAL:
+                    p = tuple(np.deg2rad(point)) if radians else point
+                    cell = rdggs.cell_from_point(resolution, p, plane=False)
+                    self.assertEqual(str(cell), expected)
+
+    def test_from_uri_http_and_max_areal_resolution(self):
+        http = _OGC_RHEALPIX_URI.replace("https://", "http://")
+        rdggs = RHEALPixDGGS.from_uri(http, max_areal_resolution=1e6)
+        self.assertEqual(rdggs.uri, _OGC_RHEALPIX_URI)
+        self.assertEqual(rdggs.max_areal_resolution, 1e6)
+
+    def test_from_uri_unknown(self):
+        for uri in (
+            "https://www.opengis.net/def/dggrs/OGC/1.0/HEALPix",
+            "rHEALPix",
+            _OGC_RHEALPIX_URI + "/",
+        ):
+            with self.subTest(uri=uri), self.assertRaises(ValueError):
+                RHEALPixDGGS.from_uri(uri)
