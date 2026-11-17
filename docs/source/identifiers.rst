@@ -84,7 +84,11 @@ int64 arrays of level, row and column:
   :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.indices_from_uint64`;
 - index strings and level-row-col text:
   :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.level_row_col_text_from_indices`,
-  :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.indices_from_level_row_col_text`.
+  :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.indices_from_level_row_col_text`;
+- positions to nuclei, in the plane, on the ellipsoid or on the authalic
+  sphere: :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.nuclei_from_level_row_col`,
+  the counterpart of :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.nuclei` for
+  index strings.
 
 :func:`~rhealpixdggs.rhp_wrappers.rhp_to_uint64` and
 :func:`~rhealpixdggs.rhp_wrappers.rhp_from_uint64` convert single index
