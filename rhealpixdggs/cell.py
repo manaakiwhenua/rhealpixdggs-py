@@ -2456,8 +2456,11 @@ class Cell:
         close to the seam at x = +-pi R from opposite sides, or a polar
         cell and an equatorial face its polar square is not attached to
         in the layout. (Cells that touch across such a seam still give 0,
-        since touching is decided from the grid's topology.) Use `plane` =
-        False for a surface distance.
+        since touching is decided from the grid's topology.) Within one
+        face the plane is equal-area, not equidistant: its distance is
+        0.88 to 1.37 times the geodesic on an equatorial face and 0.70 to
+        1.69 times on a polar face. Use `plane` = False for a surface
+        distance, and see :doc:`proximity` for the measures that cost less.
 
         On the ellipsoid each cell's boundary is sampled at `n` points
         per edge, the nearest pair of samples is found, and the result is
@@ -2619,11 +2622,11 @@ class Cell:
         contains the other.
 
         The count is exact and computed from the identifiers alone, by
-        integer arithmetic. It is a grid measure, not a length: a step
+        integer arithmetic. The count is a grid measure, not a length: a step
         is a cell width along a row or column but longer along a
         diagonal, and the plane itself stretches surface distances
         unevenly, so the count times the cell width only approximates
-        the distance on the ellipsoid.
+        the distance on the ellipsoid; see :doc:`proximity`.
 
         EXAMPLES::
 

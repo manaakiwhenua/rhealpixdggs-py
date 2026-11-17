@@ -71,6 +71,7 @@ Table of contents
    identifiers
    nside
    isolatitude
+   proximity
    harmonics
    cell
    conversion
