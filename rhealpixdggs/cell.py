@@ -1,13 +1,13 @@
 # from rhealpixdggs.dggs import WGS84_003
 
 import enum
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from colorsys import hsv_to_rgb
 from functools import cache, cached_property, total_ordering
 from itertools import product
-from math import fsum, hypot, isqrt
+from math import fsum, hypot
 from random import uniform
-from typing import TYPE_CHECKING, ClassVar, Literal, cast, get_args, overload
+from typing import TYPE_CHECKING, ClassVar, Literal, cast, overload
 
 if TYPE_CHECKING:
     from rhealpixdggs.dggs import RHEALPixDGGS
@@ -18,14 +18,24 @@ import pyproj
 from numpy import base_repr
 from scipy import integrate, optimize
 
+from rhealpixdggs.identifiers import (
+    _SUB_ZONE_AT,
+    _SUB_ZONE_INDEX,
+    CELLS0,
+    SubZoneOrder,
+    _check_sub_zone_order,
+    _digits_to_rc,
+    _fits_uint64,
+    _level_row_col,
+    _level_row_col_text,
+    _pack_uint64,
+    _rc_to_digits,
+)
 from rhealpixdggs.utils import (
     FloatArray,
     _normalise_antimeridian_rings,
     wrap_longitude,
 )
-
-# Level 0 cell IDs, which are anomalous.
-CELLS0 = ["N", "O", "P", "Q", "R", "S"]
 
 # Points per axis of the Gauss-Legendre product rule that integrates the
 # centroid of a dart or skew quad cell over its planar square (issue #120).
@@ -33,158 +43,6 @@ CELLS0 = ["N", "O", "P", "Q", "R", "S"]
 # exponentially: 20 points agree with 40 to about 1e-14 degrees, the
 # projection's own floating-point floor.
 _CENTROID_QUADRATURE_ORDER = 20
-
-
-# Sub-zone orders for Cell.subcells, by their names in OGC's DGGRS
-# definition schema. Each maps a position in the order to the (row, col)
-# of a subcell in the n x n block of an ancestor's subcells, n = N**depth,
-# rows counted from the top and columns from the left, and back.
-SubZoneOrder = Literal["mortonCurve", "scanline", "hilbertCurve", "spiralFromCenter"]
-SUB_ZONE_ORDERS: tuple[str, ...] = get_args(SubZoneOrder)
-
-
-def _digits_to_rc(N: int, digits: Sequence[int]) -> tuple[int, int]:
-    row = col = 0
-    for d in digits:
-        row, col = row * N + d // N, col * N + d % N
-    return row, col
-
-
-def _rc_to_digits(N: int, depth: int, row: int, col: int) -> list[int]:
-    weights = [N ** (depth - 1 - i) for i in range(depth)]
-    return [(row // w % N) * N + col // w % N for w in weights]
-
-
-def _morton_at(N: int, depth: int, i: int) -> tuple[int, int]:
-    digits = [i // (N * N) ** (depth - 1 - k) % (N * N) for k in range(depth)]
-    return _digits_to_rc(N, digits)
-
-
-def _morton_index(N: int, depth: int, row: int, col: int) -> int:
-    index = 0
-    for d in _rc_to_digits(N, depth, row, col):
-        index = index * N * N + d
-    return index
-
-
-def _scanline_at(N: int, depth: int, i: int) -> tuple[int, int]:
-    return divmod(i, N**depth)
-
-
-def _scanline_index(N: int, depth: int, row: int, col: int) -> int:
-    return row * N**depth + col
-
-
-def _hilbert_at(N: int, depth: int, i: int) -> tuple[int, int]:
-    # The iterative d-to-xy conversion, with x the column and y the row, so
-    # the curve runs from the top left corner to the top right.
-    n = N**depth
-    x = y = 0
-    s = 1
-    while s < n:
-        rx = 1 & (i // 2)
-        ry = 1 & (i ^ rx)
-        if ry == 0:
-            if rx == 1:
-                x, y = s - 1 - x, s - 1 - y
-            x, y = y, x
-        x += s * rx
-        y += s * ry
-        i //= 4
-        s *= 2
-    return y, x
-
-
-def _hilbert_index(N: int, depth: int, row: int, col: int) -> int:
-    n = N**depth
-    x, y, index = col, row, 0
-    s = n // 2
-    while s > 0:
-        rx = 1 if x & s else 0
-        ry = 1 if y & s else 0
-        index += s * s * ((3 * rx) ^ ry)
-        if ry == 0:
-            if rx == 1:
-                x, y = n - 1 - x, n - 1 - y
-            x, y = y, x
-        s //= 2
-    return index
-
-
-# The spiral starts at the centre and goes right 1, down 1, left 2, up 2,
-# right 3, ..., so ring k (cells k steps from the centre) starts at index
-# (2k - 1)**2, k - 1 rows above the centre on its right side, and runs down
-# its right side, left along its bottom, up its left side and right along
-# its top, 2k cells each.
-def _spiral_at(N: int, depth: int, i: int) -> tuple[int, int]:
-    m = N**depth // 2
-    if i == 0:
-        return m, m
-    k = (isqrt(i) + 1) // 2
-    side, t = divmod(i - (2 * k - 1) ** 2, 2 * k)
-    dr, dc = [
-        (t - (k - 1), k),
-        (k, k - 1 - t),
-        (k - 1 - t, -k),
-        (-k, t - (k - 1)),
-    ][side]
-    return m + dr, m + dc
-
-
-def _spiral_index(N: int, depth: int, row: int, col: int) -> int:
-    m = N**depth // 2
-    dr, dc = row - m, col - m
-    k = max(abs(dr), abs(dc))
-    if k == 0:
-        return 0
-    if dc == k and dr > -k:
-        offset = dr + k - 1
-    elif dr == k:
-        offset = 2 * k + k - 1 - dc
-    elif dc == -k:
-        offset = 4 * k + k - 1 - dr
-    else:
-        offset = 6 * k + dc + k - 1
-    return (2 * k - 1) ** 2 + offset
-
-
-_SUB_ZONE_AT = {
-    "mortonCurve": _morton_at,
-    "scanline": _scanline_at,
-    "hilbertCurve": _hilbert_at,
-    "spiralFromCenter": _spiral_at,
-}
-_SUB_ZONE_INDEX = {
-    "mortonCurve": _morton_index,
-    "scanline": _scanline_index,
-    "hilbertCurve": _hilbert_index,
-    "spiralFromCenter": _spiral_index,
-}
-
-
-def _check_sub_zone_order(order: str, N: int) -> None:
-    if order not in SUB_ZONE_ORDERS:
-        raise ValueError(
-            f"order must be one of {', '.join(SUB_ZONE_ORDERS)}, not {order!r}"
-        )
-    if order == "hilbertCurve" and N & (N - 1):
-        raise ValueError(f"hilbertCurve needs N_side a power of 2, not {N}")
-    if order == "spiralFromCenter" and N % 2 == 0:
-        raise ValueError(f"spiralFromCenter needs odd N_side, not {N}")
-
-
-# The uint64 zone identifier of OGC's 2D tile matrix set form: level in the
-# top 5 bits, row in the next 29, column in the low 30.
-_UINT64_LEVEL_SHIFT = 59
-_UINT64_ROW_SHIFT = 30
-_UINT64_ROW_LIMIT = 1 << 29
-_UINT64_COL_LIMIT = 1 << 30
-
-
-def _face_blocks(north_square: int, south_square: int) -> list[tuple[int, int]]:
-    """(row, col) of each resolution 0 cell, in ``CELLS0`` order, in the 3 x 4
-    frame of the planar grid."""
-    return [(0, north_square), (1, 0), (1, 1), (1, 2), (1, 3), (2, south_square)]
 
 
 @cache
@@ -952,14 +810,7 @@ class Cell:
             (2, 13, 13)
 
         """
-        N = self.N_side
-        L = len(self.suid) - 1
-        p = N**L
-        block_row, block_col = _face_blocks(
-            self.rdggs.north_square, self.rdggs.south_square
-        )[CELLS0.index(str(self.suid[0]))]
-        row, col = _digits_to_rc(N, [int(d) for d in self.suid[1:]])
-        return L, block_row * p + row, block_col * p + col
+        return _level_row_col(self.rdggs, self.suid)
 
     @property
     def uint64(self) -> int:
@@ -982,9 +833,9 @@ class Cell:
 
         """
         L, row, col = self.level_row_col
-        if row >= _UINT64_ROW_LIMIT or col >= _UINT64_COL_LIMIT:
+        if not _fits_uint64(row, col):
             raise ValueError(f"{self} is too fine for a uint64 identifier")
-        return L << _UINT64_LEVEL_SHIFT | row << _UINT64_ROW_SHIFT | col
+        return _pack_uint64(L, row, col)
 
     @property
     def level_row_col_text(self) -> str:
@@ -1001,7 +852,7 @@ class Cell:
             '6-438-B1F'
 
         """
-        return "-".join(f"{v:X}" for v in self.level_row_col)
+        return _level_row_col_text(*self.level_row_col)
 
     def ul_vertex(self, plane: bool = True) -> tuple[float, float]:
         """

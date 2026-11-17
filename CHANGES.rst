@@ -63,6 +63,14 @@ which the registered DGGRS does not declare as an identifier, and
 ``level_row_col_text_from_indices`` and
 ``indices_from_level_row_col_text`` convert arrays of it (issue #190).
 
+Maintenance, with no change in behaviour: the identifier code -- index
+strings, sub-zone orders, positions and the uint64 and level-row-col
+forms -- moved from ``dggs`` and ``cell`` into a new ``identifiers``
+module, since it depends only on a grid's layout and not on its ellipsoid
+or projection. The ``RHEALPixDGGS`` and ``Cell`` methods are unchanged and
+call into it, and ``CELLS0`` is still importable from ``cell``
+(issue #192).
+
 0.11.0
 ^^^^^^
 ``RHEALPixDGGS.cells_from_line`` and ``rhp_wrappers.linetrace`` take a
