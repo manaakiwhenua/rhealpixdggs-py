@@ -204,7 +204,7 @@ class SCENZGridRHEALPixDGGSTestCase(unittest.TestCase):
             standard = RHEALPixDGGS(Ellipsoid(radians=radians))
             get = rdggs.cell_from_point(1, (lon_0, lat), plane=False)
             expect = standard.cell_from_point(1, (0, lat), plane=False)
-            self.assertEqual(get, expect)
+            self.assertEqual(get.suid, expect.suid)
             # And the rotated grid's planar origin is (lon_0, 0).
             get = rdggs.cell_from_point(1, (lon_0, 0), plane=False)
             expect = rdggs.cell_from_point(1, (0, 0))
@@ -1636,3 +1636,35 @@ class OGCPresetTestCase(unittest.TestCase):
         ):
             with self.subTest(uri=uri), self.assertRaises(ValueError):
                 RHEALPixDGGS.from_uri(uri)
+
+
+class GridEqualityTestCase(unittest.TestCase):
+    # Grids differing only in lon_0 or angular unit used to compare equal.
+    def setUp(self):
+        self.standard = WGS84_003
+        self.rotated = RHEALPixDGGS(Ellipsoid(lon_0=50))
+
+    def test_grids(self):
+        self.assertEqual(WGS84_003, RHEALPixDGGS(Ellipsoid()))
+        self.assertEqual(self.rotated, RHEALPixDGGS(Ellipsoid(lon_0=410)))
+        self.assertNotEqual(self.standard, self.rotated)
+        self.assertNotEqual(WGS84_003, WGS84_003_RADIANS)
+        self.assertNotEqual(WGS84_003, WGS84_003_OGC)
+        self.assertNotEqual(WGS84_003_OGC, WGS84_003_OGC_RADIANS)
+
+    def test_cells(self):
+        self.assertNotEqual(self.standard.cell(["N"]), self.rotated.cell(["N"]))
+        self.assertNotEqual(WGS84_003.cell(["N"]), WGS84_003_RADIANS.cell(["N"]))
+        self.assertEqual(
+            self.rotated.cell(["N"]), RHEALPixDGGS(Ellipsoid(lon_0=50)).cell(["N"])
+        )
+
+    def test_mixing_grids_raises(self):
+        from rhealpixdggs.zoneset import ZoneSet
+
+        with self.assertRaises(ValueError):
+            ZoneSet(self.standard, [self.rotated.cell(["N"])])
+        with self.assertRaises(ValueError):
+            ZoneSet(self.standard, ["N"]).union(ZoneSet(self.rotated, ["N"]))
+        with self.assertRaises(ValueError):
+            self.standard.cell(["N"]).intersects(self.rotated.cell(["N"]))

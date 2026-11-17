@@ -15,6 +15,8 @@ Keep adding tests!
 
 import unittest
 
+from numpy import deg2rad, pi
+
 import rhealpixdggs.ellipsoids as ell
 
 
@@ -30,6 +32,21 @@ class MyTestCase(unittest.TestCase):
                 p = E.random_point(lam_min, lam_max, phi_min, phi_max)
                 self.assertTrue(p[0] >= lam_min and p[0] < lam_max)
                 self.assertTrue(p[1] >= phi_min and p[0] < phi_max)
+
+    def test_equality(self):
+        E = ell.Ellipsoid
+        self.assertEqual(E(lon_0=50), E(lon_0=50))
+        self.assertEqual(E(lon_0=50), E(lon_0=410))
+        self.assertEqual(E(lon_0=-180), E(lon_0=180))
+        self.assertEqual(
+            E(lon_0=0.1, radians=True), E(lon_0=0.1 + 2 * pi, radians=True)
+        )
+        self.assertNotEqual(E(lon_0=50), E(lon_0=0))
+        self.assertNotEqual(E(lon_0=50), E(lon_0=50 + 1e-6))
+        # The angular unit is part of identity, as for a PROJ CRS.
+        self.assertNotEqual(E(), E(radians=True))
+        self.assertNotEqual(E(lon_0=50), E(lon_0=deg2rad(50), radians=True))
+        self.assertNotEqual(E(), E(f=1 / 298.257222101))
 
     def test_rejects_nonzero_lat_0(self):
         # Recentring in latitude is not a rotation of the ellipsoid and

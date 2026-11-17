@@ -19,6 +19,7 @@ Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordin
 #                  http://www.gnu.org/licenses/
 # *****************************************************************************
 
+from math import isclose, remainder
 from random import uniform
 
 import pyproj
@@ -138,7 +139,17 @@ class Ellipsoid:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Ellipsoid):
             return NotImplemented
-        return self.a == other.a and self.b == other.b
+        # As PROJ compares CRSs: the angular unit is part of identity, and
+        # central meridians are compared as angles, a full turn apart equal.
+        turn = 2 * self.pi()
+        return (
+            self.a == other.a
+            and self.b == other.b
+            and self.radians == other.radians
+            and isclose(
+                remainder(self.lon_0 - other.lon_0, turn), 0, abs_tol=turn * 1e-12
+            )
+        )
 
     def __ne__(self, other: object) -> bool:
         """
