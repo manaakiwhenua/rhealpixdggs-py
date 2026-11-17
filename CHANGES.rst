@@ -1,3 +1,11 @@
+0.12.1
+^^^^^^
+The identifiers page of the documentation listed nothing but the module's
+summary. It now describes each way of naming a cell (index string, suid,
+position, uint64, level-row-col text) with links to the conversions
+between them, single and batch, and the sub-zone orders, and lists the
+module's public constants (issue #194).
+
 0.12.0
 ^^^^^^
 Added the presets ``WGS84_003_OGC`` and ``WGS84_003_OGC_RADIANS``, the
