@@ -158,7 +158,6 @@ destroy the equal-area property.) ::
 #                  http: //www.gnu.org/licenses/
 # *****************************************************************************
 import operator
-import re
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import pairwise, product
 from math import asin, copysign, degrees, floor, fsum, isclose, pi
@@ -193,17 +192,9 @@ import rhealpixdggs.pj_rhealpix as pjr
 import rhealpixdggs.projection_wrapper as pw
 from rhealpixdggs.cell import (
     _CENTROID_QUADRATURE_ORDER,
-    _UINT64_COL_LIMIT,
-    _UINT64_LEVEL_SHIFT,
-    _UINT64_ROW_LIMIT,
-    _UINT64_ROW_SHIFT,
-    CELLS0,
     Cell,
-    SubZoneOrder,
-    _face_blocks,
     _gauss_legendre_unit,
     _geod,
-    _rc_to_digits,
 )
 from rhealpixdggs.ellipsoids import (
     UNIT_SPHERE,
@@ -213,6 +204,25 @@ from rhealpixdggs.ellipsoids import (
     WGS84_ELLIPSOID_RADIANS,
     WGS84_F,
     Ellipsoid,
+)
+from rhealpixdggs.identifiers import (
+    CELLS0,
+    INDEX_STRING_N_SIDES,
+    SubZoneOrder,
+    _format_index,
+    _format_indices,
+    _index_width,
+    _indices_from_level_row_col,
+    _indices_from_level_row_col_text,
+    _level_row_col_from_indices,
+    _level_row_col_from_uint64,
+    _level_row_col_text_from_indices,
+    _parse_index,
+    _parse_indices,
+    _parse_level_row_col_text,
+    _suid_from_level_row_col,
+    _uint64_from_level_row_col,
+    _unpack_uint64,
 )
 from rhealpixdggs.utils import (
     FloatArray,
@@ -238,9 +248,6 @@ _REGISTERED_GRIDS = {
     _OGC_RHEALPIX_URI: _RegisteredGrid(WGS84_A, WGS84_F, 50, 3, 0, 0, "scanline"),
 }
 
-# Cell.level_row_col_text: level, row and column in hexadecimal.
-_LEVEL_ROW_COL_TEXT = re.compile(r"([0-9A-Fa-f]+)-([0-9A-Fa-f]+)-([0-9A-Fa-f]+)")
-
 
 class RingTable(NamedTuple):
     """
@@ -265,43 +272,6 @@ class RingTable(NamedTuple):
     authalic_latitude: FloatArray
     first_longitude: FloatArray
     longitude_spacing: FloatArray
-
-
-INDEX_STRING_N_SIDES = (2, 3)
-
-
-def _index_width(N_side: int) -> int:
-    """
-    Characters per digit in the index strings of a grid with `N_side`.
-    Index strings, a face letter followed by one digit per resolution, are
-    defined for ``N_side`` 2 and 3 (issue #146); raise ValueError otherwise.
-    """
-    if N_side not in INDEX_STRING_N_SIDES:
-        raise ValueError(
-            f"index strings are defined for N_side 2 and 3, not N_side={N_side}; "
-            "address the cells of this grid by their suid tuples (issue #146)"
-        )
-    return 1
-
-
-def _parse_index(index: str, N_side: int) -> tuple[str | int, ...] | None:
-    """The suid for `index` in a grid with `N_side`; see ``RHEALPixDGGS.parse_index``."""
-    _index_width(N_side)
-    if not index or index[0] not in CELLS0:
-        return None
-    digits = index[1:]
-    if not all(d in "0123456789" for d in digits):
-        return None
-    values = [int(d) for d in digits]
-    if any(v >= N_side**2 for v in values):
-        return None
-    return (index[0], *values)
-
-
-def _format_index(suid: Sequence[str | int], N_side: int) -> str:
-    """The index string for `suid` in a grid with `N_side`; see ``RHEALPixDGGS.format_index``."""
-    _index_width(N_side)
-    return str(suid[0]) + "".join(str(d) for d in suid[1:])
 
 
 class _LineTrace(NamedTuple):
@@ -1328,14 +1298,7 @@ class RHEALPixDGGS:
         rows, all of resolution `resolution` (digit columns beyond it are
         ignored: ``_parse_planar_points`` always yields at least one).
         """
-        self._require_index_strings()
-        chars = np.empty((len(face), resolution + 1), dtype=np.uint32)
-        chars[:, 0] = np.array([ord(c) for c in CELLS0])[face]
-        # Column by column: a whole-array temporary would be int64 and, for
-        # millions of cells, the largest allocation of the caller.
-        for k in range(resolution):
-            chars[:, k + 1] = digits[:, k] + ord("0")
-        return chars.view(f"<U{resolution + 1}").ravel()
+        return _format_indices(face, digits, resolution, self.N_side)
 
     def cells_in_box(
         self,
@@ -2570,19 +2533,7 @@ class RHEALPixDGGS:
 
         """
         level, row, col = (operator.index(v) for v in (level, row, col))
-        if not 0 <= level <= self.max_resolution:
-            raise ValueError(
-                f"level must be from 0 to {self.max_resolution}, not {level}"
-            )
-        p = self.N_side**level
-        blocks = _face_blocks(self.north_square, self.south_square)
-        if not (0 <= row < 3 * p and 0 <= col < 4 * p) or (
-            (row // p, col // p) not in blocks
-        ):
-            raise ValueError(f"no level {level} cell at row {row}, column {col}")
-        face = CELLS0[blocks.index((row // p, col // p))]
-        digits = _rc_to_digits(self.N_side, level, row % p, col % p)
-        return Cell(self, [face, *digits])
+        return Cell(self, _suid_from_level_row_col(self, level, row, col))
 
     def cell_from_uint64(self, value: int) -> Cell:
         """
@@ -2596,14 +2547,7 @@ class RHEALPixDGGS:
             R553110
 
         """
-        value = operator.index(value)
-        if not 0 <= value < 1 << 64:
-            raise ValueError(f"{value} is not a uint64")
-        return self.cell_from_level_row_col(
-            value >> _UINT64_LEVEL_SHIFT,
-            value >> _UINT64_ROW_SHIFT & (_UINT64_ROW_LIMIT - 1),
-            value & (_UINT64_COL_LIMIT - 1),
-        )
+        return self.cell_from_level_row_col(*_unpack_uint64(operator.index(value)))
 
     def cell_from_level_row_col_text(self, text: str) -> Cell:
         """
@@ -2617,11 +2561,7 @@ class RHEALPixDGGS:
             R553110
 
         """
-        match = _LEVEL_ROW_COL_TEXT.fullmatch(text)
-        if match is None:
-            raise ValueError(f"{text!r} is not level-row-col in hexadecimal")
-        level, row, col = (int(v, 16) for v in match.groups())
-        return self.cell_from_level_row_col(level, row, col)
+        return self.cell_from_level_row_col(*_parse_level_row_col_text(text))
 
     def level_row_col_from_indices(
         self, indices: Iterable[str]
@@ -2639,21 +2579,7 @@ class RHEALPixDGGS:
             ([1, 2], [4, 13], [4, 13])
 
         """
-        strings = list(indices)
-        valid, face, digits, resolution = self._parse_indices(strings)
-        if not valid.all():
-            raise ValueError(f"invalid index {strings[int(np.argmin(valid))]!r}")
-        N = self.N_side
-        level = resolution.astype(np.int64)
-        row = np.zeros(len(strings), dtype=np.int64)
-        col = np.zeros(len(strings), dtype=np.int64)
-        for k in range(digits.shape[1]):
-            active = k < level
-            row = np.where(active, row * N + digits[:, k] // N, row)
-            col = np.where(active, col * N + digits[:, k] % N, col)
-        blocks = np.array(_face_blocks(self.north_square, self.south_square))
-        p = N**level
-        return level, row + blocks[face, 0] * p, col + blocks[face, 1] * p
+        return _level_row_col_from_indices(self, indices)
 
     def indices_from_level_row_col(
         self,
@@ -2673,8 +2599,7 @@ class RHEALPixDGGS:
             ['P4', 'P44']
 
         """
-        self._require_index_strings()
-        return self._format_level_row_col(*self._checked_level_row_col(level, row, col))
+        return _indices_from_level_row_col(self, level, row, col)
 
     def uint64_from_level_row_col(
         self,
@@ -2695,14 +2620,7 @@ class RHEALPixDGGS:
             [0, 3458765673461713695]
 
         """
-        _, level_, row_, col_ = self._checked_level_row_col(level, row, col)
-        if (row_ >= _UINT64_ROW_LIMIT).any() or (col_ >= _UINT64_COL_LIMIT).any():
-            raise ValueError("cells too fine for a uint64 identifier")
-        return (
-            level_.astype(np.uint64) << np.uint64(_UINT64_LEVEL_SHIFT)
-            | row_.astype(np.uint64) << np.uint64(_UINT64_ROW_SHIFT)
-            | col_.astype(np.uint64)
-        )
+        return _uint64_from_level_row_col(self, level, row, col)
 
     def level_row_col_from_uint64(
         self, values: Iterable[int] | np.ndarray
@@ -2723,20 +2641,7 @@ class RHEALPixDGGS:
             ([0, 6], [0, 1080], [0, 2847])
 
         """
-        z = np.asarray(values)
-        if z.size and (z.dtype.kind not in "iu" or (z < 0).any()):
-            raise ValueError("values must be non-negative integers")
-        z = z.astype(np.uint64).ravel()
-        level = (z >> np.uint64(_UINT64_LEVEL_SHIFT)).astype(np.int64)
-        row = z >> np.uint64(_UINT64_ROW_SHIFT) & np.uint64(_UINT64_ROW_LIMIT - 1)
-        col = z & np.uint64(_UINT64_COL_LIMIT - 1)
-        row, col = row.astype(np.int64), col.astype(np.int64)
-        face = self._face_of_level_row_col(level, row, col)
-        if (face < 0).any():
-            raise ValueError(
-                f"{int(z[np.argmax(face < 0)])} names no cell of this grid"
-            )
-        return level, row, col
+        return _level_row_col_from_uint64(self, values)
 
     def level_row_col_text_from_indices(self, indices: Iterable[str]) -> list[str]:
         """
@@ -2751,11 +2656,7 @@ class RHEALPixDGGS:
             ['0-0-0', '6-438-B1F']
 
         """
-        level, row, col = self.level_row_col_from_indices(indices)
-        return [
-            f"{L:X}-{r:X}-{c:X}"
-            for L, r, c in zip(level.tolist(), row.tolist(), col.tolist(), strict=True)
-        ]
+        return _level_row_col_text_from_indices(self, indices)
 
     def indices_from_level_row_col_text(self, texts: Iterable[str]) -> list[str]:
         """
@@ -2770,24 +2671,7 @@ class RHEALPixDGGS:
             ['N', 'R553110']
 
         """
-        self._require_index_strings()
-        strings = list(texts)
-        positions = np.zeros((len(strings), 3), dtype=np.int64)
-        for k, text in enumerate(strings):
-            match = (
-                _LEVEL_ROW_COL_TEXT.fullmatch(text) if isinstance(text, str) else None
-            )
-            values = [int(v, 16) for v in match.groups()] if match else []
-            # Anything this large names no cell, and would overflow int64.
-            if not values or max(values) >= 1 << 62:
-                raise ValueError(f"{text!r} is not the level-row-col of a cell")
-            positions[k] = values
-        level, row, col = positions.T
-        face = self._face_of_level_row_col(level, row, col)
-        if (face < 0).any():
-            text = strings[int(np.argmax(face < 0))]
-            raise ValueError(f"{text!r} names no cell of this grid")
-        return self._format_level_row_col(face, level, row, col)
+        return _indices_from_level_row_col_text(self, texts)
 
     def uint64_from_indices(self, indices: Iterable[str]) -> np.ndarray:
         """
@@ -2818,59 +2702,6 @@ class RHEALPixDGGS:
         self._require_index_strings()
         return self.indices_from_level_row_col(*self.level_row_col_from_uint64(values))
 
-    def _checked_level_row_col(
-        self,
-        level: Iterable[int] | np.ndarray,
-        row: Iterable[int] | np.ndarray,
-        col: Iterable[int] | np.ndarray,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Face codes and flat int64 level, row and column arrays of
-        positions broadcast together; raise ValueError if any is not
-        integral or names no cell of this grid."""
-        arrays = [np.asarray(a) for a in (level, row, col)]
-        if any(a.size and a.dtype.kind not in "iu" for a in arrays):
-            raise ValueError("level, row and column must be integers")
-        level_, row_, col_ = (
-            a.astype(np.int64).ravel() for a in np.broadcast_arrays(*arrays)
-        )
-        face = self._face_of_level_row_col(level_, row_, col_)
-        if (face < 0).any():
-            k = int(np.argmax(face < 0))
-            raise ValueError(
-                f"no level {level_[k]} cell at row {row_[k]}, column {col_[k]}"
-            )
-        return face, level_, row_, col_
-
-    def _face_of_level_row_col(
-        self, level: np.ndarray, row: np.ndarray, col: np.ndarray
-    ) -> np.ndarray:
-        """The face code (position in ``CELLS0``) of each position, -1 where
-        it names no cell: a level outside 0 to ``max_resolution``, or a row
-        and column outside the frame or in one of its empty blocks."""
-        ok = (level >= 0) & (level <= self.max_resolution) & (row >= 0) & (col >= 0)
-        p = self.N_side ** np.where(ok, level, 0)
-        ok &= (row < 3 * p) & (col < 4 * p)
-        face_of_block = np.full((3, 4), -1)
-        for k, (r, c) in enumerate(_face_blocks(self.north_square, self.south_square)):
-            face_of_block[r, c] = k
-        block = face_of_block[np.where(ok, row // p, 0), np.where(ok, col // p, 0)]
-        return np.where(ok, block, -1)
-
-    def _format_level_row_col(
-        self, face: np.ndarray, level: np.ndarray, row: np.ndarray, col: np.ndarray
-    ) -> list[str]:
-        """The index strings of valid positions with face codes `face`."""
-        N = self.N_side
-        result = np.empty(len(face), dtype=object)
-        for L in np.unique(level):
-            group = level == L
-            p = N**L
-            weights = N ** np.arange(L - 1, -1, -1, dtype=np.int64)
-            r = (row[group] % p)[:, None] // weights % N
-            c = (col[group] % p)[:, None] // weights % N
-            result[group] = self._format_indices(face[group], r * N + c, int(L))
-        return result.tolist()
-
     def _parse_indices(
         self, indices: Iterable[str]
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -2883,28 +2714,7 @@ class RHEALPixDGGS:
         ``N_side ** 2`` -- get resolution 0, base cell code -1 and zero digits.
         Raise ValueError if the grid has no index strings.
         """
-        self._require_index_strings()
-        strings = np.array(list(indices), dtype=str)
-        count = len(strings)
-        chars = max(strings.dtype.itemsize // 4, 2)
-        codes = np.zeros((count, chars), dtype=np.uint32)
-        if count:
-            codes[:, : strings.dtype.itemsize // 4] = strings.view(np.uint32).reshape(
-                count, -1
-            )
-        length = (codes != 0).sum(axis=1)
-        face = np.full(count, -1, dtype=np.int64)
-        for k, letter in enumerate(CELLS0):
-            face[codes[:, 0] == ord(letter)] = k
-        digits = codes[:, 1:].astype(np.int64) - ord("0")
-        levels = np.arange(1, chars)
-        active = levels[None, :] < length[:, None]
-        digit_ok = ~active | ((digits >= 0) & (digits < self.N_side**2))
-        valid = (length > 0) & (face >= 0) & digit_ok.all(axis=1)
-        digits = np.where(active & valid[:, None], digits, 0)
-        resolution = np.where(valid, length - 1, 0)
-        face = np.where(valid, face, -1)
-        return valid, face, digits, resolution
+        return _parse_indices(indices, self.N_side)
 
     def _index_geometry(
         self, face: np.ndarray, digits: np.ndarray, resolution: np.ndarray

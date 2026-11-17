@@ -6,13 +6,8 @@ import numpy as np
 from shapely.geometry import MultiPolygon, Point, Polygon
 
 from rhealpixdggs.cell import Cell
-from rhealpixdggs.dggs import (
-    WGS84_003,
-    RHEALPixDGGS,
-    _format_index,
-    _index_width,
-    _parse_index,
-)
+from rhealpixdggs.dggs import WGS84_003, RHEALPixDGGS
+from rhealpixdggs.identifiers import _format_index, _index_width, _parse_index
 
 
 def get_finest_containing_cell(
