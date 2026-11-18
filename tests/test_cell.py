@@ -426,6 +426,14 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             for i in range(9):
                 self.assertTrue(s[i] == t[i])
 
+    def test_subcells_beyond_max_resolution(self):
+        rdggs = WGS84_123
+        deepest = Cell(rdggs, [N] + [0] * rdggs.max_resolution)
+        with self.assertRaisesRegex(ValueError, "max_resolution"):
+            deepest.subcells()
+        with self.assertRaisesRegex(ValueError, "max_resolution"):
+            Cell(rdggs, (N,)).subcells(rdggs.max_resolution + 1)
+
     def test_ul_vertex(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             # Should work for resolution 0 cells.
