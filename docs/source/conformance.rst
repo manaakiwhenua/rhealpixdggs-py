@@ -77,18 +77,15 @@ Common Spatio-temporal Classes
      - As A.1: currently no temporal dimension, and outside the
        targeted class.
    * - A.5 RS using zonal identifiers
-     - A reference system whose zones carry unique identifiers, a
-       parent/child hierarchy, an extent and a representative
-       position.
-     - Partial
-     - The identifiers are specified in `Zonal identifiers`_ below.
-       :func:`~rhealpixdggs.rhp_wrappers.rhp_to_parent` and
-       :meth:`~rhealpixdggs.cell.Cell.subcells` give the hierarchy,
-       :meth:`~rhealpixdggs.cell.Cell.boundary` the extent and
-       :meth:`~rhealpixdggs.cell.Cell.centroid` the representative
-       position (A.27; the :meth:`~rhealpixdggs.cell.Cell.nucleus` is
-       the indexing point, interior by construction). The mapping onto
-       the model's classes is to be written (v1.0).
+     - A reference system made of zones and zone classes: each zone
+       has an identifier, an extent, a representative position and
+       parent/child links, and each zone class a refinement level.
+     - Met
+     - The reference system is an
+       :class:`~rhealpixdggs.dggs.RHEALPixDGGS`, a zone a
+       :class:`~rhealpixdggs.cell.Cell` and a zone class a resolution.
+       `Reference system using zonal identifiers`_ below maps them
+       onto the model's classes.
 
 DGGS Core — reference system
 ----------------------------
@@ -447,6 +444,53 @@ system itself and not by an independent authority.
    * - Constraint: dimension > 0
      - A cell has topological dimension 2 (`Zone geometry and
        topology`_).
+
+Reference system using zonal identifiers
+----------------------------------------
+
+Requirement 5 asks that the reference system conform to the classes
+of clause 7.3.3 (Tables 28–39). They describe four things: the
+reference system, the identifier, the zone and the zone class. Each
+comes as a primitive, which is spatial or temporal, and as a compound
+or complex of one spatial and one temporal primitive. rHEALPixDGGS
+instantiates the spatial primitives.
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - Model class
+     - In rHEALPixDGGS
+   * - RSUsingZonalIdentifiers, RSUsingZonalIdentifiersPrimitive
+     - An :class:`~rhealpixdggs.dggs.RHEALPixDGGS` instance, such as
+       ``WGS84_003``. It comprises its zone classes, the resolutions 0
+       to ``max_resolution``, and its zones, every cell of every
+       resolution.
+   * - ZonalIdentifier, ZonalIdentifierPrimitive
+     - The index string of a cell, a geographic identifier specified
+       in `Zonal identifiers`_. The 64-bit integer
+       :attr:`~rhealpixdggs.cell.Cell.uint64` is a second encoding of
+       the same identifier.
+   * - Zone, ZonePrimitive
+     - :class:`~rhealpixdggs.cell.Cell`, which is the LocationS of
+       `Spatial location`_. Its ``identifier`` is ``str(cell)``, its
+       ``extent`` :meth:`~rhealpixdggs.cell.Cell.boundary`, its
+       ``representativePosition``
+       :meth:`~rhealpixdggs.cell.Cell.centroid`, and its ``parentOf``
+       and ``childOf`` links :meth:`~rhealpixdggs.cell.Cell.subcells`
+       and :meth:`~rhealpixdggs.cell.Cell.parent`.
+   * - ZoneClass, ZoneClassPrimitive
+     - A resolution. Its ``refinementLevel`` is the integer itself,
+       which every cell carries as ``Cell.resolution``; its zones are
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.grid`; the classes it is
+       child of and parent of are the resolutions one less and one
+       more. Resolution 0 has no class above it and
+       ``max_resolution`` none below.
+   * - RSUsingZonalIdentifiersCompound, ZonalIdentifierComplex,
+       ZoneCompound, ZoneClassComplex
+     - Not instantiated. Each pairs a spatial primitive with a
+       temporal one, and rHEALPixDGGS currently has no temporal
+       dimension.
 
 Zonal identifiers
 -----------------
