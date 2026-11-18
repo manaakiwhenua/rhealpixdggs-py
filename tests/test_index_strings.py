@@ -142,6 +142,16 @@ class IndexStringsTestCase(unittest.TestCase):
             "+proj=rhealpix +lon_0=0 +ellps=WGS84 +north_square=1 +south_square=2",
         )
         self.assertIn("(N, 10, 15)", d["zirs"]["textZIRS"]["description"])
+        grs80 = RHEALPixDGGS(ellipsoid=Ellipsoid(a=6378137, f=1 / 298.257222101))
+        d = grs80.to_dggrs_definition()
+        self.assertEqual(
+            d["dggh"]["definition"]["projString"],
+            "+proj=rhealpix +lon_0=0 +a=6378137.0 +rf=298.257222101",
+        )
+        self.assertEqual(
+            d["dggh"]["parameters"]["ellipsoid"], "+a=6378137.0 +rf=298.257222101"
+        )
+        self.assertIn("the ellipsoid +a=6378137.0 +rf=298.257222101", d["description"])
         radians = RHEALPixDGGS(
             ellipsoid=Ellipsoid(R=6371000, lon_0=np.pi / 2, radians=True)
         )
