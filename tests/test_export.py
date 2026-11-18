@@ -317,9 +317,12 @@ class GMLTestCase(unittest.TestCase):
             )
 
     def test_geometry_matches_geojson(self):
-        cells = ["N", "P0", "N46", "S8", "N4", "O"]
+        # R straddles the antimeridian on the rotated grid.
+        cells = ["N", "P0", "N46", "S8", "N4", "O", "R"]
         _, members = zones(export.to_gml(cells, ROTATED, n=4, codespace="x"))
         features = export.to_geojson(cells, ROTATED, n=4)["features"]
+        types = {feature["geometry"]["type"] for feature in features}
+        self.assertEqual(types, {"Polygon", "MultiPolygon"})
         for zone, feature in zip(members, features, strict=True):
             geometry = zone.find(f"{RHP}geometry")[0]
             if feature["geometry"]["type"] == "Polygon":

@@ -24,9 +24,10 @@ jobs:
       # resolution against pyproject.toml), rather than from the lock file:
       # this is what verifies the declared dependency bounds and each
       # matrix Python version actually work. The harmonics extra brings
-      # ducc0, without which the harmonics tests and doctests are skipped.
+      # ducc0, without which the harmonics tests and doctests are skipped;
+      # xmlschema lets the GML export be validated against its schema.
       - name: Install package
-        run: python -m pip install ".[harmonics]"
+        run: python -m pip install ".[harmonics]" xmlschema
 
       - name: Unit tests
         if: matrix.python-version != '3.12'
