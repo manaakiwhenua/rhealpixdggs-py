@@ -2292,7 +2292,7 @@ class RHEALPixDGGS:
                 for (ra, va), (rb, vb) in pairwise(cuts):
                     for edge in lattice_lines_between(va, vb, anchor):
                         fa, fb = va - edge, vb - edge
-                        if fa == 0:
+                        if fa == 0:  # pragma: no cover - exact hit at a run start
                             crossings.add(ra)
                         elif fb == 0:  # pragma: no cover - exact hit at a piece end
                             crossings.add(rb)

@@ -42,6 +42,8 @@ class MyTestCase(unittest.TestCase):
             self.assertEqual(
                 E.random_point(rng=Random(9)), E.random_point(rng=Random(9))
             )
+            lam, phi = E.random_point()
+            self.assertTrue(-180 <= lam < 180 and -89.5 <= phi <= 89.5)
         lam, phi = ell.WGS84_ELLIPSOID_RADIANS.random_point(rng=Random(9))
         self.assertTrue(-pi <= lam < pi)
         self.assertTrue(abs(phi) <= pi / 2 - pi / 360)

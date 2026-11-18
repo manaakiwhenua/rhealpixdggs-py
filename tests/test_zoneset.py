@@ -328,3 +328,5 @@ class ZoneSetProtocolTestCase(unittest.TestCase):
                 ZoneSet(WGS84_003, ["P4"]).child(levels=levels)
             with self.assertRaises(ValueError):
                 ZoneSet(WGS84_003, ["P4"]).parent(levels=levels)
+            with self.assertRaises(ValueError):
+                ZoneSet(WGS84_003, ["P4"]).sibling(levels=levels)

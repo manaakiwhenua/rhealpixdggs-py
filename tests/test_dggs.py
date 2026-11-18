@@ -1818,6 +1818,8 @@ class CubeFoldTestCase(unittest.TestCase):
 class RandomSamplingTestCase(unittest.TestCase):
     def test_random_point_is_seedable_and_lands_in_the_grid(self):
         for plane in (True, False):
+            unseeded = WGS84_003.random_point(plane=plane)
+            self.assertIsNotNone(WGS84_003.cell_from_point(3, unseeded, plane=plane))
             p = WGS84_003.random_point(plane=plane, rng=Random(7))
             self.assertEqual(p, WGS84_003.random_point(plane=plane, rng=Random(7)))
             self.assertNotEqual(p, WGS84_003.random_point(plane=plane, rng=Random(8)))
@@ -1838,6 +1840,9 @@ class RegionEdgeCasesTestCase(unittest.TestCase):
         self.assertNotEqual(WGS84_003, 3)
         self.assertFalse(WGS84_003 == 3)
         self.assertIs(WGS84_003.__eq__(3), NotImplemented)
+
+    def test_rings_of_only_invalid_indices(self):
+        self.assertEqual(WGS84_003.rings(["bad", "x"]).tolist(), [-1, -1])
 
     def test_reversed_bounds_give_nothing(self):
         g = WGS84_003
