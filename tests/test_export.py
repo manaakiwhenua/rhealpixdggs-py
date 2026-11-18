@@ -6,6 +6,8 @@ import csv
 import io
 import json
 import unittest
+import xml.etree.ElementTree as ET
+from importlib import resources
 
 import numpy as np
 import shapely
@@ -258,3 +260,211 @@ class ExportTestCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+GML = "{http://www.opengis.net/gml/3.2}"
+RHP = f"{{{export.GML_NAMESPACE}}}"
+
+
+def zones(text):
+    root = ET.fromstring(text)
+    return root, root.findall(f"{RHP}member/{RHP}Zone")
+
+
+class GMLTestCase(unittest.TestCase):
+    def test_document_structure(self):
+        cells = ["N", "P0", "N46", "S8"]
+        root, members = zones(
+            export.to_gml(cells, ROTATED, codespace="https://example.org/g")
+        )
+        self.assertEqual(root.tag, f"{RHP}ZoneCollection")
+        self.assertEqual(root.get(f"{GML}id"), "zones")
+        self.assertEqual(
+            root.get("{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"),
+            f"{export.GML_NAMESPACE} {export.GML_SCHEMA_LOCATION}",
+        )
+        self.assertEqual(root.find(f"{RHP}dggrs").text, "https://example.org/g")
+        self.assertEqual([z.get(f"{GML}id") for z in members], cells)
+        table = export.cell_table(cells, ROTATED)
+        for k, zone in enumerate(members):
+            identifier = zone.find(f"{GML}identifier")
+            self.assertEqual(
+                (identifier.text, identifier.get("codeSpace")),
+                (cells[k], "https://example.org/g"),
+            )
+            self.assertEqual(
+                zone.find(f"{RHP}resolution").text, str(table.resolution[k])
+            )
+            self.assertEqual(zone.find(f"{RHP}shape").text, table.shape[k])
+            area = zone.find(f"{RHP}area")
+            self.assertEqual((float(area.text), area.get("uom")), (table.area[k], "m2"))
+            self.assertEqual(
+                [b.text for b in zone.findall(f"{RHP}boundaryType")],
+                list(export.boundary_types(cells[k], ROTATED)),
+            )
+            # GML writes EPSG:4326 latitude first.
+            pos = zone.find(f"{RHP}position/{GML}Point/{GML}pos")
+            self.assertEqual(
+                [float(v) for v in pos.text.split()],
+                [table.centroid[k, 1], table.centroid[k, 0]],
+            )
+            point = zone.find(f"{RHP}position/{GML}Point")
+            self.assertEqual(point.get("srsName"), "urn:ogc:def:crs:EPSG::4326")
+            nucleus = zone.find(f"{RHP}nucleus/{GML}Point/{GML}pos")
+            self.assertEqual(
+                [float(v) for v in nucleus.text.split()],
+                [table.nucleus[k, 1], table.nucleus[k, 0]],
+            )
+
+    def test_geometry_matches_geojson(self):
+        # R straddles the antimeridian on the rotated grid.
+        cells = ["N", "P0", "N46", "S8", "N4", "O", "R"]
+        _, members = zones(export.to_gml(cells, ROTATED, n=4, codespace="x"))
+        features = export.to_geojson(cells, ROTATED, n=4)["features"]
+        types = {feature["geometry"]["type"] for feature in features}
+        self.assertEqual(types, {"Polygon", "MultiPolygon"})
+        for zone, feature in zip(members, features, strict=True):
+            geometry = zone.find(f"{RHP}geometry")[0]
+            if feature["geometry"]["type"] == "Polygon":
+                self.assertEqual(geometry.tag, f"{GML}Polygon")
+                polygons = [geometry]
+            else:
+                self.assertEqual(geometry.tag, f"{GML}MultiSurface")
+                polygons = geometry.findall(f"{GML}surfaceMember/{GML}Polygon")
+            self.assertEqual(geometry.get("srsName"), "urn:ogc:def:crs:EPSG::4326")
+            self.assertEqual(geometry.get(f"{GML}id"), f"{feature['id']}.geometry")
+            rings = feature["geometry"]["coordinates"]
+            if feature["geometry"]["type"] == "Polygon":
+                rings = [rings]
+            for polygon, ring in zip(polygons, rings, strict=True):
+                values = [
+                    float(v)
+                    for v in polygon.find(
+                        f"{GML}exterior/{GML}LinearRing/{GML}posList"
+                    ).text.split()
+                ]
+                expected = [v for lon, lat in ring[0] for v in (lat, lon)]
+                self.assertEqual(values, expected)
+
+    def test_boundary_types_match_the_edges(self):
+        # Sample each planar edge and project it: a smallCircle keeps its
+        # latitude, a greatEllipse its longitude, a projectedLine neither.
+        for rdggs in (WGS84_003, WGS84_122, RHEALPixDGGS(N_side=4)):
+            for resolution in range(3):
+                for cell in rdggs.grid(resolution):
+                    types = export.boundary_types(cell, rdggs)
+                    (x0, x1), (y0, y1) = cell.xy_range()
+                    t = np.linspace(0.1, 0.9, 5)
+                    edges = [
+                        [(x0 + s * (x1 - x0), y1) for s in t],
+                        [(x1, y1 - s * (y1 - y0)) for s in t],
+                        [(x1 - s * (x1 - x0), y0) for s in t],
+                        [(x0, y0 + s * (y1 - y0)) for s in t],
+                    ]
+                    if len(types) == 1:
+                        self.assertEqual(cell.ellipsoidal_shape, "cap")
+                        edges = [[point for edge in edges for point in edge]]
+                    for kind, points in zip(types, edges, strict=True):
+                        ll = np.array(
+                            [rdggs.rhealpix(x, y, inverse=True) for x, y in points]
+                        )
+                        same_lat = np.ptp(ll[:, 1]) < 1e-9
+                        turns = (np.diff(ll[:, 0]) + 180) % 360 - 180
+                        same_lon = bool(np.all(np.abs(turns) < 1e-9))
+                        expected = {
+                            "smallCircle": same_lat,
+                            "greatEllipse": same_lon,
+                            "projectedLine": not same_lat and not same_lon,
+                        }[kind]
+                        self.assertTrue(expected, msg=f"{rdggs.N_side} {cell} {kind}")
+
+    def test_codespace_and_other_ellipsoids(self):
+        from rhealpixdggs.dggs import WGS84_003_OGC
+
+        _, members = zones(export.to_gml(["P0"], WGS84_003_OGC))
+        self.assertEqual(
+            members[0].find(f"{GML}identifier").get("codeSpace"), WGS84_003_OGC.uri
+        )
+        with self.assertRaises(ValueError):
+            export.to_gml(["P0"], WGS84_003)
+        with self.assertRaises(ValueError):
+            export.to_gml(["P0", "nope"], WGS84_003, codespace="x")
+        _, members = zones(
+            export.to_gml(["P0"], RHEALPixDGGS(N_side=2, uri="https://example.org/n2"))
+        )
+        self.assertEqual(
+            members[0].find(f"{GML}identifier").get("codeSpace"),
+            "https://example.org/n2",
+        )
+        # Not WGS84: geodetic coordinates, no srsName claimed.
+        sphere = RHEALPixDGGS(
+            ellipsoid=Ellipsoid(R=6371000), N_side=3, uri="https://example.org/s"
+        )
+        _, members = zones(export.to_gml(["P0"], sphere))
+        self.assertIsNone(members[0].find(f"{RHP}geometry/{GML}Polygon").get("srsName"))
+        # Radians grids are written in degrees, like the GeoJSON.
+        _, members = zones(export.to_gml(["P0"], WGS84_003_RADIANS, codespace="x"))
+        self.assertEqual(
+            members[0].find(f"{RHP}nucleus/{GML}Point/{GML}pos").text.split()[1],
+            repr(float(export.cell_table(["P0"], WGS84_003).nucleus[0, 0])),
+        )
+
+    def test_planar_document(self):
+        from rhealpixdggs.dggs import WGS84_003_OGC
+
+        cells = ["P0", "N46", "N", "S8"]
+        root, members = zones(export.to_gml(cells, WGS84_003_OGC, planar=True))
+        crs = root.find(f"{RHP}crs/{GML}ProjectedCRS")
+        self.assertEqual(crs.get(f"{GML}id"), "rhealpix")
+        values = [v.text for v in crs.iter(f"{GML}value")]
+        self.assertEqual(values, ["50", "0", "0"])
+        self.assertEqual(
+            crs.find(f"{GML}baseGeodeticCRS").get("{http://www.w3.org/1999/xlink}href"),
+            "urn:ogc:def:crs:EPSG::4326",
+        )
+        for index, zone in zip(cells, members, strict=True):
+            cell = WGS84_003_OGC.cell(WGS84_003_OGC.parse_index(index))
+            polygon = zone.find(f"{RHP}geometry/{GML}Polygon")
+            self.assertEqual(polygon.get("srsName"), "#rhealpix")
+            values = [
+                float(v)
+                for v in polygon.find(
+                    f"{GML}exterior/{GML}LinearRing/{GML}posList"
+                ).text.split()
+            ]
+            ring = list(zip(values[0::2], values[1::2], strict=True))
+            self.assertEqual(ring[0], ring[-1])
+            self.assertEqual(sorted(ring[:-1]), sorted(cell.vertices(plane=True)))
+            nucleus = zone.find(f"{RHP}nucleus/{GML}Point/{GML}pos").text.split()
+            self.assertEqual(
+                [float(v) for v in nucleus], list(cell.nucleus(plane=True))
+            )
+        with self.assertRaises(ValueError):
+            export.to_gml(
+                ["P0"], RHEALPixDGGS(ellipsoid=Ellipsoid(R=1), uri="x"), planar=True
+            )
+
+    def test_validates_against_the_schema(self):
+        # The schema imports GML 3.2.1 from schemas.opengis.net; skip when
+        # xmlschema or the network is missing.
+        try:
+            import xmlschema
+        except ImportError:
+            self.skipTest("xmlschema is not installed")
+        path = resources.files("rhealpixdggs") / "schemas" / "zone.xsd"
+        try:
+            schema = xmlschema.XMLSchema(str(path))
+        except Exception as error:  # noqa: BLE001 - any fetch failure
+            self.skipTest(f"GML schemas unavailable: {error}")
+        cells = ["N", "P0", "N46", "S8", "N4", "O", "N0"]
+        schema.validate(
+            export.to_gml(cells, ROTATED, n=3, codespace="https://example.org/g")
+        )
+        schema.validate(
+            export.to_gml(["N0", "S3"], WGS84_122, codespace="https://example.org/h")
+        )
+        schema.validate(
+            export.to_gml(
+                cells, ROTATED, codespace="https://example.org/g", planar=True
+            )
+        )

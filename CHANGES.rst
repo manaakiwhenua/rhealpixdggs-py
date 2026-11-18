@@ -30,6 +30,15 @@ publishes the definition with the coordinate-epoch statement for the
 dynamic WGS 84 datum and a worked example of the epoch's effect on
 zone assignment, closing OGC Topic 21 test A.7 (issue #100).
 
+Added ``export.to_gml``, cells as a GML 3.2 document under the
+application schema ``schemas/zone.xsd`` that ships with the package and
+is published with the documentation: each zone's identifier in the
+grid's codespace, the attributes of the GeoJSON export, the geometry in
+EPSG:4326, or with ``planar=True`` the exact square in the grid's own
+CRS, carried in the document, and the curve type of each edge from Topic
+21's ``EA_BoundaryType`` list, which ``export.boundary_types`` gives for
+any cell (issue #103).
+
 0.13.0
 ^^^^^^
 Added ``Cell.grid_distance``, the number of hops between two cells over

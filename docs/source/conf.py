@@ -165,6 +165,23 @@ html_theme = "furo"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
+
+def _copy_schemas(app, exception):
+    """Publish the package's XML schemas at <site>/schemas/, where
+    rhealpixdggs.export.GML_SCHEMA_LOCATION says they are."""
+    if exception is None and app.builder.name == "html":
+        import shutil
+
+        source = os.path.join(
+            os.path.dirname(__file__), "..", "..", "rhealpixdggs", "schemas"
+        )
+        shutil.copytree(source, os.path.join(app.outdir, "schemas"), dirs_exist_ok=True)
+
+
+def setup(app):
+    app.connect("build-finished", _copy_schemas)
+
+
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 # html_last_updated_fmt = '%b %d, %Y'

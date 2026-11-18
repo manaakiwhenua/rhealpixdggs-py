@@ -65,6 +65,7 @@ pytest = "^7.4.0"
 sphinx = "^7.2"
 furo = ">=2024.8"
 coverage = "^7.16.1"
+xmlschema = "^4.3.2"
 
 [tool.poetry.group.figures]
 optional = true

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+GML 3.2 application schema for the zones (cells) of an rHEALPix discrete
+global grid system, as rhealpixdggs.export.to_gml writes them. A Zone is
+a feature whose gml:identifier is the cell's index string in the codespace
+of its grid (the URI of the grid's DGGRS definition), with the attributes
+the package's GeoJSON and CSV exports carry and the curve types of its
+boundary from the EA_BoundaryType code list of OGC Topic 21 (OGC 20-040r3).
+-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+        xmlns:gml="http://www.opengis.net/gml/3.2"
+        xmlns:rhp="https://manaakiwhenua.github.io/rhealpixdggs-py/schemas/zone"
+        targetNamespace="https://manaakiwhenua.github.io/rhealpixdggs-py/schemas/zone"
+        elementFormDefault="qualified"
+        version="1.0.0">
+
+  <import namespace="http://www.opengis.net/gml/3.2"
+          schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd"/>
+
+  <element name="Zone" type="rhp:ZoneType" substitutionGroup="gml:AbstractFeature">
+    <annotation>
+      <documentation>A cell of an rHEALPix grid. Its gml:identifier is the
+      cell's index string; the codeSpace is the URI of the grid's DGGRS
+      definition, which fixes which cell the string names.</documentation>
+    </annotation>
+  </element>
+
+  <complexType name="ZoneType">
+    <complexContent>
+      <extension base="gml:AbstractFeatureType">
+        <sequence>
+          <element name="resolution" type="nonNegativeInteger">
+            <annotation><documentation>The refinement level, 0 for a base
+            cell; the number of digits after the face letter.</documentation></annotation>
+          </element>
+          <element name="shape" type="rhp:ShapeType">
+            <annotation><documentation>The cell's shape on the ellipsoid.</documentation></annotation>
+          </element>
+          <element name="area" type="gml:MeasureType">
+            <annotation><documentation>The cell's surface area on the
+            ellipsoid, the same for every cell of a resolution.</documentation></annotation>
+          </element>
+          <element name="boundaryType" type="rhp:BoundaryTypeType" minOccurs="1" maxOccurs="4">
+            <annotation><documentation>The curve type of each edge, from
+            the EA_BoundaryType code list of OGC Topic 21, in the order of
+            the cell's planar edges clockwise from its upper-left vertex:
+            top, right, bottom, left. One element for a cap cell, whose
+            boundary is one parallel.</documentation></annotation>
+          </element>
+          <element name="position" type="gml:PointPropertyType">
+            <annotation><documentation>The cell's direct position, its
+            centroid (OGC Topic 21 requirement 27).</documentation></annotation>
+          </element>
+          <element name="nucleus" type="gml:PointPropertyType">
+            <annotation><documentation>The cell's indexing point, the
+            centre of its planar square.</documentation></annotation>
+          </element>
+          <element name="geometry" type="gml:GeometryPropertyType">
+            <annotation><documentation>The cell's boundary as a gml:Polygon,
+            or a gml:MultiSurface of two polygons for a cell that straddles
+            the antimeridian. In EPSG:4326 the curved edges are sampled;
+            in the grid's planar CRS the cell is its exact square.</documentation></annotation>
+          </element>
+        </sequence>
+      </extension>
+    </complexContent>
+  </complexType>
+
+  <simpleType name="ShapeType">
+    <restriction base="string">
+      <enumeration value="quad"/>
+      <enumeration value="cap"/>
+      <enumeration value="dart"/>
+      <enumeration value="skew_quad"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="BoundaryTypeType">
+    <annotation><documentation>EA_BoundaryType, OGC 20-040r3 Table 76.</documentation></annotation>
+    <restriction base="string">
+      <enumeration value="geodesic"/>
+      <enumeration value="smallCircle"/>
+      <enumeration value="greatCircle"/>
+      <enumeration value="smallEllipse"/>
+      <enumeration value="greatEllipse"/>
+      <enumeration value="projectedLine"/>
+    </restriction>
+  </simpleType>
+
+  <element name="ZoneCollection" type="rhp:ZoneCollectionType" substitutionGroup="gml:AbstractFeature">
+    <annotation>
+      <documentation>A set of zones of one grid, in the order they were
+      given, with the grid's DGGRS definition URI.</documentation>
+    </annotation>
+  </element>
+
+  <complexType name="ZoneCollectionType">
+    <complexContent>
+      <extension base="gml:AbstractFeatureType">
+        <sequence>
+          <element name="dggrs" type="anyURI">
+            <annotation><documentation>The URI of the grid's DGGRS
+            definition, the codeSpace of every member's identifier.</documentation></annotation>
+          </element>
+          <element name="crs" type="gml:ProjectedCRSPropertyType" minOccurs="0">
+            <annotation><documentation>The grid's own projected CRS, present
+            when the members' geometries are planar and refer to it by
+            srsName="#rhealpix": every cell is then an exact square.</documentation></annotation>
+          </element>
+          <element name="member" type="rhp:ZonePropertyType" minOccurs="0" maxOccurs="unbounded"/>
+        </sequence>
+      </extension>
+    </complexContent>
+  </complexType>
+
+  <complexType name="ZonePropertyType">
+    <sequence>
+      <element ref="rhp:Zone"/>
+    </sequence>
+  </complexType>
+
+</schema>
