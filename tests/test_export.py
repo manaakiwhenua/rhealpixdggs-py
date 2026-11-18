@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
 
 GML = "{http://www.opengis.net/gml/3.2}"
-RHP = "{%s}" % export.GML_NAMESPACE
+RHP = f"{{{export.GML_NAMESPACE}}}"
 
 
 def zones(text):
@@ -360,7 +360,7 @@ class GMLTestCase(unittest.TestCase):
                     ]
                     if len(types) == 1:
                         self.assertEqual(cell.ellipsoidal_shape, "cap")
-                        edges = [sum(edges, [])]
+                        edges = [[point for edge in edges for point in edge]]
                     for kind, points in zip(types, edges, strict=True):
                         ll = np.array(
                             [rdggs.rhealpix(x, y, inverse=True) for x, y in points]
