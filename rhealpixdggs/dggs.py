@@ -815,9 +815,7 @@ class RHEALPixDGGS:
             self._projection_cache["healpix"] = pw.Projection(
                 ellipsoid=self.ellipsoid, proj="healpix"
             )
-        result = self._projection_cache["healpix"](u, v, inverse=inverse)
-        assert result is not None
-        return result
+        return self._projection_cache["healpix"](u, v, inverse=inverse)
 
     @overload
     def rhealpix(
@@ -866,9 +864,7 @@ class RHEALPixDGGS:
                 south_square=self.south_square,
                 region=region,
             )
-        result = self._projection_cache[region](u, v, inverse=inverse)
-        assert result is not None
-        return result
+        return self._projection_cache[region](u, v, inverse=inverse)
 
     def combine_triangles(
         self, u: float, v: float, inverse: bool = False, region: str = "none"
