@@ -599,7 +599,8 @@ class RHEALPixDGGS:
         ellipsoid. ``crs.to_wkt()`` and ``crs.to_json()`` give the WKT2
         and PROJJSON definitions. The planar coordinates of this package
         are coordinates in this CRS; PROJ's own ``rhealpix`` agrees with
-        them to within a few micrometres.
+        them to within a few micrometres. ``crs_on`` gives the same CRS
+        on a named realisation of the datum.
 
         EXAMPLES::
 
@@ -613,7 +614,6 @@ class RHEALPixDGGS:
         """
         if self._crs is None:
             E = self.ellipsoid
-            lon_0 = degrees(E.lon_0) if E.radians else E.lon_0
             if not E.sphere and isclose(E.a, WGS84_A) and isclose(E.f, WGS84_F):
                 base = CRS("EPSG:4326")
             else:
@@ -630,35 +630,67 @@ class RHEALPixDGGS:
                 base = GeographicCRS(
                     name=name, datum=CustomDatum(name=name, ellipsoid=ellipsoid)
                 )
-            squares = (
-                f"north_square={self.north_square}, south_square={self.south_square}"
-            )
-            conversion = CoordinateOperation.from_json_dict(
-                {
-                    "type": "Conversion",
-                    "name": f"rHEALPix lon_0={format(float(lon_0), '.15g')}, {squares}",
-                    "method": {"name": "PROJ rhealpix"},
-                    "parameters": [
-                        {"name": "lon_0", "value": float(lon_0), "unit": "degree"},
-                        {
-                            "name": "north_square",
-                            "value": self.north_square,
-                            "unit": "unity",
-                        },
-                        {
-                            "name": "south_square",
-                            "value": self.south_square,
-                            "unit": "unity",
-                        },
-                    ],
-                }
-            )
-            self._crs = ProjectedCRS(
-                conversion=conversion,
-                geodetic_crs=base,
-                name=f"rHEALPix ({base.name}, lon_0={format(float(lon_0), '.15g')}, {squares})",
-            )
+            self._crs = self.crs_on(base)
         return self._crs
+
+    def crs_on(self, base: CRS | str) -> CRS:
+        """
+        This grid's CRS (see ``crs``) on the geographic CRS `base`, a
+        ``pyproj.CRS`` or anything ``pyproj.CRS`` accepts, for data
+        referenced to a named realisation of the datum rather than to the
+        ensemble: WGS 84 (G2139) is EPSG:9755, for instance. Raise
+        ValueError unless `base` is geographic on this grid's ellipsoid,
+        since the projection is defined on that ellipsoid alone.
+
+        EXAMPLES::
+
+            >>> crs = WGS84_003_OGC.crs_on("EPSG:9755")
+            >>> crs.geodetic_crs.name
+            'WGS 84 (G2139)'
+            >>> crs.coordinate_operation == WGS84_003_OGC.crs.coordinate_operation
+            True
+
+        """
+        base = CRS(base)
+        E = self.ellipsoid
+        ellipsoid = base.ellipsoid
+        if (
+            not base.is_geographic
+            or ellipsoid is None
+            or not isclose(ellipsoid.semi_major_metre, E.a, rel_tol=1e-12)
+            or not isclose(ellipsoid.semi_minor_metre, E.b, rel_tol=1e-12)
+        ):
+            raise ValueError(
+                f"{base.name!r} is not a geographic CRS on this grid's ellipsoid"
+            )
+        lon_0 = degrees(E.lon_0) if E.radians else E.lon_0
+        lon_0_text = format(float(lon_0), ".15g")
+        squares = f"north_square={self.north_square}, south_square={self.south_square}"
+        conversion = CoordinateOperation.from_json_dict(
+            {
+                "type": "Conversion",
+                "name": f"rHEALPix lon_0={lon_0_text}, {squares}",
+                "method": {"name": "PROJ rhealpix"},
+                "parameters": [
+                    {"name": "lon_0", "value": float(lon_0), "unit": "degree"},
+                    {
+                        "name": "north_square",
+                        "value": self.north_square,
+                        "unit": "unity",
+                    },
+                    {
+                        "name": "south_square",
+                        "value": self.south_square,
+                        "unit": "unity",
+                    },
+                ],
+            }
+        )
+        return ProjectedCRS(
+            conversion=conversion,
+            geodetic_crs=base,
+            name=f"rHEALPix ({base.name}, lon_0={lon_0_text}, {squares})",
+        )
 
     @property
     def codespace(self) -> str | None:

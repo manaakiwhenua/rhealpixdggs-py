@@ -534,6 +534,31 @@ referenced to a named realisation, not the ensemble, and transformed to
 a common frame and epoch first, which PROJ does between ITRF
 realisations with a plate-motion model; the frame and epoch belong with
 the identifiers and their codespace.
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.crs_on` gives the grid's CRS on
+a named realisation, ``crs_on("EPSG:9755")`` for WGS 84 (G2139), for
+data that is referenced that way.
+
+As an example of the epoch's effect, take a point in GDA2020
+(EPSG:7844), the static Australian datum, fixed to its plate at epoch
+2020.0, and observe it in ITRF2014 (EPSG:9000) in 2010 and again in
+2030. The plate carries the point 1.16 m between the observations, and
+the two fall in different resolution 15 cells; transformed back to the
+static frame, which removes the plate's motion, both fall in the one
+cell the ground point occupies::
+
+    >>> import pyproj
+    >>> from rhealpixdggs.dggs import WGS84_003_OGC
+    >>> to_itrf = pyproj.Transformer.from_crs("EPSG:7844", "EPSG:9000", always_xy=True)
+    >>> to_gda = pyproj.Transformer.from_crs("EPSG:9000", "EPSG:7844", always_xy=True)
+    >>> lon, lat = 149.0999973, -35.3000031
+    >>> observed = {epoch: to_itrf.transform(lon, lat, tt=epoch)[:2] for epoch in (2010.0, 2030.0)}
+    >>> [str(WGS84_003_OGC.cell_from_point(15, p, plane=False)) for p in observed.values()]
+    ['R665234534347420', 'R665234534347183']
+    >>> round(pyproj.Geod(ellps="WGS84").inv(*observed[2010.0], *observed[2030.0])[2], 2)
+    1.16
+    >>> fixed = [to_gda.transform(*p, tt=epoch)[:2] for epoch, p in observed.items()]
+    >>> [str(WGS84_003_OGC.cell_from_point(15, p, plane=False)) for p in fixed]
+    ['R665234534347186', 'R665234534347186']
 
 Area error budget and sequence maximum
 --------------------------------------

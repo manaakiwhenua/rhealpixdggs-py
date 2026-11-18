@@ -81,6 +81,27 @@ class CRSTestCase(unittest.TestCase):
         self.assertEqual(params["lon_0"], 0)
         self.assertEqual(UNIT_003.crs.ellipsoid.semi_major_metre, 1)
 
+    def test_crs_on_a_named_realisation(self):
+        crs = WGS84_003_OGC.crs_on("EPSG:9755")
+        self.assertEqual(crs.geodetic_crs.to_authority(), ("EPSG", "9755"))
+        self.assertEqual(
+            crs.coordinate_operation, WGS84_003_OGC.crs.coordinate_operation
+        )
+        self.assertEqual(
+            WGS84_003_OGC.crs_on(pyproj.CRS("EPSG:4326")), WGS84_003_OGC.crs
+        )
+        transformer = pyproj.Transformer.from_crs("EPSG:9755", crs, always_xy=True)
+        x, y = transformer.transform(10, 20)
+        self.assertAlmostEqual(x, WGS84_003_OGC.rhealpix(10, 20)[0], places=5)
+        self.assertAlmostEqual(y, WGS84_003_OGC.rhealpix(10, 20)[1], places=5)
+        # Another ellipsoid, a projected CRS, or a sphere grid on WGS 84.
+        with self.assertRaises(ValueError):
+            WGS84_003_OGC.crs_on("EPSG:4269")
+        with self.assertRaises(ValueError):
+            WGS84_003_OGC.crs_on("EPSG:3857")
+        with self.assertRaises(ValueError):
+            UNIT_003.crs_on("EPSG:4326")
+
     def test_definitions_round_trip(self):
         for name, rdggs in GRIDS.items():
             with self.subTest(grid=name):

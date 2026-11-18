@@ -24,9 +24,11 @@ grid's ellipsoid, with the central meridian and polar squares as the
 conversion's parameters, so ``to_wkt()`` and ``to_json()`` give the WKT2
 and PROJJSON definitions and other software can apply them. PROJ's
 ``rhealpix`` reproduces the package's plane to within a few micrometres.
-``to_dggrs_definition`` carries the PROJJSON. The conformance chapter
+``to_dggrs_definition`` carries the PROJJSON, and ``crs_on`` gives the
+CRS on a named realisation of the datum. The conformance chapter
 publishes the definition with the coordinate-epoch statement for the
-dynamic WGS 84 datum, closing OGC Topic 21 test A.7 (issue #100).
+dynamic WGS 84 datum and a worked example of the epoch's effect on
+zone assignment, closing OGC Topic 21 test A.7 (issue #100).
 
 0.13.0
 ^^^^^^
