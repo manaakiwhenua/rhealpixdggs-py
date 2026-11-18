@@ -64,11 +64,12 @@ Common Spatio-temporal Classes
        geometry and topology`_ below maps it onto the model's classes
        and declares the dimensions.
    * - A.3 spatial location
-     - Locations identified by reference to zones (ISO 19112 style).
-     - Partial
-     - :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point`,
-       :func:`~rhealpixdggs.rhp_wrappers.geo_to_rhp`; mapping
-       documentation to be written (v1.0).
+     - A location is a place named by an identifier (ISO 19112 style),
+       with an extent, a point inside it, and links to the locations
+       above and below it.
+     - Met
+     - Every :class:`~rhealpixdggs.cell.Cell` is such a location.
+       `Spatial location`_ below maps it onto the model's class.
    * - A.4 temporal RS using period identifiers
      - A temporal reference system whose periods carry identifiers,
        conforming to the common data model.
@@ -411,6 +412,41 @@ zone is and what dimensions it has.
    * - ZoneCompoundGeometry, ZoneCompoundTopology
      - Not instantiated. These pair a spatial zone with a temporal
        one, and rHEALPixDGGS currently has no temporal dimension.
+
+Spatial location
+----------------
+
+Requirement 3 asks that spatial locations conform to the LocationS
+class of clause 7.3.1 (Table 23), a specialisation of the ISO 19112
+location: a place referred to by an identifier instead of by
+coordinates. Every :class:`~rhealpixdggs.cell.Cell` is a LocationS.
+As the table notes, these locations are defined by the reference
+system itself and not by an independent authority.
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - LocationS element
+     - In rHEALPixDGGS
+   * - identifier
+     - The cell's index string, ``str(cell)``, specified in `Zonal
+       identifiers`_.
+   * - extent
+     - :meth:`~rhealpixdggs.cell.Cell.boundary`.
+   * - coordinateTuple
+     - :meth:`~rhealpixdggs.cell.Cell.centroid`, the direct position
+       of A.12 and A.27, which lies inside the extent.
+   * - parentOf, childOf
+     - :meth:`~rhealpixdggs.cell.Cell.subcells` gives the locations a
+       cell is parent of, and :meth:`~rhealpixdggs.cell.Cell.parent`
+       the location it is child of. Resolution 0 cells have no parent
+       and cells at ``max_resolution`` have no children (asking for
+       them raises ``ValueError``), which is why the model makes both
+       links conditional.
+   * - Constraint: dimension > 0
+     - A cell has topological dimension 2 (`Zone geometry and
+       topology`_).
 
 Zonal identifiers
 -----------------

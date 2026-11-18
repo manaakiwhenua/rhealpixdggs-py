@@ -676,7 +676,8 @@ class Cell:
           square rings, first step to the right, ending top right. Needs
           odd ``N_side``, for a centre subcell.
 
-        Raise ValueError for any other order, or one this grid lacks.
+        Raise ValueError for any other order, or one this grid lacks, or
+        if `resolution` exceeds the grid's ``max_resolution``.
 
         EXAMPLES::
 
@@ -697,6 +698,11 @@ class Cell:
         assert L is not None  # the empty cell has no subcells
         if resolution is None:
             resolution = L + 1
+        if resolution > self.rdggs.max_resolution:
+            raise ValueError(
+                f"Resolution {resolution} exceeds the grid's max_resolution "
+                f"{self.rdggs.max_resolution}."
+            )
         return self._subcells(resolution - L, order)
 
     def _sub_zone_order(self, order: SubZoneOrder | None) -> SubZoneOrder:
