@@ -6,11 +6,14 @@ Keep adding tests!
 - David Habgood (DH), 2020-10-27: Initial version.
 """
 
+import io
 import unittest
 
 from shapely import wkt
+from shapely.geometry import Polygon
 
 from rhealpixdggs.conversion import *
+from rhealpixdggs.dggs import WGS84_003
 
 test_geom = """
         MULTIPOLYGON (((148.6675 -35.5725, 148.6675 -35.575, 148.67 -35.575, 148.67 -35.5775, 148.6725 -35.5775,
@@ -717,3 +720,52 @@ class TestCompressOrderCellsNSide(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CellZoneFromPolyEdgeCasesTestCase(unittest.TestCase):
+    SMALL = Polygon([(10, 10), (11, 10), (11, 11), (10, 11)])
+
+    def test_no_cell_contains_a_polygon_spanning_faces(self):
+        big = Polygon([(-100, -10), (100, -10), (100, 10), (-100, 10)])
+        self.assertIsNone(get_finest_containing_cell(big))
+        with self.assertRaises(ValueError):
+            CellZoneFromPoly(("big", big), 2, True)
+
+    def test_file_output_and_a_given_bounding_cell(self):
+        f = io.StringIO()
+        zone = CellZoneFromPoly(("box", self.SMALL), 5, True, file=f)
+        text = f.getvalue()
+        self.assertTrue(text.startswith("\nbox,"))
+        self.assertGreater(len(zone.cells_list), 0)
+        for cell in zone.cells_list:
+            self.assertIn(f"{cell} ", text)
+        given = CellZoneFromPoly(
+            ("box", self.SMALL), 5, True, bounding_cell=WGS84_003.cell(["Q"])
+        )
+        self.assertEqual(
+            [str(c) for c in given.cells_list], [str(c) for c in zone.cells_list]
+        )
+        # Without return_cells only the file is written.
+        f = io.StringIO()
+        only_file = CellZoneFromPoly(("box", self.SMALL), 5, False, file=f)
+        self.assertEqual(only_file.cells_list, [])
+        self.assertEqual(f.getvalue(), text)
+
+    def test_bounding_cell_inside_the_polygon_or_at_the_limit(self):
+        cell = WGS84_003.cell(["Q", 4])
+        whole = Polygon(cell.vertices(plane=False)).buffer(0.1)
+        zone = CellZoneFromPoly(("q4", whole), 1, True, bounding_cell=cell)
+        self.assertEqual([str(c) for c in zone.cells_list], ["Q4"])
+        zone = CellZoneFromPoly(
+            ("box", self.SMALL), 0, True, bounding_cell=WGS84_003.cell(["Q"])
+        )
+        self.assertEqual(zone.cells_list, [])
+
+    def test_compress_recursively(self):
+        cells = [f"P{i}{j}" for i in range(9) for j in range(9)]
+        self.assertEqual(compress_order_cells(cells), [f"P{i}" for i in range(9)])
+        self.assertEqual(compress_order_cells(cells, recursive=True), ["P"])
+        self.assertEqual(
+            compress_order_cells(cells[:-1], recursive=True),
+            [f"P{i}" for i in range(8)] + [f"P8{j}" for j in range(8)],
+        )

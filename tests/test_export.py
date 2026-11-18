@@ -468,3 +468,9 @@ class GMLTestCase(unittest.TestCase):
                 cells, ROTATED, codespace="https://example.org/g", planar=True
             )
         )
+
+
+class PoleExpansionTestCase(unittest.TestCase):
+    def test_ring_without_a_pole_vertex_is_returned_as_is(self):
+        ring = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]])
+        self.assertIs(export._expand_poles(ring), ring)

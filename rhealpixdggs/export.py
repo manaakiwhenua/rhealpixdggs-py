@@ -387,19 +387,19 @@ def to_csv(
     buffer = io.StringIO()
     writer = csv.writer(buffer, delimiter=delimiter, lineterminator="\n")
     writer.writerow(PROPERTIES)
-    for k in range(len(table.indices)):
-        writer.writerow(
-            [
-                str(table.indices[k]),
-                int(table.resolution[k]),
-                str(table.shape[k]),
-                float(table.area[k]),
-                float(table.centroid[k, 0]),
-                float(table.centroid[k, 1]),
-                float(table.nucleus[k, 0]),
-                float(table.nucleus[k, 1]),
-            ]
+    writer.writerows(
+        zip(
+            table.indices,
+            table.resolution,
+            table.shape,
+            table.area,
+            table.centroid[:, 0],
+            table.centroid[:, 1],
+            table.nucleus[:, 0],
+            table.nucleus[:, 1],
+            strict=True,
         )
+    )
     return buffer.getvalue()
 
 

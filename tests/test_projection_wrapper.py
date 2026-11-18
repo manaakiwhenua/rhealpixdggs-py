@@ -196,3 +196,22 @@ class MyTestCase(unittest.TestCase):
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProjectionStrTestCase(unittest.TestCase):
+    def test_str_lists_the_projection_and_its_ellipsoid(self):
+        text = str(
+            Projection(ellipsoid=WGS84_ELLIPSOID, proj="rhealpix", north_square=1)
+        )
+        lines = text.splitlines()
+        self.assertEqual(
+            lines[:4],
+            [
+                "map projection:",
+                "    proj = rhealpix",
+                "    kwargs = {'north_square': 1}",
+                "    ellipsoid:",
+            ],
+        )
+        self.assertIn("        a = 6378137.0", lines)
+        self.assertIn("        radians = False", lines)

@@ -1,13 +1,12 @@
 """
-This Python 3.11 module implements the rHEALPix map projection.
+The rHEALPix map projection: HEALPix with the polar triangles rearranged
+into two squares, placed by ``north_square`` and ``south_square``. The
+forward and inverse projections for the sphere and the ellipsoid, their
+array forms, the triangle bookkeeping that moves the polar caps, and
+:func:`rhealpix`, which wraps them as one callable.
 
-- Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.
-
-NOTE:
-
-All lengths are measured in meters and all angles are measured in radians
-unless indicated otherwise.
-By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
+Lengths are in the ellipsoid's units and angles in radians; the callable
+from :func:`rhealpix` takes degrees unless called with ``radians=True``.
 """
 
 # *****************************************************************************

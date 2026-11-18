@@ -1,12 +1,10 @@
 """
-This Python 3.11 module implements several helper functions for coding map projections.
+Helpers for the projections and the grid: rounding, longitude and
+latitude wrapping, the authalic latitude and radius of an ellipsoid, and
+the ``ProjectionFunction`` protocol the projections implement.
 
-- Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
-
-NOTE:
-
-All lengths are measured in meters and all angles are measured in radians
-unless indicated otherwise.
+Angles are in degrees unless a function's ``radians`` argument says
+otherwise.
 """
 
 # *****************************************************************************

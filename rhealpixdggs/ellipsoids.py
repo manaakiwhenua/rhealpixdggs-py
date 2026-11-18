@@ -1,15 +1,11 @@
 """
-This Python 3.11 code implements ellipsoids of revolution.
+Ellipsoids of revolution: :class:`Ellipsoid` and the WGS84 and unit
+sphere instances the grids are built on.
 
-- Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
-
-NOTE:
-
-All lengths are measured in meters and all angles are measured in radians
-unless indicated otherwise.
-
-By 'ellipsoid' throughout, I mean an ellipsoid of revolution and *not* a general (triaxial) ellipsoid.
-Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordinates.
+Lengths are in metres and angles in degrees, or in radians when the
+ellipsoid is built with ``radians=True``. An ellipsoid is an ellipsoid
+of revolution, never a triaxial one, and a point on it is given as
+``(longitude, latitude)``.
 """
 
 # *****************************************************************************
@@ -20,7 +16,7 @@ Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordin
 # *****************************************************************************
 
 from math import isclose, remainder
-from random import uniform
+from random import Random
 
 import pyproj
 from numpy import arcsin, arctanh, cos, deg2rad, pi, rad2deg, sin, sqrt
@@ -126,7 +122,6 @@ class Ellipsoid:
 
     def __str__(self) -> str:
         result = ["ellipsoid:"]
-        # result.append('lengths measured in meters')
         for k, v in sorted(self.__dict__.items()):
             if k == "phi_0":
                 continue
@@ -151,14 +146,6 @@ class Ellipsoid:
             )
         )
 
-    def __ne__(self, other: object) -> bool:
-        """
-        The inequality relation on cells.
-        Since Python 3.3 doesn't automatically create reverse relations
-        from given ones, i must define this seemingly redundant relation.
-        """
-        return not self.__eq__(other)
-
     def pi(self) -> float:
         """
         Return pi if `self.radians` = True and 180 otherwise.
@@ -174,6 +161,7 @@ class Ellipsoid:
         lam_max: float | None = None,
         phi_min: float | None = None,
         phi_max: float | None = None,
+        rng: Random | None = None,
     ) -> tuple[float, float]:
         """
         Return a point (given in geodetic coordinates) sampled uniformly at
@@ -181,14 +169,19 @@ class Ellipsoid:
         `lam_min <= lam < lam_max` and latitude in the range
         `phi_min <= phi < phi_max`.
         But avoid the poles.
+        The draw comes from `rng`, a ``random.Random``, so a seeded one
+        makes it reproducible; by default it is fresh and unseeded.
 
         EXAMPLES::
 
+           >>> from random import Random
            >>> E = UNIT_SPHERE
-           >>> print(E.random_point()) # doctest: +SKIP
-           (-1.0999574573422948, 0.21029104897701129)
+           >>> print(E.random_point(rng=Random(1)))
+           (-131.62887211953554, 44.01665753153827)
 
         """
+        if rng is None:
+            rng = Random()
         PI = self.pi()
         if lam_min is None:
             lam_min = -PI
@@ -205,7 +198,7 @@ class Ellipsoid:
             )
         # Pick a longitude.
         while True:
-            u = uniform(0, 1)
+            u = rng.uniform(0, 1)
             lam = (lam_max - lam_min) * u + lam_min
             # Don't include lam_max.
             if lam < lam_max:
@@ -214,7 +207,7 @@ class Ellipsoid:
         # Pick a latitude.
         delta = pi / 360
         while True:
-            v = uniform(0, 1)
+            v = rng.uniform(0, 1)
             if self.sphere:
                 phi = arcsin((sin(phi_max) - sin(phi_min)) * v + sin(phi_min))
             else:
@@ -234,7 +227,7 @@ class Ellipsoid:
         if not self.radians:
             # Convert back to degrees.
             lam, phi = rad2deg([lam, phi])
-        return lam, phi
+        return float(lam), float(phi)
 
     def xyz(self, lam: float, phi: float) -> tuple[float, float, float]:
         """

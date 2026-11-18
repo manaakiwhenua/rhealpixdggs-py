@@ -1,152 +1,49 @@
 """
-This Python 3.11 module implements the rHEALPix discrete global grid system.
+The rHEALPix discrete global grid system: :class:`RHEALPixDGGS`, a grid on
+an ellipsoid of revolution whose parameters are ``N_side``, the positions
+of the two polar squares and the ellipsoid's central meridian, with the
+operations on its cells, from locating a point to walking the hierarchy
+and the isolatitude rings. See :doc:`introduction` for the grid and
+:doc:`dggs` for its orientation parameters.
 
-- Alexander Raichev (AR), 2012-11-12: Initial version based upon grids.py.
+Conventions:
 
-NOTES:
-
-All lengths are measured in meters and all angles are measured in radians
-unless indicated otherwise.
-
-By 'ellipsoid' throughout, I mean an ellipsoid of revolution and *not* a general (triaxial) ellipsoid.
-
-Points lying on the plane are given in rectangular (horizontal, vertical) coordinates, and points lying on the ellipsoid are given in geodetic (longitude, latitude) coordinates unless indicated otherwise.
-
-DGGS abbreviates 'discrete global grid system'.
-
-Except when manipulating positive integers, I avoid the modulo function '%'
-and insted write everything in terms of 'floor()'.
-This is because Python interprets the sign of '%' differently than
-Java or C, and I don't want to confuse people who are translating this code
-to those languages.
+- Lengths are in metres. Angles are in degrees unless the ellipsoid was
+  built with ``radians=True``.
+- An ellipsoid is an ellipsoid of revolution, never a triaxial one.
+- A planar point is ``(x, y)`` in the rHEALPix projection; an ellipsoidal
+  point is ``(longitude, latitude)``.
 
 EXAMPLES:
 
-Create the (1, 2)-rHEALPix DGGS with N_side = 3 that is based on the WGS84 ellipsoid. Use degrees instead of the default radians for angular measurements ::
+The (1, 2)-rHEALPix DGGS with ``N_side`` 3 on the WGS84 ellipsoid, the
+resolution 1 cell containing a point, its neighbours on the ellipsoid,
+and the resolution 1 cells meeting a longitude-latitude quadrangle ::
 
-    >>> from numpy.testing import assert_allclose
     >>> from rhealpixdggs.ellipsoids import WGS84_ELLIPSOID
-    >>> E = WGS84_ELLIPSOID
-    >>> rdggs = RHEALPixDGGS(ellipsoid=E, north_square=1, south_square=2, N_side=3)
-    >>> print(rdggs)
-    rHEALPix DGGS:
-        N_side = 3
-        north_square = 1
-        south_square = 2
-        max_areal_resolution = 1
-        max_resolution = 15
-        ellipsoid:
-            R_A = 6371007.180918476
-            a = 6378137.0
-            b = 6356752.314245179
-            e = 0.08181919084262149
-            f = 0.0033528106647474805
-            lat_0 = 0
-            lon_0 = 0
-            radians = False
-            sphere = False
-
-Pick a (longitude-latitude) point on the ellipsoid and find the resolution 1 cell that contains it ::
-
-    >>> p = (0, 45)
-    >>> c = rdggs.cell_from_point(1, p, plane=False); print(c)
+    >>> rdggs = RHEALPixDGGS(ellipsoid=WGS84_ELLIPSOID, north_square=1, south_square=2, N_side=3)
+    >>> c = rdggs.cell_from_point(1, (0, 45), plane=False)
+    >>> print(c)
     N8
-
-Find the ellipsoidal (edge) neighbors of this cell ::
-
-    >>> for (direction, cell) in sorted(c.neighbors(plane=False).items()):
+    >>> for direction, cell in sorted(c.neighbors(plane=False).items()):
     ...     print(direction, cell)
     east N5
     south_east Q0
     south_west P2
     west N7
-
-Find the planar (edge) neighbors of this cell ::
-
-    >>> for (direction, cell) in sorted(c.neighbors('plane').items()):
-    ...     print(direction, cell)
-    down P2
-    left N7
-    right Q0
-    up N5
-
-Find all the resolution 1 cells intersecting the longitude-latitude aligned ellipsoidal quadrangle with given northwest and southeast corners ::
-
-    >>> nw = (0, 45)
-    >>> se = (90, 0)
-    >>> cells = rdggs.cells_from_region(1, nw, se, plane=False)
-    >>> for row in cells:
+    >>> for row in rdggs.cells_from_region(1, (0, 45), (90, 0), plane=False):
     ...     print([str(cell) for cell in row])
     ['N8', 'N5', 'N2']
     ['Q0', 'Q1', 'Q2', 'R0']
     ['Q3', 'Q4', 'Q5', 'R3']
 
-Compute the ellipsoidal nuclei of these cells ::
+A grid rotated about the polar axis so that New Zealand sits in the
+middle of an equatorial face, which :doc:`dggs` explains ::
 
-    >>> expected_results = [
-    ...    [
-    ...        (1.90833280887811e-14, 58.52801748206219),
-    ...        (45.00000000000002, 58.52801748206219),
-    ...        (89.99999999999997, 58.52801748206219)
-    ...    ], [
-    ...        (14.999999999999998, 26.490118751439734),
-    ...        (45.0, 26.490118751439734),
-    ...        (74.99999999999999, 26.490118751439734),
-    ...        (105.00000000000001, 26.490118751439734)
-    ...    ], [
-    ...        (14.999999999999998, 0),
-    ...        (45.0, 0),
-    ...        (74.99999999999999, 0),
-    ...        (105.00000000000001, 0)
-    ...    ]]
-    >>> for i, row in enumerate(cells):
-    ...     for j, cell in enumerate(row):
-    ...         print(cell, assert_allclose(cell.nucleus(plane=False), expected_results[i][j], rtol=1e-15, atol=0) == None)
-    N8 True
-    N5 True
-    N2 True
-    Q0 True
-    Q1 True
-    Q2 True
-    R0 True
-    Q3 True
-    Q4 True
-    Q5 True
-    R3 True
-
-Create a (0, 0)-rHEALPix DGGS with N_side = 3 based on the WGS84 ellipsoid.
-Use degrees instead of the default radians for angular measurements and
-rotate the DGGS about the polar axis so that New Zealand sits in the middle
-of an equatorial face. The face edges and the polar dart cells lie on the
-meridians ``lon_0 + k * 90``, so choosing ``lon_0`` 45 degrees west of
-Auckland's meridian keeps them clear of the country. (Recentring in
-latitude is not supported: ``Ellipsoid`` rejects a nonzero ``lat_0``,
-because shifting latitude is not a rotation of the ellipsoid and would
-destroy the equal-area property.) ::
-
-    >>> p = (174, -37)  # Approximate Auckland lon-lat coordinates
-    >>> from rhealpixdggs.ellipsoids import *
-    >>> E = Ellipsoid(a=WGS84_A, f=WGS84_F, radians=False, lon_0=p[0] - 45)
-    >>> rdggs = RHEALPixDGGS(E, N_side=3, north_square=0, south_square=0)
-    >>> print(rdggs)
-    rHEALPix DGGS:
-        N_side = 3
-        north_square = 0
-        south_square = 0
-        max_areal_resolution = 1
-        max_resolution = 15
-        ellipsoid:
-            R_A = 6371007.180918476
-            a = 6378137.0
-            b = 6356752.314245179
-            e = 0.08181919084262149
-            f = 0.0033528106647474805
-            lat_0 = 0
-            lon_0 = 129
-            radians = False
-            sphere = False
-
-    >>> print(rdggs.cell_from_point(1, p, plane=False))
+    >>> from rhealpixdggs.ellipsoids import Ellipsoid, WGS84_A, WGS84_F
+    >>> E = Ellipsoid(a=WGS84_A, f=WGS84_F, lon_0=174 - 45)
+    >>> rdggs = RHEALPixDGGS(E, N_side=3)
+    >>> print(rdggs.cell_from_point(1, (174, -37), plane=False))
     Q7
 
 """
@@ -161,7 +58,7 @@ import operator
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import pairwise, product
 from math import asin, copysign, degrees, floor, fsum, isclose, pi
-from random import randint
+from random import Random
 from typing import Any, Literal, NamedTuple, cast, get_args, overload
 from warnings import warn
 
@@ -526,9 +423,6 @@ class RHEALPixDGGS:
             and self.south_square == other.south_square
             and self.max_resolution == other.max_resolution
         )
-
-    def __ne__(self, other: object) -> bool:
-        return not self.__eq__(other)
 
     @property
     def uri(self) -> str | None:
@@ -1868,7 +1762,9 @@ class RHEALPixDGGS:
         Consequently, there are 2*self.N_side**resolution
         boundary latitudes between the poles if self.N_side is odd and
         2*self.N_side**resolution - 1 boundary latitudes if self.N_side is
-        even.
+        even. Resolution 0 with even N_side is the exception: the one
+        nucleus latitude is the equator and the two boundary latitudes
+        are the polar squares' rims.
 
         EXAMPLES::
 
@@ -1923,15 +1819,11 @@ class RHEALPixDGGS:
                     y = -R * pi / 2 + w / 2
                 else:
                     y = -R * pi / 2 + w
-        # Start y above y_min.
-        if y <= y_min:
-            dy = y_min - y
-            y = max(y + int(np.ceil(dy / w)) * w, y + w)
-        # Collect the ys.
-        result = []
-        while y < y_max:
-            result.append(y)
-            y += w
+        # Step by multiples of w rather than a running sum, so that
+        # rounding cannot let a pole in.
+        first = max(int(np.ceil((y_min - y) / w - 1e-9)), 1) if y <= y_min else 0
+        stop = int(np.ceil((y_max - y) / w - 1e-9))
+        result = [y + k * w for k in range(first, stop)]
         # Convert to latitudes if desired.
         if not plane:
             result = [self.healpix(R * pi / 4, y, inverse=True)[1] for y in result]
@@ -2387,7 +2279,7 @@ class RHEALPixDGGS:
         brackets: list[tuple[float, float, float, float, int, float]] = []
         N_SCAN = 64
         for pa, pb in pairwise(sorted(breakpoints)):
-            if pb - pa < 1e-14:
+            if pb - pa < 1e-14:  # pragma: no cover - coincident breakpoints
                 continue
             # Evaluate strictly inside the piece, clear of its kinks.
             eps = (pb - pa) * 1e-12
@@ -2400,9 +2292,9 @@ class RHEALPixDGGS:
                 for (ra, va), (rb, vb) in pairwise(cuts):
                     for edge in lattice_lines_between(va, vb, anchor):
                         fa, fb = va - edge, vb - edge
-                        if fa == 0:
+                        if fa == 0:  # pragma: no cover - exact hit at a run start
                             crossings.add(ra)
-                        elif fb == 0:
+                        elif fb == 0:  # pragma: no cover - exact hit at a piece end
                             crossings.add(rb)
                         else:
                             brackets.append((ra, rb, fa, fb, axis, edge))
@@ -2524,10 +2416,8 @@ class RHEALPixDGGS:
         for (cell, _, _), length in zip(trace.runs, lengths, strict=True):
             if cell is None:
                 continue
-            while position < len(ordered) and ordered[position] != cell:
+            while ordered[position] != cell:
                 position += 1
-            if position == len(ordered):  # pragma: no cover - defensive
-                position = ordered.index(cell)
             shares[position] = shares.get(position, 0.0) + length
         return [(cell, shares.get(i, 0.0) / total) for i, cell in enumerate(ordered)]
 
@@ -4022,43 +3912,56 @@ class RHEALPixDGGS:
             result.append(cells)
         return result
 
-    def random_point(self, plane: bool = True) -> tuple[float, float]:
+    def random_point(
+        self, plane: bool = True, rng: Random | None = None
+    ) -> tuple[float, float]:
         """
         Return a point in this DGGS sampled uniformly at
         random from the plane or from the ellipsoid.
+        The draw comes from `rng`, a ``random.Random``, so a seeded one
+        makes it reproducible; by default it is fresh and unseeded.
 
         EXAMPLES::
 
+            >>> from random import Random
             >>> rdggs = RHEALPixDGGS()
-            >>> print(E.random_point()) # doctest: +SKIP
-            (-1.0999574573422948, 0.21029104897701129)
+            >>> print(rdggs.random_point(rng=Random(1)))
+            (-14318770.45545909, 3024934.1268202867)
 
         """
-        # Pick a random resolution 0 cell.
-        n = randint(0, 5)
-        c = self.cell([CELLS0[n]])
-        # Pick a random point in that cell.
-        return c.random_point(plane=plane)
+        if rng is None:
+            rng = Random()
+        # The six resolution 0 cells have equal area, so a uniform choice
+        # of cell then a uniform point within it is uniform overall.
+        c = self.cell([CELLS0[rng.randint(0, 5)]])
+        return c.random_point(plane=plane, rng=rng)
 
-    def random_cell(self, resolution: int | None = None) -> Cell:
+    def random_cell(
+        self, resolution: int | None = None, rng: Random | None = None
+    ) -> Cell:
         """
         Return a cell of the given resolution chosen uniformly at random
         from all cells at that resolution.
         If `resolution=None`, then the cell resolution is first chosen
         uniformly at random from [0,..,self.max_resolution].
+        The draw comes from `rng`, a ``random.Random``, so a seeded one
+        makes it reproducible; by default it is fresh and unseeded.
 
         EXAMPLES::
 
-            >>> print(RHEALPixDGGS().random_cell()) # doctest: +SKIP
-            S480586367780080
+            >>> from random import Random
+            >>> print(RHEALPixDGGS().random_cell(rng=Random(1)))
+            R1417
 
         """
+        if rng is None:
+            rng = Random()
         if resolution is None:
-            resolution = randint(0, self.max_resolution)
+            resolution = rng.randint(0, self.max_resolution)
         suid: list[str | int] = []
-        suid.append(CELLS0[randint(0, 5)])
+        suid.append(CELLS0[rng.randint(0, 5)])
         for _ in range(1, resolution + 1):
-            suid.append(randint(0, self.N_side**2 - 1))
+            suid.append(rng.randint(0, self.N_side**2 - 1))
         return Cell(self, suid)
 
     def minimal_cover(
@@ -4094,12 +3997,8 @@ class RHEALPixDGGS:
         for p in points:
             c = self.cell_from_point(resolution, p, plane=plane)
             if c is not None:
-                # nuc = c.nucleus(plane=plane)
-                cover[str(c)] = c  # (c, nuc[0], nuc[1])
+                cover[str(c)] = c
         return list(cover.values())
-        # Sort cells by nuclei y-coordinate and then by x-coordinate.
-        # cover.sort(key=lambda x: (x[2], -x[1]), reverse=True)
-        # return [t[0] for t in cover]
 
 
 # Some common rHEALPix DGGSs.

@@ -1,15 +1,13 @@
 """
-This Python 3.11 module implements the HEALPix map projection as described in [CaRo2007]_.
+The HEALPix map projection of [CaRo2007]_, for the sphere and, through
+the authalic latitude, for an ellipsoid of revolution: the forward and
+inverse projections, their array forms, and :func:`healpix`, which wraps
+them as one callable.
 
 .. [CaRo2007] Mark R. Calabretta and Boudewijn F. Roukema, Mapping on the healpix grid, Monthly Notices of the Royal Astronomical Society 381 (2007), no. 2, 865--872.
 
-- Alexander Raichev (AR), 2013-01-26: Refactored code from release 0.3.
-
-NOTE:
-
-All lengths are measured in meters and all angles are measured in radians
-unless indicated otherwise.
-By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
+Lengths are in the ellipsoid's units and angles in radians; the callable
+from :func:`healpix` takes degrees unless called with ``radians=True``.
 """
 
 # *****************************************************************************

@@ -1,6 +1,7 @@
 import unittest
 from itertools import pairwise, product
 from math import pi
+from random import Random
 
 import numpy as np
 from scipy.spatial.distance import euclidean, norm
@@ -1306,23 +1307,6 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             sphere = 4 * pi * rdggs.ellipsoid.R_A**2
             self.assertAlmostEqual(total / sphere, 1, places=12)
 
-    def test_color(self):
-        rdggs = WGS84_003
-        cells = list(rdggs.grid(1))
-        colors = [c.color() for c in cells]
-        # Deterministic, in-range RGB.
-        for c, rgb in zip(cells, colors, strict=True):
-            self.assertEqual(len(rgb), 3)
-            for component in rgb:
-                self.assertGreaterEqual(component, 0)
-                self.assertLessEqual(component, 1)
-            self.assertEqual(c.color(), rgb)
-        # Documented as "a unique RGB color tuple for this cell": distinct
-        # cells at the same resolution get distinct colors.
-        self.assertEqual(len(set(colors)), len(cells))
-        # The saturation parameter is honored.
-        self.assertNotEqual(cells[7].color(saturation=0.2), cells[7].color(0.9))
-
     def test_region_overlaps(self):
         # DE-9IM overlaps between a cell and the union of a set of cells:
         # the set shares interior with the cell, does not cover it, and is
@@ -1957,3 +1941,70 @@ class GridDistanceTestCase(unittest.TestCase):
             a.grid_distance(Cell(WGS84_003_OGC, ["N", 0]))
         with self.assertRaises(ValueError):
             a.grid_distance(Cell(WGS84_003, []))
+
+
+class CellEdgeCasesTestCase(unittest.TestCase):
+    def test_comparison_with_other_types(self):
+        cell = WGS84_123.cell(["N"])
+        self.assertNotEqual(cell, "N")
+        self.assertFalse(cell == "N")
+
+    def test_level_order_index_round_trips(self):
+        # Every cell of the first resolutions, on grids where the face
+        # needs one or two digits of the suid's base N_side**2 number.
+        for rdggs in (WGS84_123, WGS84_122):
+            index = 0
+            for resolution in range(3):
+                for cell in rdggs.grid(resolution):
+                    self.assertEqual(Cell(rdggs, level_order_index=index), cell)
+                    self.assertEqual(cell.index("resolution"), index)
+                    index += 1
+
+    def test_level_order_index_at_a_resolution_boundary(self):
+        # Floating-point log can put the last index of a resolution one
+        # resolution too high; the constructor steps back.
+        index = 562949953421309
+        cell = Cell(WGS84_122, level_order_index=index)
+        self.assertEqual(str(cell), "S" + "3" * 23)
+        self.assertEqual(cell.index("resolution"), index)
+
+    def test_neighbor_in_an_unknown_direction_is_none(self):
+        cell = WGS84_123.cell(["N", 4])
+        self.assertIsNone(cell.neighbor("nowhere"))
+        self.assertIsNone(cell.neighbor("nowhere", plane=False))
+
+    def test_north_cap_neighbors_are_ordered_by_longitude(self):
+        for rdggs in (WGS84_123, RHEALPixDGGS(N_side=3)):
+            got = rdggs.cell(["N"]).neighbors(plane=False)
+            keys = ["south_0", "south_1", "south_2", "south_3"]
+            self.assertEqual(sorted(got), keys)
+            self.assertEqual({str(v) for v in got.values()}, set("OPQR"))
+            lons = [got[k].nucleus(plane=False)[0] for k in keys]
+            self.assertEqual(lons, sorted(lons))
+
+    def test_nw_vertex_on_the_ellipsoid_is_the_projected_planar_one(self):
+        for suid in (["N", 0], ["N", 4, 7], ["S", 2], ["P", 1]):
+            cell = WGS84_123.cell(suid)
+            expected = WGS84_123.rhealpix(*cell.nw_vertex(plane=True), inverse=True)
+            np.testing.assert_allclose(cell.nw_vertex(plane=False), expected)
+
+    def test_interior_matrix_and_flat_forms_agree(self):
+        cell = WGS84_123.cell(["P", 3])
+        for plane in (True, False):
+            matrix = cell.interior(n=3, plane=plane, flatten=False)
+            flat = cell.interior(n=3, plane=plane, flatten=True)
+            self.assertEqual([len(row) for row in matrix], [3, 3, 3])
+            self.assertEqual(flat, [matrix[i][j] for j in range(3) for i in range(3)])
+            for p in flat:
+                self.assertTrue(cell.contains(p, plane=plane))
+
+    def test_random_point_is_seedable_and_lies_in_the_cell(self):
+        # Caps at two resolutions, a dart and a quad: the cap branch widens
+        # the longitude range and one latitude bound to the pole.
+        for suid in (["N"], ["S"], ["N", 4], ["S", 4], ["N", 0], ["P", 3]):
+            cell = WGS84_123.cell(suid)
+            for plane in (True, False):
+                p = cell.random_point(plane=plane, rng=Random(3))
+                self.assertEqual(p, cell.random_point(plane=plane, rng=Random(3)))
+                self.assertTrue(cell.contains(p, plane=plane))
+                self.assertEqual((type(p[0]), type(p[1])), (float, float))

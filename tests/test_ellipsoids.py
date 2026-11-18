@@ -14,6 +14,7 @@ Keep adding tests!
 # *****************************************************************************
 
 import unittest
+from random import Random
 
 from numpy import deg2rad, pi
 
@@ -28,10 +29,29 @@ class MyTestCase(unittest.TestCase):
             lam_max = 35
             phi_min = -47
             phi_max = 58
+            rng = Random(5)
             for _ in range(100):
-                p = E.random_point(lam_min, lam_max, phi_min, phi_max)
-                self.assertTrue(p[0] >= lam_min and p[0] < lam_max)
-                self.assertTrue(p[1] >= phi_min and p[0] < phi_max)
+                p = E.random_point(lam_min, lam_max, phi_min, phi_max, rng=rng)
+                self.assertTrue(lam_min <= p[0] < lam_max)
+                self.assertTrue(phi_min <= p[1] < phi_max)
+            # The whole ellipsoid by default, keeping half a degree off the poles.
+            for _ in range(100):
+                lam, phi = E.random_point(rng=rng)
+                self.assertTrue(-180 <= lam < 180)
+                self.assertTrue(-89.5 <= phi <= 89.5)
+            self.assertEqual(
+                E.random_point(rng=Random(9)), E.random_point(rng=Random(9))
+            )
+            lam, phi = E.random_point()
+            self.assertTrue(-180 <= lam < 180 and -89.5 <= phi <= 89.5)
+        lam, phi = ell.WGS84_ELLIPSOID_RADIANS.random_point(rng=Random(9))
+        self.assertTrue(-pi <= lam < pi)
+        self.assertTrue(abs(phi) <= pi / 2 - pi / 360)
+
+    def test_comparison_with_other_types(self):
+        self.assertNotEqual(ell.WGS84_ELLIPSOID, 3)
+        self.assertFalse(ell.WGS84_ELLIPSOID == 3)
+        self.assertIs(ell.WGS84_ELLIPSOID.__eq__(3), NotImplemented)
 
     def test_equality(self):
         E = ell.Ellipsoid

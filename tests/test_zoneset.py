@@ -309,3 +309,24 @@ class ZoneSetTestCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ZoneSetProtocolTestCase(unittest.TestCase):
+    def test_repr_hash_and_comparison(self):
+        a = ZoneSet(WGS84_003, ["P4", "P5"])
+        b = ZoneSet(WGS84_003, ["P5", "P4"])
+        self.assertEqual(repr(a), "ZoneSet(['P4', 'P5'])")
+        self.assertEqual(a, b)
+        self.assertEqual(hash(a), hash(b))
+        self.assertEqual(len({a, b}), 1)
+        self.assertNotEqual(a, {"P4", "P5"})
+        self.assertIs(a.__eq__(3), NotImplemented)
+
+    def test_hierarchy_levels_must_be_positive(self):
+        for levels in (0, -1):
+            with self.assertRaises(ValueError):
+                ZoneSet(WGS84_003, ["P4"]).child(levels=levels)
+            with self.assertRaises(ValueError):
+                ZoneSet(WGS84_003, ["P4"]).parent(levels=levels)
+            with self.assertRaises(ValueError):
+                ZoneSet(WGS84_003, ["P4"]).sibling(levels=levels)
