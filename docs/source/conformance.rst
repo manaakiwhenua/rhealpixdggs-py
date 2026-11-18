@@ -299,10 +299,11 @@ Equal-Area Earth Reference System
    * - A.24 sequence maximum
      - A declared limit on refinement iterations tied to the cell-area
        error budget.
-     - Partial
-     - ``RHEALPixDGGS.max_resolution`` (default 15) and
-       ``max_areal_resolution`` exist; the derivation tying the limit
-       to the area error budget is to be documented (v1.0).
+     - Met
+     - ``RHEALPixDGGS.max_resolution`` is the limit (15 for
+       ``WGS84_003``); identifiers beyond it are rejected. `Area error
+       budget and sequence maximum`_ below derives the limit and shows
+       every grid up to it is within the budget.
    * - A.25 global area preservation
      - Domain completeness and position uniqueness preserved at every
        level (dynamic-datum form).
@@ -336,10 +337,11 @@ Equal-Area Earth Reference System
        the isolatitude rings.
    * - A.28 area error budget
      - A declared cell-area error budget of at most 1% per grid.
-     - Partial
-     - :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.area_error_budget`
-       computes the budget; the per-resolution table is to be
-       published on this page (v1.0).
+     - Met
+     - Declared per grid in `Area error budget and sequence maximum`_
+       below, in the dynamic-datum form: at most 6 × 10⁻⁸ for
+       ``WGS84_003``, computed by
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.area_error_budget`.
    * - A.29 equal-area cells
      - Cells in each grid are equal-area within the declared budget.
      - Met
@@ -348,33 +350,109 @@ Equal-Area Earth Reference System
        the area tests in the test suite (budgets published under
        A.28).
 
-Planned work by release
------------------------
+Area error budget and sequence maximum
+--------------------------------------
 
-- **v0.9.0** — the zone-query interface is complete (intersects, crosses,
-  distance, withinDistance, relativePosition, relatePosition, relate:
-  `#96 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/96>`_;
-  DE-9IM semantics for ``overlaps``:
-  `#97 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/97>`_)
-  the centroid is the published representative position
-  (`#98 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/98>`_),
-  zones and query results export to GeoJSON and delimited text
-  (`#99 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/99>`_),
-  and the hierarchy predicates, zone-set operations and query attributes
-  of Table 53 are in place
-  (`#161 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/161>`_).
-- **v1.0** — finish this page's remaining rows: CRS definitions
-  (WKT2/PROJJSON) with epoch statement
-  (`#100 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/100>`_),
-  the zonal identifier grammar
-  (`#101 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/101>`_),
-  the published error-budget and maximum-resolution derivation
-  (`#102 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/102>`_),
-  GML export with its application schema
-  (`#103 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/103>`_),
-  and the formal reference-system declaration with the quantization
-  and interoperation mapping documentation
-  (`#104 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/104>`_).
+Requirement 28 asks an equal-area reference system to declare, for each
+of its grids, an error budget of at most 1 %: the largest ratio by which
+a cell's area may differ from the theoretical cell area, the surface
+area of the Earth model divided by the number of cells. Requirement 24
+asks for a limit on the sequence of grids that keeps every grid within
+the budget. This section is that declaration, with ``WGS84_003`` as the
+worked case. WGS84 is a dynamic datum, so the dynamic-datum form of
+Requirement 28 applies: one budget value per grid.
+
+The rHEALPix projection is equal-area from the ellipsoid to the plane,
+where the six resolution 0 cells are squares of side ``π R_A / 2`` and
+each cell has ``N_side²`` congruent children. The resolution ``r`` grid
+has ``6 N_side^(2r)`` cells, so the theoretical cell area is
+
+.. math::
+
+   A_r = \frac{4 \pi R_A^2}{6\, N_{side}^{2r}},
+
+and because the projection is equal-area, every cell's area is also
+``A_r``: the ratio of Requirement 28 is 1 at every resolution in exact
+arithmetic. :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cell_area` returns
+``A_r`` and :meth:`~rhealpixdggs.cell.Cell.area` reports it for every
+cell.
+
+Of the error sources Topic 21 lists, two apply to a closed-form system in
+double precision: data-type precision and error propagation. The datum,
+its realisation and the Earth model are the CRS's (A.7), and the area
+another program measures from a cell's boundary points carries that
+program's error. Two floating-point effects remain. The computed value
+of ``A_r`` passes through at most 10 rounding steps, so carries at most
+``10 ε = 2.2 × 10⁻¹⁵`` relative error at every resolution;
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.area_error_budget` derives the
+count and gives the resulting absolute tolerance per grid, the
+tolerance for testing two computed areas for equality. And the corners
+of a cell, as the plane holds them, lie within a few units in the last
+place of the plane's extent ``π R_A``, under ``δ = 10⁻⁸ m``, of their
+exact positions, so the area enclosed by a cell's corners differs from
+``A_r`` by at most ``4 δ / w_r``, where ``w_r`` is the cell width. The
+declared budget for the resolution ``r`` grid is the sum,
+``10 ε + 4 δ / w_r``. For ``WGS84_003``::
+
+    >>> import sys
+    >>> from rhealpixdggs.dggs import WGS84_003
+    >>> budget = WGS84_003.area_error_budget()
+    >>> for r, b in budget.items():
+    ...     declared = 10 * sys.float_info.epsilon + 4e-8 / WGS84_003.cell_width(r)
+    ...     print(f"{r:2d}  {b['cell_area_m2']:10.4e}  {b['abs_tolerance']:8.2e}  {declared:8.2e}")
+     0  8.5011e+13  1.89e-01  6.22e-15
+     1  9.4457e+12  2.10e-02  1.42e-14
+     2  1.0495e+12  2.33e-03  3.82e-14
+     3  1.1661e+11  2.59e-04  1.10e-13
+     4  1.2957e+10  2.88e-05  3.26e-13
+     5  1.4397e+09  3.20e-06  9.73e-13
+     6  1.5996e+08  3.55e-07  2.92e-12
+     7  1.7774e+07  3.95e-08  8.74e-12
+     8  1.9749e+06  4.39e-09  2.62e-11
+     9  2.1943e+05  4.87e-10  7.87e-11
+    10  2.4381e+04  5.41e-11  2.36e-10
+    11  2.7090e+03  6.02e-12  7.08e-10
+    12  3.0100e+02  6.68e-13  2.12e-09
+    13  3.3444e+01  7.43e-14  6.37e-09
+    14  3.7160e+00  8.25e-15  1.91e-08
+    15  4.1289e-01  9.17e-16  5.74e-08
+
+The columns are the resolution, the cell area ``A_r`` in m², the
+absolute tolerance on its computed value in m², and the declared
+budget as a ratio. The budget grows by ``N_side`` per resolution,
+because the corner displacement is fixed in metres while the cell
+shrinks, and reaches 1 % at a cell width of about 4 µm: resolution 26
+for ``N_side = 3``. This is the limit Requirement 24 refers to, and the
+sequence stops well short of it. ``max_resolution`` is the first
+resolution whose cells are no larger than ``max_areal_resolution``,
+one square metre by default:
+
+.. math::
+
+   \text{max\_resolution} = \left\lceil
+   \frac{\log(A_0 / \text{max\_areal\_resolution})}{2 \log N_{side}}
+   \right\rceil,
+
+15 for ``N_side = 3`` (cells of 0.41 m²) and 24 for ``N_side = 2``
+(0.30 m²). Identifiers longer than ``max_resolution + 1`` digits are
+rejected. At resolution 15 the budget is 6 × 10⁻⁸, five orders of
+magnitude inside the 1 % that Requirement 28 allows, and the binding
+limit on the sequence is the area floor. A ``max_areal_resolution``
+below about 10⁻¹¹ m² would carry the sequence past the budget.
+
+Planned work
+------------
+
+The rows above that are not yet Met are v1.0 work: CRS definitions
+(WKT2/PROJJSON) with epoch statement
+(`#100 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/100>`_),
+the zonal identifier grammar
+(`#101 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/101>`_),
+GML export with its application schema
+(`#103 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/103>`_),
+and the formal reference-system declaration with the quantization and
+interoperation mapping documentation
+(`#104 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/104>`_).
 
 Progress is tracked in the project's `GitHub milestones
 <https://github.com/manaakiwhenua/rhealpixdggs-py/milestones>`_.

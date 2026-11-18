@@ -1,3 +1,10 @@
+0.13.1
+^^^^^^
+The standards conformance chapter declares the cell-area error budget
+per grid for ``WGS84_003`` and derives ``max_resolution`` from
+``max_areal_resolution``, closing OGC Topic 21 tests A.24 and A.28
+(issue #102).
+
 0.13.0
 ^^^^^^
 Added ``Cell.grid_distance``, the number of hops between two cells over
