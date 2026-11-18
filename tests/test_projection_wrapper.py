@@ -5,10 +5,12 @@ Keep adding tests!
 """
 
 import unittest
+from unittest import mock
 
 import numpy as np
 from numpy.testing import assert_allclose
 
+import rhealpixdggs.projection_wrapper as pw
 from rhealpixdggs.ellipsoids import (
     WGS84_ELLIPSOID,
     WGS84_ELLIPSOID_RADIANS,
@@ -87,15 +89,25 @@ class MyTestCase(unittest.TestCase):
         self.assertNotEqual(f0(10, 80), f1(10, 80))
         self.assertEqual(f0(10, 20), f1(10, 20))
 
-    def test_unimplemented_homemade_projection_degrades_gracefully(self):
-        # 'isea', 'csea', and 'qsc' are listed in HOMEMADE_PROJECTIONS but have
-        # no backing rhealpixdggs.pj_* module. Calling them should hit the
-        # "Oops! Projection %s is not implemented." branch (returning None),
-        # not crash with an uncaught ModuleNotFoundError/AttributeError.
-        # Regression test for the `except NameError` bug (see issue #50).
-        for proj in ("isea", "csea", "qsc"):
+    def test_homemade_name_without_a_module_raises(self):
+        with mock.patch.object(pw, "HOMEMADE_PROJECTIONS", {"rhealpix", "nope"}):
+            f = Projection(ellipsoid=WGS84_ELLIPSOID, proj="nope")
+            with self.assertRaises(ValueError):
+                f(0, 0)
+            with self.assertRaises(ValueError):
+                f(np.array([0.0]), np.array([0.0]))
+
+    def test_isea_and_qsc_reach_proj(self):
+        # Once listed as homemade without a module, these now fall through
+        # to PROJ, which implements both (isea's inverse only approximately).
+        import pyproj
+
+        for proj in ("isea", "qsc"):
             f = Projection(ellipsoid=WGS84_ELLIPSOID, proj=proj)
-            self.assertIsNone(f(0, 0))
+            p = pyproj.Proj(proj=proj, a=WGS84_ELLIPSOID.a, e=WGS84_ELLIPSOID.e)
+            x, y = f(10, 20)
+            self.assertEqual((x, y), p(10, 20))
+            self.assertEqual(f(x, y, inverse=True), p(x, y, inverse=True))
 
     def test_underlying_callable_is_built_once_and_cached(self):
         # Regression test: __call__() used to rebuild its underlying f
@@ -179,10 +191,6 @@ class MyTestCase(unittest.TestCase):
         lon, lat = f(np.array([0.0, x[1]]), np.array([0.0, y[1]]), inverse=True)
         self.assertEqual((lon[0], lat[0]), (50.0, 0.0))
         self.assertEqual((lon[1], lat[1]), f(x[1], y[1], inverse=True))
-
-    def test_unimplemented_homemade_projection_returns_none_for_arrays(self):
-        f = Projection(ellipsoid=WGS84_ELLIPSOID, proj="isea")
-        self.assertIsNone(f(np.array([0.0]), np.array([0.0])))
 
     def test_underlying_callable_is_shared_by_scalar_and_array_calls(self):
         p = Projection(ellipsoid=WGS84_ELLIPSOID, proj="rhealpix")

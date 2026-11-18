@@ -30,10 +30,9 @@ from rhealpixdggs.utils import (
     wrap_longitude,
 )
 
-# Homemade map projections, as opposed to those in the PROJ.4 library.
-# Remove 'healpix' and 'rhealpix' to use the PROJ.4 versions instead,
-# assuming you have the *correct/patched* PROJ.4 versions.
-HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
+# Projections implemented in this package's pj_* modules; every other name
+# goes to PROJ. Remove a name here to use PROJ's version of it instead.
+HOMEMADE_PROJECTIONS = {"healpix", "rhealpix"}
 
 
 class Projection:
@@ -98,7 +97,7 @@ class Projection:
             result.append(" " * 8 + k + " = " + str(v))
         return "\n".join(result)
 
-    def _get_f(self) -> ProjectionFunction | pyproj.Proj | None:
+    def _get_f(self) -> ProjectionFunction | pyproj.Proj:
         """
         Return the underlying f(u, v, radians=False, inverse=False)
         callable for this projection, building it on first use and
@@ -112,12 +111,12 @@ class Projection:
             e = self.ellipsoid.e
             if self.proj in HOMEMADE_PROJECTIONS:
                 try:
-                    # Import projection module for proj.
                     module = importlib.import_module("rhealpixdggs.pj_" + self.proj)
                     self._f = getattr(module, self.proj)(a=a, e=e, **self.kwargs)
-                except (AttributeError, ModuleNotFoundError):
-                    print(f"Oops! Projection {self.proj} is not implemented.")
-                    return None
+                except (AttributeError, ModuleNotFoundError) as error:
+                    raise ValueError(
+                        f"no module implements the homemade projection {self.proj!r}"
+                    ) from error
             else:
                 # Use a projection from the PROJ library.
                 self._f = pyproj.Proj(proj=self.proj, a=a, e=e, **self.kwargs)
@@ -126,21 +125,21 @@ class Projection:
     @overload
     def __call__(
         self, u: float, v: float, inverse: bool = ...
-    ) -> tuple[float, float] | None: ...
+    ) -> tuple[float, float]: ...
 
     @overload
     def __call__(
         self, u: FloatArray, v: FloatArray, inverse: bool = ...
-    ) -> tuple[FloatArray, FloatArray] | None: ...
+    ) -> tuple[FloatArray, FloatArray]: ...
 
     @overload
     def __call__(
         self, u: float | FloatArray, v: float | FloatArray, inverse: bool = ...
-    ) -> tuple[float, float] | tuple[FloatArray, FloatArray] | None: ...
+    ) -> tuple[float, float] | tuple[FloatArray, FloatArray]: ...
 
     def __call__(
         self, u: float | FloatArray, v: float | FloatArray, inverse: bool = False
-    ) -> tuple[float, float] | tuple[FloatArray, FloatArray] | None:
+    ) -> tuple[float, float] | tuple[FloatArray, FloatArray]:
         """
         Project the point `(u, v)`, or invert it if `inverse` = True. `u` and
         `v` may be floats or numpy arrays of a common shape; arrays are
@@ -151,8 +150,6 @@ class Projection:
         lat_0 = ellipsoid.lat_0
         radians = ellipsoid.radians
         f = self._get_f()
-        if f is None:
-            return None
         if isinstance(u, np.ndarray) or isinstance(v, np.ndarray):
             u_arr, v_arr = np.broadcast_arrays(
                 np.asarray(u, dtype=np.float64), np.asarray(v, dtype=np.float64)

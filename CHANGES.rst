@@ -52,6 +52,12 @@ held the whole geometry, so a small polygon under a coarse
 ``return_cells`` was false; and ``!=`` between a grid, cell or
 ellipsoid and an object of another type was always false (issue #211).
 
+``HOMEMADE_PROJECTIONS`` lists only the two projections the package
+implements, so ``Projection(proj="isea")`` and ``"qsc"`` now reach
+PROJ's versions instead of printing that they are not implemented and
+returning ``None``; a homemade name whose module is missing raises
+``ValueError`` (issue #206).
+
 0.13.0
 ^^^^^^
 Added ``Cell.grid_distance``, the number of hops between two cells over
