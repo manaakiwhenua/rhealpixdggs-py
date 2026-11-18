@@ -516,18 +516,24 @@ asks that coordinates referenced to it carry a coordinate epoch. The
 grid is defined on the ellipsoid and has no epoch: a zone is a fixed
 region of the ellipsoid, the same at every epoch, so the sequence of
 grids preserves domain completeness and position uniqueness at any epoch
-(A.25) and the error budget above holds at any epoch (A.28). What an
-epoch changes is which zone a point on the ground falls in, because the
-ground moves relative to the frame with its tectonic plate, by up to
-about 7 cm a year. A decade of that motion, 0.7 m, is the width of a
-resolution 15 cell; a century, 7 m, the width of a resolution 13 cell.
-The package therefore takes coordinates as given, in whatever
-realisation and epoch they have, and makes no epoch transformation.
-Data assigned to zones at a resolution where such displacements are a
-fraction of a cell should be transformed to a common frame and epoch
-first, which PROJ does between ITRF realisations with a plate-motion
-model, and the frame and epoch recorded with the identifiers and their
-codespace.
+(A.25) and the error budget below is the budget of the grid on the
+ellipsoid, which holds at any epoch (A.28). Topic 21 asks that a budget
+on WGS 84 cater for the approximation in the WGS 84 definition. The
+realisations of the ensemble differ by near-rigid transformations, so
+the approximation is a positional uncertainty, 2 m, and not an area
+one: what it affects is which zone a point on the ground falls in, and
+it exceeds a cell width from resolution 14 (2.1 m). The coordinate
+epoch affects the same thing, because the ground moves relative to the
+frame with its tectonic plate, by up to about 7 cm a year: a decade of
+that motion, 0.7 m, is the width of a resolution 15 cell, and a century,
+7 m, the width of a resolution 13 cell. The package therefore takes
+coordinates as given, in whatever realisation and epoch they have, and
+makes no transformation between them. Data assigned to zones at a
+resolution where such displacements are a fraction of a cell should be
+referenced to a named realisation, not the ensemble, and transformed to
+a common frame and epoch first, which PROJ does between ITRF
+realisations with a plate-motion model; the frame and epoch belong with
+the identifiers and their codespace.
 
 Area error budget and sequence maximum
 --------------------------------------
