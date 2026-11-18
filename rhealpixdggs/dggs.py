@@ -161,7 +161,7 @@ import operator
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import pairwise, product
 from math import asin, copysign, degrees, floor, fsum, isclose, pi
-from random import randint
+from random import Random
 from typing import Any, Literal, NamedTuple, cast, get_args, overload
 from warnings import warn
 
@@ -1865,7 +1865,9 @@ class RHEALPixDGGS:
         Consequently, there are 2*self.N_side**resolution
         boundary latitudes between the poles if self.N_side is odd and
         2*self.N_side**resolution - 1 boundary latitudes if self.N_side is
-        even.
+        even. Resolution 0 with even N_side is the exception: the one
+        nucleus latitude is the equator and the two boundary latitudes
+        are the polar squares' rims.
 
         EXAMPLES::
 
@@ -1920,15 +1922,11 @@ class RHEALPixDGGS:
                     y = -R * pi / 2 + w / 2
                 else:
                     y = -R * pi / 2 + w
-        # Start y above y_min.
-        if y <= y_min:
-            dy = y_min - y
-            y = max(y + int(np.ceil(dy / w)) * w, y + w)
-        # Collect the ys.
-        result = []
-        while y < y_max:
-            result.append(y)
-            y += w
+        # Step by multiples of w rather than a running sum, so that
+        # rounding cannot let a pole in.
+        first = max(int(np.ceil((y_min - y) / w - 1e-9)), 1) if y <= y_min else 0
+        stop = int(np.ceil((y_max - y) / w - 1e-9))
+        result = [y + k * w for k in range(first, stop)]
         # Convert to latitudes if desired.
         if not plane:
             result = [self.healpix(R * pi / 4, y, inverse=True)[1] for y in result]
@@ -2384,7 +2382,7 @@ class RHEALPixDGGS:
         brackets: list[tuple[float, float, float, float, int, float]] = []
         N_SCAN = 64
         for pa, pb in pairwise(sorted(breakpoints)):
-            if pb - pa < 1e-14:
+            if pb - pa < 1e-14:  # pragma: no cover - coincident breakpoints
                 continue
             # Evaluate strictly inside the piece, clear of its kinks.
             eps = (pb - pa) * 1e-12
@@ -2399,7 +2397,7 @@ class RHEALPixDGGS:
                         fa, fb = va - edge, vb - edge
                         if fa == 0:
                             crossings.add(ra)
-                        elif fb == 0:
+                        elif fb == 0:  # pragma: no cover - exact hit at a piece end
                             crossings.add(rb)
                         else:
                             brackets.append((ra, rb, fa, fb, axis, edge))
@@ -4017,43 +4015,56 @@ class RHEALPixDGGS:
             result.append(cells)
         return result
 
-    def random_point(self, plane: bool = True) -> tuple[float, float]:
+    def random_point(
+        self, plane: bool = True, rng: Random | None = None
+    ) -> tuple[float, float]:
         """
         Return a point in this DGGS sampled uniformly at
         random from the plane or from the ellipsoid.
+        The draw comes from `rng`, a ``random.Random``, so a seeded one
+        makes it reproducible; by default it is fresh and unseeded.
 
         EXAMPLES::
 
+            >>> from random import Random
             >>> rdggs = RHEALPixDGGS()
-            >>> print(E.random_point()) # doctest: +SKIP
-            (-1.0999574573422948, 0.21029104897701129)
+            >>> print(rdggs.random_point(rng=Random(1)))
+            (-14318770.45545909, 3024934.1268202867)
 
         """
-        # Pick a random resolution 0 cell.
-        n = randint(0, 5)
-        c = self.cell([CELLS0[n]])
-        # Pick a random point in that cell.
-        return c.random_point(plane=plane)
+        if rng is None:
+            rng = Random()
+        # The six resolution 0 cells have equal area, so a uniform choice
+        # of cell then a uniform point within it is uniform overall.
+        c = self.cell([CELLS0[rng.randint(0, 5)]])
+        return c.random_point(plane=plane, rng=rng)
 
-    def random_cell(self, resolution: int | None = None) -> Cell:
+    def random_cell(
+        self, resolution: int | None = None, rng: Random | None = None
+    ) -> Cell:
         """
         Return a cell of the given resolution chosen uniformly at random
         from all cells at that resolution.
         If `resolution=None`, then the cell resolution is first chosen
         uniformly at random from [0,..,self.max_resolution].
+        The draw comes from `rng`, a ``random.Random``, so a seeded one
+        makes it reproducible; by default it is fresh and unseeded.
 
         EXAMPLES::
 
-            >>> print(RHEALPixDGGS().random_cell()) # doctest: +SKIP
-            S480586367780080
+            >>> from random import Random
+            >>> print(RHEALPixDGGS().random_cell(rng=Random(1)))
+            R1417
 
         """
+        if rng is None:
+            rng = Random()
         if resolution is None:
-            resolution = randint(0, self.max_resolution)
+            resolution = rng.randint(0, self.max_resolution)
         suid: list[str | int] = []
-        suid.append(CELLS0[randint(0, 5)])
+        suid.append(CELLS0[rng.randint(0, 5)])
         for _ in range(1, resolution + 1):
-            suid.append(randint(0, self.N_side**2 - 1))
+            suid.append(rng.randint(0, self.N_side**2 - 1))
         return Cell(self, suid)
 
     def minimal_cover(

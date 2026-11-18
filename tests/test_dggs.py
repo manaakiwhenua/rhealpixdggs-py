@@ -17,7 +17,8 @@ Keep adding tests!
 import itertools
 import unittest
 import warnings
-from random import randint  # , uniform
+from random import Random, randint
+from typing import ClassVar
 
 import numpy as np
 from numpy import array, pi

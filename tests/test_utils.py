@@ -481,3 +481,18 @@ class UtilsTestCase(unittest.TestCase):
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
     unittest.main()
+
+
+class AuthalicEdgeCasesTestCase(unittest.TestCase):
+    def test_auth_lat_clamps_rounding_past_the_pole(self):
+        # At a pole the ratio q/qp is 1 exactly, but can round past it.
+        e = 0.11561403508771931
+        self.assertEqual(ut.auth_lat(-90, e=e), -90.0)
+        self.assertAlmostEqual(ut.auth_lat(90, e=e), 90.0, places=9)
+
+    def test_auth_rad_inverse_round_trip(self):
+        a = 6378137.0
+        for e in (0.1, 0.5, 0.9):
+            R = ut.auth_rad(a, e)
+            self.assertLess(R, a)
+            self.assertAlmostEqual(ut.auth_rad(R, e, inverse=True), a, places=6)

@@ -3,7 +3,7 @@ from collections.abc import Iterator
 from functools import cache, cached_property, total_ordering
 from itertools import product
 from math import degrees, fsum, hypot
-from random import uniform
+from random import Random
 from typing import TYPE_CHECKING, ClassVar, Literal, cast, overload
 
 if TYPE_CHECKING:
@@ -249,11 +249,12 @@ class Cell:
                 # Then k = L + 1
                 L = k - 1
                 remainder = index - ind(L)
-            # Now compute cell suid from remainder.
-            digits_str = base_repr(remainder, b)
-            # If necessary, prepend with zeros to get a length L + 1 string.
-            digits_str = "0" * (L + 1 - len(digits_str)) + digits_str
-            digits = [int(s) for s in digits_str]
+            # The face needs two base b digits on an N_side 2 grid, so
+            # split it off before reading the L digits.
+            face, rest = divmod(remainder, b**L)
+            digits = [face]
+            if L:
+                digits.extend(int(s) for s in base_repr(rest, b).zfill(L))
         # Replace the first digit with the appropriate letter.
         return (CELLS0[digits[0]], *digits[1:])
 
@@ -413,9 +414,8 @@ class Cell:
             # Calculate level order index.
             b = self.N_side**2
             n = len(s)
-            result = self.rdggs.num_cells(res_1=0, res_2=L - 1) + sum(
-                [s[n - 1 - i] * b**i for i in range(n)]
-            )
+            before = self.rdggs.num_cells(res_1=0, res_2=L - 1) if L else 0
+            result = before + sum([s[n - 1 - i] * b**i for i in range(n)])
         return result
 
     def suid_rowcol(
@@ -3053,28 +3053,35 @@ class Cell:
         """The ``sibling`` of Table 53: see ``ZoneSet.sibling``."""
         return _as_zoneset(self).sibling(levels, inherit_id)
 
-    def random_point(self, plane: bool = True) -> tuple[float, float]:
+    def random_point(
+        self, plane: bool = True, rng: Random | None = None
+    ) -> tuple[float, float]:
         """
         Return a random point in this cell.
         If `plane` = True, then choose the point from
         the planar cell.
         Otherwise, choose the point from the ellipsoidal cell.
+        The draw comes from `rng`, a ``random.Random``, so a seeded one
+        makes it reproducible; by default it is fresh and unseeded.
 
         EXAMPLES::
 
+            >>> from random import Random
             >>> from rhealpixdggs.dggs import RHEALPixDGGS
-            >>> c = Cell(RHEALPixDGGS(), ['N', 0])
-            >>> print(c.random_point(plane=False))  # doctest: +SKIP
-            (1.4840291937583836, 0.90042819146088571)
+            >>> c = RHEALPixDGGS().cell(['N', 0])
+            >>> print(c.random_point(plane=False, rng=Random(1)))
+            (105.82647713859684, 48.050405365061536)
 
         """
+        if rng is None:
+            rng = Random()
         vertices = self.vertices(plane=plane)
         u_min = min([p[0] for p in vertices])
         u_max = max([p[0] for p in vertices])
         v_min = min([p[1] for p in vertices])
         v_max = max([p[1] for p in vertices])
         if plane:
-            return uniform(u_min, u_max), uniform(v_min, v_max)
+            return float(rng.uniform(u_min, u_max)), float(rng.uniform(v_min, v_max))
         else:
             if self.ellipsoidal_shape == "cap":
                 # Need to adjust extremes.
@@ -3089,7 +3096,9 @@ class Cell:
             # Rejection can happen for polar cells, because they are not
             # rectangular.
             while True:
-                lam, phi = self.ellipsoid.random_point(u_min, u_max, v_min, v_max)
+                lam, phi = self.ellipsoid.random_point(
+                    u_min, u_max, v_min, v_max, rng=rng
+                )
                 if self.contains((lam, phi), plane=False):
                     # Success
                     return lam, phi

@@ -165,3 +165,12 @@ class HarmonicsTestCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(find_spec("ducc0"), "ducc0 is not installed")
+class HarmonicsLengthCheckTestCase(unittest.TestCase):
+    def test_wrong_number_of_values_is_rejected(self):
+        with self.assertRaises(ValueError):
+            harmonics.from_ring_order(WGS84_003, 1, np.zeros(53))
+        with self.assertRaises(ValueError):
+            harmonics.analysis(WGS84_003, 1, np.zeros(53), lmax=2)

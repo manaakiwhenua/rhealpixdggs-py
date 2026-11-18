@@ -1253,3 +1253,20 @@ class WarningStacklevelTestCase(unittest.TestCase):
         self.assert_blames_caller(
             lambda: rhpw.linetrace(degenerate, res=3, verbose=True)
         )
+
+
+class PolyfillEdgeCasesTestCase(unittest.TestCase):
+    def test_resolution_too_deep_for_int64_keys(self):
+        deep = gs.RHEALPixDGGS(N_side=3, max_areal_resolution=1e-10)
+        poly = sh.Polygon([(10, 10), (11, 10), (11, 11), (10, 11)])
+        with self.assertRaises(ValueError):
+            rhpw.polyfill(poly, res=20, plane=False, dggs=deep)
+
+    def test_geometry_outside_the_planar_image_fills_nothing(self):
+        far = sh.Polygon([(1e9, 1e9), (1.1e9, 1e9), (1.1e9, 1.1e9)])
+        self.assertEqual(len(rhpw.polyfill_array(far, res=2, plane=True)), 0)
+
+    def test_malformed_lines_and_empty_duplicate_removal(self):
+        self.assertTrue(rhpw._malformed_lines(sh.Point(0, 0)))
+        self.assertFalse(rhpw._malformed_lines(sh.LineString([(0, 0), (1, 1)])))
+        self.assertEqual(rhpw._remove_sequential_duplicates([]), [])

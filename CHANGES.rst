@@ -39,6 +39,19 @@ CRS, carried in the document, and the curve type of each edge from Topic
 21's ``EA_BoundaryType`` list, which ``export.boundary_types`` gives for
 any cell (issue #103).
 
+The random samplers, ``RHEALPixDGGS.random_point`` and ``random_cell``,
+``Cell.random_point`` and ``Ellipsoid.random_point``, take ``rng``, a
+``random.Random``, so a seeded draw is reproducible, and return plain
+floats. ``Cell.color`` is removed. Fixed four defects the new tests
+turned up: ``Cell.index("resolution")`` was 6 too large for resolution 0
+cells, and ``Cell(level_order_index=...)`` gave the wrong cell for faces
+R and S on an ``N_side`` 2 grid; ``cell_latitudes`` could include a
+pole through rounding; ``CellZoneFromPoly`` skipped a child cell that
+held the whole geometry, so a small polygon under a coarse
+``bounding_cell`` produced no cells, and it raised when
+``return_cells`` was false; and ``!=`` between a grid, cell or
+ellipsoid and an object of another type was always false (issue #211).
+
 0.13.0
 ^^^^^^
 Added ``Cell.grid_distance``, the number of hops between two cells over

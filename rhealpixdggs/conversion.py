@@ -87,8 +87,7 @@ class CellZoneFromPoly:
         self.geometry = feature[1]
         self.res_limit = res_limit
         self.return_cells = return_cells
-        if return_cells:
-            self.cells_list: list[Cell] = []
+        self.cells_list: list[Cell] = []
         self.file = file
         if file:
             file.write(f"\n{self.label},")
@@ -130,7 +129,7 @@ class CellZoneFromPoly:
                     self._write_cells(child_cell, "centroid")
             # 3: check the children (call this same function on the children)
             else:
-                if self.geometry.overlaps(child_poly):
+                if self.geometry.intersects(child_poly):
                     self._get_dggs_poly(child_cell)
 
     def _write_cells(self, cell: Cell, desc: str) -> None:
