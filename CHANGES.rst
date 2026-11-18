@@ -1,5 +1,5 @@
-0.13.1
-^^^^^^
+1.0.0
+^^^^^
 The standards conformance chapter declares the cell-area error budget
 per grid for ``WGS84_003`` and derives ``max_resolution`` from
 ``max_areal_resolution``, closing OGC Topic 21 tests A.24 and A.28
@@ -17,6 +17,18 @@ definition. Index
 strings with more digits than ``max_resolution`` are now invalid to
 ``parse_index``, ``rhp_is_valid`` and the array methods, as they already
 were to ``Cell`` (issue #101).
+
+Added ``RHEALPixDGGS.crs``, the grid's coordinate reference system as a
+``pyproj.CRS``: the rHEALPix projection on WGS 84 (EPSG:4326) or on the
+grid's ellipsoid, with the central meridian and polar squares as the
+conversion's parameters, so ``to_wkt()`` and ``to_json()`` give the WKT2
+and PROJJSON definitions and other software can apply them. PROJ's
+``rhealpix`` reproduces the package's plane to within a few micrometres.
+``to_dggrs_definition`` carries the PROJJSON, and ``crs_on`` gives the
+CRS on a named realisation of the datum. The conformance chapter
+publishes the definition with the coordinate-epoch statement for the
+dynamic WGS 84 datum and a worked example of the epoch's effect on
+zone assignment, closing OGC Topic 21 test A.7 (issue #100).
 
 0.13.0
 ^^^^^^

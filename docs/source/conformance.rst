@@ -100,11 +100,10 @@ DGGS Core — reference system
    * - A.7 CRS
      - A defined coordinate reference system, with coordinate-epoch
        provisions.
-     - Partial
-     - :class:`~rhealpixdggs.ellipsoids.Ellipsoid` plus the rHEALPix
-       projection define the CRS operationally; WKT2/PROJJSON
-       definitions and a dynamic-datum epoch statement are to be
-       published (v1.0).
+     - Met
+     - :attr:`~rhealpixdggs.dggs.RHEALPixDGGS.crs` is the projected CRS
+       in WKT2 and PROJJSON; `Coordinate reference system`_ below
+       gives the definition and the coordinate-epoch statement.
    * - A.8 global domain
      - A specified global domain and its dimensionality.
      - Met
@@ -309,9 +308,10 @@ Equal-Area Earth Reference System
      - Domain completeness and position uniqueness preserved at every
        level (dynamic-datum form).
      - Met
-     - WGS84 is a dynamic datum; completeness and uniqueness hold at
+     - WGS 84 is a dynamic datum; completeness and uniqueness hold at
        every level by the subdivision construction (A.9, A.10 apply
-       per level).
+       per level), and at every coordinate epoch, because the grid is
+       fixed to the ellipsoid (`Coordinate reference system`_).
    * - A.26 cells are simple 2D polygons
      - Every EAERS cell is a simple polygon.
      - Met
@@ -445,6 +445,121 @@ Data exchanged by identifier should carry the codespace, as the
 other software should use the registered grid, whose URI other software
 can resolve.
 
+Coordinate reference system
+---------------------------
+
+Requirement 7 asks a DGGS reference system to define a CRS and to meet
+the coordinate-epoch provisions of ``MD_ReferenceSystem``. The CRS of a
+grid is the projected CRS of the rHEALPix projection with the grid's
+central meridian and polar squares, in metres, on the grid's ellipsoid:
+for the WGS84 grids the base CRS is WGS 84, EPSG:4326, and for any
+other ellipsoid a geographic CRS of that ellipsoid.
+:attr:`~rhealpixdggs.dggs.RHEALPixDGGS.crs` gives the CRS as a
+``pyproj.CRS``, from which ``to_wkt()`` and ``to_json()`` write the WKT2
+and PROJJSON definitions; the DGGRS definition of the previous section
+carries the PROJJSON. For the registered grid::
+
+    >>> from rhealpixdggs.dggs import WGS84_003_OGC
+    >>> print(WGS84_003_OGC.crs.to_wkt(pretty=True))
+    PROJCRS["rHEALPix (WGS 84, lon_0=50, north_square=0, south_square=0)",
+        BASEGEOGCRS["WGS 84",
+            ENSEMBLE["World Geodetic System 1984 ensemble",
+                MEMBER["World Geodetic System 1984 (Transit)"],
+                MEMBER["World Geodetic System 1984 (G730)"],
+                MEMBER["World Geodetic System 1984 (G873)"],
+                MEMBER["World Geodetic System 1984 (G1150)"],
+                MEMBER["World Geodetic System 1984 (G1674)"],
+                MEMBER["World Geodetic System 1984 (G1762)"],
+                MEMBER["World Geodetic System 1984 (G2139)"],
+                MEMBER["World Geodetic System 1984 (G2296)"],
+                ELLIPSOID["WGS 84",6378137,298.257223563,
+                    LENGTHUNIT["metre",1]],
+                ENSEMBLEACCURACY[2.0]],
+            PRIMEM["Greenwich",0,
+                ANGLEUNIT["degree",0.0174532925199433]],
+            ID["EPSG",4326]],
+        CONVERSION["rHEALPix lon_0=50, north_square=0, south_square=0",
+            METHOD["PROJ rhealpix"],
+            PARAMETER["lon_0",50,
+                ANGLEUNIT["degree",0.0174532925199433,
+                    ID["EPSG",9122]]],
+            PARAMETER["north_square",0,
+                SCALEUNIT["unity",1,
+                    ID["EPSG",9201]]],
+            PARAMETER["south_square",0,
+                SCALEUNIT["unity",1,
+                    ID["EPSG",9201]]]],
+        CS[Cartesian,2],
+            AXIS["(E)",east,
+                ORDER[1],
+                LENGTHUNIT["metre",1,
+                    ID["EPSG",9001]]],
+            AXIS["(N)",north,
+                ORDER[2],
+                LENGTHUNIT["metre",1,
+                    ID["EPSG",9001]]]]
+
+The conversion is PROJ's ``rhealpix`` method, so the definition is one
+other software can apply: every planar coordinate this package computes,
+cell corners and nuclei included, is a coordinate in this CRS, and
+PROJ's own ``rhealpix`` reproduces the package's projection to within a
+few micrometres over the whole globe, which the test suite checks for
+each kind of ellipsoid. The projection is defined on the authalic sphere
+of the ellipsoid, so the plane's extent is ``2 π R_A`` by ``3 π R_A / 2``
+in metres. The angular unit a grid is built with (degrees or radians)
+is a convention of the package's interface, not of the CRS, whose
+geographic coordinates are in degrees.
+
+WGS 84 is a datum ensemble, EPSG:4326 with an ensemble accuracy of 2 m,
+and its realisations are dynamic reference frames, so ISO 19111:2019
+asks that coordinates referenced to it carry a coordinate epoch. The
+grid is defined on the ellipsoid and has no epoch: a zone is a fixed
+region of the ellipsoid, the same at every epoch, so the sequence of
+grids preserves domain completeness and position uniqueness at any epoch
+(A.25) and the error budget below is the budget of the grid on the
+ellipsoid, which holds at any epoch (A.28). Topic 21 asks that a budget
+on WGS 84 cater for the approximation in the WGS 84 definition. The
+realisations of the ensemble differ by near-rigid transformations, so
+the approximation is a positional uncertainty, 2 m, and not an area
+one: what it affects is which zone a point on the ground falls in, and
+it exceeds a cell width from resolution 14 (2.1 m). The coordinate
+epoch affects the same thing, because the ground moves relative to the
+frame with its tectonic plate, by up to about 7 cm a year: a decade of
+that motion, 0.7 m, is the width of a resolution 15 cell, and a century,
+7 m, the width of a resolution 13 cell. The package therefore takes
+coordinates as given, in whatever realisation and epoch they have, and
+makes no transformation between them. Data assigned to zones at a
+resolution where such displacements are a fraction of a cell should be
+referenced to a named realisation, not the ensemble, and transformed to
+a common frame and epoch first, which PROJ does between ITRF
+realisations with a plate-motion model; the frame and epoch belong with
+the identifiers and their codespace.
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.crs_on` gives the grid's CRS on
+a named realisation, ``crs_on("EPSG:9755")`` for WGS 84 (G2139), for
+data that is referenced that way.
+
+As an example of the epoch's effect, take a point in GDA2020
+(EPSG:7844), the static Australian datum, fixed to its plate at epoch
+2020.0, and observe it in ITRF2014 (EPSG:9000) in 2010 and again in
+2030. The plate carries the point 1.16 m between the observations, and
+the two fall in different resolution 15 cells; transformed back to the
+static frame, which removes the plate's motion, both fall in the one
+cell the ground point occupies::
+
+    >>> import pyproj
+    >>> from rhealpixdggs.dggs import WGS84_003_OGC
+    >>> to_itrf = pyproj.Transformer.from_crs("EPSG:7844", "EPSG:9000", always_xy=True)
+    >>> to_gda = pyproj.Transformer.from_crs("EPSG:9000", "EPSG:7844", always_xy=True)
+    >>> lon, lat = 149.0999973, -35.3000031
+    >>> observed = {epoch: to_itrf.transform(lon, lat, tt=epoch)[:2] for epoch in (2010.0, 2030.0)}
+    >>> [str(WGS84_003_OGC.cell_from_point(15, p, plane=False)) for p in observed.values()]
+    ['R665234534347420', 'R665234534347183']
+    >>> round(pyproj.Geod(ellps="WGS84").inv(*observed[2010.0], *observed[2030.0])[2], 2)
+    1.16
+    >>> fixed = [to_gda.transform(*p, tt=epoch)[:2] for epoch, p in observed.items()]
+    >>> [str(WGS84_003_OGC.cell_from_point(15, p, plane=False)) for p in fixed]
+    ['R665234534347186', 'R665234534347186']
+
 Area error budget and sequence maximum
 --------------------------------------
 
@@ -538,12 +653,8 @@ below about 10⁻¹¹ m² would carry the sequence past the budget.
 Planned work
 ------------
 
-The rows above that are not yet Met are v1.0 work: CRS definitions
-(WKT2/PROJJSON) with epoch statement
-(`#100 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/100>`_),
-the zonal identifier grammar
-(`#101 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/101>`_),
-GML export with its application schema
+The rows above that are not yet Met are v1.0 work: GML export with its
+application schema
 (`#103 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/103>`_),
 and the formal reference-system declaration with the quantization and
 interoperation mapping documentation
