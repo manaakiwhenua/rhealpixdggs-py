@@ -76,6 +76,10 @@ in the area formula. The absolute tolerance shrinks proportionally with cell
 area as resolution increases. Resolution 15 is the finest level supported by
 the default configuration (cells of approximately 0.41 m²).
 
+The [standards conformance chapter](https://manaakiwhenua.github.io/rhealpixdggs-py/conformance.html)
+declares the per-grid error budget this implies for OGC Topic 21 and derives
+the resolution limit.
+
 ### Requirements
 
 Dependencies are declared in `pyproject.toml` (this project is managed
