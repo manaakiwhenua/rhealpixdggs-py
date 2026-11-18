@@ -5,6 +5,19 @@ per grid for ``WGS84_003`` and derives ``max_resolution`` from
 ``max_areal_resolution``, closing OGC Topic 21 tests A.24 and A.28
 (issue #102).
 
+The conformance chapter specifies the zonal identifiers: the grammar of
+index strings, their validity rules, the sequence and uint64 forms, and
+the codespace that makes an identifier globally unique: the URI of the
+grid's DGGRS definition, which the new ``RHEALPixDGGS.codespace`` gives.
+``RHEALPixDGGS`` takes a ``uri`` for a grid that is not the registered
+one, ``uri`` reports it, and ``to_dggrs_definition`` writes the DGGRS
+definition that URI should resolve to, in the schema of OGC API - DGGS;
+for the registered grid the result agrees with OGC's published
+definition. Index
+strings with more digits than ``max_resolution`` are now invalid to
+``parse_index``, ``rhp_is_valid`` and the array methods, as they already
+were to ``Cell`` (issue #101).
+
 0.13.0
 ^^^^^^
 Added ``Cell.grid_distance``, the number of hops between two cells over

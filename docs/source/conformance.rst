@@ -68,13 +68,14 @@ Common Spatio-temporal Classes
        parent/child hierarchy, an extent and a representative
        position.
      - Partial
-     - Cell suids, :func:`~rhealpixdggs.rhp_wrappers.rhp_to_parent`,
-       :meth:`~rhealpixdggs.cell.Cell.subcells`, the extent from
-       :meth:`~rhealpixdggs.cell.Cell.boundary`, and the representative
-       position :meth:`~rhealpixdggs.cell.Cell.centroid` (A.27; the
-       :meth:`~rhealpixdggs.cell.Cell.nucleus` is the indexing point); a
-       formal identifier grammar (valid strings, canonical form) is to be
-       published (v1.0).
+     - The identifiers are specified in `Zonal identifiers`_ below.
+       :func:`~rhealpixdggs.rhp_wrappers.rhp_to_parent` and
+       :meth:`~rhealpixdggs.cell.Cell.subcells` give the hierarchy,
+       :meth:`~rhealpixdggs.cell.Cell.boundary` the extent and
+       :meth:`~rhealpixdggs.cell.Cell.centroid` the representative
+       position (A.27; the :meth:`~rhealpixdggs.cell.Cell.nucleus` is
+       the indexing point, interior by construction). The mapping onto
+       the model's classes is to be written (v1.0).
 
 DGGS Core — reference system
 ----------------------------
@@ -139,12 +140,12 @@ DGGS Core — reference system
      - Every zone has a globally unique identifier, structured on a
        recognized indexing method.
      - Met
-     - Suids are hierarchy-based (resolution 0 letter plus one base-
-       N_side² digit per refinement); uniqueness is structural. A
-       formal grammar is to be published with A.5 (v1.0). Both zone
-       identifier reference systems the OGC-registered rHEALPix DGGRS
-       declares are supported: the text one (index strings) and the
-       uint64 one (:attr:`~rhealpixdggs.cell.Cell.uint64`,
+     - `Zonal identifiers`_ below gives the grammar, the validity
+       rules and the codespace that makes an identifier globally
+       unique. Both zone identifier reference systems the
+       OGC-registered rHEALPix DGGRS declares are supported: the text
+       one (index strings) and the uint64 one
+       (:attr:`~rhealpixdggs.cell.Cell.uint64`,
        :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cell_from_uint64`).
    * - A.14 discrete global grid
      - Grids defined as the aggregation of all cells at one level.
@@ -349,6 +350,100 @@ Equal-Area Earth Reference System
        the projection is equal-area onto the ellipsoid; verified by
        the area tests in the test suite (budgets published under
        A.28).
+
+Zonal identifiers
+-----------------
+
+Requirement 13 asks that every zone in every grid have a globally unique
+identifier, and Requirement 5 that identifiers follow the common data
+model, in which a ``ZonalIdentifier`` is a label or code that names one
+zone. This section specifies the identifiers; :doc:`identifiers`
+describes working with them.
+
+The text identifier of a cell, its index string, is a face letter
+followed by one digit per refinement level. In ABNF (:rfc:`5234`):
+
+.. code-block:: abnf
+
+   index-string = face *digit     ; at most max_resolution digits
+   face         = "N" / "O" / "P" / "Q" / "R" / "S"
+   digit        = %x30-38         ; "0" to "8" for N_side 3
+                                  ; %x30-33, "0" to "3", for N_side 2
+
+The letter names a resolution 0 cell: ``N`` and ``S`` the polar faces,
+``O`` to ``R`` the equatorial faces eastward from ``lon_0``. Each digit
+picks one of the ``N_side²`` children of the cell named so far, numbered
+from the top left along rows, so ``N12`` is child 2 of child 1 of ``N``.
+The number of digits is the cell's resolution, from 0 to
+``max_resolution``, 15 for ``WGS84_003`` (Requirement 24, below). Index
+strings are defined for ``N_side`` 2 and 3, whose digits are single
+characters. The sequence form below is the same grammar over integers,
+a face letter followed by at most ``max_resolution`` integers from 0 to
+``N_side² - 1``, and every grid has it; a grid with a larger ``N_side``
+names its cells by the sequence and uint64 forms.
+
+A string is an identifier of a grid exactly when it matches the grammar
+for that grid's ``N_side`` with at most ``max_resolution`` digits: upper
+case, with no whitespace, separator or prefix.
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.parse_index` returns None for any
+other string, :func:`~rhealpixdggs.rhp_wrappers.rhp_is_valid` False, and
+the array methods that take index strings reject it. The regular
+expression the grammar gives for ``WGS84_003`` agrees with the parser::
+
+    >>> import re
+    >>> from rhealpixdggs.dggs import WGS84_003
+    >>> index_string = re.compile(r"[NOPQRS][0-8]{0,15}")
+    >>> for s in ["N", "N12", "S001450634", "n12", "N9", "N 1", "N" + "0" * 16]:
+    ...     print(repr(s), bool(index_string.fullmatch(s)), WGS84_003.parse_index(s) is not None)
+    'N' True True
+    'N12' True True
+    'S001450634' True True
+    'n12' False False
+    'N9' False False
+    'N 1' False False
+    'N0000000000000000' False False
+
+The index string is the canonical text form, and each cell has exactly
+one: the string records the path from the face to the cell, so distinct
+cells have distinct strings, and a string's prefixes name the cell's
+ancestors. The sequence form, the suid ``('N', 1, 2)``, is the same
+identifier as a tuple of its symbols, and
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.format_index` and
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.parse_index` convert between the
+two without loss. The uint64 form is the integer identifier the OGC
+registration declares beside the text one, the cell's level, row and
+column packed into one integer (:attr:`~rhealpixdggs.cell.Cell.uint64`);
+it is unique because a position is unique within its level. The
+level-row-col text of OGC tile matrix sets is a position, not an
+identifier the reference system declares.
+
+Within a grid, uniqueness is therefore structural. Across grids the same
+string names different cells: ``N12`` lies at a different place in a grid
+with another ``lon_0``, another ``N_side``, other polar squares or
+another ellipsoid. An identifier is globally unique together with its
+codespace, the URI of the DGGRS definition that fixes the grid, which
+:attr:`~rhealpixdggs.dggs.RHEALPixDGGS.codespace` gives. For the
+OGC-registered grid the URI is OGC's. For any other grid the authority is
+whoever defines the grid, so the URI is given when the grid is
+constructed, and should resolve to the grid's definition in the DGGRS
+definition schema of OGC API - DGGS, which
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.to_dggrs_definition` writes for
+any grid; for the registered grid the result agrees with the definition
+OGC publishes. A grid given no URI has no codespace, and an export that
+needs one, such as GML, requires it::
+
+    >>> from rhealpixdggs.dggs import WGS84_003_OGC, WGS84_003, RHEALPixDGGS
+    >>> WGS84_003_OGC.codespace
+    'https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix'
+    >>> WGS84_003.codespace is None
+    True
+    >>> RHEALPixDGGS(N_side=2, uri="https://example.org/dggrs/n2").codespace
+    'https://example.org/dggrs/n2'
+
+Data exchanged by identifier should carry the codespace, as the
+``codeSpace`` attribute of a GML identifier does, and data meant for
+other software should use the registered grid, whose URI other software
+can resolve.
 
 Area error budget and sequence maximum
 --------------------------------------

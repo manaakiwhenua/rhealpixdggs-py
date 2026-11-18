@@ -324,7 +324,8 @@ class RHEALPixDGGS:
     - `max_resolution` - A nonnegative integer that is the maximum grid
       resolution needed to have ellipsoidal cells of area at most
       `max_areal_resolution`.
-    - `uri` - The OGC URI of this grid if it is a registered DGGRS, else None.
+    - `uri` - The URI of the DGGRS this grid is: the registered one's, or
+      the one given at construction, else None.
     - `child_order` - A dictionary of the ordering (Morton order) of child
       cells of a cell in terms of the row-column coordinates in the matrix
       of child cells.  Child cell are numbered 0 to `N_side**2 -1` from
@@ -355,6 +356,7 @@ class RHEALPixDGGS:
         north_square: int = 0,
         south_square: int = 0,
         max_areal_resolution: float = 1,  # square metres
+        uri: str | None = None,
     ) -> None:
         self.N_side = N_side
         self.north_square = north_square % 4  # = 0, 1, 2, or 3.
@@ -371,6 +373,14 @@ class RHEALPixDGGS:
 
         self.ellipsoid = ellipsoid
         self._projection_cache: dict[str, pw.Projection] = {}
+        if uri is not None:
+            key = "https://" + uri.removeprefix("http://").removeprefix("https://")
+            if key in _REGISTERED_GRIDS and self._registered_uri() != key:
+                raise ValueError(
+                    f"{uri!r} is a registered DGGRS with other parameters; "
+                    "build it with RHEALPixDGGS.from_uri"
+                )
+        self._uri = uri
 
         # Dictionary of the ordering (Morton order) of child cells of a cell
         # in terms of the row-column coordinates in the matrix of child cells.
@@ -519,10 +529,11 @@ class RHEALPixDGGS:
     @property
     def uri(self) -> str | None:
         """
-        The URI of the registered DGGRS this grid is, or None if it is not
-        a registered one. The only rHEALPix DGGRS OGC registers is WGS84,
-        ``N_side`` 3, both polar squares 0, central meridian 50 degrees
-        east, whatever the angular unit or ``max_areal_resolution``.
+        The URI of the DGGRS this grid is: the registered DGGRS's if the
+        grid is one, else the `uri` the grid was constructed with, else
+        None. The only rHEALPix DGGRS OGC registers is WGS84, ``N_side``
+        3, both polar squares 0, central meridian 50 degrees east, whatever
+        the angular unit or ``max_areal_resolution``.
 
         EXAMPLES::
 
@@ -530,8 +541,14 @@ class RHEALPixDGGS:
             'https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix'
             >>> WGS84_003.uri is None
             True
+            >>> RHEALPixDGGS(N_side=2, uri="https://example.org/dggrs/n2").uri
+            'https://example.org/dggrs/n2'
 
         """
+        return self._registered_uri() or self._uri
+
+    def _registered_uri(self) -> str | None:
+        """The URI of the registered DGGRS with this grid's parameters, if any."""
         e = self.ellipsoid
         lon_0 = e.lon_0 if not e.radians else degrees(e.lon_0)
         for uri, g in _REGISTERED_GRIDS.items():
@@ -565,8 +582,165 @@ class RHEALPixDGGS:
             'mortonCurve'
 
         """
-        uri = self.uri
+        uri = self._registered_uri()
         return _REGISTERED_GRIDS[uri].sub_zone_order if uri else "mortonCurve"
+
+    @property
+    def codespace(self) -> str | None:
+        """
+        The namespace that makes this grid's zone identifiers globally
+        unique: the URI of its DGGRS definition, OGC's for the registered
+        grid and the `uri` given at construction for any other, which
+        should resolve to that grid's definition. None for a grid given
+        no URI, which then has no codespace for exchange. See the
+        conformance chapter of the documentation.
+
+        EXAMPLES::
+
+            >>> WGS84_003_OGC.codespace
+            'https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix'
+            >>> WGS84_003.codespace is None
+            True
+
+        """
+        return self.uri
+
+    def to_dggrs_definition(
+        self, title: str = "rHEALPix", description: str | None = None
+    ) -> dict[str, Any]:
+        """
+        This grid's DGGRS definition in the schema of OGC API - DGGS, as a
+        JSON-serialisable dict: the document the grid's ``uri`` should
+        resolve to, and for the registered grid the one OGC publishes.
+        `description` defaults to a summary of the parameters.
+
+        EXAMPLES::
+
+            >>> import json
+            >>> d = WGS84_003_OGC.to_dggrs_definition()
+            >>> d["uri"]
+            'https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix'
+            >>> d["dggh"]["definition"]["projString"]
+            '+proj=rhealpix +lon_0=50 +ellps=WGS84'
+            >>> d["dggh"]["parameters"]["orientation"]["latitude"]
+            -41.93785391016014
+            >>> d["zirs"]["textZIRS"]["type"], d["subZoneOrder"]["type"]
+            ('hierarchicalConcatenation', 'scanline')
+            >>> sorted(json.loads(json.dumps(WGS84_002.to_dggrs_definition())))
+            ['description', 'dggh', 'subZoneOrder', 'title', 'zirs']
+
+        """
+        E = self.ellipsoid
+        N = self.N_side
+        lon_0 = degrees(E.lon_0) if E.radians else E.lon_0
+        phi_0 = degrees(E.phi_0) if E.radians else E.phi_0
+        lon_0_text = format(float(lon_0), ".15g")
+        if E.sphere:
+            ellipsoid = f"+R={float(E.R)!r}"
+            ellipsoid_name = f"a sphere of radius {float(E.R)!r} m"
+        elif isclose(E.a, WGS84_A) and isclose(E.f, WGS84_F):
+            ellipsoid = "+ellps=WGS84"
+            ellipsoid_name = "the WGS84 ellipsoid"
+        else:
+            ellipsoid = f"+a={float(E.a)!r} +rf={float(1 / E.f)!r}"
+            ellipsoid_name = f"the ellipsoid {ellipsoid}"
+        proj = f"+proj=rhealpix +lon_0={lon_0_text} {ellipsoid}"
+        if self.north_square or self.south_square:
+            proj += (
+                f" +north_square={self.north_square} +south_square={self.south_square}"
+            )
+        squares = (
+            f"polar squares at positions {self.north_square} and {self.south_square}"
+        )
+        if N in INDEX_STRING_N_SIDES:
+            text = (
+                "The indexing is hierarchical, starting at level 0 with the letters "
+                "N and S for the north and south polar zones and O, P, Q, R for "
+                f"the equatorial band. Each refined level adds one digit from 0 to "
+                f"{N * N - 1} in row-major order from top to bottom and left to right."
+            )
+        else:
+            text = (
+                "The indexing is hierarchical, starting at level 0 with the letters "
+                "N and S for the north and south polar zones and O, P, Q, R for "
+                f"the equatorial band. Each refined level adds one integer from 0 to "
+                f"{N * N - 1} in row-major order from top to bottom and left to "
+                "right; the text form lists the letter and the integers separated "
+                "by commas within parentheses, as (N, 10, 15)."
+            )
+        orders = {
+            "mortonCurve": "the order of the identifier digits, a Morton curve "
+            "through the sub-zones",
+            "scanline": "row-major, top-to-bottom, left-to-right scanlines "
+            "throughout the entire parent zone",
+            "hilbertCurve": "a Hilbert curve through the sub-zones",
+            "spiralFromCenter": "a spiral outward from the centre sub-zone",
+        }
+        if description is None:
+            description = (
+                f"An rHEALPix Discrete Global Grid Reference System using a "
+                f"refinement ratio of {N * N}, the prime meridian at {lon_0_text}\u00b0 "
+                f"East, {ellipsoid_name}, {squares}, hierarchical "
+                f"indexing with level 0 zones named N,O,P,Q,R,S and a sub-zone "
+                f"ordering using {orders[self.sub_zone_order]}."
+            )
+        strategy = ["nestedChildCell"]
+        if N % 2:
+            # An odd N_side puts a child's nucleus on its parent's.
+            strategy.append("nodeCentredChildCell")
+        definition: dict[str, Any] = {
+            "title": title,
+            "description": description,
+        }
+        if self.uri is not None:
+            definition["uri"] = self.uri
+        definition["dggh"] = {
+            "definition": {
+                "spatialDimensions": 2,
+                "temporalDimensions": 0,
+                "projString": proj,
+                "basePolyhedron": "cube",
+                "refinementRatio": N * N,
+                "refinementStrategy": strategy,
+                "constraints": {"cellAxisAligned": True, "cellEqualSized": True},
+                "zoneTypes": ["square"],
+            },
+            "parameters": {
+                "ellipsoid": (
+                    "[EPSG:7030]" if ellipsoid == "+ellps=WGS84" else ellipsoid
+                ),
+                "orientation": {
+                    "description": (
+                        f"Prime meridian set to {lon_0_text}\u00b0 East, with two "
+                        "corners of the cube positioned at this longitude and "
+                        "latitudes corresponding to the extremities of the "
+                        "equatorial band at \u00b1 arcsin(2/3) authalic latitude "
+                        f"(~{float(phi_0)!r} geodetic)"
+                    ),
+                    "latitude": -float(phi_0),
+                    "longitude": float(lon_0),
+                    "azimuth": 0,
+                },
+            },
+        }
+        definition["zirs"] = {
+            "textZIRS": {"description": text, "type": "hierarchicalConcatenation"},
+            "uint64ZIRS": {
+                "description": (
+                    "A 64-bit integer with the 30 least significant bits "
+                    "corresponding to a column, the next 29 bits to a row, and "
+                    "the 5 most significant bits to the level of an OGC 2D Tile "
+                    "Matrix Set identifier, with the north and south polar faces "
+                    f"at positions {self.north_square} and {self.south_square}."
+                ),
+                "type": "ogc2DTMSHexLevelRowCol",
+            },
+        }
+        definition["subZoneOrder"] = {
+            "description": f"Sub-zones are ordered by {orders[self.sub_zone_order]}.",
+            "type": self.sub_zone_order,
+        }
+        return definition
 
     @classmethod
     def from_uri(
@@ -2450,7 +2624,8 @@ class RHEALPixDGGS:
         Return the suid of the cell with index string `index`, or None if
         `index` is not an index string of this grid: a face letter from
         ``CELLS0`` followed by one decimal digit below ``N_side ** 2`` per
-        resolution. Raise ValueError if the grid has no index strings.
+        resolution, at most ``max_resolution`` of them. Raise ValueError if
+        the grid has no index strings.
 
         EXAMPLES::
 
@@ -2460,9 +2635,11 @@ class RHEALPixDGGS:
             True
             >>> WGS84_002.parse_index('P41') is None
             True
+            >>> WGS84_003.parse_index('P' + '0' * 16) is None
+            True
 
         """
-        return _parse_index(index, self.N_side)
+        return _parse_index(index, self.N_side, self.max_resolution)
 
     def format_index(self, suid: Sequence[str | int]) -> str:
         """
@@ -2712,11 +2889,12 @@ class RHEALPixDGGS:
         as a code 0-5 (the position in ``CELLS0``), the digits as an
         ``(len(indices), max_resolution)`` int64 array (zero beyond a cell's
         resolution) and each index's resolution. Invalid indices -- empty,
-        unknown base cell, or a character that is not a digit below
-        ``N_side ** 2`` -- get resolution 0, base cell code -1 and zero digits.
-        Raise ValueError if the grid has no index strings.
+        unknown base cell, a character that is not a digit below
+        ``N_side ** 2``, or finer than ``max_resolution`` -- get resolution
+        0, base cell code -1 and zero digits. Raise ValueError if the grid
+        has no index strings.
         """
-        return _parse_indices(indices, self.N_side)
+        return _parse_indices(indices, self.N_side, self.max_resolution)
 
     def _index_geometry(
         self, face: np.ndarray, digits: np.ndarray, resolution: np.ndarray

@@ -48,12 +48,19 @@ def _index_width(N_side: int) -> int:
     return 1
 
 
-def _parse_index(index: str, N_side: int) -> tuple[str | int, ...] | None:
-    """The suid for `index` in a grid with `N_side`; see ``RHEALPixDGGS.parse_index``."""
+def _parse_index(
+    index: str, N_side: int, max_resolution: int | None = None
+) -> tuple[str | int, ...] | None:
+    """
+    The suid for `index` in a grid with `N_side`, None if it is not one or
+    is finer than `max_resolution`; see ``RHEALPixDGGS.parse_index``.
+    """
     _index_width(N_side)
     if not index or index[0] not in CELLS0:
         return None
     digits = index[1:]
+    if max_resolution is not None and len(digits) > max_resolution:
+        return None
     if not all(d in "0123456789" for d in digits):
         return None
     values = [int(d) for d in digits]
@@ -69,16 +76,17 @@ def _format_index(suid: Sequence[str | int], N_side: int) -> str:
 
 
 def _parse_indices(
-    indices: Iterable[str], N_side: int
+    indices: Iterable[str], N_side: int, max_resolution: int | None = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Parse cell index strings into arrays: a validity mask, the base cell
     as a code 0-5 (the position in ``CELLS0``), the digits as an
     ``(len(indices), max_resolution)`` int64 array (zero beyond a cell's
     resolution) and each index's resolution. Invalid indices -- empty,
-    unknown base cell, or a character that is not a digit below
-    ``N_side ** 2`` -- get resolution 0, base cell code -1 and zero digits.
-    Raise ValueError if the grid has no index strings.
+    unknown base cell, a character that is not a digit below
+    ``N_side ** 2``, or more digits than `max_resolution` -- get
+    resolution 0, base cell code -1 and zero digits. Raise ValueError if
+    the grid has no index strings.
     """
     _index_width(N_side)
     strings = np.array(list(indices), dtype=str)
@@ -98,6 +106,8 @@ def _parse_indices(
     active = levels[None, :] < length[:, None]
     digit_ok = ~active | ((digits >= 0) & (digits < N_side**2))
     valid = (length > 0) & (face >= 0) & digit_ok.all(axis=1)
+    if max_resolution is not None:
+        valid &= length <= max_resolution + 1
     digits = np.where(active & valid[:, None], digits, 0)
     resolution = np.where(valid, length - 1, 0)
     face = np.where(valid, face, -1)
@@ -353,7 +363,9 @@ def _level_row_col_from_indices(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """See ``RHEALPixDGGS.level_row_col_from_indices``."""
     strings = list(indices)
-    valid, face, digits, resolution = _parse_indices(strings, grid.N_side)
+    valid, face, digits, resolution = _parse_indices(
+        strings, grid.N_side, grid.max_resolution
+    )
     if not valid.all():
         raise ValueError(f"invalid index {strings[int(np.argmin(valid))]!r}")
     N = grid.N_side

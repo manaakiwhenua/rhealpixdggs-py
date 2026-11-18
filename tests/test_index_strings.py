@@ -5,6 +5,7 @@ formatter on the grid (issue #146). These tests check the round trips on
 those grids and that every string entry point raises for any other grid.
 """
 
+import json
 import unittest
 
 import numpy as np
@@ -45,6 +46,114 @@ class IndexStringsTestCase(unittest.TestCase):
                 with self.subTest(N_side=rdggs.N_side, index=index):
                     self.assertIsNone(rdggs.parse_index(index))
                     self.assertFalse(rhp_wrappers.rhp_is_valid(index, rdggs))
+
+    def test_parse_rejects_strings_beyond_max_resolution(self):
+        for rdggs in GRIDS:
+            deepest = "N" + "0" * rdggs.max_resolution
+            too_deep = deepest + "0"
+            with self.subTest(N_side=rdggs.N_side):
+                suid = rdggs.parse_index(deepest)
+                self.assertEqual(rdggs.cell(suid).suid, suid)
+                self.assertIsNone(rdggs.parse_index(too_deep))
+                self.assertFalse(rhp_wrappers.rhp_is_valid(too_deep, rdggs))
+                with self.assertRaises(ValueError):
+                    rdggs.cell(("N",) + (0,) * (rdggs.max_resolution + 1))
+                valid, _, _, _ = rdggs._parse_indices([deepest, too_deep])
+                self.assertEqual(valid.tolist(), [True, False])
+                with self.assertRaises(ValueError):
+                    rdggs.level_row_col_from_indices([too_deep])
+
+    def test_codespace_and_uri(self):
+        from rhealpixdggs.dggs import WGS84_003_OGC, WGS84_003_RADIANS
+
+        self.assertEqual(WGS84_003_OGC.codespace, WGS84_003_OGC.uri)
+        self.assertIsNone(WGS84_003.codespace)
+        own = "https://example.org/dggrs/n2"
+        mine = RHEALPixDGGS(N_side=2, uri=own)
+        self.assertEqual(mine.uri, own)
+        self.assertEqual(mine.codespace, own)
+        self.assertEqual(mine.sub_zone_order, "mortonCurve")
+        self.assertEqual(mine, WGS84_002)
+        # The registered URI names the registered parameters, whatever a
+        # constructor is told.
+        ogc = WGS84_003_OGC.uri
+        same = RHEALPixDGGS(WGS84_003_OGC.ellipsoid, uri=ogc)
+        self.assertEqual(same.uri, ogc)
+        named = RHEALPixDGGS(WGS84_003_OGC.ellipsoid, uri=own)
+        self.assertEqual(named.uri, ogc)
+        with self.assertRaises(ValueError):
+            RHEALPixDGGS(N_side=2, uri=ogc)
+        with self.assertRaises(ValueError):
+            RHEALPixDGGS(N_side=2, uri=ogc.replace("https", "http"))
+        self.assertIsNone(WGS84_003_RADIANS.codespace)
+
+    def test_dggrs_definition_agrees_with_ogc(self):
+        # The fields OGC's published rHEALPix definition fixes, at
+        # https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix; the prose
+        # and links are not compared.
+        from rhealpixdggs.dggs import WGS84_003_OGC
+
+        d = WGS84_003_OGC.to_dggrs_definition()
+        self.assertEqual(d["uri"], WGS84_003_OGC.uri)
+        definition = d["dggh"]["definition"]
+        self.assertEqual(definition["spatialDimensions"], 2)
+        self.assertEqual(definition["temporalDimensions"], 0)
+        self.assertEqual(
+            definition["projString"], "+proj=rhealpix +lon_0=50 +ellps=WGS84"
+        )
+        self.assertEqual(definition["basePolyhedron"], "cube")
+        self.assertEqual(definition["refinementRatio"], 9)
+        self.assertEqual(
+            definition["refinementStrategy"],
+            ["nestedChildCell", "nodeCentredChildCell"],
+        )
+        self.assertEqual(
+            definition["constraints"], {"cellAxisAligned": True, "cellEqualSized": True}
+        )
+        self.assertEqual(definition["zoneTypes"], ["square"])
+        parameters = d["dggh"]["parameters"]
+        self.assertEqual(parameters["ellipsoid"], "[EPSG:7030]")
+        self.assertAlmostEqual(
+            parameters["orientation"]["latitude"], -41.937853910160136, places=12
+        )
+        self.assertEqual(parameters["orientation"]["longitude"], 50)
+        self.assertEqual(parameters["orientation"]["azimuth"], 0)
+        self.assertEqual(d["zirs"]["textZIRS"]["type"], "hierarchicalConcatenation")
+        self.assertEqual(d["zirs"]["uint64ZIRS"]["type"], "ogc2DTMSHexLevelRowCol")
+        self.assertEqual(d["subZoneOrder"]["type"], "scanline")
+        json.dumps(d)
+
+    def test_dggrs_definition_of_other_grids(self):
+        from rhealpixdggs.ellipsoids import Ellipsoid
+
+        d = WGS84_002.to_dggrs_definition()
+        self.assertNotIn("uri", d)
+        self.assertEqual(d["dggh"]["definition"]["refinementRatio"], 4)
+        self.assertEqual(
+            d["dggh"]["definition"]["refinementStrategy"], ["nestedChildCell"]
+        )
+        self.assertEqual(d["subZoneOrder"]["type"], "mortonCurve")
+        own = "https://example.org/dggrs/n4"
+        n4 = RHEALPixDGGS(N_side=4, north_square=1, south_square=2, uri=own)
+        d = n4.to_dggrs_definition(title="N4", description="mine")
+        self.assertEqual((d["title"], d["description"], d["uri"]), ("N4", "mine", own))
+        self.assertEqual(
+            d["dggh"]["definition"]["projString"],
+            "+proj=rhealpix +lon_0=0 +ellps=WGS84 +north_square=1 +south_square=2",
+        )
+        self.assertIn("(N, 10, 15)", d["zirs"]["textZIRS"]["description"])
+        radians = RHEALPixDGGS(
+            ellipsoid=Ellipsoid(R=6371000, lon_0=np.pi / 2, radians=True)
+        )
+        d = radians.to_dggrs_definition()
+        self.assertEqual(
+            d["dggh"]["definition"]["projString"],
+            "+proj=rhealpix +lon_0=90 +R=6371000.0",
+        )
+        self.assertEqual(d["dggh"]["parameters"]["orientation"]["longitude"], 90)
+        self.assertAlmostEqual(
+            d["dggh"]["parameters"]["orientation"]["latitude"], -41.8103149, places=6
+        )
 
     def test_digit_range_follows_n_side(self):
         self.assertEqual(WGS84_003.parse_index("P48"), ("P", 4, 8))
