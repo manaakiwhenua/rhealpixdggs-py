@@ -527,9 +527,6 @@ class RHEALPixDGGS:
             and self.max_resolution == other.max_resolution
         )
 
-    def __ne__(self, other: object) -> bool:
-        return not self.__eq__(other)
-
     @property
     def uri(self) -> str | None:
         """
@@ -2524,10 +2521,8 @@ class RHEALPixDGGS:
         for (cell, _, _), length in zip(trace.runs, lengths, strict=True):
             if cell is None:
                 continue
-            while position < len(ordered) and ordered[position] != cell:
+            while ordered[position] != cell:
                 position += 1
-            if position == len(ordered):  # pragma: no cover - defensive
-                position = ordered.index(cell)
             shares[position] = shares.get(position, 0.0) + length
         return [(cell, shares.get(i, 0.0) / total) for i, cell in enumerate(ordered)]
 
@@ -4094,12 +4089,8 @@ class RHEALPixDGGS:
         for p in points:
             c = self.cell_from_point(resolution, p, plane=plane)
             if c is not None:
-                # nuc = c.nucleus(plane=plane)
-                cover[str(c)] = c  # (c, nuc[0], nuc[1])
+                cover[str(c)] = c
         return list(cover.values())
-        # Sort cells by nuclei y-coordinate and then by x-coordinate.
-        # cover.sort(key=lambda x: (x[2], -x[1]), reverse=True)
-        # return [t[0] for t in cover]
 
 
 # Some common rHEALPix DGGSs.

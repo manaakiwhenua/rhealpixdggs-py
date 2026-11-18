@@ -37,7 +37,6 @@ from rhealpixdggs.utils import (
 # Remove 'healpix' and 'rhealpix' to use the PROJ.4 versions instead,
 # assuming you have the *correct/patched* PROJ.4 versions.
 HOMEMADE_PROJECTIONS = {"healpix", "rhealpix", "isea", "csea", "qsc"}
-# HOMEMADE_PROJECTIONS = {"isea", "csea", "qsc"}
 
 
 class Projection:

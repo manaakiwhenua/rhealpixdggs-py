@@ -1,8 +1,5 @@
-# from rhealpixdggs.dggs import WGS84_003
-
 import enum
 from collections.abc import Iterator
-from colorsys import hsv_to_rgb
 from functools import cache, cached_property, total_ordering
 from itertools import product
 from math import degrees, fsum, hypot
@@ -341,9 +338,6 @@ class Cell:
             and (self.rdggs == other.rdggs)
             and (self.suid == other.suid)
         )
-
-    def __ne__(self, other: object) -> bool:
-        return not self.__eq__(other)
 
     def __hash__(self) -> int:
         # Consistent with __eq__ (equal cells have equal suids), and
@@ -3099,23 +3093,6 @@ class Cell:
                 if self.contains((lam, phi), plane=False):
                     # Success
                     return lam, phi
-
-    def color(self, saturation: float = 0.5) -> tuple[float, float, float]:
-        """
-        Return a unique RGB color tuple for this cell.
-        Inessential graphics method.
-        """
-        suid = self.suid
-        N = self.rdggs.N_side
-        hue_resolution0 = {v: k / 6.0 for (k, v) in enumerate(CELLS0)}
-        hue = hue_resolution0[str(suid[0])]
-        n = len(suid)
-        if n > 1:
-            hue += sum([suid[i] * N ** (-2 * i) for i in range(1, n)]) / 6.0
-            # hue += sum([suid[i + 1]*N**(resolution - 1 - i)
-            #             for i in range(resolution)])/\
-            #        float(6*N**(2*resolution))
-        return hsv_to_rgb(hue, saturation, 1)
 
 
 # Neighbour stepping, used by rhp_wrappers' rings and by ZoneSet.buffer.

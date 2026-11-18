@@ -1306,23 +1306,6 @@ class SCENZGridCELLTestCase(unittest.TestCase):
             sphere = 4 * pi * rdggs.ellipsoid.R_A**2
             self.assertAlmostEqual(total / sphere, 1, places=12)
 
-    def test_color(self):
-        rdggs = WGS84_003
-        cells = list(rdggs.grid(1))
-        colors = [c.color() for c in cells]
-        # Deterministic, in-range RGB.
-        for c, rgb in zip(cells, colors, strict=True):
-            self.assertEqual(len(rgb), 3)
-            for component in rgb:
-                self.assertGreaterEqual(component, 0)
-                self.assertLessEqual(component, 1)
-            self.assertEqual(c.color(), rgb)
-        # Documented as "a unique RGB color tuple for this cell": distinct
-        # cells at the same resolution get distinct colors.
-        self.assertEqual(len(set(colors)), len(cells))
-        # The saturation parameter is honored.
-        self.assertNotEqual(cells[7].color(saturation=0.2), cells[7].color(0.9))
-
     def test_region_overlaps(self):
         # DE-9IM overlaps between a cell and the union of a set of cells:
         # the set shares interior with the cell, does not cover it, and is

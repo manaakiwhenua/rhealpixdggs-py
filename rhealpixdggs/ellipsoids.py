@@ -126,7 +126,6 @@ class Ellipsoid:
 
     def __str__(self) -> str:
         result = ["ellipsoid:"]
-        # result.append('lengths measured in meters')
         for k, v in sorted(self.__dict__.items()):
             if k == "phi_0":
                 continue
@@ -150,14 +149,6 @@ class Ellipsoid:
                 remainder(self.lon_0 - other.lon_0, turn), 0, abs_tol=turn * 1e-12
             )
         )
-
-    def __ne__(self, other: object) -> bool:
-        """
-        The inequality relation on cells.
-        Since Python 3.3 doesn't automatically create reverse relations
-        from given ones, i must define this seemingly redundant relation.
-        """
-        return not self.__eq__(other)
 
     def pi(self) -> float:
         """
