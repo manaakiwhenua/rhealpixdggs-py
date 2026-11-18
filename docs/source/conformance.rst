@@ -255,9 +255,13 @@ DGGS Core — functions
        (:func:`~rhealpixdggs.export.to_csv`, delimited text with the
        same attributes), publishing the centroid of A.27 as each cell's
        position; :func:`~rhealpixdggs.export.geometries` gives the
-       shapely geometries for OGR-backed writers. ``toGML`` follows in
-       v1.0 with the application schema (#103); ``toHDF``,
-       ``toJSON-LD``, ``toNetCDF`` and ``toXML`` are not planned. The
+       shapely geometries for OGR-backed writers; and ``toGML``
+       (:func:`~rhealpixdggs.export.to_gml`, GML 3.2 under the
+       application schema published at ``schemas/zone.xsd``, with the
+       identifier in the grid's codespace, the boundary curve types of
+       A.26 and the geometry in EPSG:4326 or, exactly, in the grid's
+       own CRS carried in the document). ``toHDF``, ``toJSON-LD``,
+       ``toNetCDF`` and ``toXML`` are not planned. The
        ``broadcastResult`` operation of Table 60 (transport) is outside
        the library's scope, per the note above.
 
@@ -315,8 +319,18 @@ Equal-Area Earth Reference System
    * - A.26 cells are simple 2D polygons
      - Every EAERS cell is a simple polygon.
      - Met
-     - As A.11; the boundary-curve types per cell shape are to be
-       described alongside the GML work (v1.0).
+     - As A.11. The curve type of every edge, from the
+       ``EA_BoundaryType`` code list, is
+       :func:`~rhealpixdggs.export.boundary_types` and is written with
+       each zone in the GML export: quad cells are bounded by parallels
+       (``smallCircle``) and meridians (``greatEllipse``); a cap by one
+       parallel; dart and skew quad cells by parallels, by meridians
+       through the pole for even ``N_side``, and by images of straight
+       planar lines (``projectedLine``), as :doc:`export` describes.
+       The test suite checks the classification against the sampled
+       edges over whole resolutions. Parallels and meridians are exact
+       as segments in EPSG:4326; a projected line is exact only as a
+       segment in the grid's CRS, which the planar GML form writes.
    * - A.27 direct position is the centroid
      - Each cell's direct position is its centroid, the geodesic
        center of surface area.
@@ -653,10 +667,8 @@ below about 10⁻¹¹ m² would carry the sequence past the budget.
 Planned work
 ------------
 
-The rows above that are not yet Met are v1.0 work: GML export with its
-application schema
-(`#103 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/103>`_),
-and the formal reference-system declaration with the quantization and
+The rows above that are not yet Met are v1.0 work: the formal
+reference-system declaration with the quantization and
 interoperation mapping documentation
 (`#104 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/104>`_).
 

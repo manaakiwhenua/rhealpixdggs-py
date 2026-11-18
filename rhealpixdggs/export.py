@@ -24,11 +24,20 @@ in the ellipsoid's length units squared, metres on WGS84),
 ``Cell.centroid``) and ``nucleus_lon``, ``nucleus_lat`` (its indexing
 point). ``geometries`` returns the same geometries as shapely objects, for
 geopandas and other OGR-backed writers.
+
+GML follows GML 3.2 and the application schema ``schemas/zone.xsd`` that
+ships with the package and is published at ``GML_SCHEMA_LOCATION``:
+``to_gml`` writes a ``ZoneCollection`` of ``Zone`` features with the same
+attributes, each edge's curve type from OGC Topic 21's ``EA_BoundaryType``
+code list (``boundary_types``), and the geometry in EPSG:4326 with
+latitude first, as GML's axis order for that CRS requires.
 """
 
 import csv
 import io
+import xml.etree.ElementTree as ET
 from collections.abc import Iterable
+from math import isclose
 from typing import Any, NamedTuple
 
 import numpy as np
@@ -392,3 +401,329 @@ def to_csv(
             ]
         )
     return buffer.getvalue()
+
+
+# GML -----------------------------------------------------------------------
+
+#: The namespace of the GML application schema, ``schemas/zone.xsd``.
+GML_NAMESPACE = "https://manaakiwhenua.github.io/rhealpixdggs-py/schemas/zone"
+#: Where the application schema is published.
+GML_SCHEMA_LOCATION = "https://manaakiwhenua.github.io/rhealpixdggs-py/schemas/zone.xsd"
+_GML = "http://www.opengis.net/gml/3.2"
+_XSI = "http://www.w3.org/2001/XMLSchema-instance"
+_XLINK = "http://www.w3.org/1999/xlink"
+_PLANAR_SRS = "#rhealpix"
+_QUAD_EDGES = ("smallCircle", "greatEllipse", "smallCircle", "greatEllipse")
+
+
+def boundary_types(
+    index: str | Cell, dggs: RHEALPixDGGS = WGS84_003
+) -> tuple[str, ...]:
+    """
+    The curve type of each edge of the cell `index` (an index string or
+    ``Cell``, read as a cell of `dggs`) on the ellipsoid, from the
+    ``EA_BoundaryType`` code list of OGC Topic 21: one entry per planar
+    edge clockwise from the upper-left vertex (top, right, bottom, left),
+    or one entry for a cap cell, whose four edges lie on one parallel.
+
+    A quad cell's edges are parallels (``smallCircle``) and meridians
+    (``greatEllipse``). The diagonals of a polar square cut it into four
+    sectors, and within a sector the lines parallel to its rim are
+    parallels of latitude, so a polar cell's edge is a ``smallCircle``
+    when it runs parallel to the rim of its sector (cell edges never cross
+    a diagonal), a ``greatEllipse`` when its line passes through the pole
+    (the square's centre lines, cell edges only for even ``N_side``), and
+    otherwise the image of a straight planar line, ``projectedLine``.
+    Raise ValueError for an invalid index.
+
+    EXAMPLES::
+
+        >>> boundary_types('P0')
+        ('smallCircle', 'greatEllipse', 'smallCircle', 'greatEllipse')
+        >>> boundary_types('N')
+        ('smallCircle',)
+        >>> boundary_types('N1')
+        ('smallCircle', 'projectedLine', 'smallCircle', 'projectedLine')
+        >>> from rhealpixdggs.dggs import WGS84_002
+        >>> boundary_types('N3', WGS84_002)
+        ('greatEllipse', 'smallCircle', 'smallCircle', 'greatEllipse')
+
+    """
+    cell = index if isinstance(index, Cell) else dggs.cell(dggs.parse_index(index))
+    shape = cell.ellipsoidal_shape
+    if shape == "quad":
+        return _QUAD_EDGES
+    if shape == "cap":
+        return ("smallCircle",)
+    (x0, x1), (y0, y1) = cell.xy_range()
+    (fx0, fx1), (fy0, fy1) = cell.rdggs.cell((cell.suid[0],)).xy_range()
+    xc, yc = (fx0 + fx1) / 2, (fy0 + fy1) / 2
+    tol = (fx1 - fx0) * 1e-9
+
+    def edge(along: float, across: float) -> str:
+        # `along` is the edge's offset from the pole across its direction,
+        # `across` its midpoint's offset along it.
+        if isclose(along, 0, abs_tol=tol):
+            return "greatEllipse"
+        return "smallCircle" if abs(along) > abs(across) else "projectedLine"
+
+    mx, my = (x0 + x1) / 2 - xc, (y0 + y1) / 2 - yc
+    return (edge(y1 - yc, mx), edge(x1 - xc, my), edge(y0 - yc, mx), edge(x0 - xc, my))
+
+
+def _pos(lon: float, lat: float, planar: bool = False) -> str:
+    """A GML position: easting northing in the plane, else latitude first as
+    EPSG:4326's axis order has it."""
+    if planar:
+        return f"{float(lon)!r} {float(lat)!r}"
+    return f"{float(lat)!r} {float(lon)!r}"
+
+
+def _pos_list(ring: Any, planar: bool = False) -> str:
+    return " ".join(_pos(x, y, planar) for x, y in ring.coords)
+
+
+def _gml_crs(parent: ET.Element, dggs: RHEALPixDGGS) -> None:
+    """The grid's CRS as an inline gml:ProjectedCRS with gml:id "rhealpix":
+    the conversion's parameters, with the base CRS and the Cartesian CS by
+    EPSG URN. Raise ValueError unless the base CRS has an EPSG code."""
+    base = dggs.crs.geodetic_crs
+    authority = base.to_authority() if base is not None else None
+    if authority is None:
+        raise ValueError(
+            "planar GML needs a grid on WGS84, whose base CRS has an EPSG code"
+        )
+    gml, xlink = f"{{{_GML}}}", f"{{{_XLINK}}}"
+    operation = dggs.crs.coordinate_operation
+    assert operation is not None
+    crs = ET.SubElement(parent, f"{gml}ProjectedCRS", {f"{gml}id": "rhealpix"})
+    ET.SubElement(crs, f"{gml}identifier", {"codeSpace": GML_NAMESPACE}).text = (
+        dggs.crs.name
+    )
+    ET.SubElement(crs, f"{gml}scope").text = (
+        "The planar coordinates of the rHEALPix grid."
+    )
+    conversion = ET.SubElement(
+        ET.SubElement(crs, f"{gml}conversion"),
+        f"{gml}Conversion",
+        {f"{gml}id": "rhealpix.conversion"},
+    )
+    ET.SubElement(conversion, f"{gml}identifier", {"codeSpace": GML_NAMESPACE}).text = (
+        operation.name
+    )
+    ET.SubElement(conversion, f"{gml}scope").text = (
+        "The rHEALPix projection with this grid's parameters."
+    )
+    method = ET.SubElement(
+        ET.SubElement(conversion, f"{gml}method"),
+        f"{gml}OperationMethod",
+        {f"{gml}id": "rhealpix.method"},
+    )
+    ET.SubElement(
+        method, f"{gml}identifier", {"codeSpace": "https://proj.org"}
+    ).text = operation.method_name
+    ET.SubElement(method, f"{gml}formula").text = (
+        "The rHEALPix projection, https://proj.org/operations/projections/rhealpix.html"
+    )
+    ET.SubElement(method, f"{gml}sourceDimensions").text = "2"
+    ET.SubElement(method, f"{gml}targetDimensions").text = "2"
+    units = {
+        "degree": "urn:ogc:def:uom:EPSG::9102",
+        "unity": "urn:ogc:def:uom:EPSG::9201",
+    }
+    for param in operation.params:
+        definition = ET.SubElement(
+            ET.SubElement(method, f"{gml}parameter"),
+            f"{gml}OperationParameter",
+            {f"{gml}id": f"rhealpix.{param.name}"},
+        )
+        ET.SubElement(
+            definition, f"{gml}identifier", {"codeSpace": "https://proj.org"}
+        ).text = param.name
+    for param in operation.params:
+        value = ET.SubElement(
+            ET.SubElement(conversion, f"{gml}parameterValue"), f"{gml}ParameterValue"
+        )
+        ET.SubElement(value, f"{gml}value", {"uom": units[param.unit_name]}).text = (
+            format(param.value, ".15g")
+        )
+        ET.SubElement(
+            value,
+            f"{gml}operationParameter",
+            {f"{xlink}href": f"#rhealpix.{param.name}"},
+        )
+    ET.SubElement(
+        crs,
+        f"{gml}baseGeodeticCRS",
+        {f"{xlink}href": f"urn:ogc:def:crs:{authority[0]}::{authority[1]}"},
+    )
+    ET.SubElement(
+        crs, f"{gml}cartesianCS", {f"{xlink}href": "urn:ogc:def:cs:EPSG::4400"}
+    )
+
+
+def _gml_point(
+    parent: ET.Element,
+    gml_id: str,
+    lon: float,
+    lat: float,
+    srs: dict[str, str],
+    planar: bool = False,
+) -> None:
+    point = ET.SubElement(parent, f"{{{_GML}}}Point", {f"{{{_GML}}}id": gml_id, **srs})
+    ET.SubElement(point, f"{{{_GML}}}pos").text = _pos(lon, lat, planar)
+
+
+def _gml_polygon(
+    parent: ET.Element,
+    gml_id: str,
+    polygon: Any,
+    srs: dict[str, str],
+    planar: bool = False,
+) -> None:
+    element = ET.SubElement(
+        parent, f"{{{_GML}}}Polygon", {f"{{{_GML}}}id": gml_id, **srs}
+    )
+    exterior = ET.SubElement(element, f"{{{_GML}}}exterior")
+    ring = ET.SubElement(exterior, f"{{{_GML}}}LinearRing")
+    ET.SubElement(ring, f"{{{_GML}}}posList", {"srsDimension": "2"}).text = _pos_list(
+        polygon.exterior, planar
+    )
+
+
+def to_gml(
+    indices: Iterable[str | Cell],
+    dggs: RHEALPixDGGS = WGS84_003,
+    n: int = 6,
+    codespace: str | None = None,
+    planar: bool = False,
+) -> str:
+    """
+    Return the cells `indices` (index strings or ``Cell`` objects, read as
+    cells of `dggs`) as a GML 3.2 document: a ``ZoneCollection`` of the
+    application schema at ``GML_SCHEMA_LOCATION`` with one ``Zone`` per
+    cell in input order. Each zone's ``gml:identifier`` is the index
+    string in `codespace`, by default the grid's
+    ``codespace``, the URI of its DGGRS definition; a grid with none
+    needs `codespace` given, since the identifier is unique only with it.
+    The zone carries the resolution, shape, area, the curve type of each
+    edge (``boundary_types``), the centroid as its position, the nucleus,
+    and the geometry ``geometries`` builds with `n` points per curved
+    edge: a ``gml:Polygon``, or a ``gml:MultiSurface`` of two for a cell
+    straddling the antimeridian. Geometry is written latitude first, as
+    GML requires for ``urn:ogc:def:crs:EPSG::4326``, the ``srsName`` of a
+    grid on WGS84; a grid on another ellipsoid writes its own geodetic
+    coordinates without an ``srsName``. With `planar`, the geometry is
+    instead the cell's exact square in the grid's own CRS, which the
+    document carries as a ``gml:ProjectedCRS`` that the geometries refer
+    to by ``srsName="#rhealpix"``; this needs a grid on WGS84. Raise
+    ValueError if any index is invalid, no codespace is known, or a
+    planar document is asked of another ellipsoid.
+
+    EXAMPLES::
+
+        >>> from rhealpixdggs.dggs import WGS84_003_OGC
+        >>> text = to_gml(['P0', 'N'], WGS84_003_OGC)
+        >>> print(text[:text.index('>') + 1])
+        <?xml version='1.0' encoding='utf-8'?>
+        >>> import xml.etree.ElementTree as ET
+        >>> root = ET.fromstring(text)
+        >>> zones = root.findall('{%s}member/{%s}Zone' % (GML_NAMESPACE, GML_NAMESPACE))
+        >>> [z.get('{http://www.opengis.net/gml/3.2}id') for z in zones]
+        ['P0', 'N']
+        >>> zones[0].find('{http://www.opengis.net/gml/3.2}identifier').get('codeSpace')
+        'https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix'
+        >>> [b.text for b in zones[1].iter('{%s}boundaryType' % GML_NAMESPACE)]
+        ['smallCircle']
+
+    """
+    if codespace is None:
+        codespace = dggs.codespace
+    if codespace is None:
+        raise ValueError(
+            "the grid has no codespace: give it a uri, or pass codespace, so the "
+            "zone identifiers are unique"
+        )
+    strings = _index_strings(indices)
+    table = cell_table(strings, dggs)
+    if planar:
+        srs = {"srsName": _PLANAR_SRS}
+        geoms = np.array(
+            [
+                Polygon(dggs.cell(dggs.parse_index(index)).vertices(plane=True)[::-1])
+                for index in strings
+            ],
+            dtype=object,
+        )
+        centroid = dggs.centroids(strings, plane=True)
+        nucleus = dggs.nuclei(strings, plane=True)
+    else:
+        geoms = geometries(strings, dggs, n)
+        centroid, nucleus = table.centroid, table.nucleus
+        base = dggs.crs.geodetic_crs
+        authority = base.to_authority() if base is not None else None
+        srs = (
+            {"srsName": f"urn:ogc:def:crs:{authority[0]}::{authority[1]}"}
+            if authority
+            else {}
+        )
+    ET.register_namespace("gml", _GML)
+    ET.register_namespace("rhp", GML_NAMESPACE)
+    ET.register_namespace("xsi", _XSI)
+    ET.register_namespace("xlink", _XLINK)
+    rhp = f"{{{GML_NAMESPACE}}}"
+    gml = f"{{{_GML}}}"
+    root = ET.Element(
+        f"{rhp}ZoneCollection",
+        {
+            f"{gml}id": "zones",
+            f"{{{_XSI}}}schemaLocation": f"{GML_NAMESPACE} {GML_SCHEMA_LOCATION}",
+        },
+    )
+    ET.SubElement(root, f"{rhp}dggrs").text = codespace
+    if planar:
+        _gml_crs(ET.SubElement(root, f"{rhp}crs"), dggs)
+    for k, index in enumerate(strings):
+        zone = ET.SubElement(
+            ET.SubElement(root, f"{rhp}member"), f"{rhp}Zone", {f"{gml}id": index}
+        )
+        ET.SubElement(zone, f"{gml}identifier", {"codeSpace": codespace}).text = index
+        ET.SubElement(zone, f"{rhp}resolution").text = str(int(table.resolution[k]))
+        ET.SubElement(zone, f"{rhp}shape").text = str(table.shape[k])
+        ET.SubElement(zone, f"{rhp}area", {"uom": "m2"}).text = repr(
+            float(table.area[k])
+        )
+        for curve in boundary_types(index, dggs):
+            ET.SubElement(zone, f"{rhp}boundaryType").text = curve
+        _gml_point(
+            ET.SubElement(zone, f"{rhp}position"),
+            f"{index}.position",
+            centroid[k, 0],
+            centroid[k, 1],
+            srs,
+            planar,
+        )
+        _gml_point(
+            ET.SubElement(zone, f"{rhp}nucleus"),
+            f"{index}.nucleus",
+            nucleus[k, 0],
+            nucleus[k, 1],
+            srs,
+            planar,
+        )
+        geometry = ET.SubElement(zone, f"{rhp}geometry")
+        if geoms[k].geom_type == "Polygon":
+            _gml_polygon(geometry, f"{index}.geometry", geoms[k], srs, planar)
+        else:
+            multi = ET.SubElement(
+                geometry, f"{gml}MultiSurface", {f"{gml}id": f"{index}.geometry", **srs}
+            )
+            for j, part in enumerate(geoms[k].geoms):
+                _gml_polygon(
+                    ET.SubElement(multi, f"{gml}surfaceMember"),
+                    f"{index}.geometry.{j}",
+                    part,
+                    {},
+                )
+    ET.indent(root)
+    return ET.tostring(root, encoding="unicode", xml_declaration=True) + "\n"
