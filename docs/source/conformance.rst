@@ -101,12 +101,12 @@ DGGS Core — reference system
    * - A.6 harmonized model
      - The reference system's definition conforms to the Core data
        model (grids, refinement strategy, globe geometry).
-     - Partial
+     - Met
      - All defining parameters live on
        :class:`~rhealpixdggs.dggs.RHEALPixDGGS` (ellipsoid, N_side,
-       north_square, south_square, max_resolution); the formal
-       declaration against the model's classes is to be written
-       (v1.0).
+       north_square, south_square, max_resolution). `Reference system
+       declaration`_ below states them as a DGG_ReferenceSystem and
+       maps the model's classes.
    * - A.7 CRS
      - A defined coordinate reference system, with coordinate-epoch
        provisions.
@@ -491,6 +491,79 @@ instantiates the spatial primitives.
      - Not instantiated. Each pairs a spatial primitive with a
        temporal one, and rHEALPixDGGS currently has no temporal
        dimension.
+
+Reference system declaration
+----------------------------
+
+Requirement 6 asks that the reference system be defined in the terms
+of clause 8.2 (Tables 40–46). An
+:class:`~rhealpixdggs.dggs.RHEALPixDGGS` is a DGG_ReferenceSystem
+(Table 41). The library defines a family of them, one for each choice
+of ellipsoid, ``N_side``, ``north_square`` and ``south_square``; the
+declaration below holds for every member, with the values for
+``WGS84_003`` given as the example.
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - Attribute
+     - Value
+   * - DGGS_Grids
+     - ``cellEquiSized``, then ``cellAxisAligned``, in that order of
+       priority (Table 45). Cells of one resolution have equal area
+       (A.29), and their edges are parallel to the axes of the grid's
+       projected CRS.
+   * - DGGS_Refinement
+     - ``nestedChildCell`` (Table 46): the children of a cell tile it
+       exactly, so their combined boundary is the parent's. When
+       ``N_side`` is odd the centre child also shares its parent's
+       nucleus. That is not declared as ``centredChildCell``, which is
+       defined on the representative position, the centroid (A.27),
+       and the two centroids differ.
+   * - DGGS_RefinementRatio
+     - ``N_side`` squared, the same at every level: 9 for
+       ``WGS84_003``.
+   * - DGGS_RefSys: CRS
+     - :attr:`~rhealpixdggs.dggs.RHEALPixDGGS.crs`, with the
+       coordinate-epoch statement of `Coordinate reference system`_.
+   * - DGGS_RefSys: GLOBE
+     - The surface of the grid's ellipsoid of revolution,
+       ``RHEALPixDGGS.ellipsoid``: spatial dimension 3, topological
+       dimension 2, temporal dimension 0 (`Zone geometry and
+       topology`_).
+   * - DGGS_RefSys: MDRS
+     - The description of the whole system that
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.to_dggrs_definition`
+       returns.
+   * - DGGS_RefSys: ZIRS
+     - :attr:`~rhealpixdggs.dggs.RHEALPixDGGS.uri`, the identifier of
+       the grid's zonal identifier reference system and the codespace
+       of its identifiers (`Zonal identifiers`_). A grid constructed
+       without a URI, ``WGS84_003`` among them, has none.
+
+The remaining classes of the model are these.
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - Model class
+     - In rHEALPixDGGS
+   * - Cell
+     - :class:`~rhealpixdggs.cell.Cell`, the unit of geometry that
+       goes with a zone. It has the dimensions of the globe.
+   * - DiscreteGlobalGrid
+     - The cells of one resolution,
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.grid`, paired with the
+       zone class of that resolution (`Reference system using zonal
+       identifiers`_). Its ``refinementRatio`` is ``N_side`` squared.
+   * - GlobeGeometry
+     - The ellipsoid surface. It comprises every cell, and each
+       resolution's grid is a tessellation of it (A.9, A.10, A.25).
+   * - DGG_ReferenceSystemType, DGG_GridConstraint,
+       DGG_RefinementStrategy
+     - The union and code lists whose values are declared above.
 
 Zonal identifiers
 -----------------
