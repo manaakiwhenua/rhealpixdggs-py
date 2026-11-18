@@ -22,9 +22,8 @@ documentation itself.
 
 Scope notes:
 
-- The purely temporal tests A.1 and A.4 belong to the separate
-  *Spatio-temporal DGGS Core* conformance class and are not required
-  for a spatial DGGS; rHEALPixDGGS does not claim them.
+- The purely temporal tests A.1 and A.4 are not part of the
+  Equal-Area Earth DGGS class; they are listed below as not claimed.
 - The interoperation modules deliberately stop at the library
   boundary: rHEALPixDGGS provides query execution and standard-format
   serialization, while transport protocols (HTTP and friends, e.g. an
@@ -37,6 +36,7 @@ Each row below records a status:
   linked API documentation.
 - **Partial** — implemented in substance, with named work remaining.
 - **Planned** — not yet implemented; the release target is named.
+- **Not claimed** — outside the conformance class the project targets.
 
 Common Spatio-temporal Classes
 ------------------------------
@@ -49,20 +49,32 @@ Common Spatio-temporal Classes
      - What it requires
      - Status
      - Evidence and plan
+   * - A.1 temporal geometry
+     - Temporal geometry and topology (instants, intervals and their
+       ordering) conforming to the common data model.
+     - Not claimed
+     - rHEALPixDGGS currently has no temporal dimension. The test
+       belongs to the spatio-temporal conformance classes only.
    * - A.2 zone geometry
-     - Zonal geometry and topology conforming to the common data
-       model (zones with boundaries, neighborhoods and hierarchy).
-     - Partial
-     - :meth:`~rhealpixdggs.cell.Cell.boundary`,
-       :meth:`~rhealpixdggs.cell.Cell.vertices`,
-       :meth:`~rhealpixdggs.cell.Cell.neighbors`; the explicit mapping
-       onto the model's classes is to be written (v1.0).
+     - A zone has a geometry of declared spatial, temporal and
+       topological dimension, and a topology of the same dimension.
+     - Met
+     - A zone is a :class:`~rhealpixdggs.cell.Cell`, a simple spatial
+       geometry with the topology of a two-dimensional face. `Zone
+       geometry and topology`_ below maps it onto the model's classes
+       and declares the dimensions.
    * - A.3 spatial location
      - Locations identified by reference to zones (ISO 19112 style).
      - Partial
      - :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point`,
        :func:`~rhealpixdggs.rhp_wrappers.geo_to_rhp`; mapping
        documentation to be written (v1.0).
+   * - A.4 temporal RS using period identifiers
+     - A temporal reference system whose periods carry identifiers,
+       conforming to the common data model.
+     - Not claimed
+     - As A.1: currently no temporal dimension, and outside the
+       targeted class.
    * - A.5 RS using zonal identifiers
      - A reference system whose zones carry unique identifiers, a
        parent/child hierarchy, an extent and a representative
@@ -108,7 +120,8 @@ DGGS Core — reference system
      - A specified global domain and its dimensionality.
      - Met
      - The domain is the entire surface of the ellipsoid of
-       revolution; spatial dimension 2, no temporal dimension.
+       revolution: spatial dimension 3, topological dimension 2,
+       temporal dimension 0 (`Zone geometry and topology`_).
    * - A.9 domain completeness
      - The level 0 grid covers the entire global domain.
      - Met
@@ -364,6 +377,40 @@ Equal-Area Earth Reference System
        the projection is equal-area onto the ellipsoid; verified by
        the area tests in the test suite (budgets published under
        A.28).
+
+Zone geometry and topology
+--------------------------
+
+Requirement 2 asks that zones conform to the classes of clause 7.2.2
+(Tables 17–22). Those classes say what kind of geometric object a
+zone is and what dimensions it has.
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - Model class
+     - In rHEALPixDGGS
+   * - ZoneGeometry
+     - :class:`~rhealpixdggs.cell.Cell`. Every cell has
+       ``spatialDimension`` 3, ``topologicalDimension`` 2 and
+       ``temporalDimension`` 0: it is a region of the surface of an
+       ellipsoid embedded in three-dimensional space, as Table 19
+       notes and Table 64 requires of an Equal-Area Earth DGGS.
+   * - ZoneSimpleGeometry
+     - Every cell: a spatial geometry invariant over time. Its shape
+       is given by :meth:`~rhealpixdggs.cell.Cell.vertices` and
+       :meth:`~rhealpixdggs.cell.Cell.boundary`, on the ellipsoid or
+       in the plane of the projection.
+   * - ZoneSimpleTopology, ZoneTopology
+     - The topology of a cell is that of a two-dimensional face, with
+       an interior, a boundary and an exterior. The zone queries of
+       A.17 are defined on these, and
+       :meth:`~rhealpixdggs.cell.Cell.relate` exposes them directly as
+       a DE-9IM matrix.
+   * - ZoneCompoundGeometry, ZoneCompoundTopology
+     - Not instantiated. These pair a spatial zone with a temporal
+       one, and rHEALPixDGGS currently has no temporal dimension.
 
 Zonal identifiers
 -----------------
@@ -667,7 +714,7 @@ below about 10⁻¹¹ m² would carry the sequence past the budget.
 Planned work
 ------------
 
-The rows above that are not yet Met are v1.0 work: the formal
+The rows above marked Partial or Planned are v1.0 work: the formal
 reference-system declaration with the quantization and
 interoperation mapping documentation
 (`#104 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/104>`_).
