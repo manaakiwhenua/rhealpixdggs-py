@@ -4,10 +4,16 @@ Cell Identifiers
 A cell can be named in several ways. Each names a cell only together with
 its grid: the same identifier names different cells in grids with a
 different ``N_side`` or different polar squares, so data exchanged by
-identifier should say which grid it uses, for instance by its
-:attr:`~rhealpixdggs.dggs.RHEALPixDGGS.uri`. The rHEALPix DGGRS that OGC
-registers (`OGC rHEALPix <https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix>`_,
+identifier should say which grid it uses, by its
+:attr:`~rhealpixdggs.dggs.RHEALPixDGGS.codespace`, the
+:attr:`~rhealpixdggs.dggs.RHEALPixDGGS.uri` of the registered grid or
+the one a grid is constructed with, which should resolve to the grid's
+:meth:`~rhealpixdggs.dggs.RHEALPixDGGS.to_dggrs_definition`. The
+rHEALPix DGGRS that OGC registers
+(`OGC rHEALPix <https://www.opengis.net/def/dggrs/OGC/1.0/rHEALPix>`_,
 the preset ``WGS84_003_OGC``) declares two of them as its identifiers.
+The grammar of the index strings is in the :doc:`conformance chapter
+<conformance>`.
 
 Representations
 ---------------
@@ -21,8 +27,9 @@ Representations
      - Notes
    * - Index string
      - ``'R553110'``
-     - A face letter and one digit per resolution, for ``N_side`` 2 and 3
-       only. The text identifier of OGC rHEALPix.
+     - A face letter and one digit per resolution, up to
+       ``max_resolution``, for ``N_side`` 2 and 3 only. The text
+       identifier of OGC rHEALPix.
    * - suid
      - ``('R', 5, 5, 3, 1, 1, 0)``
      - The same as a tuple. Every grid has one.
