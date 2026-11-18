@@ -1724,3 +1724,233 @@ class GridEqualityTestCase(unittest.TestCase):
             ZoneSet(self.standard, ["N"]).union(ZoneSet(self.rotated, ["N"]))
         with self.assertRaises(ValueError):
             self.standard.cell(["N"]).intersects(self.rotated.cell(["N"]))
+
+
+class CubeFoldTestCase(unittest.TestCase):
+    # xyz_cube folds the planar image onto a cube centred at the origin.
+    # Which cube face each polar square lands on, and how it is turned,
+    # depends on north_square and south_square.
+    FACE_AXIS: ClassVar[dict[str, tuple[int, int]]] = {
+        "N": (1, 1),
+        "S": (1, -1),
+        "O": (2, 1),
+        "P": (0, 1),
+        "Q": (2, -1),
+        "R": (0, -1),
+    }
+
+    @staticmethod
+    def grids():
+        for ns, ss in itertools.product(range(4), repeat=2):
+            yield RHEALPixDGGS(
+                ellipsoid=WGS84_ELLIPSOID, north_square=ns, south_square=ss
+            )
+
+    def test_each_face_folds_isometrically_onto_its_cube_face(self):
+        for rdggs in self.grids():
+            w = rdggs.cell_width(0)
+            for face, (axis, sign) in self.FACE_AXIS.items():
+                points = rdggs.cell([face]).interior(n=3, plane=True, flatten=True)
+                images = [np.array(rdggs.xyz_cube(*p)) for p in points]
+                for q in images:
+                    self.assertAlmostEqual(q[axis], sign * w / 2, delta=1e-6)
+                    self.assertLessEqual(np.abs(q).max(), w / 2 + 1e-6)
+                pairs = itertools.combinations(zip(points, images, strict=True), 2)
+                for (p1, q1), (p2, q2) in pairs:
+                    planar = np.hypot(p1[0] - p2[0], p1[1] - p2[1])
+                    self.assertAlmostEqual(planar, np.linalg.norm(q1 - q2), delta=1e-6)
+
+    def test_polar_squares_meet_the_equatorial_faces_along_every_edge(self):
+        # Points just inside each edge of a polar square fold to within a
+        # whisker of points just inside the top (or bottom) edges of the
+        # equatorial faces, so the cube closes without a gap, whichever
+        # positions the polar squares take.
+        n = 200
+        for rdggs in self.grids():
+            w = rdggs.cell_width(0)
+            eps = 1e-3 * w
+            t = np.linspace(eps, w - eps, n)
+            flat = np.zeros(n)
+
+            def fold(points, rdggs=rdggs):
+                return np.array([rdggs.xyz_cube(x, y) for x, y in points])
+
+            def corner(face, rdggs=rdggs, w=w):
+                x0, y1 = rdggs.cell([face]).ul_vertex(plane=True)
+                return x0, y1 - w
+
+            for polar, top in (("N", True), ("S", False)):
+                x0, y0 = corner(polar)
+                rim = fold(
+                    [
+                        *zip(x0 + eps + flat, y0 + t, strict=True),
+                        *zip(x0 + w - eps + flat, y0 + t, strict=True),
+                        *zip(x0 + t, y0 + eps + flat, strict=True),
+                        *zip(x0 + t, y0 + w - eps + flat, strict=True),
+                    ]
+                )
+                edges = []
+                for face in "OPQR":
+                    fx, fy = corner(face)
+                    edge_y = fy + w - eps if top else fy + eps
+                    edges.extend(zip(fx + t, edge_y + flat, strict=True))
+                equatorial = fold(edges)
+                gaps = np.linalg.norm(
+                    rim[:, None, :] - equatorial[None, :, :], axis=2
+                ).min(axis=1)
+                self.assertLess(gaps.max(), 5 * eps)
+
+    def test_longitude_latitude_input_is_projected_first(self):
+        rdggs = WGS84_003
+        for lon, lat in [(10, 20), (-100, -50), (170, 80), (0, -89)]:
+            u, v = rdggs.rhealpix(lon, lat)
+            np.testing.assert_allclose(
+                rdggs.xyz_cube(lon, lat, lonlat=True),
+                rdggs.xyz_cube(u, v),
+                rtol=1e-9,
+                atol=1e-6,
+            )
+            np.testing.assert_allclose(
+                rdggs.xyz(u, v), rdggs.xyz(lon, lat, lonlat=True), rtol=1e-9, atol=1e-6
+            )
+
+
+class RandomSamplingTestCase(unittest.TestCase):
+    def test_random_point_is_seedable_and_lands_in_the_grid(self):
+        for plane in (True, False):
+            p = WGS84_003.random_point(plane=plane, rng=Random(7))
+            self.assertEqual(p, WGS84_003.random_point(plane=plane, rng=Random(7)))
+            self.assertNotEqual(p, WGS84_003.random_point(plane=plane, rng=Random(8)))
+            self.assertEqual((type(p[0]), type(p[1])), (float, float))
+            self.assertIsNotNone(WGS84_003.cell_from_point(3, p, plane=plane))
+
+    def test_random_cell_is_seedable(self):
+        rng = Random(7)
+        cells = [WGS84_003.random_cell(rng=rng) for _ in range(30)]
+        rng = Random(7)
+        self.assertEqual(cells, [WGS84_003.random_cell(rng=rng) for _ in range(30)])
+        self.assertGreater(len({c.resolution for c in cells}), 1)
+        self.assertEqual(WGS84_003.random_cell(3, rng=Random(1)).resolution, 3)
+
+
+class RegionEdgeCasesTestCase(unittest.TestCase):
+    def test_comparison_with_other_types(self):
+        self.assertNotEqual(WGS84_003, 3)
+        self.assertFalse(WGS84_003 == 3)
+        self.assertIs(WGS84_003.__eq__(3), NotImplemented)
+
+    def test_reversed_bounds_give_nothing(self):
+        g = WGS84_003
+        self.assertEqual(g.cell_latitudes(1, 10, -10), [])
+        self.assertEqual(g.cells_from_meridian(1, 0, 10, -10), [])
+        self.assertEqual(g.cells_from_parallel(1, 0, 10, -10), [])
+        self.assertEqual(g.cells_from_region(1, (10, 10), (0, 20)), [])
+        self.assertIsNone(g.cell_width(1, plane=False))
+
+    def test_regions_outside_the_planar_image(self):
+        g = WGS84_003
+        ul, dr = (1e9, 2e9), (2e9, 1e9)
+        self.assertEqual(len(g.cells_in_box(1, ul, dr, plane=True)), 0)
+        self.assertEqual(g.cells_from_region(1, ul, dr, plane=True), [])
+        self.assertIsNone(g.cell_from_region(ul, dr, plane=True))
+
+    def test_cell_from_region_caps_and_a_region_no_cell_contains(self):
+        g = WGS84_003
+        north = g.cell_from_region((-180, 90), (-180, 60), plane=False)
+        south = g.cell_from_region((-180, -60), (-180, -90), plane=False)
+        self.assertEqual((str(north), str(south)), ("N", "S"))
+        self.assertIsNone(g.cell_from_region((-100, 10), (100, -10), plane=False))
+
+    def test_cells_from_region_within_one_cell(self):
+        g = WGS84_003
+        R = g.ellipsoid.R_A
+        ul, dr = (0.1 * R, 0.2 * R), (0.11 * R, 0.19 * R)
+        self.assertEqual(
+            g.cells_from_region(1, ul, dr, plane=True),
+            [[g.cell_from_point(1, ul, plane=True)]],
+        )
+
+    def test_cells_from_meridian_short_segments(self):
+        g = WGS84_003
+        self.assertEqual([str(c) for c in g.cells_from_meridian(1, 0, 1, 2)], ["Q3"])
+        self.assertEqual(
+            [str(c) for c in g.cells_from_meridian(1, 0, -76, -74)], ["S8", "S4"]
+        )
+
+    def test_cells_from_meridian_matches_dense_sampling(self):
+        # Every cell holding a sampled point of the meridian is returned, and
+        # every returned cell meets the meridian.
+        g = WGS84_003
+        phis = np.linspace(-89.99, 89.99, 3000)
+        for resolution, lam in [(1, 0.1), (2, 10), (2, -50), (2, 170), (3, 44.9)]:
+            cells = g.cells_from_meridian(resolution, lam, -90, 90)
+            for cell in cells:
+                self.assertTrue(cell.intersects_meridian(lam))
+            sampled = {
+                str(g.cell_from_point(resolution, (lam, phi), plane=False))
+                for phi in phis
+            }
+            self.assertLessEqual(sampled, {str(c) for c in cells})
+
+    def test_cell_latitudes_counts_for_odd_and_even_n_side(self):
+        # The docstring's counts: 2 N**r - 1 nuclei and 2 N**r boundaries
+        # between the poles for odd N_side, the other way round for even,
+        # except at resolution 0 where even N_side has the equator as its
+        # one nucleus latitude and the polar rims as its two boundaries.
+        for N_side in (2, 3):
+            g = RHEALPixDGGS(N_side=N_side)
+            R = g.ellipsoid.R_A
+            y_pole = R * pi / 2
+            for resolution in (0, 1, 2):
+                count = 2 * N_side**resolution
+                nuclei = g.cell_latitudes(resolution, -y_pole, y_pole, True)
+                edges = g.cell_latitudes(resolution, -y_pole, y_pole, False)
+                if N_side % 2:
+                    self.assertEqual((len(nuclei), len(edges)), (count - 1, count))
+                elif resolution == 0:
+                    self.assertEqual((len(nuclei), len(edges)), (1, 2))
+                else:
+                    self.assertEqual((len(nuclei), len(edges)), (count, count - 1))
+                w = g.cell_width(resolution)
+                np.testing.assert_allclose(np.diff(nuclei), w)
+                np.testing.assert_allclose(np.diff(edges), w)
+                self.assertIn(0, [round(y, 6) for y in nuclei + edges])
+                lats = g.cell_latitudes(resolution, -90, 90, True, plane=False)
+                self.assertEqual(len(lats), len(nuclei))
+                self.assertEqual(lats, sorted(lats))
+                self.assertLess(max(abs(lat) for lat in lats), 90)
+
+
+class RegionNucleiTestCase(unittest.TestCase):
+    def test_nuclei_of_the_cells_covering_a_quadrangle(self):
+        # Nuclei of the resolution 1 cells meeting the quadrangle from
+        # (0, 45) to (90, 0) on the (1, 2) grid, to the last digit.
+        rows = WGS84_123.cells_from_region(1, (0, 45), (90, 0), plane=False)
+        self.assertEqual(
+            [[str(cell) for cell in row] for row in rows],
+            [["N8", "N5", "N2"], ["Q0", "Q1", "Q2", "R0"], ["Q3", "Q4", "Q5", "R3"]],
+        )
+        expected = [
+            [
+                (1.90833280887811e-14, 58.52801748206219),
+                (45.00000000000002, 58.52801748206219),
+                (89.99999999999997, 58.52801748206219),
+            ],
+            [
+                (14.999999999999998, 26.490118751439734),
+                (45.0, 26.490118751439734),
+                (74.99999999999999, 26.490118751439734),
+                (105.00000000000001, 26.490118751439734),
+            ],
+            [
+                (14.999999999999998, 0),
+                (45.0, 0),
+                (74.99999999999999, 0),
+                (105.00000000000001, 0),
+            ],
+        ]
+        for row, nuclei in zip(rows, expected, strict=True):
+            for cell, nucleus in zip(row, nuclei, strict=True):
+                np.testing.assert_allclose(
+                    cell.nucleus(plane=False), nucleus, rtol=1e-15, atol=0
+                )

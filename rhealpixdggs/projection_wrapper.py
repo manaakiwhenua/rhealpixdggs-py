@@ -1,13 +1,10 @@
 """
-This Python 3.11 module implements a wrapper for map projections.
+:class:`Projection`, one callable for a map projection and its inverse
+on a given ellipsoid: HEALPix and rHEALPix from this package, every other
+projection name from PROJ.
 
-- Alexander Raichev (AR), 2013-01-25: Refactored code from release 0.3.
-
-NOTE:
-
-All lengths are measured in meters and all angles are measured in radians
-unless indicated otherwise.
-By 'ellipsoid' below, I mean an oblate ellipsoid of revolution.
+Lengths are in the ellipsoid's units and angles in degrees unless the
+ellipsoid was built with ``radians=True``.
 """
 
 # *****************************************************************************

@@ -1,15 +1,11 @@
 """
-This Python 3.11 code implements ellipsoids of revolution.
+Ellipsoids of revolution: :class:`Ellipsoid` and the WGS84 and unit
+sphere instances the grids are built on.
 
-- Alexander Raichev (AR), 2012-01-26: Refactored code from release 0.3.
-
-NOTE:
-
-All lengths are measured in meters and all angles are measured in radians
-unless indicated otherwise.
-
-By 'ellipsoid' throughout, I mean an ellipsoid of revolution and *not* a general (triaxial) ellipsoid.
-Points lying on an ellipsoid are given in geodetic (longitude, latitude) coordinates.
+Lengths are in metres and angles in degrees, or in radians when the
+ellipsoid is built with ``radians=True``. An ellipsoid is an ellipsoid
+of revolution, never a triaxial one, and a point on it is given as
+``(longitude, latitude)``.
 """
 
 # *****************************************************************************
