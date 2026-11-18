@@ -166,6 +166,9 @@ from typing import Any, Literal, NamedTuple, cast, get_args, overload
 from warnings import warn
 
 import numpy as np
+from pyproj.crs import CRS, GeographicCRS, ProjectedCRS
+from pyproj.crs.coordinate_operation import CoordinateOperation
+from pyproj.crs.datum import CustomDatum, CustomEllipsoid
 
 # Cells per chunk when enumerating the lattice cells of a planar box
 # (``RHEALPixDGGS._lattice_cells``), bounding the working set of callers such
@@ -381,6 +384,7 @@ class RHEALPixDGGS:
                     "build it with RHEALPixDGGS.from_uri"
                 )
         self._uri = uri
+        self._crs: CRS | None = None
 
         # Dictionary of the ordering (Morton order) of child cells of a cell
         # in terms of the row-column coordinates in the matrix of child cells.
@@ -586,6 +590,77 @@ class RHEALPixDGGS:
         return _REGISTERED_GRIDS[uri].sub_zone_order if uri else "mortonCurve"
 
     @property
+    def crs(self) -> CRS:
+        """
+        This grid's coordinate reference system as a ``pyproj.CRS``: the
+        projected CRS of the rHEALPix projection with this grid's
+        ``lon_0`` and polar squares, on WGS 84 (EPSG:4326) when the
+        ellipsoid is WGS84 and otherwise on a geographic CRS of the
+        ellipsoid. ``crs.to_wkt()`` and ``crs.to_json()`` give the WKT2
+        and PROJJSON definitions. The planar coordinates of this package
+        are coordinates in this CRS; PROJ's own ``rhealpix`` agrees with
+        them to within a few micrometres.
+
+        EXAMPLES::
+
+            >>> WGS84_003_OGC.crs.name
+            'rHEALPix (WGS 84, lon_0=50, north_square=0, south_square=0)'
+            >>> WGS84_003_OGC.crs.geodetic_crs.to_authority()
+            ('EPSG', '4326')
+            >>> [p.name for p in WGS84_003_OGC.crs.coordinate_operation.params]
+            ['lon_0', 'north_square', 'south_square']
+
+        """
+        if self._crs is None:
+            E = self.ellipsoid
+            lon_0 = degrees(E.lon_0) if E.radians else E.lon_0
+            if not E.sphere and isclose(E.a, WGS84_A) and isclose(E.f, WGS84_F):
+                base = CRS("EPSG:4326")
+            else:
+                if E.sphere:
+                    name = f"sphere of radius {float(E.R)!r} m"
+                    ellipsoid = CustomEllipsoid(
+                        name=name, semi_major_axis=E.a, semi_minor_axis=E.b
+                    )
+                else:
+                    name = f"ellipsoid a={float(E.a)!r} m, 1/f={float(1 / E.f)!r}"
+                    ellipsoid = CustomEllipsoid(
+                        name=name, semi_major_axis=E.a, inverse_flattening=1 / E.f
+                    )
+                base = GeographicCRS(
+                    name=name, datum=CustomDatum(name=name, ellipsoid=ellipsoid)
+                )
+            squares = (
+                f"north_square={self.north_square}, south_square={self.south_square}"
+            )
+            conversion = CoordinateOperation.from_json_dict(
+                {
+                    "type": "Conversion",
+                    "name": f"rHEALPix lon_0={format(float(lon_0), '.15g')}, {squares}",
+                    "method": {"name": "PROJ rhealpix"},
+                    "parameters": [
+                        {"name": "lon_0", "value": float(lon_0), "unit": "degree"},
+                        {
+                            "name": "north_square",
+                            "value": self.north_square,
+                            "unit": "unity",
+                        },
+                        {
+                            "name": "south_square",
+                            "value": self.south_square,
+                            "unit": "unity",
+                        },
+                    ],
+                }
+            )
+            self._crs = ProjectedCRS(
+                conversion=conversion,
+                geodetic_crs=base,
+                name=f"rHEALPix ({base.name}, lon_0={format(float(lon_0), '.15g')}, {squares})",
+            )
+        return self._crs
+
+    @property
     def codespace(self) -> str | None:
         """
         The namespace that makes this grid's zone identifiers globally
@@ -698,6 +773,7 @@ class RHEALPixDGGS:
             "definition": {
                 "spatialDimensions": 2,
                 "temporalDimensions": 0,
+                "crs": self.crs.to_json_dict(),
                 "projString": proj,
                 "basePolyhedron": "cube",
                 "refinementRatio": N * N,
