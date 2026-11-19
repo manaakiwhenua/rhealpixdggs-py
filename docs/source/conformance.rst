@@ -17,8 +17,7 @@ Spatio-temporal Classes tests A.2, A.3 and A.5, all DGGS Core tests
 (A.20–A.29) of the specification's Annex A. Every test in Annex A is
 of type *Basic*, assessed by inspection of the DGGS specification's
 documentation — so this page is both the project's self-assessment
-and, as the remaining rows are completed, the conformance
-documentation itself.
+and the conformance documentation itself.
 
 Scope notes:
 
@@ -34,8 +33,6 @@ Each row below records a status:
 
 - **Met** — the substance is implemented and stated here or in the
   linked API documentation.
-- **Partial** — implemented in substance, with named work remaining.
-- **Planned** — not yet implemented; the release target is named.
 - **Not claimed** — outside the conformance class the project targets.
 
 Common Spatio-temporal Classes
@@ -48,7 +45,7 @@ Common Spatio-temporal Classes
    * - Test
      - What it requires
      - Status
-     - Evidence and plan
+     - Evidence
    * - A.1 temporal geometry
      - Temporal geometry and topology (instants, intervals and their
        ordering) conforming to the common data model.
@@ -97,7 +94,7 @@ DGGS Core — reference system
    * - Test
      - What it requires
      - Status
-     - Evidence and plan
+     - Evidence
    * - A.6 harmonized model
      - The reference system's definition conforms to the Core data
        model (grids, refinement strategy, globe geometry).
@@ -178,7 +175,7 @@ DGGS Core — functions
    * - Test
      - What it requires
      - Status
-     - Evidence and plan
+     - Evidence
    * - A.16 quantization
      - Defined operations assigning external data to cells, conforming
        to the quantization model.
@@ -240,12 +237,13 @@ DGGS Core — functions
    * - A.18 interoperation query
      - Operations to read, interpret and execute external data
        queries.
-     - Partial
-     - External geometries (Shapely/WKT) are accepted as queries by
-       :func:`~rhealpixdggs.rhp_wrappers.polyfill` and
-       :func:`~rhealpixdggs.rhp_wrappers.linetrace`; the documented
-       mapping onto the model's query interface is to be written
-       (v1.0). Transport protocols are out of library scope (see
+     - Met
+     - `Interoperation query`_ below declares the query language,
+       ``OGCAPI``, and maps the classes of the model.
+       :func:`~rhealpixdggs.conversion.zones_from_query` interprets
+       and executes a zone query of OGC API — DGGS. The library
+       returns zones and holds no data: the data fields of a query
+       stay with the service built on it, as does the transport (see
        Scope notes).
    * - A.19 interoperation broadcast
      - Operations translating query results into standard data
@@ -283,7 +281,7 @@ Equal-Area Earth Reference System
    * - Test
      - What it requires
      - Status
-     - Evidence and plan
+     - Evidence
    * - A.20 harmonized model
      - The EAERS definition conforms to the Equal-Area data model.
      - Met
@@ -644,6 +642,85 @@ roles a cell can play. The library supports three.
        :func:`~rhealpixdggs.harmonics.analysis` take such a mapping.
    * - Quantization
      - The code list of roles, of which three are supported.
+
+Interoperation query
+--------------------
+
+Requirement 18 asks for operations that read, interpret and execute
+external data queries, in the terms of clause 8.3.5 (Tables 55–59).
+As with `Quantization`_, the library is a component of a data service
+and not the service: it answers the spatial part of a query with
+zones, and the service that holds the data answers the rest.
+
+The query language declared (``queryInterpretation``, Table 57) is
+``OGCAPI``: the zone query of `OGC API — DGGS
+<https://docs.ogc.org/is/21-038r1/21-038r1.html>`__, clause 12.
+:func:`~rhealpixdggs.conversion.zones_from_query` takes that query's
+parameters under their own names and returns the ``zones`` array of
+its response.
+
+.. list-table::
+   :widths: 24 76
+   :header-rows: 1
+
+   * - Query parameter
+     - Interpretation
+   * - ``zone-level``
+     - The resolution of the zones returned.
+   * - ``bbox``
+     - A longitude-latitude box in CRS84, which may cross the
+       antimeridian. The zones returned are those inside or
+       intersecting it, found by
+       :func:`~rhealpixdggs.conversion.cells_from_polygon` with its
+       ``overlapping`` rule. Without it every zone is returned, since
+       the library has no data to limit them.
+   * - ``parent-zone``
+     - Only that zone and its sub-zones are returned. Without a
+       ``bbox`` they come in the grid's sub-zone order.
+   * - ``compact-zones``
+     - True by default, as in the standard: zones that together cover
+       a parent are replaced by it, and the list is ordered coarsest
+       first.
+   * - ``bbox-crs``, ``limit``
+     - Not interpreted. A service transforms a box in another CRS to
+       CRS84 and pages the list.
+   * - ``datetime``, ``subset``, ``subset-crs``, ``filter``
+     - Not interpreted. They select by data, which the service holds.
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - Model class
+     - In rHEALPixDGGS
+   * - InteroperationFunctions
+     - :func:`~rhealpixdggs.conversion.zones_from_query` for the
+       query, and :mod:`rhealpixdggs.export` for the broadcast
+       (A.19).
+   * - QueryComponents
+     - The arguments of ``zones_from_query``. The ``spatialExtent`` is
+       ``bbox``; a geometry other than a box is given to
+       :func:`~rhealpixdggs.conversion.cells_from_polygon` or
+       :func:`~rhealpixdggs.conversion.cells_from_linestring`
+       directly. A ``queryFunction`` is an expression in the zone
+       operations of A.17 on the result as a
+       :class:`~rhealpixdggs.zoneset.ZoneSet`. There is no
+       ``temporalExtent``, as the grid has no temporal dimension. The
+       ``dataFields`` name values the library does not hold: they
+       are the service's.
+   * - QueryFunctions
+     - ``queryInterpretation`` is ``OGCAPI``. ``zones_from_query``
+       performs both operations: ``interpretQuery`` in turning the
+       parameters into a resolution, an extent in the grid's units,
+       a parent and a compaction rule, and ``executeQuery`` in
+       returning the zones they select.
+   * - QueryResult
+     - The list of zone identifiers. The service pairs them with its
+       values to make the DGG_Observation records of
+       `Quantization`_.
+   * - QueryType
+     - The code list of query languages, of which ``OGCAPI`` is
+       supported.
 
 Equal-area reference system declaration
 ---------------------------------------
@@ -1037,14 +1114,3 @@ rejected. At resolution 15 the budget is 6 × 10⁻⁸, five orders of
 magnitude inside the 1 % that Requirement 28 allows, and the binding
 limit on the sequence is the area floor. A ``max_areal_resolution``
 below about 10⁻¹¹ m² would carry the sequence past the budget.
-
-Planned work
-------------
-
-The rows above marked Partial or Planned are v1.0 work: the formal
-reference-system declaration with the quantization and
-interoperation mapping documentation
-(`#104 <https://github.com/manaakiwhenua/rhealpixdggs-py/issues/104>`_).
-
-Progress is tracked in the project's `GitHub milestones
-<https://github.com/manaakiwhenua/rhealpixdggs-py/milestones>`_.

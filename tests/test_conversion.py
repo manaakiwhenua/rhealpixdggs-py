@@ -12,7 +12,7 @@ from shapely import wkt
 from shapely.geometry import Polygon
 
 from rhealpixdggs.conversion import *
-from rhealpixdggs.dggs import WGS84_003
+from rhealpixdggs.dggs import WGS84_003, WGS84_003_OGC, WGS84_003_RADIANS
 
 test_geom = """
         MULTIPOLYGON (((148.6675 -35.5725, 148.6675 -35.575, 148.67 -35.575, 148.67 -35.5775, 148.6725 -35.5775,
@@ -819,6 +819,82 @@ class ShapelyGeometryTestCase(unittest.TestCase):
         self.assertEqual(cells_from_linestring(LineString(), 4), [])
         with self.assertRaises(TypeError):
             cells_from_linestring(Point(0, 0), 4)
+
+
+class ZoneQueryTestCase(unittest.TestCase):
+    def test_without_a_bbox(self):
+        faces = ["N", "O", "P", "Q", "R", "S"]
+        self.assertEqual(zones_from_query(4), faces)
+        self.assertEqual(zones_from_query(0, compact_zones=False), faces)
+        self.assertEqual(len(zones_from_query(2, compact_zones=False)), 486)
+        self.assertEqual(zones_from_query(5, parent_zone="Q31"), ["Q31"])
+        children = zones_from_query(3, parent_zone="Q31", compact_zones=False)
+        self.assertEqual(children, [f"Q31{d}" for d in range(9)])
+        # A parent finer than the level has no zone at that level within it.
+        self.assertEqual(zones_from_query(1, parent_zone="Q31"), [])
+        # Sub-zones come in the order the grid declares.
+        ogc = zones_from_query(
+            2, parent_zone="N", compact_zones=False, rdggs=WGS84_003_OGC
+        )
+        self.assertEqual(ogc, [str(c) for c in WGS84_003_OGC.cell(("N",)).subcells(2)])
+        self.assertNotEqual(ogc, sorted(ogc))
+
+    def test_bbox(self):
+        from shapely.geometry import box
+
+        bbox = (165, -48, 179, -34)
+        zones = zones_from_query(5, bbox=bbox, compact_zones=False)
+        expected = cells_from_polygon(
+            box(165, -48, 179, -34), 5, plane=False, containment="overlapping"
+        )
+        self.assertEqual(zones, expected.tolist())
+        # The compact list stands for the same zones, coarsest first.
+        compact = zones_from_query(5, bbox=bbox)
+        self.assertLess(len(compact), len(zones))
+        self.assertEqual([len(z) for z in compact], sorted(len(z) for z in compact))
+        expanded = sorted(
+            str(c)
+            for z in compact
+            for c in WGS84_003.cell(WGS84_003.parse_index(z)).subcells(5)
+        )
+        self.assertEqual(expanded, zones)
+        # A parent restricts the list and bounds how coarse it gets.
+        within = zones_from_query(5, bbox=bbox, parent_zone="R87")
+        self.assertTrue(within)
+        self.assertTrue(all(z.startswith("R87") for z in within))
+        self.assertEqual(
+            zones_from_query(3, bbox=(-180, -90, 180, 90), parent_zone="O3"), ["O3"]
+        )
+        # Heights are ignored, and a grid in radians takes the same degrees.
+        self.assertEqual(
+            zones_from_query(5, bbox=(165, -48, 0, 179, -34, 100)), compact
+        )
+        self.assertEqual(
+            zones_from_query(5, bbox=bbox, rdggs=WGS84_003_RADIANS), compact
+        )
+
+    def test_bbox_across_the_antimeridian(self):
+        crossing = zones_from_query(2, bbox=(170, -10, -170, 10), compact_zones=False)
+        east = zones_from_query(2, bbox=(170, -10, 180, 10), compact_zones=False)
+        west = zones_from_query(2, bbox=(-180, -10, -170, 10), compact_zones=False)
+        self.assertEqual(crossing, sorted(set(east) | set(west)))
+        self.assertEqual(crossing, ["O30", "O33", "O36", "R52", "R55", "R58"])
+        self.assertEqual(
+            zones_from_query(2, bbox=(170, -10, 180, 10), compact_zones=False), east
+        )
+
+    def test_rejected_queries(self):
+        for arguments in [
+            {"zone_level": -1},
+            {"zone_level": WGS84_003.max_resolution + 1},
+            {"zone_level": 2, "parent_zone": "X1"},
+            {"zone_level": 2, "parent_zone": "N9"},
+            {"zone_level": 2, "bbox": (0, 0, 1)},
+            {"zone_level": 2, "bbox": (0, 0, 0, 1)},
+            {"zone_level": 2, "bbox": (0, 1, 1, 0)},
+        ]:
+            with self.subTest(arguments=arguments), self.assertRaises(ValueError):
+                zones_from_query(**arguments)
 
 
 if __name__ == "__main__":
