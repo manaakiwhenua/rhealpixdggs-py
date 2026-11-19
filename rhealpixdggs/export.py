@@ -37,7 +37,6 @@ import csv
 import io
 import xml.etree.ElementTree as ET
 from collections.abc import Iterable
-from math import isclose
 from typing import Any, NamedTuple
 
 import numpy as np
@@ -413,7 +412,6 @@ _GML = "http://www.opengis.net/gml/3.2"
 _XSI = "http://www.w3.org/2001/XMLSchema-instance"
 _XLINK = "http://www.w3.org/1999/xlink"
 _PLANAR_SRS = "#rhealpix"
-_QUAD_EDGES = ("smallCircle", "greatEllipse", "smallCircle", "greatEllipse")
 
 
 def boundary_types(
@@ -423,8 +421,11 @@ def boundary_types(
     The curve type of each edge of the cell `index` (an index string or
     ``Cell``, read as a cell of `dggs`) on the ellipsoid, from the
     ``EA_BoundaryType`` code list of OGC Topic 21: one entry per planar
-    edge clockwise from the upper-left vertex (top, right, bottom, left),
-    or one entry for a cap cell, whose four edges lie on one parallel.
+    edge clockwise from the upper-left vertex (top, right, bottom, left).
+    A dart's two outer edges lie on one parallel and are given once, in
+    the place of the first of them, and a cap's four edges lie on one
+    parallel and are given as one entry, so the tuple has
+    ``Cell.num_edges(plane=False)`` entries.
 
     A quad cell's edges are parallels (``smallCircle``) and meridians
     (``greatEllipse``). The diagonals of a polar square cut it into four
@@ -444,31 +445,24 @@ def boundary_types(
         ('smallCircle',)
         >>> boundary_types('N1')
         ('smallCircle', 'projectedLine', 'smallCircle', 'projectedLine')
+        >>> boundary_types('N0')
+        ('projectedLine', 'projectedLine', 'smallCircle')
         >>> from rhealpixdggs.dggs import WGS84_002
         >>> boundary_types('N3', WGS84_002)
-        ('greatEllipse', 'smallCircle', 'smallCircle', 'greatEllipse')
+        ('greatEllipse', 'smallCircle', 'greatEllipse')
 
     """
     cell = index if isinstance(index, Cell) else dggs.cell(dggs.parse_index(index))
     shape = cell.ellipsoidal_shape
-    if shape == "quad":
-        return _QUAD_EDGES
     if shape == "cap":
         return ("smallCircle",)
-    (x0, x1), (y0, y1) = cell.xy_range()
-    (fx0, fx1), (fy0, fy1) = cell.rdggs.cell((cell.suid[0],)).xy_range()
-    xc, yc = (fx0 + fx1) / 2, (fy0 + fy1) / 2
-    tol = (fx1 - fx0) * 1e-9
-
-    def edge(along: float, across: float) -> str:
-        # `along` is the edge's offset from the pole across its direction,
-        # `across` its midpoint's offset along it.
-        if isclose(along, 0, abs_tol=tol):
-            return "greatEllipse"
-        return "smallCircle" if abs(along) > abs(across) else "projectedLine"
-
-    mx, my = (x0 + x1) / 2 - xc, (y0 + y1) / 2 - yc
-    return (edge(y1 - yc, mx), edge(x1 - xc, my), edge(y0 - yc, mx), edge(x0 - xc, my))
+    types = list(cell._planar_edge_types())
+    if shape == "dart":
+        first = next(
+            k for k in range(4) if types[k] == types[(k + 1) % 4] == "smallCircle"
+        )
+        del types[(first + 1) % 4]
+    return tuple(types)
 
 
 def _pos(lon: float, lat: float, planar: bool = False) -> str:

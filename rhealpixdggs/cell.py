@@ -2,7 +2,7 @@ import enum
 from collections.abc import Iterator
 from functools import cache, cached_property, total_ordering
 from itertools import product
-from math import degrees, fsum, hypot
+from math import cos, degrees, fsum, hypot, isclose, remainder, sin, sqrt, tau
 from random import Random
 from typing import TYPE_CHECKING, ClassVar, Literal, cast, overload
 
@@ -508,6 +508,115 @@ class Cell:
         """
         assert self.resolution is not None
         return self.rdggs.cell_area(self.resolution, plane=plane)
+
+    def num_edges(self, plane: bool = True) -> int:
+        """
+        Return the number of edges of this cell: 4 in the plane, and on
+        the ellipsoid 4 for a quad or skew quad, 3 for a dart, whose two
+        outer planar edges lie on one parallel, and 1 for a cap, whose
+        boundary is one parallel.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> [WGS84_003.cell((s, 0)).num_edges() for s in 'NP']
+            [4, 4]
+            >>> [WGS84_003.cell(s).num_edges(plane=False)
+            ...  for s in (('P', 4), ('N', 1), ('N', 0), ('N', 4))]
+            [4, 4, 3, 1]
+
+        """
+        if plane:
+            return 4
+        return {"quad": 4, "skew_quad": 4, "dart": 3, "cap": 1}[self.ellipsoidal_shape]
+
+    def perimeter(self, plane: bool = True, n: int = 32) -> float:
+        """
+        Return the length of the boundary of this cell, in the units of
+        the ellipsoid's radius: four widths in the plane, and on the
+        ellipsoid the length of the curves that the planar edges project
+        to. An edge along a parallel or a meridian has its exact length,
+        so the perimeter of a quad or a cap is exact. The other edges of
+        the polar cells have no closed form and are measured as chains of
+        geodesics through `n` and `n // 2` steps, extrapolated to the
+        limit: at the default `n` the relative error is under 1e-7 for the
+        resolution 0 and 1 polar cells and falls quickly with resolution.
+        Raise ValueError unless `n` is even and at least 2.
+
+        EXAMPLES::
+
+            >>> from rhealpixdggs.dggs import WGS84_003
+            >>> c = WGS84_003.cell(('P', 4))
+            >>> print(round(c.perimeter()))
+            13343406
+            >>> print(round(c.perimeter(plane=False)))
+            12216320
+
+        """
+        if plane:
+            return 4 * self.width()
+        if n < 2 or n % 2:
+            raise ValueError("n must be even and at least 2.")
+        E = self.ellipsoid
+        geod = _geod(E.a, E.f)
+        kinds = self._planar_edge_types()
+        corners = self.vertices(plane=False)
+        to_radians = 1.0 if E.radians else np.pi / 180
+        lengths = []
+        for k, kind in enumerate(kinds):
+            (lon0, lat0), (lon1, lat1) = corners[k], corners[(k + 1) % 4]
+            if kind == "smallCircle":
+                phi = lat0 * to_radians
+                turn = abs(remainder((lon1 - lon0) * to_radians, tau))
+                lengths.append(E.a * cos(phi) / sqrt(1 - E.e**2 * sin(phi) ** 2) * turn)
+            elif kind == "greatEllipse":
+                # A meridian is a geodesic.
+                lengths.append(geod.inv(lon0, lat0, lon1, lat1, radians=E.radians)[2])
+        if "projectedLine" in kinds:
+            rows = [k for k, kind in enumerate(kinds) if kind == "projectedLine"]
+            lon, lat, _ = self._boundary_samples(n + 1)
+            lon, lat = lon.reshape(4, n + 1)[rows], lat.reshape(4, n + 1)[rows]
+
+            def chain(step: int) -> float:
+                u, v = lon[:, ::step], lat[:, ::step]
+                d = geod.inv(
+                    u[:, :-1], v[:, :-1], u[:, 1:], v[:, 1:], radians=E.radians
+                )[2]
+                return float(np.sum(d))
+
+            lengths.append((4 * chain(1) - chain(2)) / 3)
+        return fsum(lengths)
+
+    def _planar_edge_types(self) -> tuple[str, str, str, str]:
+        """
+        The curve type on the ellipsoid of each planar edge of this cell,
+        clockwise from the upper-left vertex: ``smallCircle`` for an arc
+        of a parallel, ``greatEllipse`` for an arc of a meridian, and
+        ``projectedLine`` for any other image of a straight planar line.
+        """
+        if self.ellipsoidal_shape == "quad":
+            return ("smallCircle", "greatEllipse", "smallCircle", "greatEllipse")
+        if self.ellipsoidal_shape == "cap":
+            return ("smallCircle",) * 4
+        (x0, x1), (y0, y1) = self.xy_range()
+        (fx0, fx1), (fy0, fy1) = self.rdggs.cell((self.suid[0],)).xy_range()
+        xc, yc = (fx0 + fx1) / 2, (fy0 + fy1) / 2
+        tol = (fx1 - fx0) * 1e-9
+
+        def edge(along: float, across: float) -> str:
+            # `along` is the edge's offset from the pole across its direction,
+            # `across` its midpoint's offset along it.
+            if isclose(along, 0, abs_tol=tol):
+                return "greatEllipse"
+            return "smallCircle" if abs(along) > abs(across) else "projectedLine"
+
+        mx, my = (x0 + x1) / 2 - xc, (y0 + y1) / 2 - yc
+        return (
+            edge(y1 - yc, mx),
+            edge(x1 - xc, my),
+            edge(y0 - yc, mx),
+            edge(x0 - xc, my),
+        )
 
     def successor(self, resolution: int | None = None) -> "Cell | None":
         """

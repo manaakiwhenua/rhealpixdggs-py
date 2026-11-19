@@ -289,16 +289,17 @@ Equal-Area Earth Reference System
      - Evidence and plan
    * - A.20 harmonized model
      - The EAERS definition conforms to the Equal-Area data model.
-     - Partial
-     - Substance as per A.6; the formal declaration (including the
-       grid-constraint list with cellEquiSized first) is to be
-       written (v1.0).
+     - Met
+     - `Equal-area reference system declaration`_ below extends the
+       declaration of A.6 and maps the model's classes, with
+       ``cellEquiSized`` the first grid constraint.
    * - A.21 global domain
      - The domain is the whole Earth-model surface and the equal-size
        cell constraint is declared.
-     - Partial
-     - The domain is the whole ellipsoid surface (A.8); the formal
-       cellEquiSized declaration rides with A.20 (v1.0).
+     - Met
+     - The domain is the whole ellipsoid surface (A.8), and
+       ``cellEquiSized`` is declared as the first grid constraint
+       (`Reference system declaration`_).
    * - A.22 initial tessellation
      - An initial grid of equal-area cells produced by mapping the
        faces of a base polyhedron to the Earth model.
@@ -564,6 +565,100 @@ The remaining classes of the model are these.
    * - DGG_ReferenceSystemType, DGG_GridConstraint,
        DGG_RefinementStrategy
      - The union and code lists whose values are declared above.
+
+Equal-area reference system declaration
+---------------------------------------
+
+Requirement 20 asks that an equal-area Earth reference system be
+defined in the terms of clause 9.1 (Tables 63–76). These extend the
+classes of `Reference system declaration`_, and an
+:class:`~rhealpixdggs.dggs.RHEALPixDGGS` is an EA_DGG_ReferenceSystem
+(Table 63) with the declaration given there: ``cellEquiSized`` is the
+first grid constraint, as the table requires. Its CRS is a projected
+CRS on a geodetic base, which serves both as the base CRS of Table 65
+and as the projected CRS that Table 67 associates with the polyhedron.
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - Model class
+     - In rHEALPixDGGS
+   * - EA_GlobeGeometry
+     - The surface of the grid's ellipsoid, with ``spatialDimension``
+       3 and ``topologicalDimension`` 2 as Table 64 requires.
+   * - EA_SurfaceInterpolation
+     - ``elliptical``, or ``spherical`` for a grid on a sphere.
+   * - EA_BaseUnitPolyhedron
+     - A cube, with ``numFaces`` 6 and ``numEdges`` 12. The plane
+       image of the rHEALPix projection is a net of the cube: four
+       squares in a row for the equatorial faces, with the polar faces
+       attached above and below the squares numbered ``north_square``
+       and ``south_square``. The central meridian of the ellipsoid
+       fixes its orientation.
+   * - EA_PolyhedralTessellation
+     - The rHEALPix projection,
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.rhealpix`. It is
+       equal-area, so the six faces map to six cells of equal area
+       that cover the ellipsoid once (A.22, A.9, A.10).
+   * - EA_InitialDiscreteGlobalGrid
+     - The six cells N, O, P, Q, R and S,
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.grid` at resolution 0,
+       with ``refinementLevel`` 0.
+   * - EA_DiscreteGlobalGridTessellation
+     - The division of every cell into ``N_side`` squared equal planar
+       squares, :meth:`~rhealpixdggs.cell.Cell.subcells` (A.23).
+   * - EA_RefinedDiscreteGlobalGrid
+     - ``grid`` at each resolution from 1 to ``max_resolution``, its
+       ``refinementLevel`` one more than its parent's. The
+       ``domainOfValidity`` is global: the grid is fixed to the
+       ellipsoid (`Coordinate reference system`_).
+   * - EA_DiscreteGlobalGrid
+     - Either of the two above. Its ``dggsAxis`` is the curve that
+       visits the cells of a resolution in the order of their
+       identifiers, which :meth:`~rhealpixdggs.cell.Cell.successor`
+       and :meth:`~rhealpixdggs.cell.Cell.predecessor` step along. Its
+       ``dggsSurfaceInterpolation`` is that of the globe.
+   * - EA_Zone
+     - :class:`~rhealpixdggs.cell.Cell` as a location (`Spatial
+       location`_), with its ``identifier`` and its ``centroid``,
+       :meth:`~rhealpixdggs.cell.Cell.centroid` (A.27).
+   * - EA_BoundaryType, EA_BoundaryData
+     - The curve type of each edge,
+       :func:`~rhealpixdggs.export.boundary_types` (A.26), and the
+       curves themselves as the GML export writes them
+       (:doc:`export`).
+
+An EA_Cell is a :class:`~rhealpixdggs.cell.Cell` on the ellipsoid. Its
+attributes (Table 74) are these.
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - EA_Cell attribute
+     - In rHEALPixDGGS
+   * - area
+     - :meth:`~rhealpixdggs.cell.Cell.area` with ``plane=False``.
+   * - perimeter
+     - :meth:`~rhealpixdggs.cell.Cell.perimeter` with ``plane=False``.
+   * - numEdges
+     - :meth:`~rhealpixdggs.cell.Cell.num_edges` with ``plane=False``:
+       4 for a quad or skew quad, 3 for a dart and 1 for a cap.
+   * - nodes
+     - :meth:`~rhealpixdggs.cell.Cell.vertices` with ``plane=False``,
+       clockwise from the north-west. A dart has three, given by
+       ``trim_dart=True``; the four points returned for a cap divide
+       its one edge.
+   * - boundaryTypes, boundaryData
+     - As EA_BoundaryType and EA_BoundaryData above, one entry per
+       edge.
+   * - errorBudget
+     - One value for each resolution,
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.area_error_budget`
+       (A.28).
+   * - maxLevel
+     - ``max_resolution``, one value for the grid (A.24).
 
 Zonal identifiers
 -----------------

@@ -177,16 +177,17 @@ a meridian when its line passes through the pole, which happens only with
 even ``N_side``, and otherwise the image of a straight planar line,
 ``projectedLine``, which no circle or ellipse describes. A cap's four
 edges lie on one parallel, given as one ``smallCircle``; a skew quad has
-two parallels on opposite sides and two projected lines; a dart two
-parallels meeting at its outer vertex and two projected lines, or two
-meridians meeting at the pole::
+two parallels on opposite sides and two projected lines; a dart has
+three edges, one parallel, which its two outer planar edges share and
+which is given once, and two projected lines, or two meridians meeting
+at the pole::
 
     >>> for index in ['P4', 'N4', 'N1', 'N0']:
     ...     print(index, export.boundary_types(index))
     P4 ('smallCircle', 'greatEllipse', 'smallCircle', 'greatEllipse')
     N4 ('smallCircle',)
     N1 ('smallCircle', 'projectedLine', 'smallCircle', 'projectedLine')
-    N0 ('smallCircle', 'projectedLine', 'projectedLine', 'smallCircle')
+    N0 ('projectedLine', 'projectedLine', 'smallCircle')
 
 The other codes of the ``TranslationType`` list (HDF, JSON-LD, NetCDF,
 XML) are not planned.

@@ -44,8 +44,9 @@ boundary from the EA_BoundaryType code list of OGC Topic 21 (OGC 20-040r3).
             <annotation><documentation>The curve type of each edge, from
             the EA_BoundaryType code list of OGC Topic 21, in the order of
             the cell's planar edges clockwise from its upper-left vertex:
-            top, right, bottom, left. One element for a cap cell, whose
-            boundary is one parallel.</documentation></annotation>
+            top, right, bottom, left. A dart's two outer edges lie on one
+            parallel and are given once, and a cap's boundary is one
+            parallel, given as one element.</documentation></annotation>
           </element>
           <element name="position" type="gml:PointPropertyType">
             <annotation><documentation>The cell's direct position, its
