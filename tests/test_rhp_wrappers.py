@@ -18,6 +18,7 @@ import shapely as sh
 
 import rhealpixdggs.dggs as gs
 import rhealpixdggs.rhp_wrappers as rhpw
+from rhealpixdggs import conversion
 
 
 class RhpWrappersTestCase(unittest.TestCase):
@@ -1269,4 +1270,4 @@ class PolyfillEdgeCasesTestCase(unittest.TestCase):
     def test_malformed_lines_and_empty_duplicate_removal(self):
         self.assertTrue(rhpw._malformed_lines(sh.Point(0, 0)))
         self.assertFalse(rhpw._malformed_lines(sh.LineString([(0, 0), (1, 1)])))
-        self.assertEqual(rhpw._remove_sequential_duplicates([]), [])
+        self.assertEqual(conversion._remove_sequential_duplicates([]), [])

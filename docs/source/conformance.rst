@@ -182,15 +182,12 @@ DGGS Core — functions
    * - A.16 quantization
      - Defined operations assigning external data to cells, conforming
        to the quantization model.
-     - Partial
-     - Vector quantization exists:
-       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point`,
-       :func:`~rhealpixdggs.rhp_wrappers.polyfill`,
-       :func:`~rhealpixdggs.rhp_wrappers.linetrace`,
-       :class:`~rhealpixdggs.conversion.CellZoneFromPoly`,
-       :func:`~rhealpixdggs.conversion.compact_cells`. The mapping of
-       these onto the model's quantization roles is to be written
-       (v1.0).
+     - Met
+     - `Quantization`_ below declares the three roles the library
+       supports, ``asCoordinates``, ``asTags`` and ``asDataCells``,
+       names the operations for each and maps the classes of the
+       model. The library assigns identifiers and holds no data: the
+       observed values stay with the caller.
    * - A.17 zone queries
      - The full DE-9IM query interface between zones: contains,
        within, touches, disjoint, equals, intersects, overlaps,
@@ -565,6 +562,88 @@ The remaining classes of the model are these.
    * - DGG_ReferenceSystemType, DGG_GridConstraint,
        DGG_RefinementStrategy
      - The union and code lists whose values are declared above.
+
+Quantization
+------------
+
+Requirement 16 asks for operations that assign data from external
+sources to cells, in the terms of clause 8.3.2 (Tables 47–51).
+rHEALPixDGGS is not a data service. It stores no data and returns
+none; it is a component for someone building a system that does. Its
+part of quantization is to turn the geometry of external data into
+zonal identifiers, and the values assigned to those identifiers stay
+with the caller.
+
+Clause 8.3.1 lets a specification describe one or more of the six
+roles a cell can play. The library supports three.
+
+.. list-table::
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Role
+     - Operations
+   * - ``asCoordinates``
+     - A coordinate tuple becomes the identifier of the cell that
+       contains it, at a resolution the caller chooses to reflect the
+       precision of the position:
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cell_from_point`, and
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cells_from_points` for
+       arrays. To keep the structure of a line,
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cells_from_line` returns
+       the ordered cells a segment passes through, and
+       :func:`~rhealpixdggs.conversion.cells_from_linestring` those
+       of a Shapely line. The wrappers
+       :func:`~rhealpixdggs.rhp_wrappers.geo_to_rhp` and
+       :func:`~rhealpixdggs.rhp_wrappers.linetrace` are the same
+       operations for a latitude-longitude pair and a line.
+   * - ``asTags``
+     - An object is tagged with the smallest cell that wholly
+       encloses it, whose resolution indicates the object's extent:
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cell_from_region` for a
+       rectangle or a longitude-latitude quadrangle, and
+       :func:`~rhealpixdggs.conversion.get_finest_containing_cell`
+       for a polygon.
+   * - ``asDataCells``
+     - The cells that take a value from a feature are chosen by their
+       geometry.
+       :func:`~rhealpixdggs.conversion.cells_from_polygon`
+       returns the cells of a Shapely polygon under one of three
+       rules: the cell's centroid is inside it, the whole cell is
+       inside it, or the cell meets it. It can return them compacted,
+       and :func:`~rhealpixdggs.rhp_wrappers.polyfill` is its wrapper.
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.cells_from_region`
+       covers a rectangle or quadrangle and
+       :meth:`~rhealpixdggs.dggs.RHEALPixDGGS.minimal_cover` a set of
+       points. :func:`~rhealpixdggs.conversion.compact_cells` merges
+       complete groups of siblings into their parents.
+   * - ``asDataTiles``, ``asGraphicCells``, ``asGraphicTiles``
+     - Not provided. Clipping features to cells and rendering them
+       are left to software built on the library.
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - Model class
+     - In rHEALPixDGGS
+   * - QuantizationFunctions
+     - The operations above. Its ``cellContext`` is the list
+       ``asCoordinates``, ``asTags``, ``asDataCells``.
+   * - DataAssignmentProcess
+     - One call to one of those operations on an external geometry.
+       Its ``cellContext`` is the role of the operation called.
+   * - QuantizationContext
+     - The ``role`` is fixed by the operation, as the table above
+       lists.
+   * - DGG_Observation
+     - The ``identifier`` values are the index strings an operation
+       returns. The ``field`` values are the caller's: the record is
+       a mapping from index string to value that the caller builds
+       and keeps. :func:`~rhealpixdggs.harmonics.to_ring_order` and
+       :func:`~rhealpixdggs.harmonics.analysis` take such a mapping.
+   * - Quantization
+     - The code list of roles, of which three are supported.
 
 Equal-area reference system declaration
 ---------------------------------------
