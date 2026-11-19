@@ -46,17 +46,43 @@ floats. ``Cell.color`` is removed. Fixed four defects the new tests
 turned up: ``Cell.index("resolution")`` was 6 too large for resolution 0
 cells, and ``Cell(level_order_index=...)`` gave the wrong cell for faces
 R and S on an ``N_side`` 2 grid; ``cell_latitudes`` could include a
-pole through rounding; ``CellZoneFromPoly`` skipped a child cell that
-held the whole geometry, so a small polygon under a coarse
-``bounding_cell`` produced no cells, and it raised when
-``return_cells`` was false; and ``!=`` between a grid, cell or
-ellipsoid and an object of another type was always false (issue #211).
+pole through rounding; and ``!=`` between a grid, cell or ellipsoid and
+an object of another type was always false (issue #211).
 
 ``HOMEMADE_PROJECTIONS`` lists only the two projections the package
 implements, so ``Projection(proj="isea")`` and ``"qsc"`` now reach
 PROJ's versions instead of printing that they are not implemented and
 returning ``None``; a homemade name whose module is missing raises
 ``ValueError`` (issue #206).
+
+The conformance chapter accounts for every test of OGC Topic 21's
+Annex A, with new sections that map the library onto the standard's
+classes for zone geometry, spatial location, the reference system and
+its equal-area form, and quantization (issue #104).
+
+Added ``Cell.perimeter``, the length of a cell's boundary in the plane
+or on the ellipsoid, exact for edges along parallels and meridians, and
+``Cell.num_edges``, which on the ellipsoid is 3 for a dart and 1 for a
+cap. ``export.boundary_types`` and the GML export give a dart's two
+outer edges, which lie on one parallel, as one entry. ``Cell.subcells``
+raises a ``ValueError`` naming the limit when asked for a resolution
+past ``max_resolution`` (issue #104).
+
+Added ``conversion.cells_from_polygon`` and
+``conversion.cells_from_linestring``, the polygon fill and line trace
+that ``rhp_wrappers.polyfill``, ``polyfill_array`` and ``linetrace``
+now wrap without change to their own results. The new functions return
+index strings, give an empty result for an empty geometry, and raise
+for a geometry of the wrong type or an invalid one. A fill on the
+ellipsoid under the default centroid rule no longer follows every cell
+along the antimeridian down to the finest resolution, which made any
+fill in a polar face several times slower than it needed to be
+(issue #104).
+
+``conversion.CellZoneFromPoly`` is removed: ``cells_from_polygon`` with
+``compress=True`` gives the same cover in no more cells, and also
+handles polygons that span more than one resolution 0 cell
+(issue #104).
 
 0.13.0
 ^^^^^^

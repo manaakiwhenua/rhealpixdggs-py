@@ -6,7 +6,6 @@ Keep adding tests!
 - David Habgood (DH), 2020-10-27: Initial version.
 """
 
-import io
 import unittest
 
 from shapely import wkt
@@ -55,7 +54,6 @@ test_geom = """
         -35.58, 148.655 -35.575, 148.6575 -35.575, 148.6575 -35.5725, 148.665 -35.5725, 148.6675 -35.5725)))"""
 test_poly = wkt.loads(test_geom)
 # test geom from https://gds.loci.cat/geometry/geofabric2_1_1_contractedcatchment/12104622?_format=text/turtle&_view=geometryview
-test_feature = ["Contracted_Catchment_12104622", test_poly]
 ground_truth_cells_for_catchment_12104622_at_res_9 = [
     "R785180852",
     "R785180854",
@@ -565,8 +563,6 @@ class ConversionUtilsTestCase(unittest.TestCase):
         # ring is projected once as an array, not once per candidate cell.
         from shapely.geometry import Polygon as ShapelyPolygon
 
-        from rhealpixdggs.dggs import WGS84_003
-
         calls = []
         inner = WGS84_003.rhealpix
 
@@ -583,18 +579,6 @@ class ConversionUtilsTestCase(unittest.TestCase):
         forward = [a for a, k in calls if not k.get("inverse")]
         self.assertEqual(len(forward), 1)
         self.assertEqual(len(forward[0][0]), 5)
-
-    def test_CellZoneFromPoly(self):
-        """
-        Tests correct cells are output for the Geofabric Contracted Catchment 12104622 at resolution 9, without ordering
-        or compression.
-        """
-        cells_obj_list = CellZoneFromPoly(
-            feature=test_feature, res_limit=9, return_cells=True
-        ).cells_list
-        self.cell_str_list = [str(cell) for cell in cells_obj_list]
-        for cell_str in self.cell_str_list:
-            assert cell_str in ground_truth_cells_for_catchment_12104622_at_res_9
 
     def test_compress_order_cells(self):
         """
@@ -718,48 +702,10 @@ class TestCompressOrderCellsNSide(unittest.TestCase):
         assert compress_order_cells(cells) == sorted(cells)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
-class CellZoneFromPolyEdgeCasesTestCase(unittest.TestCase):
-    SMALL = Polygon([(10, 10), (11, 10), (11, 11), (10, 11)])
-
+class ConversionEdgeCasesTestCase(unittest.TestCase):
     def test_no_cell_contains_a_polygon_spanning_faces(self):
         big = Polygon([(-100, -10), (100, -10), (100, 10), (-100, 10)])
         self.assertIsNone(get_finest_containing_cell(big))
-        with self.assertRaises(ValueError):
-            CellZoneFromPoly(("big", big), 2, True)
-
-    def test_file_output_and_a_given_bounding_cell(self):
-        f = io.StringIO()
-        zone = CellZoneFromPoly(("box", self.SMALL), 5, True, file=f)
-        text = f.getvalue()
-        self.assertTrue(text.startswith("\nbox,"))
-        self.assertGreater(len(zone.cells_list), 0)
-        for cell in zone.cells_list:
-            self.assertIn(f"{cell} ", text)
-        given = CellZoneFromPoly(
-            ("box", self.SMALL), 5, True, bounding_cell=WGS84_003.cell(["Q"])
-        )
-        self.assertEqual(
-            [str(c) for c in given.cells_list], [str(c) for c in zone.cells_list]
-        )
-        # Without return_cells only the file is written.
-        f = io.StringIO()
-        only_file = CellZoneFromPoly(("box", self.SMALL), 5, False, file=f)
-        self.assertEqual(only_file.cells_list, [])
-        self.assertEqual(f.getvalue(), text)
-
-    def test_bounding_cell_inside_the_polygon_or_at_the_limit(self):
-        cell = WGS84_003.cell(["Q", 4])
-        whole = Polygon(cell.vertices(plane=False)).buffer(0.1)
-        zone = CellZoneFromPoly(("q4", whole), 1, True, bounding_cell=cell)
-        self.assertEqual([str(c) for c in zone.cells_list], ["Q4"])
-        zone = CellZoneFromPoly(
-            ("box", self.SMALL), 0, True, bounding_cell=WGS84_003.cell(["Q"])
-        )
-        self.assertEqual(zone.cells_list, [])
 
     def test_compress_recursively(self):
         cells = [f"P{i}{j}" for i in range(9) for j in range(9)]
@@ -769,3 +715,111 @@ class CellZoneFromPolyEdgeCasesTestCase(unittest.TestCase):
             compress_order_cells(cells[:-1], recursive=True),
             [f"P{i}" for i in range(8)] + [f"P8{j}" for j in range(8)],
         )
+
+
+class ShapelyGeometryTestCase(unittest.TestCase):
+    def test_cells_from_polygon(self):
+        from shapely.geometry import LineString, MultiPolygon, box
+
+        square = box(0, 0, 1, 1)
+        cells = cells_from_polygon(square, 5, plane=False)
+        self.assertEqual(
+            cells.tolist(),
+            [
+                "Q33303",
+                "Q33304",
+                "Q33305",
+                "Q33306",
+                "Q33307",
+                "Q33308",
+                "Q33330",
+                "Q33331",
+                "Q33332",
+            ],
+        )
+        # Every centroid the rule keeps is inside, and compressing changes
+        # the cells but not what they cover.
+        fine = cells_from_polygon(square, 7, plane=False)
+        centroids = WGS84_003.centroids(fine, plane=False)
+        self.assertTrue(
+            all(0 <= lon <= 1 and 0 <= lat <= 1 for lon, lat in centroids.tolist())
+        )
+        coarse = cells_from_polygon(square, 7, plane=False, compress=True)
+        self.assertLess(len(coarse), len(fine))
+        expanded = sorted(
+            str(c)
+            for index in coarse.tolist()
+            for c in WGS84_003.cell(WGS84_003.parse_index(index)).subcells(7)
+        )
+        self.assertEqual(expanded, fine.tolist())
+        # The three rules nest.
+        full = set(cells_from_polygon(square, 6, False, "full").tolist())
+        center = set(cells_from_polygon(square, 6, False).tolist())
+        meets = set(cells_from_polygon(square, 6, False, "overlapping").tolist())
+        self.assertTrue(full < center < meets)
+        # Nothing to fill is an empty result, not an error.
+        for nothing in [Polygon(), MultiPolygon()]:
+            empty = cells_from_polygon(nothing, 5, plane=False)
+            self.assertEqual(empty.tolist(), [])
+        bowtie = Polygon([(0, 0), (1, 1), (1, 0), (0, 1)])
+        with self.assertRaises(ValueError):
+            cells_from_polygon(bowtie, 5, plane=False)
+        with self.assertRaises(TypeError):
+            cells_from_polygon(LineString([(0, 0), (1, 1)]), 5)
+        with self.assertRaises(ValueError):
+            cells_from_polygon(square, 5, containment="most")
+        with self.assertRaises(ValueError):
+            cells_from_polygon(square, 5, min_res=6)
+
+    def test_cells_from_polygon_beside_the_antimeridian(self):
+        # A polar cell that crosses the antimeridian is dropped as soon as
+        # it is clear of the geometry, without changing the result.
+        from shapely.geometry import box
+
+        for region in [box(177, 60, 180, 62), box(-180, -75, -177, -72)]:
+            cells = cells_from_polygon(region, 6, plane=False)
+            self.assertGreater(len(cells), 0)
+            centroids = WGS84_003.centroids(cells, plane=False)
+            minx, miny, maxx, maxy = region.bounds
+            candidates = WGS84_003.cells_in_box(6, (minx, maxy), (maxx, miny), False)
+            inside = [
+                index
+                for index, (lon, lat) in zip(
+                    candidates.tolist(),
+                    WGS84_003.centroids(candidates, plane=False).tolist(),
+                    strict=True,
+                )
+                if minx < lon < maxx and miny < lat < maxy
+            ]
+            self.assertEqual(sorted(inside), cells.tolist())
+            self.assertEqual(len(centroids), len(cells))
+
+    def test_cells_from_linestring(self):
+        from shapely.geometry import LineString, MultiLineString, Point
+
+        line = LineString([(-176.260506, -43.738058), (-176.258807, -43.738379)])
+        self.assertEqual(
+            cells_from_linestring(line, 9, plane=False),
+            ["S001450634", "S001450635"],
+        )
+        bent = LineString([(0, 0), (2, 0), (2, 2)])
+        cells = cells_from_linestring(bent, 4, plane=False)
+        segments = [
+            str(c)
+            for start, end in [((0, 0), (2, 0)), ((2, 0), (2, 2))]
+            for c in WGS84_003.cells_from_line(4, start, end, plane=False)
+        ]
+        self.assertEqual(
+            cells, [c for k, c in enumerate(segments) if k == 0 or c != segments[k - 1]]
+        )
+        both = MultiLineString([line, bent])
+        self.assertEqual(
+            cells_from_linestring(both, 4, plane=False)[-len(cells) :], cells
+        )
+        self.assertEqual(cells_from_linestring(LineString(), 4), [])
+        with self.assertRaises(TypeError):
+            cells_from_linestring(Point(0, 0), 4)
+
+
+if __name__ == "__main__":
+    unittest.main()

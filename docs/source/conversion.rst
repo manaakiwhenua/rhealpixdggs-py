@@ -22,7 +22,8 @@ The conversion Module
 
 .. autosummary::
 
-    CellZoneFromPoly
+    cells_from_linestring
+    cells_from_polygon
     compact_cells
     compress_order_cells
     get_finest_containing_cell
