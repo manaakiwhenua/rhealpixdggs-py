@@ -434,6 +434,66 @@ class SCENZGridCELLTestCase(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "max_resolution"):
             Cell(rdggs, (N,)).subcells(rdggs.max_resolution + 1)
 
+    def test_num_edges(self):
+        rdggs = WGS84_123
+        expected = {"quad": 4, "skew_quad": 4, "dart": 3, "cap": 1}
+        for resolution in range(3):
+            for cell in rdggs.grid(resolution):
+                self.assertEqual(cell.num_edges(), 4)
+                self.assertEqual(
+                    cell.num_edges(plane=False), expected[cell.ellipsoidal_shape]
+                )
+
+    def test_perimeter_plane(self):
+        for rdggs in [WGS84_123, WGS84_123_RADIANS]:
+            cell = Cell(rdggs, (S, 2, 3))
+            self.assertEqual(cell.perimeter(), 4 * cell.width())
+
+    def test_perimeter_ellipsoid(self):
+        from rhealpixdggs.cell import _geod
+
+        def parallel(E, lat, turn):
+            # Length of the arc of the parallel at `lat` through `turn` radians.
+            e2 = E.f * (2 - E.f)
+            return E.a * np.cos(lat) / np.sqrt(1 - e2 * np.sin(lat) ** 2) * turn
+
+        for rdggs in [WGS84_123, WGS84_123_RADIANS]:
+            E = rdggs.ellipsoid
+            rad = (lambda v: v) if E.radians else np.radians
+            # A quad is two arcs of parallels and two equal arcs of meridians.
+            for suid in [(P, 4), (Q, 0), (O, 3, 7), (R, 8, 0, 5)]:
+                cell = Cell(rdggs, suid)
+                nw, ne, se, _ = cell.vertices(plane=False)
+                turn = abs(rad(ne[0]) - rad(nw[0]))
+                meridian = _geod(E.a, E.f).inv(*ne, *se, radians=E.radians)[2]
+                expected = (
+                    parallel(E, rad(nw[1]), turn)
+                    + parallel(E, rad(se[1]), turn)
+                    + 2 * meridian
+                )
+                self.assertAlmostEqual(
+                    cell.perimeter(plane=False) / expected, 1, delta=1e-13
+                )
+            # A cap is one whole parallel.
+            for suid in [(N,), (S, 4), (N, 4, 4)]:
+                cell = Cell(rdggs, suid)
+                lat = rad(cell.vertices(plane=False)[0][1])
+                self.assertAlmostEqual(
+                    cell.perimeter(plane=False) / parallel(E, lat, 2 * pi),
+                    1,
+                    delta=1e-13,
+                )
+            # Darts and skew quads have no closed form: check convergence.
+            for suid in [(N, 0), (N, 1), (S, 8), (S, 5, 2)]:
+                cell = Cell(rdggs, suid)
+                self.assertAlmostEqual(
+                    cell.perimeter(plane=False) / cell.perimeter(plane=False, n=256),
+                    1,
+                    delta=1e-7,
+                )
+        with self.assertRaises(ValueError):
+            Cell(WGS84_123, (P, 4)).perimeter(plane=False, n=7)
+
     def test_ul_vertex(self):
         for rdggs in [WGS84_123, WGS84_123_RADIANS]:
             # Should work for resolution 0 cells.

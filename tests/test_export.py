@@ -361,9 +361,26 @@ class GMLTestCase(unittest.TestCase):
                         [(x1 - s * (x1 - x0), y0) for s in t],
                         [(x0, y0 + s * (y1 - y0)) for s in t],
                     ]
+                    self.assertEqual(len(types), cell.num_edges(plane=False))
                     if len(types) == 1:
                         self.assertEqual(cell.ellipsoidal_shape, "cap")
                         edges = [[point for edge in edges for point in edge]]
+                    elif len(types) == 3:
+                        # The two outer edges share a parallel; find them by
+                        # their latitude and merge their samples.
+                        self.assertEqual(cell.ellipsoidal_shape, "dart")
+                        lats = [
+                            {
+                                round(float(rdggs.rhealpix(x, y, inverse=True)[1]), 9)
+                                for x, y in edge
+                            }
+                            for edge in edges
+                        ]
+                        k = next(
+                            k for k in range(4) if len(lats[k] | lats[(k + 1) % 4]) == 1
+                        )
+                        edges[k] = edges[k] + edges[(k + 1) % 4]
+                        del edges[(k + 1) % 4]
                     for kind, points in zip(types, edges, strict=True):
                         ll = np.array(
                             [rdggs.rhealpix(x, y, inverse=True) for x, y in points]
