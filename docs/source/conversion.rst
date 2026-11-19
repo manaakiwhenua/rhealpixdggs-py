@@ -27,6 +27,7 @@ The conversion Module
     compact_cells
     compress_order_cells
     get_finest_containing_cell
+    zones_from_query
 
 .. automodule:: rhealpixdggs.conversion
     :members:

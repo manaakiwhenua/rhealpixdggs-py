@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from itertools import compress, pairwise
 from typing import Any, Literal, cast
 
@@ -145,6 +145,101 @@ def cells_from_linestring(
             ]
         cells = _remove_sequential_duplicates(cells)
     return cells
+
+
+def zones_from_query(
+    zone_level: int,
+    bbox: Sequence[float] | None = None,
+    parent_zone: str | None = None,
+    compact_zones: bool = True,
+    rdggs: RHEALPixDGGS = WGS84_003,
+) -> list[str]:
+    """
+    Interpret and execute a zone query of OGC API - DGGS (OGC 21-038r1,
+    clause 12) on `rdggs`: return the identifiers of the zones the query
+    selects, the ``zones`` array of its response. The arguments are the
+    query parameters ``zone-level``, ``bbox``, ``parent-zone`` and
+    ``compact-zones``, with the defaults the standard gives them.
+
+    - `zone_level`: the resolution of the zones.
+    - `bbox`: west, south, east and north bounds in longitude and
+      latitude degrees (CRS84), selecting the zones inside or
+      intersecting the box. A box whose west bound exceeds its east
+      bound crosses the antimeridian. Six numbers are read as a box with
+      heights, which are ignored. Without `bbox` every zone is selected.
+    - `parent_zone`: only this zone and its sub-zones are returned.
+    - `compact_zones`: if True, zones that together cover a parent are
+      replaced by it, repeatedly, so the list stands for the zones at
+      `zone_level` in fewer identifiers; it is ordered coarsest first.
+
+    The library holds no data, so every zone of the grid counts as having
+    data, and the parameters that select by data (``datetime``,
+    ``subset``, ``filter``) are left to the service that holds it.
+
+    Raise ValueError for a `zone_level` outside the grid's resolutions,
+    a `parent_zone` that is not a zone of the grid, or a `bbox` that
+    is not four or six numbers bounding an area.
+
+    EXAMPLES::
+
+        >>> zones_from_query(1, parent_zone='N', compact_zones=False)
+        ['N0', 'N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8']
+        >>> zones_from_query(2)
+        ['N', 'O', 'P', 'Q', 'R', 'S']
+        >>> zones_from_query(2, bbox=(170, -10, -170, 10), compact_zones=False)
+        ['O30', 'O33', 'O36', 'R52', 'R55', 'R58']
+        >>> zones_from_query(3, bbox=(165, -48, 179, -34))[:4]
+        ['R88', 'R871', 'R872', 'R874']
+
+    """
+    rdggs._require_index_strings()
+    if not 0 <= zone_level <= rdggs.max_resolution:
+        raise ValueError(
+            f"zone_level must be between 0 and {rdggs.max_resolution}, not {zone_level!r}"
+        )
+    min_res = 0
+    if parent_zone is not None:
+        if rdggs.parse_index(parent_zone) is None:
+            raise ValueError(f"{parent_zone!r} is not a zone of this grid")
+        min_res = len(parent_zone) - 1
+        if min_res > zone_level:
+            return []
+    if bbox is None:
+        roots = (
+            [parent_zone]
+            if parent_zone is not None
+            else [str(c) for c in rdggs.grid(0)]
+        )
+        if compact_zones:
+            return roots
+        return [
+            str(cell)
+            for root in roots
+            for cell in rdggs.cell(rdggs.parse_index(root)).subcells(zone_level)
+        ]
+    if len(bbox) not in (4, 6):
+        raise ValueError("bbox must be four or six numbers")
+    upper = len(bbox) // 2
+    west, south, east, north = bbox[0], bbox[1], bbox[upper], bbox[upper + 1]
+    if west == east or south >= north:
+        raise ValueError("bbox must bound an area")
+    scale = rdggs.ellipsoid.pi() / 180
+    spans = [(west, east)] if west < east else [(west, 180), (-180, east)]
+    region = MultiPolygon(
+        [
+            box(w * scale, south * scale, e * scale, north * scale)
+            for w, e in spans
+            if w < e
+        ]
+    )
+    zones: list[str] = cells_from_polygon(
+        region, zone_level, False, "overlapping", compact_zones, min_res, rdggs
+    ).tolist()
+    if parent_zone is not None:
+        zones = [zone for zone in zones if zone.startswith(parent_zone)]
+    if compact_zones:
+        zones.sort(key=len)
+    return zones
 
 
 def get_finest_containing_cell(

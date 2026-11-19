@@ -79,6 +79,12 @@ along the antimeridian down to the finest resolution, which made any
 fill in a polar face several times slower than it needed to be
 (issue #104).
 
+Added ``conversion.zones_from_query``, which interprets and executes a
+zone query of OGC API - DGGS: the ``zone-level``, ``bbox``,
+``parent-zone`` and ``compact-zones`` parameters in, the list of zone
+identifiers out. The conformance chapter declares it as the library's
+query interpretation, closing OGC Topic 21 test A.18 (issue #104).
+
 ``conversion.CellZoneFromPoly`` is removed: ``cells_from_polygon`` with
 ``compress=True`` gives the same cover in no more cells, and also
 handles polygons that span more than one resolution 0 cell
